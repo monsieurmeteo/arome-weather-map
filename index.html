@@ -1502,7 +1502,12 @@
         function doLogin() {
             const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
-            if (user === 'Climatpro' && pass === 'cnews2026') {
+            const COMPTES = [
+                { user: 'Climatpro', pass: 'cnews2026' },
+                { user: 'meteo',     pass: 'mto59' },
+                { user: 'meteo',     pass: 'mto62' }
+            ];
+            if (COMPTES.some(c => c.user === user && c.pass === pass)) {
                 sessionStorage.setItem('mcp_auth', '1');
                 const overlay = document.getElementById('login-overlay');
                 overlay.style.transition = 'opacity 0.4s';
