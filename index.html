@@ -5651,27 +5651,17 @@
 
             const shouldDoTripleExport = (zone === 'france') || (isNational && (isWeatherTemp || isAutoZoningActive));
 
-            // Noms pour l'archivage automatique
-            const mainTitle = document.getElementById('main-auto-title').innerText;
-            const subTitle = document.getElementById('sub-auto-title').innerText;
-            const now = new Date();
-            const timeStr = `${now.getHours()}h${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-            const getArchiveName = (suffix) => `💾 ${timeStr} - ${mainTitle} ${subTitle} (${suffix})`;
-
             try {
                 if (shouldDoTripleExport) {
-                    // --- CARTE 1 : ZONAGE AUTO (Suffix _ZONAGE) ---
-                    document.getElementById('loading-text').innerText = "GÉNÉRATION DU ZONAGE...";
+                    // --- SNAPSHOT DES PICTOS FRANCE ---
+                    // On active temporairement le zonage auto pour capturer les codes picto de chaque ville
                     autoZoningCheck.checked = true;
                     hideMarkersCheck.checked = false;
-                    if (fogGroup) fogGroup.remove(); // Masquer brouillards
+                    if (fogGroup) fogGroup.remove();
                     toggleMarkers();
                     await updateGeoJson();
                     await updateDisplay();
-                    await performCapture("_ZONAGE");
 
-                    // --- SNAPSHOT DES PICTOS FRANCE APRÈS CARTE 1 ---
-                    // On capture ici le code picto de CHAQUE ville de la vue France (ancres incluses)
                     const franceSnapshot = {};
                     const franceSnapshotList = [...lastZoningMarkers];
                     franceSnapshotList.forEach(m => {
@@ -5684,41 +5674,32 @@
                     const _distDeg = (a, b) => Math.sqrt(Math.pow(a.lat - b.lat, 2) + Math.pow(a.lon - b.lon, 2));
                     const _findSnapshotMarker = (targetCity) => {
                         const key = targetCity.name.toUpperCase().trim();
-                        // 1. Match exact par nom
-                        if (franceSnapshot[key]) {
-                            console.log(`[EXPORT] Match exact pour ${targetCity.name}`);
-                            return franceSnapshot[key];
-                        }
-                        
-                        // 2. Sinon, match par proximité GPS (avec priorité aux ancres)
+                        if (franceSnapshot[key]) return franceSnapshot[key];
                         let best = null, bestD = Infinity;
                         franceSnapshotList.forEach(m => {
                             if (!m || !m.city) return;
                             let d = _distDeg(targetCity, m.city);
-                            // On favorise les ancres (on préfère une ancre un peu plus loin qu'une ville standard collée)
-                            if (m.isAnchor) d *= 0.5; 
-                            
+                            if (m.isAnchor) d *= 0.5;
                             if (d < bestD) { bestD = d; best = m; }
                         });
-                        if (best) console.log(`[EXPORT] Match GPS pour ${targetCity.name} -> ${best.city.name} (dist relative: ${bestD.toFixed(3)})`);
                         return best;
                     };
 
-                    // --- CARTE 2 : PICTOS FRANCE (Suffix _PICTOS_T) ---
+                    // --- CARTE NATIONALE : PICTOS FRANCE ---
                     const pictoOverrides = {}, pictoTempOverrides = {};
                     zoneConfigs.france_pictos.cities.forEach((city, idx) => {
                         const m = _findSnapshotMarker(city);
-                        if (m) { 
-                            pictoOverrides[idx] = m.code; 
-                            pictoTempOverrides[idx] = m.val; 
+
+                        if (m) {
+                            pictoOverrides[idx] = m.code;
+                            pictoTempOverrides[idx] = m.val;
                         }
                     });
 
-                    // Appliquer les nouveaux overrides AVANT le changement de zone pour éviter les flashs d'indices erronés
                     manualWeatherOverrides = pictoOverrides;
                     manualTempOverrides = pictoTempOverrides;
 
-                    document.getElementById('loading-text').innerText = "GÉNÉRATION PICTOS FRANCE...";
+                    document.getElementById('loading-text').innerText = "GÉNÉRATION CARTE NATIONALE...";
                     const zoneSelectEl = document.getElementById('zone-select');
                     autoZoningCheck.checked = false;
                     hideMarkersCheck.checked = false;
@@ -5727,86 +5708,17 @@
                     zoneSelectEl.value = 'france_pictos';
                     await handleZoneChange(true);
                     await updateDisplay();
-                    await performCapture("_PICTOS_T");
-
-                    // --- CARTE 3 : SURCOUCHES (Optionnel, Suffix _SURCOUCHES) ---
-                    const dayIdxValue = parseInt(document.getElementById('day-select').value);
-                    const hasStrongGusts = lastZoningGusts.some(g => g.val >= 45);
-                    const hasSpecialMarkers = manualSpecialMarkers.length > 0;
-                    const isJ3Plus = (dayIdxValue >= 3);
-
-                    if (hasStrongGusts || hasSpecialMarkers || isJ3Plus) {
-                        document.getElementById('loading-text').innerText = "GÉNÉRATION SURCOUCHES...";
-                        autoZoningCheck.checked = false;
-                        hideMarkersCheck.checked = true;
-                        showAvgCheck.checked = true;
-                        forceShowOverlays = true;
-                        if (fogGroup) fogGroup.addTo(map);
-                        toggleMarkers();
-                        await updateGeoJson();
-                        await updateDisplay();
-
-                        await performCapture("_SURCOUCHES");
-                    }
-
-                    // --- CARTE CNEWS (Suffix _CNEWS) ---
-                    if (isNational) {
-                        document.getElementById('loading-text').innerText = "GÉNÉRATION CARTE CNEWS...";
-                        const windCheck = document.getElementById('simple-wind-check');
-                        const wasWindChecked = windCheck ? windCheck.checked : false;
-
-                        // Overrides CNEWS depuis le snapshot (mappage précis sur les piliers d'ancrage)
-                        const cnewsOverrides = {}, cnewsTempOvr = {};
-                        zoneConfigs.cnews.cities.forEach((city, idx) => {
-                            const m = _findSnapshotMarker(city);
-                            if (m) { 
-                                cnewsOverrides[idx] = m.code; 
-                                cnewsTempOvr[idx] = m.val; 
-                            }
-                        });
-
-                        // Appliquer les overrides AVANT le changement vers CNEWS
-                        manualWeatherOverrides = cnewsOverrides;
-                        manualTempOverrides = cnewsTempOvr;
-
-                        forceShowOverlays = false;
-                        zoneSelectEl.value = 'cnews';
-                        autoZoningCheck.checked = false;
-                        hideMarkersCheck.checked = false;
-                        if (windCheck) windCheck.checked = false;
-                        if (fogGroup) fogGroup.addTo(map);
-                        updateWindDisplay();
-
-                        await handleZoneChange(true);
-                        await updateDisplay();
-                        await performCapture("_CNEWS");
-
-                        if (windCheck) windCheck.checked = wasWindChecked;
-                        updateWindDisplay();
-
-                        // RESTAURATION FINALE : Retour sur France avec les pictos d'origine
-                        zoneSelectEl.value = 'france';
-                        await handleZoneChange(true);
-                        // Re-appliquer les overrides france depuis le snapshot (les indices CNEWS ne sont plus valides)
-                        const fnRestored = {}, fnTempRestored = {};
-                        zoneConfigs.france.cities.forEach((city, idx) => {
-                            const m = _findSnapshotMarker(city);
-                            if (m) { fnRestored[idx] = m.code; fnTempRestored[idx] = m.val; }
-                        });
-                        manualWeatherOverrides = fnRestored;
-                        manualTempOverrides = fnTempRestored;
-                    }
+                    await performCapture("");
 
                     // Restauration de l'état initial
                     autoZoningCheck.checked = wasAutoZoningChecked;
                     hideMarkersCheck.checked = wasHideMarkersChecked;
                     showAvgCheck.checked = wasAvgChecked;
-                    // Restaurer le paramètre d'affichage (peut avoir été forcé à weather_temp par handleZoneChange)
                     document.getElementById('param-select').value = wasParam;
                     forceShowOverlays = false;
                     isExporting = false;
                     document.body.classList.remove('exporting-mode');
-                    if (fogGroup && !map.hasLayer(fogGroup)) fogGroup.addTo(map); // Toujours réafficher
+                    if (fogGroup && !map.hasLayer(fogGroup)) fogGroup.addTo(map);
                     toggleMarkers();
                     await updateGeoJson();
                     await updateDisplay();
