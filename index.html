@@ -1503,8 +1503,7 @@
             const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
             const COMPTES = [
-                { user: 'meteo',     pass: 'mto59' },
-                { user: 'meteo',     pass: 'mto62' }
+                { user: 'meteo', pass: 'mto59' }
             ];
             if (COMPTES.some(c => c.user === user && c.pass === pass)) {
                 sessionStorage.setItem('mcp_auth', '1');
