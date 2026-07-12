@@ -15,7 +15,7 @@ MAIL_CLIENT = r"C:\Users\grego\.gemini\config\skills\mail\scripts\mail_client.py
 DEST_DIR    = r"C:\Users\grego\Desktop\cartes_alertes"
 
 # Destinataires
-RECIPIENTS = ["gregoire@example.com", "patrick.marliere@example.com"]  # Remplacer par les vraies adresses
+RECIPIENTS = ["gregory.langlet@sfr.fr", "patrick.marliere@wanadoo.fr"]
 
 def get_today_attachments():
     date_str = datetime.now().strftime("%Y%m%d")
