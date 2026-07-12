@@ -24,20 +24,30 @@ import http.server, socketserver
 from datetime import date as dt_date, timedelta
 
 # ── Chemins ──────────────────────────────────────────────────────────────────
-METEO_SCRIPTS  = r"C:\Users\grego\.gemini\config\skills\meteo\scripts"
-PROJECT_DIR    = r"C:\Users\grego\Documents\METEO_CLIMAT\meteo cnews 2"
-DEST_DIR       = r"C:\Users\grego\Desktop\cartes_alertes"
-CHROME_PATH    = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-DB_PATH        = r"C:\Users\grego\.gemini\config\skills\meteo\data\meteo_data.db"
-DATA_JSON      = os.path.join(PROJECT_DIR, "meteociel_obs_data.json")
-PORT           = 8002
+current_dir = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = current_dir
+DB_PATH = os.path.join(current_dir, "data", "meteo_data.db")
+DATA_JSON = os.path.join(current_dir, "meteociel_obs_data.json")
+PORT = 8002
 
-sys.path.insert(0, METEO_SCRIPTS)
+if not os.path.exists(DB_PATH):
+    DB_PATH = r"C:\Users\grego\.gemini\config\skills\meteo\data\meteo_data.db"
+
+if os.environ.get("GITHUB_ACTIONS"):
+    DEST_DIR = os.path.abspath(os.path.join(current_dir, "..", "cartes_alertes"))
+    os.makedirs(DEST_DIR, exist_ok=True)
+    CHROME_PATH = "/usr/bin/google-chrome"
+else:
+    DEST_DIR = r"C:\Users\grego\Desktop\cartes_alertes"
+    CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+sys.path.insert(0, current_dir)
 
 # ── Zones → départements ─────────────────────────────────────────────────────
 ZONE_DEPTS = {
     "france":   None,  # toutes
     "hdf":      ["02","59","60","62","80"],
+    "npdc":     ["59","62"],
     "normandie":["14","27","50","61","76"],
     "idf":      ["75","77","78","91","92","93","94","95"],
     "ges":      ["08","10","51","52","54","55","57","67","68","88"],
@@ -52,7 +62,7 @@ ZONE_DEPTS = {
     "cor":      ["20","2A","2B","2a","2b"],
 }
 ZONE_LABELS = {
-    "france":"France entière","hdf":"Hauts-de-France","normandie":"Normandie",
+    "france":"France entière","hdf":"Hauts-de-France","npdc":"Nord-Pas-de-Calais","normandie":"Normandie",
     "idf":"Île-de-France","ges":"Grand Est","ara":"Auvergne-Rhône-Alpes",
     "naq":"Nouvelle-Aquitaine","occ":"Occitanie","paca":"PACA",
     "bfc":"Bourgogne-Franche-Comté","bre":"Bretagne","pdl":"Pays de la Loire",
@@ -61,6 +71,7 @@ ZONE_LABELS = {
 ZONE_MAP = {
     "france":   {"center":[46.6,2.3],  "zoom":6, "zoom_portrait":6,  "min_dist":95, "max_st":65},
     "hdf":      {"center":[50.1,2.9],  "zoom":8, "zoom_portrait":8,  "min_dist":30, "max_st":45},
+    "npdc":     {"center":[50.45,2.75], "zoom":9, "zoom_portrait":9,  "min_dist":24, "max_st":25},
     "normandie":{"center":[49.0,0.2],  "zoom":8, "zoom_portrait":8,  "min_dist":30, "max_st":45},
     "idf":      {"center":[48.75,2.5], "zoom":9, "zoom_portrait":9,  "min_dist":16, "max_st":35},
     "ges":      {"center":[48.5,6.5],  "zoom":7, "zoom_portrait":7,  "min_dist":55, "max_st":50},
@@ -75,12 +86,36 @@ ZONE_MAP = {
     "cor":      {"center":[42.0,9.0],  "zoom":8, "zoom_portrait":8,  "min_dist":22, "max_st":25},
 }
 
+DEPT_NAMES = {
+    "01": "Ain", "02": "Aisne", "03": "Allier", "04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes",
+    "06": "Alpes-Maritimes", "07": "Ardèche", "08": "Ardennes", "09": "Ariège", "10": "Aube",
+    "11": "Aude", "12": "Aveyron", "13": "Bouches-du-Rhône", "14": "Calvados", "15": "Cantal",
+    "16": "Charente", "17": "Charente-Maritime", "18": "Cher", "19": "Corrèze", "2A": "Corse-du-Sud",
+    "2B": "Haute-Corse", "21": "Côte-d'Or", "22": "Côtes-d'Armor", "23": "Creuse", "24": "Dordogne",
+    "25": "Doubs", "26": "Drôme", "27": "Eure", "28": "Eure-et-Loir", "29": "Finistère",
+    "30": "Gard", "31": "Haute-Garonne", "32": "Gers", "33": "Gironde", "34": "Hérault",
+    "35": "Ille-et-Vilaine", "36": "Indre", "37": "Indre-et-Loire", "38": "Isère", "39": "Jura",
+    "40": "Landes", "41": "Loir-et-Cher", "42": "Loire", "43": "Haute-Loire", "44": "Loire-Atlantique",
+    "45": "Loiret", "46": "Lot", "47": "Lot-et-Garonne", "48": "Lozère", "49": "Maine-et-Loire",
+    "50": "Manche", "51": "Marne", "52": "Haute-Marne", "53": "Mayenne", "54": "Meurthe-et-Moselle",
+    "55": "Meuse", "56": "Morbihan", "57": "Moselle", "58": "Nièvre", "59": "Nord",
+    "60": "Oise", "61": "Orne", "62": "Pas-de-Calais", "63": "Puy-de-Dôme", "64": "Pyrénées-Atlantiques",
+    "65": "Hautes-Pyrénées", "66": "Pyrénées-Orientales", "67": "Bas-Rhin", "68": "Haut-Rhin", "69": "Rhône",
+    "70": "Haute-Saône", "71": "Saône-et-Loire", "72": "Sarthe", "73": "Savoie", "74": "Haute-Savoie",
+    "75": "Paris", "76": "Seine-Maritime", "77": "Seine-et-Marne", "78": "Yvelines", "79": "Deux-Sèvres",
+    "80": "Somme", "81": "Tarn", "82": "Tarn-et-Garonne", "83": "Var", "84": "Vaucluse",
+    "85": "Vendée", "86": "Vienne", "87": "Haute-Vienne", "88": "Vosges", "89": "Yonne",
+    "90": "Territoire de Belfort", "91": "Essonne", "92": "Hauts-de-Seine", "93": "Seine-Saint-Denis",
+    "94": "Val-de-Marne", "95": "Val-d'Oise", "971": "Guadeloupe", "972": "Martinique",
+    "973": "Guyane", "974": "La Réunion", "976": "Mayotte"
+}
+
 ALL_PARAMS = [
     "tmax","tmin","anomalie_tmax","anomalie_tmin","amplitude","tmoy",
     "precip","anomalie_precip","secheresse",
     "gust","coups_de_vent",
     "records_tmax","records_tmin","records_precip","records_gust",
-    "records_all","records_absolus",
+    "records_all","records_absolus","records_mensuels",
 ]
 PARAM_LABELS = {
     "tmax":"Températures maximales","tmin":"Températures minimales",
@@ -92,6 +127,7 @@ PARAM_LABELS = {
     "records_tmax":"Records Tmax","records_tmin":"Records Tmin",
     "records_precip":"Records Précipitations","records_gust":"Records Rafales",
     "records_all":"Tous les records du jour","records_absolus":"Records absolus",
+    "records_mensuels":"Records mensuels",
     "bilan_jour":"Bilan du jour — Top 4 extrêmes",
 }
 
@@ -141,10 +177,12 @@ def get_conn():
     return sqlite3.connect(DB_PATH)
 
 def load_observations(date_str, zone):
-    """Load all observations for a date, filtered by zone."""
+    """Load all observations for a date, filtered by zone (region or department)."""
     conn = get_conn()
     c = conn.cursor()
     depts = ZONE_DEPTS.get(zone)
+
+    is_dept = zone.upper() in DEPT_NAMES or zone.isdigit() or (len(zone) == 2 and zone[0].isdigit()) or zone.lower() in ("2a", "2b")
 
     if depts:
         placeholders = ",".join("?"*len(depts))
@@ -161,6 +199,21 @@ def load_observations(date_str, zone):
             WHERE o.date = ? AND s.dept IN ({placeholders})
             ORDER BY s.dept, s.name
         """, [date_str] + depts)
+    elif is_dept:
+        dept_code = zone.upper()
+        c.execute("""
+            SELECT o.station_code, s.name, s.dept, s.lat, s.lon,
+                   o.tmax, o.tmin, o.precip, o.gust,
+                   o.tmax_rec_m, o.tmax_rec_m_date, o.tmax_rec_a, o.tmax_rec_a_date,
+                   o.tmin_rec_m, o.tmin_rec_m_date, o.tmin_rec_a, o.tmin_rec_a_date,
+                   o.precip_rec_m, o.precip_rec_m_date, o.precip_rec_a, o.precip_rec_a_date,
+                   o.gust_rec_m,  o.gust_rec_m_date,  o.gust_rec_a,  o.gust_rec_a_date,
+                   s.dans_tx, s.dans_fxi, s.dans_rrtn
+            FROM observations o
+            JOIN stations s ON o.station_code = s.code
+            WHERE o.date = ? AND s.dept = ?
+            ORDER BY s.name
+        """, [date_str, dept_code])
     else:
         c.execute("""
             SELECT o.station_code, s.name, s.dept, s.lat, s.lon,
@@ -196,6 +249,14 @@ def load_observations(date_str, zone):
             JOIN stations s ON nr.station_code = s.code
             WHERE nr.month = ? AND s.dept IN ({placeholders})
         """, [month] + depts)
+    elif is_dept:
+        dept_code = zone.upper()
+        c.execute("""
+            SELECT nr.station_code, nr.tmax_norm, nr.tmin_norm, nr.precip_norm
+            FROM normales_records nr
+            JOIN stations s ON nr.station_code = s.code
+            WHERE nr.month = ? AND s.dept = ?
+        """, [month, dept_code])
     else:
         c.execute("SELECT station_code, tmax_norm, tmin_norm, precip_norm FROM normales_records WHERE month = ?", [month])
     norms = {r[0]: {"tmax_norm":r[1],"tmin_norm":r[2],"precip_norm":r[3]} for r in c.fetchall()}
@@ -309,11 +370,11 @@ def build_stations(rows, param, min_dist_km):
             elif r.get("gust_rec_m") is not None and gust >= r["gust_rec_m"]:
                 st["is_record_m"] = True; st["rec_val"] = r["gust_rec_m"]; st["rec_date"] = r.get("gust_rec_m_date"); priority.add(r["code"])
 
-        elif param in ("records_tmax","records_all","records_absolus"):
+        elif param in ("records_tmax","records_all","records_absolus","records_mensuels"):
             # Tmax record
             if tmax is not None:
                 if r.get("tmax_rec_a") is not None and tmax >= r["tmax_rec_a"]:
-                    if param == "records_absolus" or param == "records_all" or param == "records_tmax":
+                    if param == "records_absolus" or param == "records_all" or param == "records_tmax" or param == "records_mensuels":
                         st["value"] = tmax; st["value_display"] = f"{tmax:.1f}°"
                         st["is_record_a"] = True; st["rec_val"] = r["tmax_rec_a"]; st["rec_date"] = r.get("tmax_rec_a_date"); st["rec_type"] = "tmax"; priority.add(r["code"])
                 elif r.get("tmax_rec_m") is not None and tmax >= r["tmax_rec_m"] and param != "records_absolus":
@@ -365,7 +426,7 @@ def build_stations(rows, param, min_dist_km):
         stations.append(st)
 
     # Special case: records_all combines all record types (take best per station)
-    if param in ("records_all", "records_absolus"):
+    if param in ("records_all", "records_absolus", "records_mensuels"):
         seen = {}
         for st in stations:
             code = st["code"]
@@ -375,7 +436,13 @@ def build_stations(rows, param, min_dist_km):
 
     # For records parameters, keep only stations with active records
     if "records" in param:
-        stations = [s for s in stations if s["is_record_a"] or s["is_record_m"]]
+        if param == "records_absolus":
+            stations = [s for s in stations if s["is_record_a"]]
+        elif param == "records_mensuels":
+            # Un record absolu est aussi un record mensuel par définition
+            stations = [s for s in stations if s["is_record_m"] or s["is_record_a"]]
+        else:
+            stations = [s for s in stations if s["is_record_a"] or s["is_record_m"]]
 
     # Sort stations based on the parameter type (descending vs ascending)
     reverse_sort = True
@@ -383,6 +450,15 @@ def build_stations(rows, param, min_dist_km):
         reverse_sort = False # lowest first
 
     stations.sort(key=lambda s: s["value"], reverse=reverse_sort)
+    
+    # Juste avant le return stations à la fin de build_stations :
+    seen_names = set()
+    unique_stations = []
+    for s in stations:
+        if s["name"] not in seen_names:
+            seen_names.add(s["name"])
+            unique_stations.append(s)
+    stations = unique_stations
     return stations
 
 # ── Sélection de période ─────────────────────────────────────────────────────
@@ -424,6 +500,7 @@ def load_observations_period(date_start, date_end, zone):
     conn = get_conn()
     c = conn.cursor()
     depts = ZONE_DEPTS.get(zone)
+    is_dept = zone.upper() in DEPT_NAMES or zone.isdigit() or (len(zone) == 2 and zone[0].isdigit()) or zone.lower() in ("2a", "2b")
     base_cols = ("o.date,o.station_code,s.name,s.dept,s.lat,s.lon,"
                  "o.tmax,o.tmin,o.precip,o.gust,"
                  "o.tmax_rec_m,o.tmax_rec_m_date,o.tmax_rec_a,o.tmax_rec_a_date,"
@@ -436,6 +513,11 @@ def load_observations_period(date_start, date_end, zone):
         c.execute(f"SELECT {base_cols} FROM observations o JOIN stations s ON o.station_code=s.code "
                   f"WHERE o.date BETWEEN ? AND ? AND s.dept IN ({ph}) ORDER BY s.code,o.date",
                   [date_start, date_end]+depts)
+    elif is_dept:
+        dept_code = zone.upper()
+        c.execute(f"SELECT {base_cols} FROM observations o JOIN stations s ON o.station_code=s.code "
+                  f"WHERE o.date BETWEEN ? AND ? AND s.dept = ? ORDER BY s.code,o.date",
+                  [date_start, date_end, dept_code])
     else:
         c.execute(f"SELECT {base_cols} FROM observations o JOIN stations s ON o.station_code=s.code "
                   f"WHERE o.date BETWEEN ? AND ? ORDER BY s.code,o.date",
@@ -615,7 +697,7 @@ def main():
     parser.add_argument("--to",      dest="date_to",   default=None, help="Fin période YYYYMMDD")
     parser.add_argument("--season",  default=None, help="Saison (ex: ete2026, hiver2026)")
     # Zone / paramètre
-    parser.add_argument("--zone",    default="france", choices=list(ZONE_DEPTS.keys()))
+    parser.add_argument("--zone",    default="france", help="Zone géographique ou numéro de département (ex: france, hdf, npdc, 59, 62...)")
     parser.add_argument("--param",   default=None, help="Paramètre(s) séparés par virgule")
     parser.add_argument("--pack",    default=None, choices=["all"])
     parser.add_argument("--orientation", default="both", choices=["landscape","portrait","both"])
@@ -647,6 +729,15 @@ def main():
     min_val = float(args.min_value) if args.min_value else None
     max_val = float(args.max_value) if args.max_value else None
 
+    # ── Résolution de la zone (région, département, ou nationale) ──
+    is_dept = args.zone.upper() in DEPT_NAMES or args.zone.isdigit() or (len(args.zone) == 2 and args.zone[0].isdigit()) or args.zone.lower() in ("2a", "2b")
+    if is_dept:
+        dept_code = args.zone.upper()
+        dept_name = DEPT_NAMES.get(dept_code, f"Département {dept_code}")
+        zone_label = f"{dept_name} ({dept_code})"
+    else:
+        zone_label = ZONE_LABELS.get(args.zone, args.zone)
+
     print("═"*65)
     print(f"  PHASE 2 — Cartes Météociel")
     if date_mode == "period":
@@ -654,7 +745,7 @@ def main():
         print(f"  Du {date_start} au {date_end}")
     else:
         print(f"  Date  : {date_fr(date_str)} ({date_str})")
-    print(f"  Zone  : {ZONE_LABELS.get(args.zone, args.zone)}")
+    print(f"  Zone  : {zone_label}")
     print(f"  Params: {', '.join(params_to_render)}")
     print(f"  Format: {args.orientation}")
     if min_val is not None: print(f"  Seuil : ≥ {min_val}")
@@ -676,10 +767,29 @@ def main():
         return
     print(f"  ✅ {len(rows)} stations chargées")
 
-    zone_cfg = ZONE_MAP.get(args.zone, ZONE_MAP["france"])
+    if is_dept:
+        dept_code = args.zone.upper()
+        lats = [r["lat"] for r in rows if r.get("lat") is not None and r.get("dept") == dept_code]
+        lons = [r["lon"] for r in rows if r.get("lon") is not None and r.get("dept") == dept_code]
+        if lats and lons:
+            center_lat = sum(lats) / len(lats)
+            center_lon = sum(lons) / len(lons)
+        else:
+            center_lat, center_lon = 46.5, 2.5
+        zone_cfg = {
+            "center": [center_lat, center_lon],
+            "zoom": 9,
+            "zoom_portrait": 9,
+            "min_dist": 10,
+            "max_st": 15
+        }
+    else:
+        zone_cfg = ZONE_MAP.get(args.zone, ZONE_MAP["france"])
 
     # ── Copier les fonds ──
-    src_dir = r"C:\Users\grego\Desktop\cartes_alertes\A_CONSERVER_ABSOLUMENT"
+    src_dir = os.path.join(PROJECT_DIR, "A_CONSERVER_ABSOLUMENT")
+    if not os.path.exists(src_dir):
+        src_dir = r"C:\Users\grego\Desktop\cartes_alertes\A_CONSERVER_ABSOLUMENT"
     for src_name, dst_name in [("VIGILANCE PORTRAIT.png","bg_portrait.png"),("VIGILANCE PAYSAGE.png","bg_landscape.png")]:
         src = os.path.join(src_dir, src_name)
         if os.path.exists(src):
@@ -703,9 +813,7 @@ def main():
     time.sleep(1.5)
     print(f"  🌐 Serveur local démarré sur port {PORT}\n")
 
-    # Ranger par sous-dossier de région / zone (ex: cartes_alertes/france, cartes_alertes/hdf...)
-    base_dest = os.path.join(DEST_DIR, "mm") if args.monsieur_meteo else DEST_DIR
-    dest = os.path.join(base_dest, args.zone)
+    dest = os.path.join(DEST_DIR, "mm") if args.monsieur_meteo else DEST_DIR
     os.makedirs(dest, exist_ok=True)
     mm_flag = "1" if args.monsieur_meteo else "0"
 
@@ -726,6 +834,18 @@ def main():
             if max_val is not None:
                 stations = [s for s in stations if s["value"] is not None and s["value"] <= max_val]
             stations = stations[:args.top]
+            # Éviter de générer des cartes "Pluies diluviennes" s'il ne pleut pas
+            if param == "precip" and len(stations) > 0:
+                max_val_param = stations[0]["value"]
+                if max_val_param < 1.0: # Moins de 1 mm
+                    print(f"  ⚠️  {param:<25} Cumuls trop faibles ({max_val_param} mm) — carte ignorée")
+                    continue
+            # Éviter de générer des cartes de rafales si le vent est faible
+            if param == "gust" and len(stations) > 0:
+                max_val_param = stations[0]["value"]
+                if max_val_param < 50.0: # Moins de 50 km/h
+                    print(f"  ⚠️  {param:<25} Vent trop faible ({max_val_param} km/h) — carte ignorée")
+                    continue
             if not stations:
                 fmsg = f" (aucune station ≥{min_val})" if min_val else (f" (aucune station ≤{max_val})" if max_val else "")
                 print(f"  ⚠️  {param:<25} Aucune station avec données{fmsg} — ignoré"); continue
@@ -775,7 +895,7 @@ def main():
                 "period_label": period_label,
                 "date_mode":    date_mode,
                 "zone":         args.zone,
-                "zone_label":   ZONE_LABELS.get(args.zone, args.zone),
+                "zone_label":   zone_label,
                 "param":        param,
                 "param_label":  PARAM_LABELS.get(param, param),
                 "stations":     payload,
@@ -798,7 +918,26 @@ def main():
             if max_val is not None: parts.append(f"lte{int(max_val)}")
             if orientation == "portrait": parts.append("portrait")
             suffix = ("_" + "_".join(parts)) if parts else ""
-            filename = f"carte_obs_{args.zone}_{param}_{file_suffix}{suffix}.jpg"
+            # Clean region names for filenames
+            zone_clean_names = {
+                "france": "France",
+                "hdf": "Hauts-de-France",
+                "npdc": "Nord-Pas-de-Calais",
+                "normandie": "Normandie",
+                "idf": "Ile-de-France",
+                "ges": "Grand-Est",
+                "ara": "Auvergne-Rhone-Alpes",
+                "naq": "Nouvelle-Aquitaine",
+                "occ": "Occitanie",
+                "paca": "PACA",
+                "bfc": "Bourgogne-Franche-Comte",
+                "bre": "Bretagne",
+                "pdl": "Pays-de-la-Loire",
+                "cvl": "Centre-Val-de-Loire",
+                "cor": "Corse"
+            }
+            clean_zone_name = zone_clean_names.get(args.zone.lower(), args.zone)
+            filename = f"carte_obs_{clean_zone_name}_{param}_{file_suffix}{suffix}.jpg"
             filepath = os.path.join(dest, filename)
 
             print(f"  [{n:2d}/{total}] {param:<25} {orientation:<10} ", end="", flush=True)

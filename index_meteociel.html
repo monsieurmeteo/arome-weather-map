@@ -70,10 +70,10 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   align-items:flex-start;
 }
 .landscape .header-container {
-  top:95px; left:140px; gap:16px; width:780px;
+  top:95px; left:140px; gap:16px; width:600px;
 }
 .portrait .header-container {
-  top:140px; left:80px; gap:24px; width:calc(100% - 160px);
+  top:70px; left:80px; gap:12px; width:calc(100% - 160px);
 }
 
 /* Logo — drop-shadow discret pour l'intégrer au design sombre */
@@ -86,7 +86,7 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   height:75px;
 }
 .portrait .logo-meteo {
-  height:95px;
+  height:75px;
 }
 
 .header-text-group {
@@ -96,17 +96,29 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   position: relative;
 }
 .header-title {
-  font-size:88px; font-weight:900; letter-spacing:-1.5px; line-height:1.05; text-transform:uppercase;
+  font-size:100px; font-weight:900; letter-spacing:-1.5px; line-height:1.05; text-transform:uppercase;
   text-shadow:0 3px 8px rgba(0,0,0,0.6);
 }
-.portrait .header-title { font-size:104px; }
+.portrait .header-title { font-size:80px; }
 
 .header-subtitle {
-  font-size:46px; font-weight:800; color:#ff5a24; letter-spacing:0.5px; text-transform:uppercase;
-  text-shadow:0 2px 5px rgba(0,0,0,0.5);
-  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
 }
-.portrait .header-subtitle { font-size:46px; }
+.subtitle-region {
+  font-size:42px; font-weight:900; color:#ff5a24; letter-spacing:0.5px; text-transform:uppercase;
+  text-shadow:0 2px 5px rgba(0,0,0,0.5);
+  line-height: 1.1;
+}
+.subtitle-date {
+  font-size:26px; font-weight:700; color:rgba(255,255,255,0.80); letter-spacing:0.5px; text-transform:uppercase;
+  text-shadow:0 2px 4px rgba(0,0,0,0.5);
+  line-height: 1.1;
+}
+.portrait .subtitle-region { font-size:32px; }
+.portrait .subtitle-date { font-size:22px; }
 
 .header-desc {
   font-family: 'Outfit', sans-serif;
@@ -116,12 +128,12 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   margin-top: 5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  white-space: nowrap;
+  line-height: 1.25;
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 .portrait .header-desc {
-  font-size: 22px;
-  margin-top: 8px;
+  font-size: 18px;
+  margin-top: 4px;
 }
 
 /* ── HEADER DIVIDER LINE — lueur orange renforcée ── */
@@ -230,30 +242,36 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   box-shadow: 0 0 12px rgba(255, 204, 0, 0.5);
 }
 
-.station-name {
-  font-size:30px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
-  text-shadow:0 1px 3px rgba(0,0,0,0.4);
-  text-align:left;
-  color:#fff;
+.station-name-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding-left: 20px;
+  width: 100%;
+}
+.station-name-text {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 34px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 460px;
-  display: block;
+  flex-grow: 1;
+  min-width: 0;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
-.portrait .station-name { font-size:28px; padding-left: 16px; max-width: 320px; }
-.station-name.station-len-long {
-  font-size: 24px !important;
+.portrait .station-name-text {
+  font-size: 32px;
 }
-.portrait .station-name.station-len-long {
-  font-size: 22px !important;
+.station-dept-text {
+  font-weight: 600;
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
 }
-.station-name.station-len-xlong {
-  font-size: 19px !important;
-}
-.portrait .station-name.station-len-xlong {
-  font-size: 17px !important;
+.portrait .station-dept-text {
+  font-size: 24px;
 }
 
 /* Record pill cartouche — +12% taille pour meilleure lisibilité écran TV */
@@ -472,7 +490,7 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   box-sizing: border-box;
 }
 .landscape .rows-container-wrapper:has(.bilan-grid) {
-  top: 480px !important;
+  top: 580px !important;
   left: 100px !important;
   right: auto !important;
   width: 1720px !important;
@@ -578,51 +596,67 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 }
 .bilan-card-content {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  flex-grow: 1;
 }
 .portrait .bilan-card-content {
   width: 48%;
   height: auto;
+  display: flex;
+  flex-direction: row;
   justify-content: flex-end;
 }
 .bilan-card-station {
   font-family: 'Outfit', sans-serif;
-  font-size: 19px;
+  font-size: 30px; /* Agrandissement significatif */
   font-weight: 700;
-  color: rgba(255,255,255,0.76);
+  color: rgba(255,255,255,0.85);
   text-transform: uppercase;
-  max-width: 60%;
-  white-space: normal;
-  line-height: 1.2;
+  max-width: 100%;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap; /* Force une ligne unique */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 .portrait .bilan-card-station {
-  font-size: 26px;
+  font-size: 36px;
   max-width: 100%;
+  width: 100%;
+  text-align: center;
   color: rgba(255,255,255,0.65);
 }
 .station-len-long {
-  font-size: 15px !important;
+  font-size: 24px !important;
 }
 .portrait .station-len-long {
-  font-size: 22px !important;
+  font-size: 30px !important;
 }
 .station-len-xlong {
-  font-size: 12px !important;
+  font-size: 20px !important;
 }
 .portrait .station-len-xlong {
-  font-size: 18px !important;
+  font-size: 26px !important;
 }
 .bilan-card-value {
   font-family: 'Outfit', sans-serif;
   font-size: 58px;
   font-weight: 900;
-  text-align: right;
+  text-align: center;
   line-height: 1;
   white-space: nowrap;
+  width: 100%;
 }
-.portrait .bilan-card-value { font-size: 92px; }
+.portrait .bilan-card-value {
+  font-size: 92px;
+  text-align: right;
+  width: auto;
+}
 .bilan-card-rec-pill {
   position: absolute;
   top: 12px;
@@ -700,16 +734,16 @@ document.getElementById('logo-img').src = logoImg;
 
 // Parameter style & icon map
 const PARAM_STYLES = {
-  tmax:            { title: 'Chaleur record',        subtitle: 'Températures maximales', theme: 'hot' },
-  tmin:            { title: 'Fraîcheur record',       subtitle: 'Températures minimales',  theme: 'cold' },
+  tmax:            { title: 'Température maximale',   subtitle: 'Températures maximales', theme: 'hot' },
+  tmin:            { title: 'Température minimale',   subtitle: 'Températures minimales',  theme: 'cold' },
   anomalie_tmax:   { title: 'Anomalie Tmax',          subtitle: 'Écart à la normale',      theme: 'hot' },
   anomalie_tmin:   { title: 'Anomalie Tmin',          subtitle: 'Écart à la normale',      theme: 'cold' },
   amplitude:       { title: 'Amplitude thermique',    subtitle: 'Écart Tmax - Tmin',       theme: 'hot' },
   tmoy:            { title: 'Température moyenne',    subtitle: 'Moyenne journalière',     theme: 'hot' },
-  precip:          { title: 'Pluies diluviennes',     subtitle: 'Cumuls de précipitations',theme: 'rain' },
+  precip:          { title: 'Cumul de précipitations', subtitle: 'Cumuls de précipitations',theme: 'rain' },
   anomalie_precip: { title: 'Anomalie pluie',        subtitle: '% normale mensuelle',     theme: 'rain' },
   secheresse:      { title: 'Sécheresse record',      subtitle: 'Stations sans pluie',     theme: 'sun' },
-  gust:            { title: 'Violentes rafales',      subtitle: 'Rafales de vent max.',    theme: 'wind' },
+  gust:            { title: 'Rafales maximales',      subtitle: 'Rafales de vent max.',    theme: 'wind' },
   coups_de_vent:   { title: 'Tempête / Fort vent',    subtitle: 'Rafales les plus fortes', theme: 'wind' },
   records_tmax:    { title: 'Records de chaleur',     subtitle: 'Records battus ou égalés',theme: 'trophy' },
   records_tmin:    { title: 'Records de froid',       subtitle: 'Records battus ou égalés',theme: 'trophy' },
@@ -717,6 +751,7 @@ const PARAM_STYLES = {
   records_gust:    { title: 'Records de vent',        subtitle: 'Records battus ou égalés',theme: 'trophy' },
   records_all:     { title: 'Bilan des records',      subtitle: 'Records battus ou égalés',theme: 'trophy' },
   records_absolus: { title: 'Records absolus',       subtitle: 'Records historiques',     theme: 'trophy' },
+  records_mensuels: { title: 'Records mensuels',       subtitle: 'Records battus ou égalés',theme: 'trophy' },
   bilan_jour:      { title: 'Bilan du jour',          subtitle: 'Les extrêmes nationaux',  theme: 'trophy' }
 };
 
@@ -783,22 +818,47 @@ function applyStyles(cfg) {
   let dateWithoutYear = cfg.date_fr.replace(/\s\d{4}$/, ''); // "11 juillet"
 
   // Set titles
-  document.getElementById('title-text').textContent = meta.title;
+  let title = meta.title;
+  // Logique pour les précipitations
+  if (p === 'precip') {
+    const maxPrecip = cfg.stations.length > 0 ? cfg.stations[0].value : 0;
+    if (maxPrecip === 0) {
+      title = "AUCUNE PLUIE";
+    } else if (maxPrecip < 5) {
+      title = "PLUIES FAIBLES";
+    } else {
+      title = "CUMUL DE PRÉCIPITATIONS";
+    }
+  }
+  // Logique pour le vent
+  if (p === 'gust') {
+    const maxGust = cfg.stations.length > 0 ? cfg.stations[0].value : 0;
+    if (maxGust < 60) {
+      title = "RAFALES MAXIMALES";
+    } else if (maxGust < 85) {
+      title = "COUP DE VENT";
+    } else {
+      title = "VIOLENTES RAFALES";
+    }
+  }
+  // Mettre à jour l'élément HTML
+  document.getElementById('title-text').textContent = title;
   
-  let subtitleText = `CE ${dayName.toUpperCase()} ${dateWithoutYear.toUpperCase()}`;
+  let datePart = `CE ${dayName.toUpperCase()} ${dateWithoutYear.toUpperCase()}`;
   if (cfg.date_mode === 'period') {
-    subtitleText = cfg.date_fr.toUpperCase();
+    datePart = cfg.date_fr.toUpperCase();
+  }
+  if (cfg.filter_label) {
+    datePart += ` · ${cfg.filter_label.toUpperCase()}`;
   }
 
-  // Si régional, préfixer par le nom de la région
+  let subtitleHTML = "";
   if (cfg.zone && cfg.zone !== 'france') {
-    subtitleText = `${cfg.zone_label.toUpperCase()} · ${subtitleText}`;
+    subtitleHTML = `<div class="subtitle-region">${cfg.zone_label.toUpperCase()}</div><div class="subtitle-date">${datePart}</div>`;
+  } else {
+    subtitleHTML = `<div class="subtitle-date">${datePart}</div>`;
   }
-  
-  if (cfg.filter_label) {
-    subtitleText += ` · ${cfg.filter_label.toUpperCase()}`;
-  }
-  document.getElementById('subtitle-text').textContent = subtitleText;
+  document.getElementById('subtitle-text').innerHTML = subtitleHTML;
 
   // Render rows/capsules
   const container = document.getElementById('rows-container');
@@ -982,21 +1042,18 @@ function applyStyles(cfg) {
           peakDateHTML = `<td class="obs-date-peak" width="${colWidths.peak}" style="padding-right: 15px; padding-left: 10px;">${dateStr}</td>`;
         }
 
-        const fullname = `${st.name} (${st.dept})`;
-        let lenClass = "";
-        if (fullname.length > 25) {
-          lenClass = " station-len-xlong";
-        } else if (fullname.length > 18) {
-          lenClass = " station-len-long";
-        }
-
         row.innerHTML = `
           <td width="${colWidths.rank}">
             <div class="rank-badge-wrapper">
               <div class="rank-badge ${themeClass}">${idx + 1}</div>
             </div>
           </td>
-          <td width="${colWidths.name}"><div class="station-name${lenClass}">${fullname}</div></td>
+          <td width="${colWidths.name}">
+            <div class="station-name-container">
+              <span class="station-name-text">${st.name}</span>
+              <span class="station-dept-text">(${st.dept})</span>
+            </div>
+          </td>
           ${peakDateHTML}
           <td width="${colWidths.rec}"><div style="text-align:center; padding: 0 8px;">${recordTag}</div></td>
           <td class="station-value-cell" width="${colWidths.val}">
@@ -1078,7 +1135,7 @@ function renderBilanJour(cfg, container) {
       card.innerHTML = `
         <div class="bilan-card-header">
           <div class="bilan-card-icon">${svgIcon}</div>
-          <div style="display:flex; flex-direction:column; gap:4px; margin-left: 20px;">
+          <div style="display:flex; flex-direction:column; gap:4px; margin-left: 20px; align-items: center; text-align: center; flex-grow: 1; min-width: 0;">
             <div class="bilan-card-label">${st.label}</div>
             <div class="bilan-card-station${lenClass}">${fullname}</div>
           </div>
@@ -1107,12 +1164,10 @@ function renderBilanJour(cfg, container) {
 
   container.appendChild(grid);
 
-  // ── Stat banner premium en bas (bannière de records du jour) ──
+  // ── Stat banner premium en bas (bannière de records du jour - Records Absolus uniquement) ──
   const nbAbsolu = cfg.nb_records_a || 0;
-  const nbMensuel = cfg.nb_records_m || 0;
-  const nbTotal = nbAbsolu + nbMensuel;
 
-  if (nbTotal > 0) {
+  if (nbAbsolu > 0) {
     const banner = document.createElement('div');
     const isPort = ORIENTATION === 'portrait';
     const trophyColor = '#ffcc00';
@@ -1132,11 +1187,7 @@ function renderBilanJour(cfg, container) {
     const iconSize = isPort ? '36px' : '30px';
     const labelSize = isPort ? '28px' : '25px';
 
-    let statLabel = '';
-    let parts = [];
-    if (nbAbsolu > 0) parts.push(`${nbAbsolu} record${nbAbsolu>1?'s':''} absolu${nbAbsolu>1?'s':''}`);
-    if (nbMensuel > 0) parts.push(`${nbMensuel} record${nbMensuel>1?'s':''} mensuel${nbMensuel>1?'s':''}`);
-    statLabel = parts.join(' et ');
+    const statLabel = `${nbAbsolu} record${nbAbsolu>1?'s':''} absolu${nbAbsolu>1?'s':''}`;
 
     banner.innerHTML = `
       <svg viewBox="0 0 24 24" style="width:${iconSize};height:${iconSize};flex-shrink:0" fill="none" stroke="${trophyColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
@@ -1154,6 +1205,20 @@ function renderBilanJour(cfg, container) {
     `;
     container.appendChild(banner);
   }
+
+  // ── Auto-fit de la taille de police des villes (anti-débordement) ──
+  setTimeout(() => {
+    const isPort = document.getElementById('capture-area').classList.contains('portrait');
+    document.querySelectorAll('.bilan-card-station').forEach(el => {
+      let size = isPort ? 36 : 30;
+      el.style.fontSize = size + 'px';
+      // Réduction progressive pixel par pixel si overflow horizontal détecté
+      while (el.scrollWidth > el.clientWidth && size > 14) {
+        size--;
+        el.style.fontSize = size + 'px';
+      }
+    });
+  }, 50);
 }
 
 function getValueColor(val, theme) {
