@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Météociel — Observations Climatologiques</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Roboto+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#fff; overflow:hidden; background-color:#000; }
+
+#capture-area {
+  position:relative;
+  overflow:hidden;
+  background-color:#000;
+}
+
+/* Background image wrapper — +15% visibilité carte, contours nets */
+.bg-wrapper {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: contrast(1.48) brightness(1.25) saturate(1.20); /* +15% — nets mais discrets */
+}
+/* Records: France encore plus visible pour remplir visuellement le fond */
+.theme-trophy .bg-wrapper {
+  filter: contrast(1.65) brightness(1.42) saturate(1.30);
+}
+/* Overlay to tone down the yellow glow on the right */
+.bg-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(circle at right 300px center, rgba(8,22,48,0.06) 0%, rgba(8,22,48,0.22) 50%, rgba(8,22,48,0.3) 100%),
+              linear-gradient(90deg, rgba(8,22,48,0) 50%, rgba(8,22,48,0.26) 100%);
+}
+
+.value-inline {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+}
+.value-stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  line-height: 0.85;
+}
+
+/* Orientations */
+.landscape {
+  width: 1920px;
+  height: 1080px;
+}
+.portrait {
+  width: 1080px;
+  height: 1920px;
+}
+
+/* ── HEADER ── */
+.header-container {
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+}
+.landscape .header-container {
+  top:95px; left:140px; gap:16px; width:780px;
+}
+.portrait .header-container {
+  top:140px; left:80px; gap:24px; width:calc(100% - 160px);
+}
+
+/* Logo — drop-shadow discret pour l'intégrer au design sombre */
+.logo-meteo {
+  display:block;
+  object-fit:contain;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(0,120,255,0.18));
+}
+.landscape .logo-meteo {
+  height:75px;
+}
+.portrait .logo-meteo {
+  height:95px;
+}
+
+.header-text-group {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  position: relative;
+}
+.header-title {
+  font-size:88px; font-weight:900; letter-spacing:-1.5px; line-height:1.05; text-transform:uppercase;
+  text-shadow:0 3px 8px rgba(0,0,0,0.6);
+}
+.portrait .header-title { font-size:104px; }
+
+.header-subtitle {
+  font-size:46px; font-weight:800; color:#ff5a24; letter-spacing:0.5px; text-transform:uppercase;
+  text-shadow:0 2px 5px rgba(0,0,0,0.5);
+  white-space: nowrap;
+}
+.portrait .header-subtitle { font-size:46px; }
+
+.header-desc {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.76);
+  margin-top: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.portrait .header-desc {
+  font-size: 22px;
+  margin-top: 8px;
+}
+
+/* ── HEADER DIVIDER LINE — lueur orange renforcée ── */
+.header-divider {
+  height: 4px;
+  background: linear-gradient(90deg, rgba(255,90,36,0) 0%, rgba(255,90,36,1) 15%, rgba(255,90,36,1) 50%, rgba(255,90,36,0) 100%);
+  box-shadow: 0 0 20px rgba(255,90,36,1), 0 0 6px rgba(255,90,36,0.6), 0 0 40px rgba(255,90,36,0.3);
+  margin-top: 14px;
+  border-radius: 2px;
+  width: 100%;
+}
+.landscape .header-divider { width: 500px; }
+
+/* ── ROWS CONTAINER WRAPPER — effet verre (backdrop-blur derrière les panneaux) ── */
+.rows-container-wrapper {
+  position:absolute;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 32px;
+}
+.landscape .rows-container-wrapper {
+  top:110px; right:140px; width:1000px;
+}
+.portrait .rows-container-wrapper {
+  top:460px;
+  left: calc(50% + 22px);
+  transform: translateX(-50%);
+  width: 920px;
+}
+
+/* ── TABLE CONTAINER — effet verre + reflet lumineux premium ── */
+.table-container {
+  width: 100%;
+  border-collapse: collapse;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 35%), /* reflet shimmer haut */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='transparent'/%3E%3Crect width='1' height='1' fill='rgba(255,255,255,0.015)'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, rgba(8,22,48,0.88) 0%, rgba(5,13,30,0.92) 100%); /* légèrement plus transparent = glass */
+  border: 1.5px solid rgba(0, 150, 255, 0.52);
+  border-radius: 30px;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.78), 0 0 40px rgba(0, 150, 255, 0.24), 0 8px 20px rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+
+/* Empty state message */
+.empty-message {
+  font-size:26px; font-weight:700; text-align:center; padding:120px 0; color:rgba(255,255,255,0.4);
+}
+
+/* Table rows — séparateurs épaissis, lisibles sur smartphone */
+.table-row {
+  border-bottom: 2px solid rgba(0, 150, 255, 0.44); /* 2px lisible sur mobile */
+  font-family:'Outfit', sans-serif;
+}
+.table-row:last-child {
+  border-bottom:none;
+}
+.landscape .table-row { height:78px; }
+.portrait .table-row { height:95px; }
+/* Pluies : 2 lignes dans la cellule station → lignes plus hautes */
+.theme-precip.landscape .table-row,
+.theme-rain.landscape .table-row { height:90px; }
+.theme-precip.portrait .table-row,
+.theme-rain.portrait .table-row { height:108px; }
+
+.table-row td {
+  vertical-align:middle;
+  padding: 0;
+}
+
+/* Rank Circle Badges - Reduced diameter by 10% */
+.rank-badge-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.landscape .rank-badge-wrapper { padding-left: 26px; }
+.portrait .rank-badge-wrapper { padding-left: 20px; }
+
+.rank-badge {
+  width: 46px; /* -11.5% size reduction */
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+.portrait .rank-badge { width: 44px; height: 44px; font-size: 22px; }
+
+/* Dynamic Theme Colors for Rank Circle Badges */
+.rank-badge.rank-hot, .rank-badge.rank-sun {
+  background: linear-gradient(135deg, #e52b2b 0%, #ff5533 100%);
+  box-shadow: 0 0 12px rgba(229, 43, 43, 0.5);
+}
+.rank-badge.rank-cold, .rank-badge.rank-rain, .rank-badge.rank-wind {
+  background: linear-gradient(135deg, #0076a8 0%, #00b0f0 100%);
+  box-shadow: 0 0 12px rgba(0, 176, 240, 0.5);
+}
+.rank-badge.rank-trophy {
+  background: linear-gradient(135deg, #cc9900 0%, #ffcc00 100%);
+  box-shadow: 0 0 12px rgba(255, 204, 0, 0.5);
+}
+
+.station-name {
+  font-size:30px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
+  text-shadow:0 1px 3px rgba(0,0,0,0.4);
+  text-align:left;
+  color:#fff;
+  padding-left: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 460px;
+  display: block;
+}
+.portrait .station-name { font-size:28px; padding-left: 16px; max-width: 320px; }
+.station-name.station-len-long {
+  font-size: 24px !important;
+}
+.portrait .station-name.station-len-long {
+  font-size: 22px !important;
+}
+.station-name.station-len-xlong {
+  font-size: 19px !important;
+}
+.portrait .station-name.station-len-xlong {
+  font-size: 17px !important;
+}
+
+/* Record pill cartouche — +12% taille pour meilleure lisibilité écran TV */
+.record-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 19px; /* +12% vs 17px */
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  line-height: 1.3;
+}
+.record-pill.pill-mensuel {
+  background: rgba(255,90,36,0.20);
+  border: 1.5px solid rgba(255,90,36,0.65);
+  color: #ff5a24;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+.record-pill.pill-absolu {
+  background: rgba(255,204,0,0.20);
+  border: 1.5px solid rgba(255,204,0,0.65);
+  color: #ffcc00;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+.former-record-text {
+  font-size: 17px; /* +6% vs 16px */
+  font-weight: 600;
+  color: rgba(255,255,255,0.80);
+  text-transform: none;
+  letter-spacing: 0;
+  display: block;
+  margin-top: 5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+}
+.portrait .former-record-text { font-size: 15px; }
+/* Legacy record-text kept for capsule view */
+.record-text {
+  font-size:22px; font-weight:800; color:#ff5a24; text-transform:uppercase; letter-spacing:1px;
+  text-shadow:0 1px 3px rgba(0,0,0,0.5);
+  text-align:center;
+}
+.portrait .record-text { font-size:20px; }
+.record-abs { color:#ffcc00; }
+
+/* Main value size — base 60px, overrides par param */
+.station-value {
+  font-size:60px; font-weight:900;
+  text-shadow:0 2px 4px rgba(0,0,0,0.5);
+  text-align:right;
+  box-sizing: border-box;
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+}
+.landscape .station-value {
+  padding-right:36px;
+  padding-left:36px;
+  border-left: 1.5px solid rgba(0, 150, 255, 0.35);
+}
+.portrait .station-value {
+  padding-right:24px;
+}
+/* Chaleur record : températures rouges +8% */
+.theme-tmax .station-value,
+.theme-hot .station-value { font-size: 65px; }
+/* Pluies diluviennes */
+.theme-precip .station-value,
+.theme-rain .station-value { font-size: 63px; }
+/* Rafales : plus de marge à droite */
+.theme-gust.landscape .station-value,
+.theme-wind.landscape .station-value { padding-right: 50px; }
+
+/* Units styling */
+.val-unit {
+  font-size: 0.38em;
+  font-weight: 700;
+  margin-left: 3px;
+  color: inherit;
+  align-self: baseline;
+  opacity: 0.90;
+  text-transform: none;
+}
+.val-unit-stacked {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: lowercase;
+  margin-top: -3px;
+  color: inherit;
+  text-align: right;
+  opacity: 0.90;
+}
+/* Chaleur : °C +15% */
+.theme-tmax .val-unit,
+.theme-hot .val-unit { font-size: 0.44em; font-weight: 800; opacity: 1; }
+/* Rafales : km/h +20% */
+.theme-gust .val-unit,
+.theme-wind .val-unit { font-size: 0.52em; font-weight: 800; opacity: 1; }
+.theme-gust .val-unit-stacked,
+.theme-wind .val-unit-stacked { font-size: 22px; font-weight: 800; opacity: 1; }
+
+/* ── PRECIP : badge compact + ancien record lisible mobile ── */
+.record-sub-precip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 20px;
+  margin-top: 3px;
+  flex-wrap: nowrap;
+}
+.former-record-precip {
+  font-size: 23px; /* +40% vs 17px base */
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+  white-space: nowrap;
+}
+.portrait .former-record-precip { font-size: 20px; }
+
+/* ── INDIVIDUAL FLOATING CAPSULES — glass + shimmer + ombre profonde ── */
+.record-capsule {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 40%), /* shimmer haut */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='transparent'/%3E%3Crect width='1' height='1' fill='rgba(255,255,255,0.015)'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, rgba(8,22,48,0.88) 0%, rgba(5,13,30,0.92) 100%);
+  border: 1.5px solid rgba(0, 150, 255, 0.55);
+  border-radius: 30px;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.78), 0 0 36px rgba(0, 150, 255, 0.26), 0 8px 20px rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  margin-bottom: 28px;
+  box-sizing: border-box;
+}
+.landscape .record-capsule {
+  height: 104px;
+  padding: 0 36px;
+}
+.portrait .record-capsule {
+  height: 114px;
+  padding: 0 34px;
+}
+
+.record-icon-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 150, 255, 0.4);
+  background: rgba(5,13,30,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24px;
+  box-shadow: 0 0 12px rgba(0, 150, 255, 0.2);
+  flex-shrink: 0;
+}
+.thermometer-svg {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: #ffcc00;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.station-name-capsule {
+  font-size:32px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
+  text-shadow:0 1px 3px rgba(0,0,0,0.4);
+  text-align:left;
+  color:#fff;
+  flex-grow: 1;
+  white-space: nowrap;
+}
+.portrait .station-name-capsule { font-size:28px; width: 45%; flex-grow: 0; }
+
+.record-details-capsule {
+  flex-grow: 1;
+  text-align: center;
+}
+.portrait .record-details-capsule { width: 35%; flex-grow: 0; }
+
+.value-capsule-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+.landscape .value-capsule-wrapper {
+  padding-left: 36px;
+  border-left: 1.5px solid rgba(0, 150, 255, 0.35);
+  width: 180px;
+  flex-shrink: 0;
+}
+.portrait .value-capsule-wrapper {
+  width: 20%;
+  flex-shrink: 0;
+}
+
+.value-capsule {
+  font-size:60px; font-weight:900;
+  text-shadow:0 2px 4px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+}
+.portrait .value-capsule { font-size:52px; }
+
+/* ── Bilan du Jour CSS ── */
+.bilan-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  width: 1720px;
+  box-sizing: border-box;
+}
+.landscape .rows-container-wrapper:has(.bilan-grid) {
+  top: 480px !important;
+  left: 100px !important;
+  right: auto !important;
+  width: 1720px !important;
+  background: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+.portrait .rows-container-wrapper:has(.bilan-grid) {
+  top: 480px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 920px !important;
+  background: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+.portrait .bilan-grid {
+  flex-direction: column;
+  gap: 32px;
+  width: 920px;
+}
+.bilan-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 40%),
+    linear-gradient(135deg, rgba(8,22,48,0.85) 0%, rgba(5,13,30,0.90) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(0, 150, 255, 0.52);
+  border-radius: 20px;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 20px rgba(0,150,255,0.1);
+  position: relative;
+  overflow: visible; /* Permet au badge record de dépasser en haut */
+  box-sizing: border-box;
+}
+.landscape .bilan-card {
+  width: 25%;
+  height: 250px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.portrait .bilan-card {
+  width: 100%;
+  height: 216px;
+  padding: 0 40px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.bilan-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0) 100%);
+}
+.bilan-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1.5px solid rgba(0, 150, 255, 0.2);
+  padding-bottom: 10px;
+  margin-bottom: 8px;
+}
+.portrait .bilan-card-header {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  flex-direction: row;
+  gap: 28px;
+  justify-content: flex-start;
+  width: 52%;
+}
+.bilan-card-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 23px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.portrait .bilan-card-label { font-size: 32px; }
+.bilan-card-icon {
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.portrait .bilan-card-icon {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 150, 255, 0.44);
+  background: rgba(5,13,30,0.6);
+  flex-shrink: 0;
+  box-shadow: inset 0 0 12px rgba(0,150,255,0.2);
+}
+.bilan-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 100%;
+}
+.portrait .bilan-card-content {
+  width: 48%;
+  height: auto;
+  justify-content: flex-end;
+}
+.bilan-card-station {
+  font-family: 'Outfit', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.76);
+  text-transform: uppercase;
+  max-width: 60%;
+  white-space: normal;
+  line-height: 1.2;
+}
+.portrait .bilan-card-station {
+  font-size: 26px;
+  max-width: 100%;
+  color: rgba(255,255,255,0.65);
+}
+.station-len-long {
+  font-size: 15px !important;
+}
+.portrait .station-len-long {
+  font-size: 22px !important;
+}
+.station-len-xlong {
+  font-size: 12px !important;
+}
+.portrait .station-len-xlong {
+  font-size: 18px !important;
+}
+.bilan-card-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 58px;
+  font-weight: 900;
+  text-align: right;
+  line-height: 1;
+  white-space: nowrap;
+}
+.portrait .bilan-card-value { font-size: 92px; }
+.bilan-card-rec-pill {
+  position: absolute;
+  top: 12px;
+  right: 28px;
+  font-size: 10px;
+  font-weight: 900;
+  background: #ffcc00;
+  color: #000;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  z-index: 10;
+}
+.portrait .bilan-card-rec-pill { font-size: 11px; top: -10px; left: 50px; right: auto; padding: 1px 5px; }
+
+/* Date peak column */
+.obs-date-peak {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.44);
+  text-align: center;
+}
+.table-row:hover .obs-date-peak {
+  color: rgba(0, 234, 255, 0.85);
+}
+</style>
+</head>
+<body>
+<div id="capture-area" class="landscape">
+  <div class="bg-wrapper" id="bg-wrapper"></div>
+  <div class="bg-overlay"></div>
+
+  <div class="header-container">
+    <img id="logo-img" class="logo-meteo" src="logo.png" alt="Météo Climat Pro"/>
+    <div class="header-text-group">
+      <div class="header-title" id="title-text">CHALEUR CANICULAIRE</div>
+      <div class="header-subtitle" id="subtitle-text">CE SAMEDI 11 JUILLET</div>
+      <div class="header-desc" id="desc-text">Les principaux extrêmes observés aujourd'hui en France</div>
+      <div class="header-divider"></div>
+    </div>
+  </div>
+
+  <div class="rows-container-wrapper" id="rows-container">
+    <!-- Content (floating capsules or a table) will be dynamically injected here -->
+  </div>
+</div>
+
+<script>
+// ── URL PARAMS ────────────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const IS_HEADLESS  = params.get('headless') === 'true';
+const AUTO_SAVE    = params.get('auto_save') === 'true';
+const ORIENTATION  = params.get('orientation') || 'landscape';
+const IS_MM        = params.get('mm') === '1';
+
+// Apply orientation class & set background with cache busting
+const area = document.getElementById('capture-area');
+const bgWrapper = document.getElementById('bg-wrapper');
+const version = Date.now();
+
+if (ORIENTATION === 'portrait') {
+  area.classList.remove('landscape');
+  area.classList.add('portrait');
+  const bgImg = IS_MM ? `bg_portrait_mm.png?v=${version}` : `bg_portrait.png?v=${version}`;
+  bgWrapper.style.backgroundImage = `url('${bgImg}')`;
+} else {
+  const bgImg = IS_MM ? `bg_landscape_mm.png?v=${version}` : `bg_landscape.png?v=${version}`;
+  bgWrapper.style.backgroundImage = `url('${bgImg}')`;
+}
+
+// Apply cache busting to logo
+const logoImg = IS_MM ? `logo_mm.png?v=${version}` : `logo.png?v=${version}`;
+document.getElementById('logo-img').src = logoImg;
+
+// Parameter style & icon map
+const PARAM_STYLES = {
+  tmax:            { title: 'Chaleur record',        subtitle: 'Températures maximales', theme: 'hot' },
+  tmin:            { title: 'Fraîcheur record',       subtitle: 'Températures minimales',  theme: 'cold' },
+  anomalie_tmax:   { title: 'Anomalie Tmax',          subtitle: 'Écart à la normale',      theme: 'hot' },
+  anomalie_tmin:   { title: 'Anomalie Tmin',          subtitle: 'Écart à la normale',      theme: 'cold' },
+  amplitude:       { title: 'Amplitude thermique',    subtitle: 'Écart Tmax - Tmin',       theme: 'hot' },
+  tmoy:            { title: 'Température moyenne',    subtitle: 'Moyenne journalière',     theme: 'hot' },
+  precip:          { title: 'Pluies diluviennes',     subtitle: 'Cumuls de précipitations',theme: 'rain' },
+  anomalie_precip: { title: 'Anomalie pluie',        subtitle: '% normale mensuelle',     theme: 'rain' },
+  secheresse:      { title: 'Sécheresse record',      subtitle: 'Stations sans pluie',     theme: 'sun' },
+  gust:            { title: 'Violentes rafales',      subtitle: 'Rafales de vent max.',    theme: 'wind' },
+  coups_de_vent:   { title: 'Tempête / Fort vent',    subtitle: 'Rafales les plus fortes', theme: 'wind' },
+  records_tmax:    { title: 'Records de chaleur',     subtitle: 'Records battus ou égalés',theme: 'trophy' },
+  records_tmin:    { title: 'Records de froid',       subtitle: 'Records battus ou égalés',theme: 'trophy' },
+  records_precip:  { title: 'Records de pluie',       subtitle: 'Records battus ou égalés',theme: 'trophy' },
+  records_gust:    { title: 'Records de vent',        subtitle: 'Records battus ou égalés',theme: 'trophy' },
+  records_all:     { title: 'Bilan des records',      subtitle: 'Records battus ou égalés',theme: 'trophy' },
+  records_absolus: { title: 'Records absolus',       subtitle: 'Records historiques',     theme: 'trophy' },
+  bilan_jour:      { title: 'Bilan du jour',          subtitle: 'Les extrêmes nationaux',  theme: 'trophy' }
+};
+
+function formatValue(val, param) {
+  if (val === null || val === undefined) return "--";
+  if (param.includes('precip')) {
+    return val.toFixed(1).replace('.', ',') + " mm";
+  }
+  if (param.includes('gust') || param === 'coups_de_vent') {
+    return Math.round(val) + " km/h";
+  }
+  return val.toFixed(1).replace('.', ',') + " °c";
+}
+
+function formatValueHTML(val, param) {
+  if (val === null || val === undefined) return "--";
+  let numStr = "";
+  let unitStr = "";
+
+  if (param.includes('precip')) {
+    numStr = val.toFixed(1).replace('.', ',');
+    unitStr = " mm";
+  } else if (param.includes('gust') || param === 'coups_de_vent') {
+    numStr = Math.round(val).toString();
+    unitStr = " km/h";
+  } else {
+    numStr = val.toFixed(1).replace('.', ',');
+    unitStr = " °c";
+  }
+
+  return `<div class="value-inline"><span class="val-num">${numStr}</span><span class="val-unit">${unitStr}</span></div>`;
+}
+
+function applyStyles(cfg) {
+  const p = cfg.param;
+  const meta = PARAM_STYLES[p] || { title: cfg.param_label, subtitle: 'Bilan', theme: 'hot' };
+
+  // Control visibility of description text
+  const descEl = document.getElementById('desc-text');
+  if (p === 'bilan_jour') {
+    descEl.style.display = 'block';
+    const zoneName = (cfg.zone && cfg.zone !== 'france') ? cfg.zone_label : 'France';
+    descEl.textContent = `Les principaux extrêmes observés aujourd'hui en ${zoneName}`;
+  } else {
+    descEl.style.display = 'none';
+  }
+
+  // Inject per-param theme class on capture-area for CSS targeting
+  area.className = area.className.replace(/\btheme-\S+/g, '').trim();
+  area.classList.add('theme-' + meta.theme);
+  if (p.includes('precip')) area.classList.add('theme-precip');
+  if (p.includes('gust') || p === 'coups_de_vent') area.classList.add('theme-gust');
+  if (p === 'tmax' || p === 'anomalie_tmax') area.classList.add('theme-tmax');
+
+  // Generate French day name correctly
+  const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+  const year = parseInt(cfg.date.substring(0,4));
+  const month = parseInt(cfg.date.substring(4,6)) - 1;
+  const day = parseInt(cfg.date.substring(6,8));
+  const dateObj = new Date(year, month, day);
+  const dayName = days[dateObj.getDay()];
+
+  // Format the date string without year
+  let dateWithoutYear = cfg.date_fr.replace(/\s\d{4}$/, ''); // "11 juillet"
+
+  // Set titles
+  document.getElementById('title-text').textContent = meta.title;
+  
+  let subtitleText = `CE ${dayName.toUpperCase()} ${dateWithoutYear.toUpperCase()}`;
+  if (cfg.date_mode === 'period') {
+    subtitleText = cfg.date_fr.toUpperCase();
+  }
+
+  // Si régional, préfixer par le nom de la région
+  if (cfg.zone && cfg.zone !== 'france') {
+    subtitleText = `${cfg.zone_label.toUpperCase()} · ${subtitleText}`;
+  }
+  
+  if (cfg.filter_label) {
+    subtitleText += ` · ${cfg.filter_label.toUpperCase()}`;
+  }
+  document.getElementById('subtitle-text').textContent = subtitleText;
+
+  // Render rows/capsules
+  const container = document.getElementById('rows-container');
+  container.innerHTML = '';
+
+  if (p === 'bilan_jour') {
+    renderBilanJour(cfg, container);
+    return;
+  }
+
+  const useCapsules = cfg.stations.length <= 3;
+
+  if (useCapsules) {
+    // ── Stat banner (élément graphique discret pour combler le bas) ──
+    const nbMensuel = cfg.stations.filter(s => s.is_record_m && !s.is_record_a).length;
+    const nbAbsolu  = cfg.stations.filter(s => s.is_record_a).length;
+    const nbTotal   = cfg.stations.length;
+    let statParts = [];
+    if (nbAbsolu  > 0) statParts.push(`${nbAbsolu} record${nbAbsolu>1?'s':''} absolu${nbAbsolu>1?'s':''}`);
+    if (nbMensuel > 0) statParts.push(`${nbMensuel} record${nbMensuel>1?'s':''} mensuel${nbMensuel>1?'s':''}`);
+    if (statParts.length === 0) statParts.push(`${nbTotal} record${nbTotal>1?'s':''} battu${nbTotal>1?'s':''}`);
+    const statLabel = statParts.join(' · ');
+
+    cfg.stations.forEach(st => {
+      // Floating capsule
+      const cap = document.createElement('div');
+      cap.className = 'record-capsule';
+
+      let recordTag = '&nbsp;';
+      if (st.is_record_a || st.is_record_m) {
+        const typeStr  = st.is_record_a ? "RECORD ABSOLU"  : "RECORD MENSUEL";
+        const classStr = st.is_record_a ? "record-text record-abs" : "record-text";
+
+        let formerStr = "";
+        if (st.rec_val !== null && st.rec_val !== undefined) {
+          const formattedRecVal = formatValue(st.rec_val, p);
+          let rawDate = st.rec_date || "";
+          if (rawDate.includes("-")) {
+            const pts = rawDate.split("-");
+            if (pts.length === 3) rawDate = `${pts[2]}/${pts[1]}/${pts[0]}`;
+          }
+          formerStr = `<br/><span class="former-record-text">Ancien : ${formattedRecVal} le ${rawDate}</span>`;
+        }
+        recordTag = `<span class="${classStr}">${typeStr}</span>${formerStr}`;
+      }
+
+      // Icon circle (landscape only)
+      let iconHTML = "";
+      if (ORIENTATION === 'landscape') {
+        let strokeColor = '#ffcc00';
+        if (meta.theme === 'hot') strokeColor = '#ff1a1a';
+        else if (meta.theme === 'rain' || meta.theme === 'cold') strokeColor = '#00ffd2';
+
+        iconHTML = `
+          <div class="record-icon-circle" style="border-color: ${strokeColor}66">
+            <svg viewBox="0 0 24 24" class="thermometer-svg">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" stroke="${strokeColor}"/>
+            </svg>
+          </div>
+        `;
+      }
+
+      cap.innerHTML = `
+        ${iconHTML}
+        <div class="station-name-capsule">${st.name} (${st.dept})</div>
+        <div class="record-details-capsule">${recordTag}</div>
+        <div class="value-capsule-wrapper">
+          <div class="value-capsule" style="color: ${getValueColor(st.value, meta.theme)}">${formatValueHTML(st.value, p)}</div>
+        </div>
+      `;
+      container.appendChild(cap);
+    });
+
+    // ── Stat banner premium — dégradé, transparence, relief ──
+    const banner = document.createElement('div');
+    const isPort = ORIENTATION === 'portrait';
+    const trophyColor = meta.theme === 'hot' ? '#ff5a24' : (meta.theme === 'rain' ? '#00ffd2' : '#ffcc00');
+    banner.style.cssText = [
+      'margin-top:' + (isPort ? '52px' : '44px'),
+      'display:flex', 'align-items:center', 'justify-content:center', 'gap:22px',
+      'padding:' + (isPort ? '28px 52px' : '22px 48px'),
+      'background:linear-gradient(135deg,rgba(8,22,48,0) 0%,rgba(12,32,68,0.90) 18%,rgba(16,40,82,0.94) 50%,rgba(12,32,68,0.90) 82%,rgba(8,22,48,0) 100%)',
+      'border-top:1.5px solid rgba(0,150,255,0.32)',
+      'border-bottom:1.5px solid rgba(0,150,255,0.32)',
+      'border-radius:20px',
+      /* Effet de relief : ombre interne + ombre externe */
+      'box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),inset 0 -1px 0 rgba(0,0,0,0.3),0 8px 24px rgba(0,0,0,0.5),0 0 20px rgba(0,100,220,0.12)'
+    ].join(';');
+    const iconSize = isPort ? '38px' : '32px';
+    const labelSize = isPort ? '32px' : '27px';
+    banner.innerHTML = `
+      <svg viewBox="0 0 24 24" style="width:${iconSize};height:${iconSize};flex-shrink:0" fill="none" stroke="${trophyColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+        <defs><filter id="glow"><feGaussianBlur stdDeviation="1.2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        <path d="M6 9H3V5h3M18 9h3V5h-3M12 17v4M8 21h8"/>
+        <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"/>
+      </svg>
+      <span style="font-family:'Outfit',sans-serif;font-size:${labelSize};font-weight:800;color:rgba(255,255,255,0.92);letter-spacing:1px;text-transform:uppercase;text-shadow:0 2px 6px rgba(0,0,0,0.8),0 0 20px rgba(0,100,220,0.2)">
+        ${statLabel} aujourd'hui
+      </span>
+      <svg viewBox="0 0 24 24" style="width:${iconSize};height:${iconSize};flex-shrink:0" fill="none" stroke="${trophyColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9H3V5h3M18 9h3V5h-3M12 17v4M8 21h8"/>
+        <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"/>
+      </svg>
+    `;
+    container.appendChild(banner);
+  } else {
+    // Large table container
+    const table = document.createElement('table');
+    table.className = 'table-container';
+    
+    cfg.stations.forEach((st, idx) => {
+      const row = document.createElement('tr');
+      row.className = 'table-row';
+
+      const themeClass = `rank-${meta.theme}`;
+      const isPrecip = p.includes('precip') || p.includes('anomalie_precip');
+
+      if (isPrecip) {
+        // ── PRÉCIP : badge compact dans la cellule station, ancien record en grand ──
+        let recordSubHTML = '';
+        if (st.is_record_a || st.is_record_m) {
+          const pillClass = st.is_record_a ? "record-pill pill-absolu" : "record-pill pill-mensuel";
+          const typeStr   = st.is_record_a ? "RECORD ABSOLU" : "RECORD MENSUEL";
+          let formerStr = '';
+          if (st.rec_val !== null && st.rec_val !== undefined) {
+            const fv = formatValue(st.rec_val, p);
+            let rawDate = st.rec_date || '';
+            if (rawDate.includes('-')) {
+              const pts = rawDate.split('-');
+              if (pts.length === 3) rawDate = `${pts[2]}/${pts[1]}/${pts[0]}`;
+            }
+            formerStr = `<span class="former-record-precip">Anc. : ${fv} — ${rawDate}</span>`;
+          }
+          recordSubHTML = `<div class="record-sub-precip"><span class="${pillClass}">${typeStr}</span>${formerStr}</div>`;
+        }
+        row.innerHTML = `
+          <td width="10%">
+            <div class="rank-badge-wrapper">
+              <div class="rank-badge ${themeClass}">${idx + 1}</div>
+            </div>
+          </td>
+          <td width="73%">
+            <div class="station-name">${st.name} (${st.dept})</div>
+            ${recordSubHTML}
+          </td>
+          <td class="station-value-cell" width="17%">
+            <div class="station-value" style="color: ${getValueColor(st.value, meta.theme)}">${formatValueHTML(st.value, p)}</div>
+          </td>
+        `;
+      } else {
+        // ── LAYOUT STANDARD : 4 colonnes ──
+        let recordTag = '&nbsp;';
+        if (st.is_record_a || st.is_record_m) {
+          const pillClass = st.is_record_a ? "record-pill pill-absolu" : "record-pill pill-mensuel";
+          const typeStr   = st.is_record_a ? "RECORD ABSOLU" : "RECORD MENSUEL";
+          let formerStr = "";
+          if (st.rec_val !== null && st.rec_val !== undefined) {
+            const formattedRecVal = formatValue(st.rec_val, p);
+            let rawDate = st.rec_date || "";
+            if (rawDate.includes("-")) {
+              const pts = rawDate.split("-");
+              if (pts.length === 3) rawDate = `${pts[2]}/${pts[1]}/${pts[0]}`;
+            }
+            formerStr = `<span class="former-record-text">Anc. : ${formattedRecVal} — ${rawDate}</span>`;
+          }
+          recordTag = `<span class="${pillClass}">${typeStr}</span>${formerStr}`;
+        }
+
+        // Si mode période, afficher la colonne de la date du pic
+        const showPeakDateCol = cfg.date_mode === 'period';
+        const colWidths = showPeakDateCol 
+          ? { rank: "10%", name: "40%", peak: "15%", rec: "20%", val: "15%" }
+          : { rank: "10%", name: "53%", peak: "0%",  rec: "22%", val: "15%" };
+
+        let peakDateHTML = "";
+        if (showPeakDateCol) {
+          let dateStr = "";
+          if (st.obs_date) {
+            dateStr = st.obs_date.substring(6,8) + "/" + st.obs_date.substring(4,6);
+          }
+          peakDateHTML = `<td class="obs-date-peak" width="${colWidths.peak}" style="padding-right: 15px; padding-left: 10px;">${dateStr}</td>`;
+        }
+
+        const fullname = `${st.name} (${st.dept})`;
+        let lenClass = "";
+        if (fullname.length > 25) {
+          lenClass = " station-len-xlong";
+        } else if (fullname.length > 18) {
+          lenClass = " station-len-long";
+        }
+
+        row.innerHTML = `
+          <td width="${colWidths.rank}">
+            <div class="rank-badge-wrapper">
+              <div class="rank-badge ${themeClass}">${idx + 1}</div>
+            </div>
+          </td>
+          <td width="${colWidths.name}"><div class="station-name${lenClass}">${fullname}</div></td>
+          ${peakDateHTML}
+          <td width="${colWidths.rec}"><div style="text-align:center; padding: 0 8px;">${recordTag}</div></td>
+          <td class="station-value-cell" width="${colWidths.val}">
+            <div class="station-value" style="color: ${getValueColor(st.value, meta.theme)}">${formatValueHTML(st.value, p)}</div>
+          </td>
+        `;
+      }
+      table.appendChild(row);
+    });
+    container.appendChild(table);
+  }
+}
+
+function renderBilanJour(cfg, container) {
+  // Vector icons map (beautiful SVGs corresponding to the mockups)
+  const isPortrait = ORIENTATION === 'portrait';
+  const iconSize = isPortrait ? '52px' : '28px';
+
+  const SVG_ICONS = {
+    tmax: `
+      <svg viewBox="0 0 24 24" style="width: ${iconSize}; height: ${iconSize};" fill="none" stroke="#ff1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+      </svg>
+    `,
+    tmin: `
+      <svg viewBox="0 0 24 24" style="width: ${iconSize}; height: ${iconSize};" fill="none" stroke="#00eaff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+        <line x1="12" y1="22.08" x2="12" y2="12" />
+      </svg>
+    `,
+    precip: `
+      <svg viewBox="0 0 24 24" style="width: ${iconSize}; height: ${iconSize};" fill="none" stroke="#00ffd2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25" />
+        <line x1="8" y1="16" x2="8" y2="22" />
+        <line x1="12" y1="18" x2="12" y2="22" />
+        <line x1="16" y1="16" x2="16" y2="22" />
+      </svg>
+    `,
+    gust: `
+      <svg viewBox="0 0 24 24" style="width: ${iconSize}; height: ${iconSize};" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" />
+      </svg>
+    `
+  };
+
+  const grid = document.createElement('div');
+  grid.className = 'bilan-grid';
+
+  cfg.stations.forEach(st => {
+    const card = document.createElement('div');
+    card.className = 'bilan-card';
+    
+    let recBadgeHTML = "";
+    if (st.is_record_a || st.is_record_m) {
+      const typeStr = st.is_record_a ? "ABS" : "MENS";
+      const badgeBg = st.is_record_a ? '#ff1a1a' : '#ffcc00';
+      recBadgeHTML = `<div class="bilan-card-rec-pill" style="background:${badgeBg};color:#000;font-weight:900">${typeStr}</div>`;
+    }
+
+    // Format unit properly for Bilan du jour
+    let valDisp = st.value_disp;
+    if (st.param === 'gust' && !valDisp.includes('km/h')) {
+      valDisp += ' km/h';
+    }
+
+    const fullname = `${st.name} (${st.dept})`;
+    let lenClass = "";
+    if (fullname.length > 25) {
+      lenClass = " station-len-xlong";
+    } else if (fullname.length > 18) {
+      lenClass = " station-len-long";
+    }
+
+    const svgIcon = SVG_ICONS[st.param] || '';
+
+    if (isPortrait) {
+      // ── PORTRAIT LAYOUT ──
+      card.innerHTML = `
+        <div class="bilan-card-header">
+          <div class="bilan-card-icon">${svgIcon}</div>
+          <div style="display:flex; flex-direction:column; gap:4px; margin-left: 20px;">
+            <div class="bilan-card-label">${st.label}</div>
+            <div class="bilan-card-station${lenClass}">${fullname}</div>
+          </div>
+          ${recBadgeHTML}
+        </div>
+        <div class="bilan-card-content">
+          <div class="bilan-card-value" style="color: ${getValueColor(st.value, st.theme)}">${valDisp}</div>
+        </div>
+      `;
+    } else {
+      // ── LANDSCAPE LAYOUT ──
+      card.innerHTML = `
+        ${recBadgeHTML}
+        <div class="bilan-card-header">
+          <div class="bilan-card-label">${st.label}</div>
+          <div class="bilan-card-icon">${svgIcon}</div>
+        </div>
+        <div class="bilan-card-content">
+          <div class="bilan-card-station${lenClass}">${fullname}</div>
+          <div class="bilan-card-value" style="color: ${getValueColor(st.value, st.theme)}">${valDisp}</div>
+        </div>
+      `;
+    }
+    grid.appendChild(card);
+  });
+
+  container.appendChild(grid);
+
+  // ── Stat banner premium en bas (bannière de records du jour) ──
+  const nbAbsolu = cfg.nb_records_a || 0;
+  const nbMensuel = cfg.nb_records_m || 0;
+  const nbTotal = nbAbsolu + nbMensuel;
+
+  if (nbTotal > 0) {
+    const banner = document.createElement('div');
+    const isPort = ORIENTATION === 'portrait';
+    const trophyColor = '#ffcc00';
+
+    banner.style.cssText = [
+      'margin-top:' + (isPort ? '44px' : '36px'),
+      'display:flex', 'align-items:center', 'justify-content:center', 'gap:22px',
+      'padding:' + (isPort ? '24px 52px' : '20px 48px'),
+      'background:linear-gradient(135deg,rgba(8,22,48,0) 0%,rgba(12,32,68,0.90) 18%,rgba(16,40,82,0.94) 50%,rgba(12,32,68,0.90) 82%,rgba(8,22,48,0) 100%)',
+      'border-top:1.5px solid rgba(0,150,255,0.32)',
+      'border-bottom:1.5px solid rgba(0,150,255,0.32)',
+      'border-radius:20px',
+      'box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),inset 0 -1px 0 rgba(0,0,0,0.3),0 8px 24px rgba(0,0,0,0.5),0 0 20px rgba(0,100,220,0.12)',
+      'width: 100%', 'box-sizing: border-box'
+    ].join(';');
+
+    const iconSize = isPort ? '36px' : '30px';
+    const labelSize = isPort ? '28px' : '25px';
+
+    let statLabel = '';
+    let parts = [];
+    if (nbAbsolu > 0) parts.push(`${nbAbsolu} record${nbAbsolu>1?'s':''} absolu${nbAbsolu>1?'s':''}`);
+    if (nbMensuel > 0) parts.push(`${nbMensuel} record${nbMensuel>1?'s':''} mensuel${nbMensuel>1?'s':''}`);
+    statLabel = parts.join(' et ');
+
+    banner.innerHTML = `
+      <svg viewBox="0 0 24 24" style="width:${iconSize};height:${iconSize};flex-shrink:0" fill="none" stroke="${trophyColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+        <defs><filter id="glow"><feGaussianBlur stdDeviation="1.2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        <path d="M6 9H3V5h3M18 9h3V5h-3M12 17v4M8 21h8"/>
+        <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"/>
+      </svg>
+      <span style="font-family:'Outfit',sans-serif;font-size:${labelSize};font-weight:800;color:rgba(255,255,255,0.92);letter-spacing:1px;text-transform:uppercase;text-shadow:0 2px 6px rgba(0,0,0,0.8),0 0 20px rgba(0,100,220,0.2)">
+        ${statLabel} aujourd'hui
+      </span>
+      <svg viewBox="0 0 24 24" style="width:${iconSize};height:${iconSize};flex-shrink:0" fill="none" stroke="${trophyColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9H3V5h3M18 9h3V5h-3M12 17v4M8 21h8"/>
+        <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"/>
+      </svg>
+    `;
+    container.appendChild(banner);
+  }
+}
+
+function getValueColor(val, theme) {
+  if (theme === 'cold') return '#00eaff'; /* cyan plus saturé — ressort davantage */
+  if (theme === 'rain') return '#00ffd2';
+  if (theme === 'wind') return '#00ffd2';
+  if (theme === 'trophy') return '#ffcc00';
+  if (theme === 'sun') return '#ffcc00';
+  return '#ff1a1a';
+}
+
+function captureAndSend() {
+  const el = document.getElementById('capture-area');
+  html2canvas(el, {
+    useCORS: true, allowTaint: true, scale: 1,
+    width: el.offsetWidth, height: el.offsetHeight,
+    backgroundColor: '#000', logging: false
+  }).then(canvas => {
+    const img = canvas.toDataURL('image/jpeg', 0.95);
+    fetch('/save_map', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: img })
+    }).catch(() => {});
+  });
+}
+
+// Fetch configuration JSON
+fetch('meteociel_obs_data.json?' + Date.now())
+  .then(r => r.json())
+  .then(cfg => applyStyles(cfg))
+  .catch(err => {
+    document.getElementById('title-text').textContent = 'Erreur';
+    console.error(err);
+  });
+</script>
+</body>
+</html>

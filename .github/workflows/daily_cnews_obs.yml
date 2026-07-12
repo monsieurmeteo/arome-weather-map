@@ -1,0 +1,56 @@
+name: Routine quotidienne - Cartes d'Observations Météo CNews
+
+on:
+  schedule:
+    # Tous les jours à 17h45 UTC (soit 18h45 en heure d'hiver française, ou 19h45 en heure d'été)
+    - cron: '45 17 * * *'
+  workflow_dispatch: # Permet de lancer la génération manuellement depuis GitHub
+
+jobs:
+  build-and-generate:
+    runs-on: windows-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v3
+
+      - name: Configurer Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Installer les dépendances
+        run: |
+          pip install playwright
+          playwright install chromium
+
+      - name: Étape 1 - Mise à jour des Observations (SQLite)
+        run: |
+          python "update_daily_obs.py"
+
+      - name: Étape 2 - Générer les packs d'images (CNews)
+        run: |
+          # Liste des zones à générer : France entière + les 13 régions
+          $zones = @("france", "hdf", "normandie", "idf", "ges", "ara", "naq", "occ", "paca", "bfc", "bre", "pdl", "cvl", "cor")
+          # Paramètres d'observations climatologiques demandés
+          $params = @("bilan_jour", "tmax", "tmin", "precip", "gust")
+
+          foreach ($zone in $zones) {
+              foreach ($param in $params) {
+                  # Génération des cartes en format Paysage et Portrait
+                  python "generate_meteociel_obs_maps.py" --date today --zone $zone --param $param --orientation both
+              }
+          }
+
+      - name: Étape 3 - Envoyer les cartes par E-mail à Grégoire et Patrick
+        run: |
+          python "send_daily_cnews_obs_email.py"
+
+      - name: Étape 4 - Enregistrer et pousser les images sur GitHub
+        run: |
+          git config --global user.name "Météo Automatique"
+          git config --global user.email "meteo-bot@cnews.fr"
+          git add Desktop/cartes_alertes/
+          git commit -m "Mise à jour automatique des cartes d'observations et envoi e-mail"
+          git push origin main
