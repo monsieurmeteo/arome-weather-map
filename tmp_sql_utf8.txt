@@ -1,0 +1,17 @@
+﻿Connecting to database...
+node : Error: getaddrinfo 
+ENOTFOUND db.ubdevaemtwbzxksj
+lhjg.supabase.co
+Au caractère Ligne:1 : 1
++ node tmp/run_sql.mjs > 
+tmp/sql_out_utf8.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (Error:   
+  getaddri...hjg.supabase.   
+ co:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 

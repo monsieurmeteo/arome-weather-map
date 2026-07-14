@@ -1,0 +1,14 @@
+temp_captures/
+tmp/
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.log
+
+.vercel/
+.env*.local
+
+data/icon-eu/
+data/output/

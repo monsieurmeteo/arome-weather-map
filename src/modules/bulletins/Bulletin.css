@@ -1,0 +1,124 @@
+.bulletin-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.bulletin-paper {
+    max-width: 800px;
+    width: 100%;
+    padding: 40px;
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.bulletin-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.b-logo {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--color-primary);
+}
+
+.b-date {
+    font-weight: 500;
+    text-transform: capitalize;
+    color: var(--color-text-muted);
+}
+
+.b-title {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    color: var(--color-text-main);
+    text-transform: uppercase;
+}
+
+.b-intro {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-left: 4px solid var(--color-accent);
+    margin-bottom: 30px;
+    font-style: italic;
+    font-size: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.b-section {
+    margin-bottom: 25px;
+}
+
+.b-section h2 {
+    font-size: 1.1rem;
+    color: var(--color-primary);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.b-section p {
+    line-height: 1.6;
+    text-align: justify;
+}
+
+.b-footer {
+    margin-top: 50px;
+    border-top: 1px solid var(--color-border);
+    padding-top: 20px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.bulletin-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-print {
+    background-color: var(--color-text-main);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-print:hover {
+    background-color: black;
+}
+
+@media print {
+
+    .sidebar,
+    .top-header,
+    .btn-print,
+    .bulletin-actions {
+        display: none !important;
+    }
+
+    .main-content-wrapper {
+        margin: 0 !important;
+    }
+
+    .bulletin-paper {
+        box-shadow: none;
+        border: none;
+        max-width: 100%;
+    }
+}

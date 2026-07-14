@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Diagnostics</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="font-family: sans-serif; padding: 20px; line-height: 1.5;">
+    <h1>Supabase Diagnostics</h1>
+    <div id="status">Vérification en cours...</div>
+    <pre id="output" style="background: #f4f4f4; padding: 15px; border-radius: 8px; overflow: auto; max-height: 80vh;"></pre>
+
+    <script>
+        // On récupère les clés depuis le DOM (si je peux les injecter)
+        // Ou je les mets en dur car c'est un fichier temporaire
+        const SUPABASE_URL = "https://ubdevaemtwbzxksjlhjg.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_1qhA0xAnNSd3VxpoLdxYrQ_yUemEhaP";
+
+        async function diag() {
+            const out = document.getElementById('output');
+            const status = document.getElementById('status');
+            
+            try {
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                let report = "";
+                
+                // 1. Check last observations
+                report += "--- DERNIÈRES OBSERVATIONS (6MN) ---\n";
+                const { data: latestObs, error: err1 } = await supabase
+                    .from('observations_6mn')
+                    .select('timestamp, station_id')
+                    .order('timestamp', { ascending: false })
+                    .limit(5);
+                
+                if (err1) report += "Erreur: " + err1.message + "\n";
+                else report += JSON.stringify(latestObs, null, 2) + "\n";
+                
+                // 2. Check summaries
+                report += "\n--- DERNIERS RÉSUMÉS (DAILY) ---\n";
+                const { data: latestSum, error: err2 } = await supabase
+                    .from('daily_summaries')
+                    .select('date, station_id')
+                    .order('date', { ascending: false })
+                    .limit(5);
+                
+                if (err2) report += "Erreur: " + err2.message + "\n";
+                else report += JSON.stringify(latestSum, null, 2) + "\n";
+                
+                // 3. Row counts (approx)
+                report += "\n--- STATISTIQUES ---\n";
+                const { count: count6mn, error: err3 } = await supabase
+                    .from('observations_6mn')
+                    .select('*', { count: 'estimated', head: true });
+                report += "Observations 6mn (approx): " + count6mn + "\n";
+                
+                const { count: countSum, error: err4 } = await supabase
+                    .from('daily_summaries')
+                    .select('*', { count: 'estimated', head: true });
+                report += "Daily Summaries (approx): " + countSum + "\n";
+
+                out.textContent = report;
+                status.textContent = "Diagnostic terminé.";
+            } catch (e) {
+                out.textContent = "Crash: " + e.message;
+            }
+        }
+
+        // Remplacer les placeholders avant de lancer
+        // Note: Antigravity remplace les placeholders
+        diag();
+    </script>
+</body>
+</html>

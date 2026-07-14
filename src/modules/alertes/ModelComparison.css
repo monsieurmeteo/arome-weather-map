@@ -1,0 +1,142 @@
+.comparison-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.header-card .subtitle {
+    color: var(--color-text-muted);
+}
+
+.chart-card h3 {
+    margin-bottom: var(--spacing-md);
+    color: var(--color-primary);
+    font-size: 1.1rem;
+}
+
+.chart-wrapper {
+    width: 100%;
+    padding-right: 20px;
+    /* Space for grid */
+}
+
+.analysis-card {
+    background-color: var(--color-primary-light);
+    border-left: 4px solid var(--color-primary);
+}
+
+.analysis-card h3 {
+    color: var(--color-primary);
+    margin-bottom: 8px;
+}
+
+/* Enhanced Table Styles */
+.table-card {
+    overflow: hidden;
+}
+
+.table-comparison {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.85rem;
+}
+
+.table-comparison th,
+.table-comparison td {
+    border: 1px solid #e2e8f0;
+    padding: 10px 8px;
+    text-align: center;
+}
+
+.table-comparison thead th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.table-comparison thead tr:first-child th {
+    font-size: 0.9rem;
+    padding: 12px 8px;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+.table-comparison .sticky-col-header,
+.table-comparison .sticky-col-cell {
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 30;
+    border-right: 2px solid #cbd5e1;
+    min-width: 100px;
+    text-align: left;
+}
+
+.table-comparison .sticky-col-cell {
+    background-color: #f1f5f9;
+    font-weight: 700;
+}
+
+.table-comparison thead tr:first-child .sticky-col-header {
+    background-color: #f8fafc;
+}
+
+/* Color coding for cells */
+.val-temp-cell {
+    font-weight: 600;
+}
+
+.temp-hot {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.temp-warm {
+    background-color: #ffedd5;
+    color: #9a3412;
+}
+
+.temp-cold {
+    background-color: #e0f2fe;
+    color: #075985;
+}
+
+.val-rain-cell {
+    background-color: #f0f9ff;
+    font-weight: 700;
+    color: #0369a1;
+}
+
+.rain-none {
+    color: #cbd5e1;
+    font-weight: normal;
+}
+
+.val-wind-cell {
+    background-color: #f8fafc;
+}
+
+.val-gust-cell {
+    font-weight: 700;
+}
+
+.gust-warning {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+
+.gust-danger {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #f87171 !important;
+}
+
+/* Tooltip headers */
+.param-sub-header {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+}

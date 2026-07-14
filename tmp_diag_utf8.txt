@@ -1,0 +1,374 @@
+﻿ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  ­ƒö¼ DIAGNOSTIC BRUT ÔÇö Donn├®es API vs Collecteur
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+
+­ƒôí Fetch infrahoraire-6m : 2026-03-03T10:18:00Z
+
+Ô£à 1939 stations re├ºues
+
+ÔòÉÔòÉÔòÉ STRUCTURE DE DONN├ëES (1er objet) ÔòÉÔòÉÔòÉ
+
+Cl├®s pr├®sentes (25) : lat, lon, geo_id_insee, reference_time, insert_time, validity_time, t, td, u, dd, ff, dxi10, fxi10, rr_per, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+Valeurs du 1er objet:
+  lat: 46.278167 (number)
+  lon: 5.669 (number)
+  geo_id_insee: "01014002" (string)
+  reference_time: "2026-03-03T10:24:08Z" (string)
+  insert_time: "2026-03-03T10:20:24Z" (string)
+  validity_time: "2026-03-03T10:18:00Z" (string)
+  t: 285.25 (number)
+  td: 278.45 (number)
+  u: 63 (number)
+  dd: 320 (number)
+  ff: 1.6 (number)
+  dxi10: 320 (number)
+  fxi10: 3.1 (number)
+  rr_per: 0 (number)
+  t_10: null (object)
+  t_20: null (object)
+  t_50: null (object)
+  t_100: null (object)
+  vv: null (object)
+  etat_sol: null (object)
+  sss: 0 (number)
+  insolh: null (object)
+  ray_glo01: null (object)
+  pres: null (object)
+  pmer: null (object)
+
+ÔòÉÔòÉÔòÉ ANALYSE DES CL├ëS SUR TOUT LE DATASET ÔòÉÔòÉÔòÉ
+
+| Cl├® | Pr├®sente | Non-null | % non-null | Exemples |
+|---|---|---|---|---|
+| dd | 1939 | 768 | 40% | 320, 30, 120 |
+| dxi10 | 1939 | 768 | 40% | 320, 30, 140 |
+| etat_sol | 1939 | 79 | 4% | 0, 0, 0 |
+| ff | 1939 | 768 | 40% | 1.6, 3.1, 0.9 |
+| fxi10 | 1939 | 768 | 40% | 3.1, 5.2, 2.3 |
+| geo_id_insee | 1939 | 1939 | 100% | "01014002", "01027003", "01034004" |
+| insert_time | 1939 | 1939 | 100% | "2026-03-03T10:20:24Z", "2026-03-03T10:20:24Z", "2026-03-03T10:21:30Z" |
+| insolh | 1939 | 214 | 11% | 6, 6, 6 |
+| lat | 1939 | 1939 | 100% | 46.278167, 45.833, 45.769333 |
+| lon | 1939 | 1939 | 100% | 5.669, 5.106667, 5.688 |
+| pmer | 1939 | 203 | 10% | 102600, 102630, 102410 |
+| pres | 1939 | 213 | 11% | 99590, 101440, 99430 |
+| ray_glo01 | 1939 | 215 | 11% | 199500, 189200, 200800 |
+| reference_time | 1939 | 1939 | 100% | "2026-03-03T10:24:08Z", "2026-03-03T10:24:08Z", "2026-03-03T10:24:08Z" |
+| rr_per | 1939 | 1905 | 98% | 0, 0, 0 |
+| sss | 1939 | 248 | 13% | 0, 0.01, 0 |
+| t | 1939 | 1899 | 98% | 285.25, 288.15, 284.55 |
+| t_10 | 1939 | 129 | 7% | 282.85, 280.45, 281.65 |
+| t_100 | 1939 | 92 | 5% | 282.85, 281.85, 279.15 |
+| t_20 | 1939 | 111 | 6% | 282.75, 281.15, 282.25 |
+| t_50 | 1939 | 106 | 5% | 282.85, 281.75, 282.55 |
+| td | 1939 | 750 | 39% | 278.45, 280.95, 278.45 |
+| u | 1939 | 751 | 39% | 63, 62, 66 |
+| validity_time | 1939 | 1939 | 100% | "2026-03-03T10:18:00Z", "2026-03-03T10:18:00Z", "2026-03-03T10:18:00Z" |
+| vv | 1939 | 156 | 8% | 65500, 19900, 19870 |
+
+ÔòÉÔòÉÔòÉ STATIONS DE TEST ÔÇö DUMP COMPLET ÔòÉÔòÉÔòÉ
+
+
+ÔöÇÔöÇ RENNES-ST JACQUES (35281001) ÔöÇÔöÇ
+  Ô£à lat = 48.068833
+  Ô£à lon = -1.734
+  Ô£à geo_id_insee = "35281001"
+  Ô£à reference_time = "2026-03-03T10:24:08Z"
+  Ô£à insert_time = "2026-03-03T10:21:29Z"
+  Ô£à validity_time = "2026-03-03T10:18:00Z"
+  Ô£à t = 283.05
+  Ô£à td = 281.35
+  Ô£à u = 89
+  Ô£à dd = 300
+  Ô£à ff = 1
+  Ô£à dxi10 = 320
+  Ô£à fxi10 = 1.5
+  Ô£à rr_per = 0
+  Ô£à t_10 = 282.55
+  Ô£à t_20 = 282.95
+  Ô£à t_50 = 283.45
+  Ô£à t_100 = 283.45
+  Ô£à vv = 14600
+  Ô£à etat_sol = 0
+  Ô£à sss = 0
+  Ô£à insolh = 0
+  Ô£à ray_glo01 = 95700
+  Ô£à pres = 101990
+  Ô£à pmer = 102440
+  ­ƒôè 25 champs avec donn├®es, 0 champs null
+
+ÔöÇÔöÇ PARIS-ORLY (91027001) ÔöÇÔöÇ
+  ÔØî NON TROUV├ëE dans les donn├®es !
+  ÔÜá´©Å Trouv├®e avec pr├®fixe 91027: ID=91027002
+
+ÔöÇÔöÇ TOULOUSE-BLAGNAC (31069001) ÔöÇÔöÇ
+  Ô£à lat = 43.621
+  Ô£à lon = 1.378833
+  Ô£à geo_id_insee = "31069001"
+  Ô£à reference_time = "2026-03-03T10:24:08Z"
+  Ô£à insert_time = "2026-03-03T10:21:29Z"
+  Ô£à validity_time = "2026-03-03T10:18:00Z"
+  Ô£à t = 287.35
+  Ô£à td = 282.75
+  Ô£à u = 74
+  Ô£à dd = 120
+  Ô£à ff = 6.8
+  Ô£à dxi10 = 140
+  Ô£à fxi10 = 11.3
+  Ô£à rr_per = 0
+  Ô£à t_10 = 284.25
+  Ô£à t_20 = 284.25
+  Ô£à t_50 = 284.45
+  Ô£à t_100 = 284.65
+  Ô£à vv = 19860
+  Ô£à etat_sol = 0
+  Ô£à sss = 0
+  Ô£à insolh = 0
+  Ô£à ray_glo01 = 96200
+  Ô£à pres = 100420
+  Ô£à pmer = 102210
+  ­ƒôè 25 champs avec donn├®es, 0 champs null
+
+ÔöÇÔöÇ BOURBON_SAPC (03036002) ÔöÇÔöÇ
+  Ô£à lat = 46.58
+  Ô£à lon = 3.0495
+  Ô£à geo_id_insee = "03036002"
+  Ô£à reference_time = "2026-03-03T10:24:08Z"
+  Ô£à insert_time = "2026-03-03T10:21:29Z"
+  Ô£à validity_time = "2026-03-03T10:18:00Z"
+  Ô£à t = 285.95
+  ÔØî NULL td = null
+  ÔØî NULL u = null
+  ÔØî NULL dd = null
+  ÔØî NULL ff = null
+  ÔØî NULL dxi10 = null
+  ÔØî NULL fxi10 = null
+  Ô£à rr_per = 0
+  ÔØî NULL t_10 = null
+  ÔØî NULL t_20 = null
+  ÔØî NULL t_50 = null
+  ÔØî NULL t_100 = null
+  ÔØî NULL vv = null
+  ÔØî NULL etat_sol = null
+  ÔØî NULL sss = null
+  ÔØî NULL insolh = null
+  ÔØî NULL ray_glo01 = null
+  ÔØî NULL pres = null
+  ÔØî NULL pmer = null
+  ­ƒôè 8 champs avec donn├®es, 17 champs null
+  ÔØî Champs null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+ÔöÇÔöÇ AILLEVILLE_SAPC (10002001) ÔöÇÔöÇ
+  Ô£à lat = 48.254167
+  Ô£à lon = 4.685667
+  Ô£à geo_id_insee = "10002001"
+  Ô£à reference_time = "2026-03-03T10:24:08Z"
+  Ô£à insert_time = "2026-03-03T10:20:24Z"
+  Ô£à validity_time = "2026-03-03T10:18:00Z"
+  Ô£à t = 287.45
+  ÔØî NULL td = null
+  ÔØî NULL u = null
+  ÔØî NULL dd = null
+  ÔØî NULL ff = null
+  ÔØî NULL dxi10 = null
+  ÔØî NULL fxi10 = null
+  Ô£à rr_per = 0
+  ÔØî NULL t_10 = null
+  ÔØî NULL t_20 = null
+  ÔØî NULL t_50 = null
+  ÔØî NULL t_100 = null
+  ÔØî NULL vv = null
+  ÔØî NULL etat_sol = null
+  ÔØî NULL sss = null
+  ÔØî NULL insolh = null
+  ÔØî NULL ray_glo01 = null
+  ÔØî NULL pres = null
+  ÔØî NULL pmer = null
+  ­ƒôè 8 champs avec donn├®es, 17 champs null
+  ÔØî Champs null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+ÔöÇÔöÇ AUBUSSON_SAPC (23008004) ÔöÇÔöÇ
+  Ô£à lat = 45.957833
+  Ô£à lon = 2.187833
+  Ô£à geo_id_insee = "23008004"
+  Ô£à reference_time = "2026-03-03T10:24:08Z"
+  Ô£à insert_time = "2026-03-03T10:20:24Z"
+  Ô£à validity_time = "2026-03-03T10:18:00Z"
+  Ô£à t = 287.25
+  ÔØî NULL td = null
+  ÔØî NULL u = null
+  ÔØî NULL dd = null
+  ÔØî NULL ff = null
+  ÔØî NULL dxi10 = null
+  ÔØî NULL fxi10 = null
+  Ô£à rr_per = 0
+  ÔØî NULL t_10 = null
+  ÔØî NULL t_20 = null
+  ÔØî NULL t_50 = null
+  ÔØî NULL t_100 = null
+  ÔØî NULL vv = null
+  ÔØî NULL etat_sol = null
+  ÔØî NULL sss = null
+  ÔØî NULL insolh = null
+  ÔØî NULL ray_glo01 = null
+  ÔØî NULL pres = null
+  ÔØî NULL pmer = null
+  ­ƒôè 8 champs avec donn├®es, 17 champs null
+  ÔØî Champs null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+ÔöÇÔöÇ ALPUECH (12005001) ÔöÇÔöÇ
+  Ô£à lat = 44.756
+  Ô£à lon = 2.868167
+  Ô£à geo_id_insee = "12005001"
+  Ô£à reference_time = "2026-03-03T10:24:08Z"
+  Ô£à insert_time = "2026-03-03T10:20:24Z"
+  Ô£à validity_time = "2026-03-03T10:18:00Z"
+  Ô£à t = 280.75
+  Ô£à td = 277.35
+  Ô£à u = 79
+  Ô£à dd = 170
+  Ô£à ff = 6.8
+  Ô£à dxi10 = 170
+  Ô£à fxi10 = 11.7
+  Ô£à rr_per = 0
+  ÔØî NULL t_10 = null
+  ÔØî NULL t_20 = null
+  ÔØî NULL t_50 = null
+  ÔØî NULL t_100 = null
+  ÔØî NULL vv = null
+  ÔØî NULL etat_sol = null
+  ÔØî NULL sss = null
+  ÔØî NULL insolh = null
+  ÔØî NULL ray_glo01 = null
+  ÔØî NULL pres = null
+  ÔØî NULL pmer = null
+  ­ƒôè 14 champs avec donn├®es, 11 champs null
+  ÔØî Champs null: t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+ÔöÇÔöÇ AMBERT (63003004) ÔöÇÔöÇ
+  Ô£à lat = 45.516833
+  Ô£à lon = 3.742667
+  Ô£à geo_id_insee = "63003004"
+  Ô£à reference_time = "2026-03-03T10:24:08Z"
+  Ô£à insert_time = "2026-03-03T10:20:24Z"
+  Ô£à validity_time = "2026-03-03T10:18:00Z"
+  Ô£à t = 285.65
+  Ô£à td = 278.75
+  Ô£à u = 63
+  Ô£à dd = 220
+  Ô£à ff = 1.4
+  Ô£à dxi10 = 220
+  Ô£à fxi10 = 3.4
+  Ô£à rr_per = 0
+  ÔØî NULL t_10 = null
+  ÔØî NULL t_20 = null
+  ÔØî NULL t_50 = null
+  ÔØî NULL t_100 = null
+  ÔØî NULL vv = null
+  ÔØî NULL etat_sol = null
+  ÔØî NULL sss = null
+  ÔØî NULL insolh = null
+  ÔØî NULL ray_glo01 = null
+  ÔØî NULL pres = null
+  ÔØî NULL pmer = null
+  ­ƒôè 14 champs avec donn├®es, 11 champs null
+  ÔØî Champs null: t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+ÔöÇÔöÇ ARBENT (01014002) ÔöÇÔöÇ
+  Ô£à lat = 46.278167
+  Ô£à lon = 5.669
+  Ô£à geo_id_insee = "01014002"
+  Ô£à reference_time = "2026-03-03T10:24:08Z"
+  Ô£à insert_time = "2026-03-03T10:20:24Z"
+  Ô£à validity_time = "2026-03-03T10:18:00Z"
+  Ô£à t = 285.25
+  Ô£à td = 278.45
+  Ô£à u = 63
+  Ô£à dd = 320
+  Ô£à ff = 1.6
+  Ô£à dxi10 = 320
+  Ô£à fxi10 = 3.1
+  Ô£à rr_per = 0
+  ÔØî NULL t_10 = null
+  ÔØî NULL t_20 = null
+  ÔØî NULL t_50 = null
+  ÔØî NULL t_100 = null
+  ÔØî NULL vv = null
+  ÔØî NULL etat_sol = null
+  Ô£à sss = 0
+  ÔØî NULL insolh = null
+  ÔØî NULL ray_glo01 = null
+  ÔØî NULL pres = null
+  ÔØî NULL pmer = null
+  ­ƒôè 15 champs avec donn├®es, 10 champs null
+  ÔØî Champs null: t_10, t_20, t_50, t_100, vv, etat_sol, insolh, ray_glo01, pres, pmer
+
+ÔöÇÔöÇ DOUAI (59178001) ÔöÇÔöÇ
+  Ô£à lat = 50.389667
+  Ô£à lon = 3.067167
+  Ô£à geo_id_insee = "59178001"
+  Ô£à reference_time = "2026-03-03T10:24:08Z"
+  Ô£à insert_time = "2026-03-03T10:21:29Z"
+  Ô£à validity_time = "2026-03-03T10:18:00Z"
+  Ô£à t = 286.95
+  ÔØî NULL td = null
+  ÔØî NULL u = null
+  ÔØî NULL dd = null
+  ÔØî NULL ff = null
+  ÔØî NULL dxi10 = null
+  ÔØî NULL fxi10 = null
+  Ô£à rr_per = 0
+  ÔØî NULL t_10 = null
+  ÔØî NULL t_20 = null
+  ÔØî NULL t_50 = null
+  ÔØî NULL t_100 = null
+  ÔØî NULL vv = null
+  ÔØî NULL etat_sol = null
+  ÔØî NULL sss = null
+  ÔØî NULL insolh = null
+  ÔØî NULL ray_glo01 = null
+  ÔØî NULL pres = null
+  ÔØî NULL pmer = null
+  ­ƒôè 8 champs avec donn├®es, 17 champs null
+  ÔØî Champs null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+ÔòÉÔòÉÔòÉ COMPARAISON MULTI-ENDPOINTS ÔòÉÔòÉÔòÉ
+
+
+ÔöÇÔöÇ infrahoraire-6m (paquet) ÔöÇÔöÇ
+  Ô£à Trouv├®e. 25 champs: lat, lon, geo_id_insee, reference_time, insert_time, validity_time, t, td, u, dd, ff, dxi10, fxi10, rr_per, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+  ÔØî Champs null: AUCUN
+
+ÔöÇÔöÇ observation station (DPObs) ÔöÇÔöÇ
+  Ô£à 1 obs. 25 champs: lat, lon, geo_id_insee, reference_time, insert_time, validity_time, t, td, u, dd, ff, dxi10, fxi10, rr_per, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+  ÔØî Champs null: AUCUN
+
+ÔòÉÔòÉÔòÉ TEST SAPC VIA ENDPOINT INDIVIDUEL ÔòÉÔòÉÔòÉ
+
+
+ÔöÇÔöÇ Station 03036002 ÔöÇÔöÇ
+  [PAQUET] 8 champs non-null, 17 null
+    Non-null: lat, lon, geo_id_insee, reference_time, insert_time, validity_time, t, rr_per
+    Null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+  [INDIVIDUEL] 8 champs non-null, 17 null
+    Non-null: lat, lon, geo_id_insee, reference_time, insert_time, validity_time, t, rr_per
+    Null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+ÔöÇÔöÇ Station 10002001 ÔöÇÔöÇ
+  [PAQUET] 8 champs non-null, 17 null
+    Non-null: lat, lon, geo_id_insee, reference_time, insert_time, validity_time, t, rr_per
+    Null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+  [INDIVIDUEL] 8 champs non-null, 17 null
+    Non-null: lat, lon, geo_id_insee, reference_time, insert_time, validity_time, t, rr_per
+    Null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+ÔöÇÔöÇ Station 23008004 ÔöÇÔöÇ
+  [PAQUET] 8 champs non-null, 17 null
+    Non-null: lat, lon, geo_id_insee, reference_time, insert_time, validity_time, t, rr_per
+    Null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+  [INDIVIDUEL] 8 champs non-null, 17 null
+    Non-null: lat, lon, geo_id_insee, reference_time, insert_time, validity_time, t, rr_per
+    Null: td, u, dd, ff, dxi10, fxi10, t_10, t_20, t_50, t_100, vv, etat_sol, sss, insolh, ray_glo01, pres, pmer
+
+­ƒôä Dump complet sauvegard├® dans diag_raw_output.json

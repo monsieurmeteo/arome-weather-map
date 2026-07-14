@@ -1,0 +1,34 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/api-agate/(.*)",
+      "destination": "https://www.mwattest.fr/$1"
+    },
+    {
+      "source": "/api-meteo/(.*)",
+      "destination": "https://public-api.meteofrance.fr/public/DPObs/v1/$1"
+    },
+    {
+      "source": "/api-meteo-paquet/(.*)",
+      "destination": "https://public-api.meteofrance.fr/public/DPPaquetObs/v1/$1"
+    },
+    {
+      "source": "/api-meteo-poste/(.*)",
+      "destination": "https://public-api.meteofrance.fr/public/DPAI01/v1/$1"
+    },
+    {
+      "source": "/api-radar-mf/(.*)",
+      "destination": "https://public-api.meteofrance.fr/public/DPPaquetRadar/v1/$1"
+    },
+    {
+      "source": "/mf-token",
+      "destination": "https://portail-api.meteofrance.fr/token"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

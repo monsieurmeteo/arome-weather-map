@@ -1,0 +1,8 @@
+﻿[dotenv@17.2.3] injecting env (4) from .env.local -- tip: ÔÜÖ´©Å  suppress all logs with { quiet: true }
+--- HEALTH CHECK ---
+daily_summaries_count: 10.245s
+Daily summaries count: null { message: '' }
+stations_count: 9.423s
+Stations count: 2146 
+Latest obs_6mn: 2026-03-08T11:06:00+00:00
+Future DS: []

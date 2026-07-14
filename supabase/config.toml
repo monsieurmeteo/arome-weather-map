@@ -1,0 +1,19 @@
+project_id = "ubdevaemtwbzxksjlhjg"
+
+[functions.archive-horaire]
+verify_jwt = false
+
+[functions.collect-6mn]
+verify_jwt = false
+
+[functions.collect-horaire]
+verify_jwt = false
+
+[functions.collect-vigilance]
+verify_jwt = false
+
+[functions.catchup-rennes]
+enabled = true
+verify_jwt = false
+import_map = "./functions/catchup-rennes/deno.json"
+entrypoint = "./functions/catchup-rennes/index.ts"

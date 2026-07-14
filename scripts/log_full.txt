@@ -1,0 +1,151 @@
+﻿[dotenv@17.2.3] injecting env (4) from .env.local -- tip: ­ƒôí add observability to secrets: https://dotenvx.com/ops
+
+--- 2026-02-01 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-02 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 1 points filled.
+
+--- 2026-02-03 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 1 points filled.
+
+--- 2026-02-04 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-05 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 1 points filled.
+
+--- 2026-02-06 for 59178001 ---
+ÔÜá´©Å 25 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 25 points filled.
+
+--- 2026-02-07 for 59178001 ---
+ÔÜá´©Å 159 missing points.
+Parsed 240 rows, 210 have temperature.
+­ƒÜÇ Success: 129 points filled.
+
+--- 2026-02-08 for 59178001 ---
+ÔÜá´©Å 178 missing points.
+Parsed 240 rows, 209 have temperature.
+­ƒÜÇ Success: 148 points filled.
+
+--- 2026-02-09 for 59178001 ---
+ÔÜá´©Å 179 missing points.
+Parsed 240 rows, 189 have temperature.
+­ƒÜÇ Success: 128 points filled.
+
+--- 2026-02-10 for 59178001 ---
+ÔÜá´©Å 192 missing points.
+Parsed 168 rows, 128 have temperature.
+­ƒÜÇ Success: 80 points filled.
+
+--- 2026-02-11 for 59178001 ---
+ÔÜá´©Å 162 missing points.
+Parsed 168 rows, 133 have temperature.
+­ƒÜÇ Success: 57 points filled.
+
+--- 2026-02-12 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-13 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-14 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-15 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 1 points filled.
+
+--- 2026-02-16 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 1 points filled.
+
+--- 2026-02-17 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-18 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-19 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-20 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 239 have temperature.
+Ôä╣´©Å None of the missing points match available data on Meteociel.
+
+--- 2026-02-21 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 1 points filled.
+
+--- 2026-02-22 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-23 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 1 points filled.
+
+--- 2026-02-24 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-25 for 59178001 ---
+ÔÜá´©Å 5 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 5 points filled.
+
+--- 2026-02-26 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 1 points filled.
+
+--- 2026-02-27 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-02-28 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-03-01 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-03-02 for 59178001 ---
+ÔÜá´©Å 1 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 1 points filled.
+
+--- 2026-03-03 for 59178001 ---
+ÔÜá´©Å 4 missing points.
+Parsed 240 rows, 240 have temperature.
+­ƒÜÇ Success: 4 points filled.
+
+--- 2026-03-04 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-03-05 for 59178001 ---
+Ô£à No gaps.
+
+--- 2026-03-06 for 59178001 ---
+ÔÜá´©Å 69 missing points.
+Parsed 204 rows, 140 have temperature.
+Ôä╣´©Å None of the missing points match available data on Meteociel.
+
+--- 2026-03-07 for 59178001 ---
+ÔÜá´©Å 46 missing points.
+Parsed 222 rows, 138 have temperature.
+Ôä╣´©Å None of the missing points match available data on Meteociel.
+
+--- 2026-03-08 for 59178001 ---
+ÔÜá´©Å 144 missing points.
+Parsed 110 rows, 85 have temperature.
+Ôä╣´©Å None of the missing points match available data on Meteociel.

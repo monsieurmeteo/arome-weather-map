@@ -1,0 +1,193 @@
+﻿[dotenv@17.2.3] injecting env (4) from .env.local -- tip: ÔÜÖ´©Å  load multiple .env files with { path: ['.env.local', '.env'] }
+
+--- Date: 2026-03-05 for 59178001 ---
+Ô£à 0 lacunes.
+
+--- Date: 2026-03-06 for 59178001 ---
+ÔÜá´©Å 69 points manquants.
+Parsed 204 observations from Meteociel.
+Searching for UTC 2026-03-06T03:30:00.000Z -> Local 4h30
+Obs sample: [
+  {
+    "hour": 23,
+    "minute": 54,
+    "t": 9.6,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": 0
+  },
+  {
+    "hour": 23,
+    "minute": 48,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  },
+  {
+    "hour": 23,
+    "minute": 42,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  },
+  {
+    "hour": 23,
+    "minute": 36,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  },
+  {
+    "hour": 23,
+    "minute": 30,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  }
+]
+Ôä╣´©Å No matching data found on Meteociel.
+
+--- Date: 2026-03-07 for 59178001 ---
+ÔÜá´©Å 46 points manquants.
+Parsed 222 observations from Meteociel.
+Searching for UTC 2026-03-07T01:06:00.000Z -> Local 2h6
+Obs sample: [
+  {
+    "hour": 23,
+    "minute": 54,
+    "t": 8.8,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": 0
+  },
+  {
+    "hour": 23,
+    "minute": 48,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  },
+  {
+    "hour": 23,
+    "minute": 42,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  },
+  {
+    "hour": 23,
+    "minute": 36,
+    "t": 8.7,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": 0
+  },
+  {
+    "hour": 23,
+    "minute": 30,
+    "t": 8.7,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": 0
+  }
+]
+Ôä╣´©Å No matching data found on Meteociel.
+
+--- Date: 2026-03-08 for 59178001 ---
+ÔÜá´©Å 144 points manquants.
+Parsed 110 observations from Meteociel.
+Searching for UTC 2026-03-08T00:24:00.000Z -> Local 1h24
+Obs sample: [
+  {
+    "hour": 10,
+    "minute": 54,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  },
+  {
+    "hour": 10,
+    "minute": 48,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  },
+  {
+    "hour": 10,
+    "minute": 42,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  },
+  {
+    "hour": 10,
+    "minute": 36,
+    "t": null,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": null
+  },
+  {
+    "hour": 10,
+    "minute": 30,
+    "t": 7.4,
+    "u": null,
+    "td": null,
+    "ff": null,
+    "fxi": null,
+    "pres": null,
+    "rr": 0
+  }
+]
+Ôä╣´©Å No matching data found on Meteociel.

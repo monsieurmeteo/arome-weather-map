@@ -1,0 +1,17 @@
+﻿[dotenv@17.2.3] injecting env (4) from .env.local -- tip: ­ƒæÑ sync secrets across teammates & machines: https://dotenvx.com/ops
+node : Error: getaddrinfo 
+ENOTFOUND db.ubdevaemtwbzxksj
+lhjg.supabase.co
+Au caractère Ligne:1 : 1
++ node tmp/check_size.mjs > 
+tmp/size_out_utf8.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (Error:   
+  getaddri...hjg.supabase.   
+ co:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 

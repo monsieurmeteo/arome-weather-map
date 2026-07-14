@@ -1,0 +1,155 @@
+.forecast-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.forecast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.source-badge {
+    font-size: 0.75rem;
+    background-color: var(--color-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--color-text-muted);
+}
+
+.table-scroll-wrapper {
+    overflow-x: auto;
+    position: relative;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: white;
+}
+
+.forecast-table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: max-content;
+    font-size: 0.9rem;
+}
+
+.forecast-table th,
+.forecast-table td {
+    padding: 8px 12px;
+    text-align: center;
+    border-right: 1px solid #f0f0f0;
+    min-width: 60px;
+}
+
+.forecast-table th {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+}
+
+/* Sticky First Column */
+.sticky-col {
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 10;
+    text-align: left !important;
+    font-weight: 600;
+    border-right: 2px solid var(--color-border);
+    min-width: 120px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.forecast-table th.sticky-col {
+    background-color: var(--color-primary);
+    color: white;
+    z-index: 20;
+}
+
+/* Rows styling */
+.forecast-table tr:nth-child(even) td:not(.sticky-col) {
+    background-color: #fbfbfb;
+}
+
+.time-cell {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.time-cell small {
+    font-weight: normal;
+    opacity: 0.8;
+    font-size: 0.75rem;
+}
+
+.new-day {
+    border-left: 2px solid var(--color-primary) !important;
+}
+
+/* Specific Rows */
+/* Specific Rows Colors */
+.val-temp {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* Color scales for temperature - applied via JS logic or static classes if possible */
+/* We will use generic classes that can be applied dynamically if needed, 
+   but for now let's style the cell text based on value if logic permits, 
+   OR just make them look good generally */
+
+.temp-cold {
+    color: #3f51b5;
+}
+
+/* Blue for cold */
+.temp-mild {
+    color: #4caf50;
+}
+
+/* Green for mild */
+.temp-warm {
+    color: #ff9800;
+}
+
+/* Orange for warm */
+.temp-hot {
+    color: #f44336;
+}
+
+/* Red for hot */
+
+.val-rain.has-rain {
+    background-color: #e3f2fd !important;
+    color: #0288d1;
+    font-weight: 600;
+    border-radius: 4px;
+}
+
+.row-sub td {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.val-rain.has-rain {
+    background-color: #e3f2fd !important;
+    color: #0288d1;
+    font-weight: 600;
+}
+
+.wind-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.high-wind {
+    color: var(--color-danger);
+    font-weight: bold;
+}
+
+.weather-icon {
+    color: var(--color-text-main);
+}

@@ -1,0 +1,52 @@
+{
+  "name": "minisite-douai",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "prod": "npx vercel build --prod && node scratch/clean_vercel_output.js && npx vercel deploy --prebuilt --prod",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
+    "clsx": "^2.1.1",
+    "d3-delaunay": "^6.0.4",
+    "d3-geo": "^3.1.1",
+    "d3-scale": "^4.0.2",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "gifshot": "^0.4.5",
+    "h5wasm": "^0.8.11",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.7",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.562.0",
+    "pg": "^8.19.0",
+    "pngjs": "^7.0.0",
+    "prop-types": "^15.8.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.12.0",
+    "react-simple-maps": "^3.0.0",
+    "recharts": "^3.6.0",
+    "resend": "^6.8.0",
+    "sharp": "^0.34.5",
+    "tweetsodium": "^0.0.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "vite": "^7.2.4"
+  }
+}

@@ -1,0 +1,489 @@
+.radar-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 5px;
+    background-color: #f1f5f9;
+    color: #1e293b;
+    overflow: hidden;
+    gap: 5px;
+}
+
+/* Barrett compacte de contrôles */
+.radar-controls-compact {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 4px 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    gap: 10px;
+    z-index: 10;
+    flex-wrap: nowrap;
+    position: relative;
+}
+
+.last-update-tag {
+    font-size: 0.6rem;
+    color: #94a3b8;
+    background: #f8fafc;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    font-weight: 600;
+}
+
+.control-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.control-divider {
+    width: 1px;
+    height: 24px;
+    background: #e2e8f0;
+}
+
+.btn-compact {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    background: #f1f5f9;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-compact:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.btn-compact.active {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-compact.action {
+    background: #10b981;
+    color: white;
+    width: auto;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.btn-compact.action.export {
+    background: #6366f1;
+}
+
+.btn-text {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+/* Main Content & Dual View */
+.radar-main-content {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+    height: 100%;
+}
+
+.radar-main-content .radar-map-wrapper {
+    flex: 1;
+}
+
+.radar-map-wrapper {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    background: white;
+    height: 100%;
+}
+
+
+
+.radar-leaflet-map {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Timeline/Player */
+.time-badge {
+    background: #1e293b;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 85px;
+}
+
+.compact-range {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #e2e8f0;
+    border-radius: 3px;
+    outline: none;
+}
+
+.compact-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.compact-select {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.tiny-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+}
+
+/* Settings Panel Overlay */
+.map-settings-panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5000;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    width: 180px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.settings-header {
+    background: #1e293b;
+    color: white;
+    padding: 6px 10px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.settings-body {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    padding: 3px 6px;
+    border-radius: 4px;
+}
+
+.settings-select {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.7rem;
+    color: #334155;
+    outline: none;
+}
+
+.color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.settings-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+}
+
+/* Obs Markers */
+.obs-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: white;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.obs-badge.temp {
+    background: #ef4444;
+}
+
+.obs-badge.wind {
+    background: #3b82f6;
+}
+
+/* Legend & Timestamp Overlay */
+.map-legend-compact {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 6px 10px;
+    border-radius: 6px;
+    width: 150px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.legend-gradient-bar {
+    height: 5px;
+    width: 100%;
+    border-radius: 2px;
+    margin-bottom: 2px;
+}
+
+.legend-numbers {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.map-timestamp-overlay {
+    margin-top: 4px;
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-align: center;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 2px;
+}
+
+/* Animation traditionnelle du radar (gestion directe par l'état React) */
+/* Optimisation des transitions : on ne veut pas de transition sur la carte de base, seulement sur le radar */
+.radar-tile-layer-pro {
+    pointer-events: none;
+    will-change: opacity;
+    transition: opacity 0.2s ease-out;
+    image-rendering: auto;
+}
+
+.radar-tile-layer-pro.active {
+    /* Force le GPU pour la frame active */
+    transform: translateZ(0);
+}
+
+/* Transition douce sur TOUTES les tile layers (radar + satellite) lors des changements d'opacité */
+.leaflet-layer {
+    transition: opacity 0.3s ease-out !important;
+}
+
+/* Désactiver la transition sur les tile layers de fond (OpenStreetMap, Carto) pour éviter les flashs */
+.leaflet-tile-container {
+    /* Les tuiles individuelles ne doivent pas avoir de transition interne */
+}
+
+/* Forcer GPU pour les layers actifs */
+.leaflet-image-layer {
+    transition: opacity 0.3s ease-out !important;
+    will-change: opacity;
+}
+
+/* Radar Glass Loader */
+.radar-glass-loader {
+    position: absolute;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader-content {
+    background: white;
+    padding: 20px 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.loader-content p {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f1f5f9;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.export-overlay .loader-content {
+    width: 300px;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: #6366f1;
+    transition: width 0.3s ease;
+}
+
+/* Mouse Coords for Radar */
+.mouse-coords-overlay-radar {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    z-index: 2000;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #fff;
+    display: flex;
+    gap: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.mouse-coords-overlay-radar .coord-label {
+    color: #3b82f6;
+    font-weight: 800;
+}
+
+.mouse-coords-overlay-radar .coord-val {
+    font-weight: 500;
+}
+
+/* RESPONSIVE MOBILE RADAR & SATELLITE (< 768px) */
+@media (max-width: 768px) {
+    .radar-container {
+        height: auto !important;
+        min-height: 100vh !important;
+        overflow: auto !important;
+        padding: 8px !important;
+        gap: 10px !important;
+    }
+
+    .radar-controls-compact {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        padding: 12px !important;
+        height: auto !important;
+    }
+
+    .radar-controls-compact .control-section {
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    .control-divider {
+        display: none !important;
+    }
+
+    .radar-main-content {
+        flex-direction: column !important;
+        height: auto !important;
+        flex: none !important;
+    }
+
+    .radar-map-wrapper {
+        height: 55vh !important;
+        min-height: 380px !important;
+        width: 100% !important;
+    }
+
+    .compact-range {
+        width: 100% !important;
+        margin: 6px 0 !important;
+    }
+
+    .mouse-coords-overlay-radar {
+        display: none !important;
+    }
+
+    .map-settings-panel {
+        top: 8px !important;
+        right: 8px !important;
+        width: 150px !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .map-legend-compact {
+        bottom: 8px !important;
+        left: 8px !important;
+        width: 120px !important;
+        padding: 4px 8px !important;
+    }
+}

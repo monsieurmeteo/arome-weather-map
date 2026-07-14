@@ -1,0 +1,32 @@
+name: Foudre Archive Daily
+
+on:
+  schedule:
+    # Tous les jours à 00:05 UTC (01:05 heure de Paris)
+    - cron: '5 0 * * *'
+  workflow_dispatch: # Permet de le lancer manuellement
+
+jobs:
+  archive-foudre:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install && npm install puppeteer
+        
+      - name: Install Playwright/Puppeteer dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgbm-dev
+        
+      - name: Run Lightning Archive Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/capture_foudre_daily.mjs

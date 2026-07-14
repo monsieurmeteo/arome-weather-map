@@ -1,0 +1,80 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { supabase, weatherAPI } from '../../services/api';
+import { meteoFrancePosteService } from '../../services/meteoFrancePosteService';
+import { DEPARTMENTS } from '../../data/departments';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import './BtpManager.css';
+
+const BtpManager = () => {
+    const [projects, setProjects] = useState([]);
+    const [currentProjectId, setCurrentProjectId] = useState('');
+    const [projectName, setProjectName] = useState('Météo BTP');
+    const [chantierName, setChantierName] = useState('');
+
+    // States for configuration
+    const [activeTrades, setActiveTrades] = useState([]);
+    const [TRADES_FULL, setTRADES_FULL] = useState([
+        "Terrassement / Terrassement Voiries", "VRD – Voiries et Réseaux Divers", "Renforcement de sol / Traitement de sol", "Traitement de plateforme (chaux / ciment)", "Travaux Asphalte / Enrobés", "Rabattage de nappes", "Gros œuvre", "Fondations / Fondations spéciales", "Béton armé", "Coulage béton armé / Dalles", "Dallage", "Charpente", "Murs coupe-feu", "Couverture", "Bardage / Panneaux", "Étanchéité", "Isolation", "Menuiseries extérieures", "Métallerie", "Clôtures", "Espaces verts", "Ravalement / Peinture extérieure", "Grues / Bétonnières", "Levage d'éléments techniques", "Aires de béquillage", "Tous travaux extérieurs / Tâches extérieures", "Tous corps d’état", "Murs coupe feu"
+    ]);
+    const [globalData, setGlobalData] = useState({});
+    const [rules, setRules] = useState([]);
+    const [annexCols, setAnnexCols] = useState({ temp: true, rain: true, snow: true, windA: true, windG: true, humi: true, soil: true, fog: true, windAvgPdf: false });
+    const [emitterName, setEmitterName] = useState('MÉTÉO CLIMAT PRO');
+    const [txEnt, setTxEnt] = useState('400 rue Paul Lafargue\n59283 RAIMBEAUCOURT');
+    const [txCli, setTxCli] = useState('');
+    const [clientAddress, setClientAddress] = useState('');
+    const [clientPhone, setClientPhone] = useState('');
+    const [clientEmail, setClientEmail] = useState('');
+    const [emailCli, setEmailCli] = useState(''); // Direct send email
+    const [showEmitter, setShowEmitter] = useState(false);
+    const [stationMeteo, setStationMeteo] = useState('');
+    const [logoL, setLogoL] = useState('/logo_default.png');
+    const [logoR, setLogoR] = useState('');
+    const [emitterPhone, setEmitterPhone] = useState('06 83 90 91 60');
+    const [emitterEmail, setEmitterEmail] = useState('patrick.marliere@wanadoo.fr');
+
+    const [projectAddress, setProjectAddress] = useState('');
+    const [projectClient, setProjectClient] = useState('');
+    const [startChantierDate, setStartChantierDate] = useState('');
+    const [contractDuration, setContractDuration] = useState('');
+    const [reportType, setReportType] = useState('Hebdomadaire');
+    const [contractDurationUnit, setContractDurationUnit] = useState('mois');
+
+    const [displaySimple, setDisplaySimple] = useState(false);
+    const [showCharts, setShowCharts] = useState(false);
+    const [checkPeriod, setCheckPeriod] = useState(true);
+    const [autoSnow, setAutoSnow] = useState(true);
+    const [snowTempLimit, setSnowTempLimit] = useState(0);
+
+    // States for data entry
+    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+    const [soilData, setSoilData] = useState({});
+    const [heatData, setHeatData] = useState({});
+    const [frozeData, setFrozeData] = useState({});
+    const [fogData, setFogData] = useState({});
+    const [status, setStatus] = useState('');
+
+    // UI Local state
+    const [activeOutTab, setActiveOutTab] = useState('out-report');
+    const [tradesModalOpen, setTradesModalOpen] = useState(false);
+    const [ruleTradesModalOpen, setRuleTradesModalOpen] = useState(false);
+    const [ruleTradesModalTimestamp, setRuleTradesModalTimestamp] = useState(0);
+    const [colsModalOpen, setColsModalOpen] = useState(false);
+    const [promptModalOpen, setPromptModalOpen] = useState(false);
+    const [currentRuleIndex, setCurrentRuleIndex] = useState(-1);
+    const [openRuleIdx, setOpenRuleIdx] = useState(-1);
+    const [reportOutput, setReportOutput] = useState('');
+    const [chartsOutput, setChartsOutput] = useState('');
+    const [emptyCellStyle, setEmptyCellStyle] = useState('gray');
+    const [chartDesign, setChartDesign] = useState('architect');
+    const [newTradeInput, setNewTradeInput] = useState('');
+    const [aiImportModalOpen, setAiImportModalOpen] = useState(false);
+    const [aiRawText, setAiRawText] = useState('');
+
+    // MF Selection
+    const [selectedDept, setSelectedDept] = useState('');
+    const [stations, setStations] = useState([]);
+    const [stationNames, setStationNames] = useState({});
+    const [loadingStations, setLoadingStatio
