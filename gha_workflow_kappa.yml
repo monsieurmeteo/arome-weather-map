@@ -1,0 +1,62 @@
+name: Météo Kappa Automatique
+
+on:
+  schedule:
+    # 18h00 heure française d'été (16h00 UTC)
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Mode test (envoyer uniquement à Grégory, pas à Patrick)"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  run-kappa:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code du dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Installer Playwright Chromium (pour les captures de cartes)
+        run: |
+          playwright install chromium
+
+      - name: Lancer la génération et l'envoi Kappa
+        env:
+          PYTHONUNBUFFERED: "1"
+          CHROME_PATH: "/usr/bin/google-chrome"
+          GMAIL_EMAIL: "langlet.gregory@gmail.com"
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Envoi à Patrick uniquement en production (cron schedule ou test_mode désactivé)
+          RECIPIENT_EMAILS: ${{ (github.event_name == 'schedule' || github.event.inputs.test_mode == 'false') && 'gregory.langlet@sfr.fr, langlet.gregory@gmail.com, langletcharlotte480@gmail.com' || 'gregory.langlet@sfr.fr, langlet.gregory@gmail.com, langletcharlotte480@gmail.com' }}
+        run: |
+          python cnews/scripts/send_kappa_email.py
+
+      - name: Commiter et pousser les modifications de bulletins (pour mise à jour Vercel)
+        run: |
+          git config --global user.name "Gregory LANGLET"
+          git config --global user.email "langlet.gregory@gmail.com"
+          git add cnews/AUTOMATISATION.json cnews/BULLETINS_AUTOMATIQUES_DEMAIN.json cnews/BULLETINS_AUTOMATIQUES_DEMAIN.txt cnews/AUTOMATISATION_*.zip
+          git commit -m "Mise à jour automatique des bulletins Kappa du jour [GHA]" || echo "Aucune modification à commiter"
+          git checkout -- .
+          git clean -fd
+          git pull --rebase origin main
+          git push origin main

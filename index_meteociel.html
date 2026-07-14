@@ -96,10 +96,10 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   position: relative;
 }
 .header-title {
-  font-size:100px; font-weight:900; letter-spacing:-1.5px; line-height:1.05; text-transform:uppercase;
-  text-shadow:0 3px 8px rgba(0,0,0,0.6);
+  font-size:130px; font-weight:900; letter-spacing:-1.5px; line-height:1.05; text-transform:uppercase;
+  text-shadow:0 3px 12px rgba(0,0,0,0.85); color: #ef4444; /* Titre très grand et rouge */
 }
-.portrait .header-title { font-size:80px; }
+.portrait .header-title { font-size:100px; }
 
 .header-subtitle {
   display: flex;
@@ -108,17 +108,17 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   width: 100%;
 }
 .subtitle-region {
-  font-size:42px; font-weight:900; color:#ff5a24; letter-spacing:0.5px; text-transform:uppercase;
+  font-size:52px; font-weight:900; color:#ff5a24; letter-spacing:0.5px; text-transform:uppercase;
   text-shadow:0 2px 5px rgba(0,0,0,0.5);
   line-height: 1.1;
 }
 .subtitle-date {
-  font-size:26px; font-weight:700; color:rgba(255,255,255,0.80); letter-spacing:0.5px; text-transform:uppercase;
+  font-size:32px; font-weight:700; color:rgba(255,255,255,0.80); letter-spacing:0.5px; text-transform:uppercase;
   text-shadow:0 2px 4px rgba(0,0,0,0.5);
   line-height: 1.1;
 }
-.portrait .subtitle-region { font-size:32px; }
-.portrait .subtitle-date { font-size:22px; }
+.portrait .subtitle-region { font-size:40px; }
+.portrait .subtitle-date { font-size:28px; }
 
 .header-desc {
   font-family: 'Outfit', sans-serif;
@@ -191,13 +191,13 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 .table-row:last-child {
   border-bottom:none;
 }
-.landscape .table-row { height:78px; }
-.portrait .table-row { height:95px; }
+.landscape .table-row { height:110px; }
+.portrait .table-row { height:120px; }
 /* Pluies : 2 lignes dans la cellule station → lignes plus hautes */
 .theme-precip.landscape .table-row,
-.theme-rain.landscape .table-row { height:90px; }
+.theme-rain.landscape .table-row { height:125px; }
 .theme-precip.portrait .table-row,
-.theme-rain.portrait .table-row { height:108px; }
+.theme-rain.portrait .table-row { height:135px; }
 
 .table-row td {
   vertical-align:middle;
@@ -252,7 +252,7 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 .station-name-text {
   text-transform: uppercase;
   font-weight: 700;
-  font-size: 34px;
+  font-size: 42px; /* Agrandissement pour lisibilité */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -262,24 +262,24 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 .portrait .station-name-text {
-  font-size: 32px;
+  font-size: 38px;
 }
 .station-dept-text {
   font-weight: 600;
-  font-size: 26px;
+  font-size: 32px; /* Agrandissement */
   color: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
 }
 .portrait .station-dept-text {
-  font-size: 24px;
+  font-size: 28px;
 }
 
-/* Record pill cartouche — +12% taille pour meilleure lisibilité écran TV */
+/* Record pill cartouche */
 .record-pill {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 19px; /* +12% vs 17px */
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 24px; /* Agrandissement de 19px à 24px */
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -298,7 +298,7 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   text-shadow: 0 1px 3px rgba(0,0,0,0.6);
 }
 .former-record-text {
-  font-size: 17px; /* +6% vs 16px */
+  font-size: 22px; /* Agrandissement de 17px à 22px */
   font-weight: 600;
   color: rgba(255,255,255,0.80);
   text-transform: none;
@@ -307,19 +307,19 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   margin-top: 5px;
   text-shadow: 0 1px 2px rgba(0,0,0,0.7);
 }
-.portrait .former-record-text { font-size: 15px; }
+.portrait .former-record-text { font-size: 19px; }
 /* Legacy record-text kept for capsule view */
 .record-text {
-  font-size:22px; font-weight:800; color:#ff5a24; text-transform:uppercase; letter-spacing:1px;
+  font-size:26px; font-weight:800; color:#ff5a24; text-transform:uppercase; letter-spacing:1px;
   text-shadow:0 1px 3px rgba(0,0,0,0.5);
   text-align:center;
 }
-.portrait .record-text { font-size:20px; }
+.portrait .record-text { font-size:22px; }
 .record-abs { color:#ffcc00; }
 
 /* Main value size — base 60px, overrides par param */
 .station-value {
-  font-size:60px; font-weight:900;
+  font-size:80px; font-weight:900; /* Agrandissement de 60px à 80px */
   text-shadow:0 2px 4px rgba(0,0,0,0.5);
   text-align:right;
   box-sizing: border-box;
@@ -335,12 +335,12 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 .portrait .station-value {
   padding-right:24px;
 }
-/* Chaleur record : températures rouges +8% */
+/* Chaleur record : températures rouges */
 .theme-tmax .station-value,
-.theme-hot .station-value { font-size: 65px; }
+.theme-hot .station-value { font-size: 88px; } /* Agrandissement de 65px à 88px */
 /* Pluies diluviennes */
 .theme-precip .station-value,
-.theme-rain .station-value { font-size: 63px; }
+.theme-rain .station-value { font-size: 84px; } /* Agrandissement de 63px à 84px */
 /* Rafales : plus de marge à droite */
 .theme-gust.landscape .station-value,
 .theme-wind.landscape .station-value { padding-right: 50px; }
@@ -532,9 +532,10 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 .landscape .bilan-card {
   width: 25%;
   height: 250px;
-  padding: 28px 24px;
+  padding: 24px 20px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: space-between;
 }
 .portrait .bilan-card {
@@ -631,18 +632,7 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   text-align: center;
   color: rgba(255,255,255,0.65);
 }
-.station-len-long {
-  font-size: 24px !important;
-}
-.portrait .station-len-long {
-  font-size: 30px !important;
-}
-.station-len-xlong {
-  font-size: 20px !important;
-}
-.portrait .station-len-xlong {
-  font-size: 26px !important;
-}
+/* Classes station-len supprimees au profit de l'auto-fit JS purement dynamique */
 .bilan-card-value {
   font-family: 'Outfit', sans-serif;
   font-size: 58px;
@@ -683,6 +673,26 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 .table-row:hover .obs-date-peak {
   color: rgba(0, 234, 255, 0.85);
 }
+.landscape .zone-badge-right {
+  position: absolute;
+  top: 150px; /* abaisse pour s'aligner verticalement */
+  right: 140px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 110px; /* taille maximale de base augmentee */
+  font-weight: 900;
+  color: #ff5a24; /* Orange CNews */
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: right;
+  line-height: 1.0;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  z-index: 10;
+  max-width: 1000px; /* augmentee pour s'adapter aux grands formats sans retour a la ligne */
+  white-space: nowrap;
+}
+.portrait .zone-badge-right {
+  display: none;
+}
 </style>
 </head>
 <body>
@@ -699,6 +709,7 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
       <div class="header-divider"></div>
     </div>
   </div>
+  <div id="zone-badge-right" class="zone-badge-right"></div>
 
   <div class="rows-container-wrapper" id="rows-container">
     <!-- Content (floating capsules or a table) will be dynamically injected here -->
@@ -852,8 +863,31 @@ function applyStyles(cfg) {
     datePart += ` · ${cfg.filter_label.toUpperCase()}`;
   }
 
+  const zoneBadge = document.getElementById('zone-badge-right');
+  if (p === 'bilan_jour') {
+    zoneBadge.style.display = 'block';
+    let cleanZone = cfg.zone_label;
+    if (cfg.zone === 'france') {
+      cleanZone = 'FRANCE';
+    }
+    zoneBadge.textContent = cleanZone.toUpperCase();
+    
+    // Adaptation automatique de la taille de police pour eviter tout debordement (échelle augmentée)
+    let size = 110;
+    if (cleanZone.length > 22) {
+      size = 65;
+    } else if (cleanZone.length > 16) {
+      size = 85;
+    } else if (cleanZone.length > 10) {
+      size = 95;
+    }
+    zoneBadge.style.fontSize = size + 'px';
+  } else {
+    zoneBadge.style.display = 'none';
+  }
+
   let subtitleHTML = "";
-  if (cfg.zone && cfg.zone !== 'france') {
+  if (cfg.zone && cfg.zone !== 'france' && p !== 'bilan_jour') {
     subtitleHTML = `<div class="subtitle-region">${cfg.zone_label.toUpperCase()}</div><div class="subtitle-date">${datePart}</div>`;
   } else {
     subtitleHTML = `<div class="subtitle-date">${datePart}</div>`;
@@ -872,15 +906,7 @@ function applyStyles(cfg) {
   const useCapsules = cfg.stations.length <= 3;
 
   if (useCapsules) {
-    // ── Stat banner (élément graphique discret pour combler le bas) ──
-    const nbMensuel = cfg.stations.filter(s => s.is_record_m && !s.is_record_a).length;
-    const nbAbsolu  = cfg.stations.filter(s => s.is_record_a).length;
-    const nbTotal   = cfg.stations.length;
-    let statParts = [];
-    if (nbAbsolu  > 0) statParts.push(`${nbAbsolu} record${nbAbsolu>1?'s':''} absolu${nbAbsolu>1?'s':''}`);
-    if (nbMensuel > 0) statParts.push(`${nbMensuel} record${nbMensuel>1?'s':''} mensuel${nbMensuel>1?'s':''}`);
-    if (statParts.length === 0) statParts.push(`${nbTotal} record${nbTotal>1?'s':''} battu${nbTotal>1?'s':''}`);
-    const statLabel = statParts.join(' · ');
+    // Bannières de records du bas de page supprimées
 
     cfg.stations.forEach(st => {
       // Floating capsule
@@ -932,38 +958,7 @@ function applyStyles(cfg) {
       container.appendChild(cap);
     });
 
-    // ── Stat banner premium — dégradé, transparence, relief ──
-    const banner = document.createElement('div');
-    const isPort = ORIENTATION === 'portrait';
-    const trophyColor = meta.theme === 'hot' ? '#ff5a24' : (meta.theme === 'rain' ? '#00ffd2' : '#ffcc00');
-    banner.style.cssText = [
-      'margin-top:' + (isPort ? '52px' : '44px'),
-      'display:flex', 'align-items:center', 'justify-content:center', 'gap:22px',
-      'padding:' + (isPort ? '28px 52px' : '22px 48px'),
-      'background:linear-gradient(135deg,rgba(8,22,48,0) 0%,rgba(12,32,68,0.90) 18%,rgba(16,40,82,0.94) 50%,rgba(12,32,68,0.90) 82%,rgba(8,22,48,0) 100%)',
-      'border-top:1.5px solid rgba(0,150,255,0.32)',
-      'border-bottom:1.5px solid rgba(0,150,255,0.32)',
-      'border-radius:20px',
-      /* Effet de relief : ombre interne + ombre externe */
-      'box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),inset 0 -1px 0 rgba(0,0,0,0.3),0 8px 24px rgba(0,0,0,0.5),0 0 20px rgba(0,100,220,0.12)'
-    ].join(';');
-    const iconSize = isPort ? '38px' : '32px';
-    const labelSize = isPort ? '32px' : '27px';
-    banner.innerHTML = `
-      <svg viewBox="0 0 24 24" style="width:${iconSize};height:${iconSize};flex-shrink:0" fill="none" stroke="${trophyColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
-        <defs><filter id="glow"><feGaussianBlur stdDeviation="1.2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-        <path d="M6 9H3V5h3M18 9h3V5h-3M12 17v4M8 21h8"/>
-        <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"/>
-      </svg>
-      <span style="font-family:'Outfit',sans-serif;font-size:${labelSize};font-weight:800;color:rgba(255,255,255,0.92);letter-spacing:1px;text-transform:uppercase;text-shadow:0 2px 6px rgba(0,0,0,0.8),0 0 20px rgba(0,100,220,0.2)">
-        ${statLabel} aujourd'hui
-      </span>
-      <svg viewBox="0 0 24 24" style="width:${iconSize};height:${iconSize};flex-shrink:0" fill="none" stroke="${trophyColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 9H3V5h3M18 9h3V5h-3M12 17v4M8 21h8"/>
-        <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"/>
-      </svg>
-    `;
-    container.appendChild(banner);
+    /* Bannière de records supprimée */
   } else {
     // Large table container
     const table = document.createElement('table');
@@ -1070,7 +1065,7 @@ function applyStyles(cfg) {
 function renderBilanJour(cfg, container) {
   // Vector icons map (beautiful SVGs corresponding to the mockups)
   const isPortrait = ORIENTATION === 'portrait';
-  const iconSize = isPortrait ? '52px' : '28px';
+  const iconSize = isPortrait ? '52px' : '36px';
 
   const SVG_ICONS = {
     tmax: `
@@ -1080,9 +1075,7 @@ function renderBilanJour(cfg, container) {
     `,
     tmin: `
       <svg viewBox="0 0 24 24" style="width: ${iconSize}; height: ${iconSize};" fill="none" stroke="#00eaff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-        <line x1="12" y1="22.08" x2="12" y2="12" />
+        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
       </svg>
     `,
     precip: `
@@ -1121,13 +1114,6 @@ function renderBilanJour(cfg, container) {
     }
 
     const fullname = `${st.name} (${st.dept})`;
-    let lenClass = "";
-    if (fullname.length > 25) {
-      lenClass = " station-len-xlong";
-    } else if (fullname.length > 18) {
-      lenClass = " station-len-long";
-    }
-
     const svgIcon = SVG_ICONS[st.param] || '';
 
     if (isPortrait) {
@@ -1137,7 +1123,7 @@ function renderBilanJour(cfg, container) {
           <div class="bilan-card-icon">${svgIcon}</div>
           <div style="display:flex; flex-direction:column; gap:4px; margin-left: 20px; align-items: center; text-align: center; flex-grow: 1; min-width: 0;">
             <div class="bilan-card-label">${st.label}</div>
-            <div class="bilan-card-station${lenClass}">${fullname}</div>
+            <div class="bilan-card-station">${fullname}</div>
           </div>
           ${recBadgeHTML}
         </div>
@@ -1149,14 +1135,10 @@ function renderBilanJour(cfg, container) {
       // ── LANDSCAPE LAYOUT ──
       card.innerHTML = `
         ${recBadgeHTML}
-        <div class="bilan-card-header">
-          <div class="bilan-card-label">${st.label}</div>
-          <div class="bilan-card-icon">${svgIcon}</div>
-        </div>
-        <div class="bilan-card-content">
-          <div class="bilan-card-station${lenClass}">${fullname}</div>
-          <div class="bilan-card-value" style="color: ${getValueColor(st.value, st.theme)}">${valDisp}</div>
-        </div>
+        <div class="bilan-card-label" style="text-align: center; width: 100%; height: 28px; line-height: 28px;">${st.label}</div>
+        <div class="bilan-card-icon" style="margin: auto 0; display: flex; align-items: center; justify-content: center;">${svgIcon}</div>
+        <div class="bilan-card-station" style="text-align: center; width: 100%; margin-bottom: 4px;">${fullname}</div>
+        <div class="bilan-card-value" style="color: ${getValueColor(st.value, st.theme)}; text-align: center; width: 100%; height: 58px; line-height: 58px; margin-top: 4px;">${valDisp}</div>
       `;
     }
     grid.appendChild(card);
@@ -1164,47 +1146,7 @@ function renderBilanJour(cfg, container) {
 
   container.appendChild(grid);
 
-  // ── Stat banner premium en bas (bannière de records du jour - Records Absolus uniquement) ──
-  const nbAbsolu = cfg.nb_records_a || 0;
-
-  if (nbAbsolu > 0) {
-    const banner = document.createElement('div');
-    const isPort = ORIENTATION === 'portrait';
-    const trophyColor = '#ffcc00';
-
-    banner.style.cssText = [
-      'margin-top:' + (isPort ? '44px' : '36px'),
-      'display:flex', 'align-items:center', 'justify-content:center', 'gap:22px',
-      'padding:' + (isPort ? '24px 52px' : '20px 48px'),
-      'background:linear-gradient(135deg,rgba(8,22,48,0) 0%,rgba(12,32,68,0.90) 18%,rgba(16,40,82,0.94) 50%,rgba(12,32,68,0.90) 82%,rgba(8,22,48,0) 100%)',
-      'border-top:1.5px solid rgba(0,150,255,0.32)',
-      'border-bottom:1.5px solid rgba(0,150,255,0.32)',
-      'border-radius:20px',
-      'box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),inset 0 -1px 0 rgba(0,0,0,0.3),0 8px 24px rgba(0,0,0,0.5),0 0 20px rgba(0,100,220,0.12)',
-      'width: 100%', 'box-sizing: border-box'
-    ].join(';');
-
-    const iconSize = isPort ? '36px' : '30px';
-    const labelSize = isPort ? '28px' : '25px';
-
-    const statLabel = `${nbAbsolu} record${nbAbsolu>1?'s':''} absolu${nbAbsolu>1?'s':''}`;
-
-    banner.innerHTML = `
-      <svg viewBox="0 0 24 24" style="width:${iconSize};height:${iconSize};flex-shrink:0" fill="none" stroke="${trophyColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
-        <defs><filter id="glow"><feGaussianBlur stdDeviation="1.2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-        <path d="M6 9H3V5h3M18 9h3V5h-3M12 17v4M8 21h8"/>
-        <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"/>
-      </svg>
-      <span style="font-family:'Outfit',sans-serif;font-size:${labelSize};font-weight:800;color:rgba(255,255,255,0.92);letter-spacing:1px;text-transform:uppercase;text-shadow:0 2px 6px rgba(0,0,0,0.8),0 0 20px rgba(0,100,220,0.2)">
-        ${statLabel} aujourd'hui
-      </span>
-      <svg viewBox="0 0 24 24" style="width:${iconSize};height:${iconSize};flex-shrink:0" fill="none" stroke="${trophyColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 9H3V5h3M18 9h3V5h-3M12 17v4M8 21h8"/>
-        <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"/>
-      </svg>
-    `;
-    container.appendChild(banner);
-  }
+  // Bannières de records du bas de page supprimées
 
   // ── Auto-fit de la taille de police des villes (anti-débordement) ──
   setTimeout(() => {

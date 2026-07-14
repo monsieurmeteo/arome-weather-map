@@ -1,10 +1,14 @@
-.vercel
+﻿.chrome_profile*/
+.vercel/
 __pycache__/
-*.jpg
-*.txt
-*.png
-!logo meteo climat pro 3.png
-!pictogramme/*.png
-*.log
-.env
-node_modules/
+bulletin_final.html
+exemple_*.html
+exports_csv/
+temp_captures/
+meteofrance_data*.json
+meteociel_obs_data.json
+test.json
+svg_dump.html
+carte_jours_suivants_page_*.png
+vigilance_carte.png
+vigilance_output.txt

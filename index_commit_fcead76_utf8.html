@@ -1,23 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 
 <head>
-    <script>
-        window.onerror = function(message, source, lineno, colno, error) {
-            fetch('/log_error', {
-                method: 'POST',
-                body: JSON.stringify({ message, source, lineno, colno, stack: error ? error.stack : '' }),
-                headers: { 'Content-Type': 'application/json' }
-            });
-        };
-        window.onunhandledrejection = function(event) {
-            fetch('/log_error', {
-                method: 'POST',
-                body: JSON.stringify({ message: 'Unhandled Rejection: ' + event.reason }),
-                headers: { 'Content-Type': 'application/json' }
-            });
-        };
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Météo France - Expert Edition Finale</title>
@@ -249,12 +233,12 @@
         }
 
         #sub-auto-title {
-            color: #ffffff;
-            font-size: 1.8rem;
+            color: #FFD700;
+            font-size: 1.2rem;
             font-weight: 700;
             text-transform: uppercase;
             margin-top: 5px;
-            text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+            text-shadow: 3px 3px 0 #000;
         }
 
         /* --- PDF & PAGE BREAKS --- */
@@ -712,7 +696,7 @@
 
         /* Override Hybride Petit */
         .weather-marker.is-small.type-weather_temp .marker-content-wrapper {
-            height: 78px;
+            height: 65px;
         }
 
         /* Mode Météo + Temp (Fin) */
@@ -735,7 +719,7 @@
         .weather-marker.is-small.type-temp .temp-standalone,
         .weather-marker.is-small.type-precip .temp-standalone,
         .weather-marker.is-small.type-precip_24h .temp-standalone {
-            font-size: 36px !important;
+            font-size: 32px !important;
             text-shadow: 2px 2px 0 #000;
         }
 
@@ -743,7 +727,7 @@
         .weather-marker.is-small.type-temp .marker-content-wrapper,
         .weather-marker.is-small.type-precip .marker-content-wrapper,
         .weather-marker.is-small.type-precip_24h .marker-content-wrapper {
-            height: 90px;
+            height: 80px;
         }
 
         .weather-marker.is-small.type-weather .weather-icon-large {
@@ -775,13 +759,13 @@
         /* Mode Small (France) */
         .is-small.type-weather_temp .icon-center-anchor,
         .is-small.type-weather_temp .weather-icon-large {
-            width: 78px !important;
-            height: 78px !important;
-            font-size: 55px !important;
+            width: 65px !important;
+            height: 65px !important;
+            font-size: 46px !important;
         }
 
         .is-small.type-weather_temp .temp-side-aligned {
-            font-size: 33px !important;
+            font-size: 28px !important;
             left: 60% !important;
             top: -2px !important;
         }
@@ -1153,20 +1137,19 @@
         /* === ENCART RECORDS LILLE (HDF uniquement) === */
         #lille-records-panel {
             display: none;
-            background: rgba(18, 30, 56, 0.6);
-            border: 1.5px solid rgba(77, 184, 255, 0.4);
+            position: absolute;
+            bottom: 40px;
+            right: 20px;
+            background: rgba(8, 12, 28, 0.95);
+            border: 1.5px solid #4db8ff;
             border-radius: 12px;
-            padding: 14px;
-            margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            /* Reset absolute position for sidebar insertion */
-            position: static !important;
-            bottom: auto !important;
-            right: auto !important;
-            pointer-events: auto !important;
-            min-width: 0 !important;
-            max-width: none !important;
-            width: auto !important;
+            padding: 14px 18px 14px 18px;
+            z-index: 1200;
+            pointer-events: none;
+            min-width: 300px;
+            max-width: 360px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 6px 24px rgba(77, 184, 255, 0.25);
         }
 
         #lille-records-panel .lrp-title {
@@ -1433,308 +1416,6 @@
         .csv-v-val-tx { color: #ff6a00; font-weight: 700; }
         .csv-v-val-ws { color: #2ecc71; opacity: 0.9; }
         .csv-v-row-day { background: rgba(255,255,255,0.02); }
-
-        /* === ÉPHÉMÉRIDES PANEL === */
-        #ephemeris-panel {
-            display: none;
-            position: absolute;
-            top: 52%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 540px;
-            background: rgba(18, 30, 56, 0.85);
-            backdrop-filter: blur(25px) saturate(180%);
-            -webkit-backdrop-filter: blur(25px) saturate(180%);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            border-radius: 28px;
-            padding: 35px 30px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
-            z-index: 1000;
-            color: #fff;
-            font-family: 'Montserrat', 'Outfit', 'Inter', sans-serif;
-            text-align: center;
-        }
-        .eph-header {
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 5px;
-            color: #ff9d00;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
-        .eph-city {
-            font-size: 26px;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: 3px;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            opacity: 0.85;
-        }
-        .eph-date {
-            font-size: 32px;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            text-transform: uppercase;
-        }
-        .eph-saint {
-            font-size: 20px;
-            font-weight: 600;
-            color: #a0aec0;
-            margin-bottom: 30px;
-            text-transform: uppercase;
-        }
-        .eph-row-container {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 30px;
-            gap: 20px;
-        }
-        .eph-box {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 18px;
-            padding: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-        .eph-icon {
-            font-size: 32px;
-            margin-bottom: 8px;
-        }
-        .eph-label {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #a0aec0;
-            margin-bottom: 5px;
-        }
-        .eph-time {
-            font-size: 26px;
-            font-weight: 800;
-            color: #fff;
-        }
-        .eph-duration-box {
-            background: rgba(255, 99, 71, 0.05);
-            border: 1px solid rgba(255, 157, 0, 0.2);
-            border-radius: 20px;
-            padding: 15px 20px;
-            margin-top: 10px;
-        }
-        .eph-duration-title {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #ff9d00;
-            margin-bottom: 6px;
-        }
-        .eph-duration-val {
-            font-size: 28px;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 4px;
-        }
-        .eph-duration-diff {
-            font-size: 13px;
-            font-weight: 600;
-            color: #ff6b6b;
-        }
-        .eph-duration-diff.gain {
-            color: #2ecc71;
-        }
-
-
-        /* === PORTRAIT MODE (9:16) FOR DIGITAL & MOBILE === */
-        #capture-area.portrait-mode {
-            width: 1080px !important;
-            height: 1920px !important;
-            flex-direction: column;
-        }
-        
-        #capture-area.portrait-mode #map-container {
-            width: 1080px !important;
-            height: 1920px !important;
-        }
-        
-        #capture-area.portrait-mode .site-logo {
-            display: flex !important;
-            top: 40px;
-            left: 40px;
-        }
-        
-        #capture-area.portrait-mode .site-logo img {
-            height: 80px !important;
-        }
-        
-        #capture-area.portrait-mode #auto-title-container {
-            top: 40px;
-            right: 40px;
-            max-width: 60%;
-        }
-        
-        #capture-area.portrait-mode #main-auto-title {
-            font-size: 2.2rem !important;
-        }
-        
-        #capture-area.portrait-mode #sub-auto-title {
-            font-size: 2.0rem !important;
-            color: #ffffff !important;
-        }
-        
-        #capture-area.portrait-mode #legend {
-            bottom: 60px;
-            left: 40px;
-            transform: scale(1.35);
-            transform-origin: bottom left;
-        }
-        
-        #capture-area.portrait-mode #averages-container {
-            bottom: 60px;
-            right: 40px;
-            transform: scale(1.35);
-            transform-origin: bottom right;
-        }
-        
-        #capture-area.portrait-mode #lille-records-panel {
-            bottom: 60px;
-            right: 40px;
-            transform: scale(1.25);
-            transform-origin: bottom right;
-        }
-        
-        #capture-area.portrait-mode #ephemeris-panel {
-            width: 780px !important;
-            padding: 50px 40px;
-            border-radius: 36px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        #capture-area.portrait-mode .eph-date {
-            font-size: 42px !important;
-        }
-        
-        #capture-area.portrait-mode .eph-saint {
-            font-size: 26px !important;
-        }
-        
-        #capture-area.portrait-mode .eph-time {
-            font-size: 36px !important;
-        }
-        
-        #capture-area.portrait-mode .eph-icon {
-            font-size: 48px !important;
-        }
-        
-        #capture-area.portrait-mode .eph-duration-val {
-            font-size: 38px !important;
-        }
-
-        /* Portrait overrides for weather pictograms and temperatures */
-        #capture-area.portrait-mode .weather-icon-large {
-            transform: scale(1.4) !important;
-        }
-        #capture-area.portrait-mode .weather-marker.is-small .weather-icon-large {
-            transform: scale(1.45) !important;
-        }
-        #capture-area.portrait-mode .temp-side-aligned {
-            font-size: 48px !important;
-            left: 58% !important;
-        }
-        #capture-area.portrait-mode .temp-standalone {
-            font-size: 68px !important;
-        }
-
-
-        /* === SQUARE MODE (1:1) FOR FACEBOOK & INSTAGRAM === */
-        #capture-area.square-mode {
-            width: 1080px !important;
-            height: 1080px !important;
-            flex-direction: column;
-        }
-        
-        #capture-area.square-mode #map-container {
-            width: 1080px !important;
-            height: 1080px !important;
-        }
-        
-        #capture-area.square-mode .site-logo {
-            top: 30px;
-            left: 30px;
-        }
-        
-        #capture-area.square-mode .site-logo img {
-            height: 75px;
-        }
-        
-        #capture-area.square-mode #auto-title-container {
-            top: 30px;
-            right: 30px;
-            max-width: 60%;
-        }
-        
-        #capture-area.square-mode #main-auto-title {
-            font-size: 1.8rem !important;
-        }
-        
-        #capture-area.square-mode #sub-auto-title {
-            font-size: 1.6rem !important;
-            color: #ffffff !important;
-        }
-        
-        #capture-area.square-mode #legend {
-            bottom: 45px;
-            left: 30px;
-            transform: scale(1.15);
-            transform-origin: bottom left;
-        }
-        
-        #capture-area.square-mode #averages-container {
-            bottom: 45px;
-            right: 30px;
-            transform: scale(1.15);
-            transform-origin: bottom right;
-        }
-        
-        #capture-area.square-mode #lille-records-panel {
-            bottom: 45px;
-            right: 30px;
-            transform: scale(1.1);
-            transform-origin: bottom right;
-        }
-        
-        #capture-area.square-mode #ephemeris-panel {
-            width: 680px !important;
-            padding: 40px 30px;
-            border-radius: 30px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        #capture-area.square-mode .eph-date {
-            font-size: 36px !important;
-        }
-        
-        #capture-area.square-mode .eph-saint {
-            font-size: 22px !important;
-        }
-        
-        #capture-area.square-mode .eph-time {
-            font-size: 30px !important;
-        }
-        
-        #capture-area.square-mode .eph-icon {
-            font-size: 40px !important;
-        }
-        
-        #capture-area.square-mode .eph-duration-val {
-            font-size: 32px !important;
-        }
-
     </style>
 </head>
 
@@ -1821,10 +1502,7 @@
         function doLogin() {
             const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
-            const COMPTES = [
-                { user: 'meteo', pass: 'mto59' }
-            ];
-            if (COMPTES.some(c => c.user === user && c.pass === pass)) {
+            if (user === 'Climatpro' && pass === 'cnews2026') {
                 sessionStorage.setItem('mcp_auth', '1');
                 const overlay = document.getElementById('login-overlay');
                 overlay.style.transition = 'opacity 0.4s';
@@ -1903,34 +1581,6 @@
                         <span style="color: #aaa; text-transform: uppercase; font-weight: bold;">Statut Routine :</span>
                         <span id="model-status-label" style="font-weight: 900; padding: 2px 8px; border-radius: 4px; font-size: 10px; transition: all 0.3s; letter-spacing: 0.3px;">--</span>
                     </div>
-                </div>
-            </div>
-
-            <!-- EXPORT RÉGION ACTUELLE CSV (TOUTES LES VARIABLES API) -->
-            <div class="sidebar-section" style="border: 2px solid #00bcff; background: rgba(0, 188, 255, 0.1); border-radius: 12px; padding: 10px; margin-bottom: 15px;">
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button onclick="generateRegionDailyCSV()" class="sidebar-btn"
-                        style="background: #00bcff; color: #fff; border: none; font-weight: 900; font-size: 13px; width: 100%; transition: transform 0.2s; margin-bottom: 0;">
-                        <i class="fas fa-file-csv"></i> CSV DAILY (RÉGION ACTUELLE)
-                    </button>
-                    <button onclick="generateRegionHourlyCSV()" class="sidebar-btn"
-                        style="background: #008cc3; color: #fff; border: none; font-weight: 900; font-size: 13px; width: 100%; transition: transform 0.2s; margin-bottom: 0;">
-                        <i class="fas fa-clock"></i> CSV HOURLY (RÉGION ACTUELLE)
-                    </button>
-                </div>
-                <div style="font-size: 10px; color: #00bcff; margin-top: 5px; font-weight: bold; text-align: center; letter-spacing: 0.5px; text-transform: uppercase;">
-                    Export Région (Toutes Variables)
-                </div>
-            </div>
-
-            <!-- BOUTON API EXPLORER -->
-            <div class="sidebar-section" style="border: 2px solid #a855f7; background: rgba(168, 85, 247, 0.1); border-radius: 12px; padding: 10px; margin-bottom: 15px;">
-                <button onclick="openApiExplorer()" class="sidebar-btn"
-                    style="background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; border: none; font-weight: 900; font-size: 14px; width: 100%; transition: transform 0.2s; margin-bottom: 0; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); cursor: pointer;">
-                    <i class="fas fa-plug"></i> ACCÈS API &amp; ENDPOINTS
-                </button>
-                <div style="font-size: 10px; color: #a855f7; margin-top: 5px; font-weight: bold; text-align: center; letter-spacing: 0.5px; text-transform: uppercase;">
-                    Documentation &amp; Testeur Live
                 </div>
             </div>
 
@@ -2069,20 +1719,9 @@
                         <option value="morning">MATIN</option>
                         <option value="afternoon">APRÈS-MIDI</option>
                         <option value="evening">SOIRÉE</option>
-                        <option value="ephemeride">📅 ÉPHÉMÉRIDE</option>
                         <option value="hourly">⏱️ MODE HORAIRE (36H)</option>
                     </select>
 
-                    <div id="orientation-container" style="margin-top: 10px; margin-bottom: 10px;">
-                        <label style="font-size:11px; color:#4db8ff; font-weight:bold; display:block; margin-bottom:5px;">
-                            📺 FORMAT D'IMAGE :
-                        </label>
-                        <select id="orientation-select" onchange="toggleOrientationSelect();" style="padding:5px; width:100%; background:#1a2a3a; color:#fff; border:1px solid #4db8ff; border-radius:4px; font-size:11px;">
-                            <option value="landscape" selected>HORIZONTAL (16:9 - TV)</option>
-                            <option value="portrait">PORTRAIT (9:16 - Mobile/Story)</option>
-                            <option value="square">CARRÉ (1:1 - Facebook/Insta)</option>
-                        </select>
-                    </div>
                     <div id="soiree-mode-container" style="margin-top: 5px;">
                         <label style="font-size:11px; color:#4db8ff; cursor:pointer; display:flex; align-items:center; gap:5px;">
                             <input type="checkbox" id="soiree-mode-check" onchange="updateDisplay();">
@@ -2157,60 +1796,6 @@
                             <input type="checkbox" id="show-lille-records" onchange="updateLillePanel()" checked>
                             RECORDS LILLE
                         </label>
-                        <div id="lille-records-panel">
-                            <div class="lrp-title">🌡️ Lille-Lesquin — Historique</div>
-                            <div class="lrp-date-badge" id="lrp-date">--</div>
-
-                            <div class="lrp-section">📉 Records froids</div>
-                            <div class="lrp-row">
-                                <span class="lrp-label">Record Tn absolu</span>
-                                <div class="lrp-right">
-                                    <span class="lrp-val cold" id="lrp-tn">--</span>
-                                    <span class="lrp-year" id="lrp-tn-yr"></span>
-                                </div>
-                            </div>
-                            <div class="lrp-row">
-                                <span class="lrp-label">Tn la + haute</span>
-                                <div class="lrp-right">
-                                    <span class="lrp-val neutral" id="lrp-tn-high">--</span>
-                                    <span class="lrp-year" id="lrp-tn-high-yr"></span>
-                                </div>
-                            </div>
-                            <div class="lrp-row">
-                                <span class="lrp-label">Tx la + basse</span>
-                                <div class="lrp-right">
-                                    <span class="lrp-val cold" id="lrp-tx-low">--</span>
-                                    <span class="lrp-year" id="lrp-tx-low-yr"></span>
-                                </div>
-                            </div>
-
-                            <hr class="lrp-divider">
-
-                            <div class="lrp-section">📈 Records chauds</div>
-                            <div class="lrp-row">
-                                <span class="lrp-label">Record Tx absolu</span>
-                                <div class="lrp-right">
-                                    <span class="lrp-val hot" id="lrp-tx-rec">--</span>
-                                    <span class="lrp-year" id="lrp-tx-rec-yr"></span>
-                                </div>
-                            </div>
-
-                            <hr class="lrp-divider">
-
-                            <div class="lrp-section">📊 Normales journalières</div>
-                            <div class="lrp-row">
-                                <span class="lrp-label">Normale Tx</span>
-                                <div class="lrp-right">
-                                    <span class="lrp-val warm" id="lrp-tx-norm">--</span>
-                                </div>
-                            </div>
-                            <div class="lrp-row">
-                                <span class="lrp-label">Normale Tn</span>
-                                <div class="lrp-right">
-                                    <span class="lrp-val cold" id="lrp-tn-norm">--</span>
-                                </div>
-                            </div>
-                        </div>
                         <label
                             style="font-size:11px; color:#ddd; cursor:pointer; display:flex; align-items:center; gap:10px">
                             <input type="checkbox" id="show-legend-check" onchange="updateDisplay();" checked> AFFICHER
@@ -2326,31 +1911,6 @@
                         <div id="sub-auto-title">INITIALISATION</div>
                     </div>
                     <div id="legend"></div>
-                    <!-- Encart Éphémérides (Carte vierge) -->
-                    <div id="ephemeris-panel">
-                        <div class="eph-header">ÉPHÉMÉRIDE</div>
-                        <div class="eph-city" id="eph-city-val">PARIS</div>
-                        <div class="eph-date" id="eph-date-val">MERCREDI 8 JUILLET</div>
-                        <div class="eph-saint" id="eph-saint-val">SAINT THIBAUT</div>
-                        <div class="eph-row-container">
-                            <div class="eph-box">
-                                <div class="eph-icon">🌅</div>
-                                <div class="eph-label">LEVER</div>
-                                <div class="eph-time" id="eph-sunrise-val">05:58</div>
-                            </div>
-                            <div class="eph-box">
-                                <div class="eph-icon">🌇</div>
-                                <div class="eph-label">COUCHER</div>
-                                <div class="eph-time" id="eph-sunset-val">21:54</div>
-                            </div>
-                        </div>
-                        
-                        <div class="eph-duration-box">
-                            <div class="eph-duration-title">⏱️ DURÉE DU JOUR</div>
-                            <div class="eph-duration-val" id="eph-duration-val">15h 56min</div>
-                            <div class="eph-duration-diff" id="eph-duration-diff-val">(-2 min de soleil)</div>
-                        </div>
-                    </div>
                     <!-- Encart Moyennes Nord/Sud -->
                     <div id="averages-container">
                         <div class="average-box north">
@@ -2360,6 +1920,61 @@
                         <div class="average-box south">
                             <div class="average-label">Moyenne SUD</div>
                             <div class="average-value" id="avg-south-val">--°</div>
+                        </div>
+                    </div>
+                    <!-- Encart Records Lille - visible uniquement en vue HDF -->
+                    <div id="lille-records-panel">
+                        <div class="lrp-title">🌡️ Lille-Lesquin — Historique</div>
+                        <div class="lrp-date-badge" id="lrp-date">--</div>
+
+                        <div class="lrp-section">📉 Records froids</div>
+                        <div class="lrp-row">
+                            <span class="lrp-label">Record Tn absolu</span>
+                            <div class="lrp-right">
+                                <span class="lrp-val cold" id="lrp-tn">--</span>
+                                <span class="lrp-year" id="lrp-tn-yr"></span>
+                            </div>
+                        </div>
+                        <div class="lrp-row">
+                            <span class="lrp-label">Tn la + haute</span>
+                            <div class="lrp-right">
+                                <span class="lrp-val neutral" id="lrp-tn-high">--</span>
+                                <span class="lrp-year" id="lrp-tn-high-yr"></span>
+                            </div>
+                        </div>
+                        <div class="lrp-row">
+                            <span class="lrp-label">Tx la + basse</span>
+                            <div class="lrp-right">
+                                <span class="lrp-val cold" id="lrp-tx-low">--</span>
+                                <span class="lrp-year" id="lrp-tx-low-yr"></span>
+                            </div>
+                        </div>
+
+                        <hr class="lrp-divider">
+
+                        <div class="lrp-section">📈 Records chauds</div>
+                        <div class="lrp-row">
+                            <span class="lrp-label">Record Tx absolu</span>
+                            <div class="lrp-right">
+                                <span class="lrp-val hot" id="lrp-tx-rec">--</span>
+                                <span class="lrp-year" id="lrp-tx-rec-yr"></span>
+                            </div>
+                        </div>
+
+                        <hr class="lrp-divider">
+
+                        <div class="lrp-section">📊 Normales journalières</div>
+                        <div class="lrp-row">
+                            <span class="lrp-label">Normale Tx</span>
+                            <div class="lrp-right">
+                                <span class="lrp-val warm" id="lrp-tx-norm">--</span>
+                            </div>
+                        </div>
+                        <div class="lrp-row">
+                            <span class="lrp-label">Normale Tn</span>
+                            <div class="lrp-right">
+                                <span class="lrp-val cold" id="lrp-tn-norm">--</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2488,91 +2103,13 @@
         <button onclick="closePickers()" class="modal-btn btn-cancel">NON, ANNULER</button>
     </div>
 
-    <!-- API Explorer Modal -->
-    <div id="api-info-modal" class="custom-modal" style="width: 780px; max-width: 95vw; max-height: 85vh; overflow-y: auto; border: 2px solid #a855f7; background: rgba(10, 10, 15, 0.98); border-radius: 20px; box-shadow: 0 0 50px rgba(168, 85, 247, 0.35); padding: 25px; color: #e2e8f0; font-family: 'Roboto Condensed', sans-serif;">
-        <h3 style="text-align: center; color: #a855f7; margin: 0 0 15px 0; font-weight: 900; font-size: 1.5rem; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <i class="fas fa-server"></i> EXPLORATEUR &amp; TESTEUR API MÉTÉO
-        </h3>
-        
-        <!-- WARNING / EXPLANATION NOTE -->
-        <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 20px; font-size: 12px; line-height: 1.5;">
-            <strong style="color: #eab308; display: block; margin-bottom: 5px; font-size: 13px;">
-                <i class="fas fa-exclamation-triangle"></i> Important pour le navigateur
-            </strong>
-            Si vous collez directement les liens de l'API dans votre navigateur, vous obtiendrez une erreur 
-            <code style="background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px; color: #ef4444; font-weight: bold;">"Missing API Key"</code> ou 
-            <code style="background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px; color: #ef4444; font-weight: bold;">"Unauthorized"</code>.
-            C'est tout à fait normal ! L'API est sécurisée et requiert que la clé soit transmise via l'en-tête (header) HTTP 
-            <code style="background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px; color: #4db8ff; font-weight: bold;">x-api-key</code>.
-            Utilisez le testeur ci-dessous ou un outil comme Postman ou cURL pour tester avec les bons en-têtes.
-        </div>
-
-        <!-- LIENS DIRECTS REGIONS & FRANCE -->
-        <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-            <h4 style="margin: 0 0 10px 0; color: #a855f7; font-size: 14px; font-weight: bold;"><i class="fas fa-bolt"></i> LIENS RAPIDES (PRÊTS À L'EMPLOI)</h4>
-            <p style="margin: 0 0 10px 0; font-size: 12px; color: #cbd5e1;">Voici les liens directs que vos développeurs doivent utiliser pour récupérer toutes les données d'un coup.</p>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <!-- FRANCE -->
-                <div style="background: #1e1e24; padding: 10px; border-radius: 8px; border: 1px solid #333;">
-                    <strong style="color: #4db8ff; font-size: 12px; display: block; margin-bottom: 5px;">Toutes les Villes de la Carte France</strong>
-                    <code style="font-size: 11px; color: #a0aec0; word-break: break-all; display: block; margin-bottom: 5px;">https://ubdevaemtwbzxksjlhjg.supabase.co/functions/v1/weather/region?id=france_pictos</code>
-                    <button onclick="navigator.clipboard.writeText('https://ubdevaemtwbzxksjlhjg.supabase.co/functions/v1/weather/region?id=france_pictos'); alert('Lien France copié !');" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 10px; cursor: pointer;">COPIER LE LIEN</button>
-                </div>
-                
-                <!-- REGIONS DROPDOWN -->
-                <div style="background: #1e1e24; padding: 10px; border-radius: 8px; border: 1px solid #333;">
-                    <strong style="color: #4db8ff; font-size: 12px; display: block; margin-bottom: 5px;">Sélectionnez une Région (ou Sous-Région) :</strong>
-                    <select id="quick-region-select" onchange="updateQuickRegionLink()" style="width: 100%; padding: 4px; font-size: 11px; background: #2d2d30; color: white; border: 1px solid #555; border-radius: 4px; margin-bottom: 8px;">
-                        <option value="hdf">Hauts-de-France (hdf)</option>
-                        <option value="normandie">Normandie (normandie)</option>
-                        <option value="ile-de-france" selected>Ile-de-France (ile-de-france)</option>
-                        <option value="grand-est">Grand Est (grand-est)</option>
-                        <option value="ara">Auvergne-Rhône-Alpes (ara)</option>
-                        <option value="naq">Nouvelle-Aquitaine (naq)</option>
-                        <option value="occitanie">Occitanie (occitanie)</option>
-                        <option value="paca">PACA (paca)</option>
-                        <option value="bfc">Bourgogne-Franche-Comté (bfc)</option>
-                        <option value="bretagne">Bretagne (bretagne)</option>
-                        <option value="pdl">Pays de la Loire (pdl)</option>
-                        <option value="cvl">Centre-Val de Loire (cvl)</option>
-                        <option value="corse">Corse (corse)</option>
-                        <option disabled>──────────</option>
-                        <option value="hautes-alpes">Hautes-Alpes (Zoom)</option>
-                        <option value="alpes-de-haute-provence">Alpes-de-Haute-Provence (Zoom)</option>
-                        <option value="alpes-maritimes">Alpes-Maritimes (Zoom)</option>
-                        <option value="bouches-du-rhone">Bouches-du-Rhône (Zoom)</option>
-                        <option value="var">Var (Zoom)</option>
-                        <option value="vaucluse">Vaucluse (Zoom)</option>
-                    </select>
-                    
-                    <code id="quick-region-url" style="font-size: 11px; color: #a0aec0; word-break: break-all; display: block; margin-bottom: 5px;">https://ubdevaemtwbzxksjlhjg.supabase.co/functions/v1/weather/region?id=ile-de-france</code>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('quick-region-url').innerText); alert('Lien Région copié !');" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 10px; cursor: pointer;">COPIER LE LIEN</button>
-                    
-                    <script>
-                        function updateQuickRegionLink() {
-                            const val = document.getElementById('quick-region-select').value;
-                            document.getElementById('quick-region-url').innerText = `https://ubdevaemtwbzxksjlhjg.supabase.co/functions/v1/weather/region?id=${val}`;
-                        }
-                    </script>
-                </div>
-            </div>
-            <p style="margin: 10px 0 0 0; font-size: 11px; color: #94a3b8; font-style: italic;">N'oubliez pas d'inclure la clé API (x-api-key) dans les en-têtes (headers) de vos requêtes !</p>
-        </div>
-
-        <!-- ACTIONS -->
-        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">
-            <button onclick="closePickers()" style="margin: 0; background: #3f3f46; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: background 0.2s;">FERMER L'EXPLORATEUR</button>
-        </div>
-    </div>
-
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
     <script>
         const zoneConfigs = {
-            france: { id: 'fra', name: "FRANCE ENTIÈRE", geoUrl: 'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/france.geojson', padding: [15, 15, 15, 15], center: [46.5, 2.5], zoom: 6, cities: [{ name: "AMIENS", lat: 49.894, lon: 2.295 }, { name: "BREST", lat: 48.39, lon: -4.48, isAnchor: true }, { name: "RENNES", lat: 48.11, lon: -1.67, isAnchor: true }, { name: "CHERBOURG", lat: 49.63, lon: -1.62 }, { name: "ROUEN", lat: 49.44, lon: 1.10, isAnchor: true }, { name: "PARIS", lat: 48.85, lon: 2.35, isAnchor: true }, { name: "LILLE", lat: 50.62, lon: 3.05, isAnchor: true }, { name: "REIMS", lat: 49.25, lon: 4.03 }, { name: "METZ", lat: 49.11, lon: 6.17, isAnchor: true }, { name: "NANTES", lat: 47.21, lon: -1.55, isAnchor: true }, { name: "TOURS", lat: 47.39, lon: 0.68, isAnchor: true }, { name: "AUXERRE", lat: 47.79, lon: 3.57 }, { name: "CHAUMONT", lat: 48.11, lon: 5.14 }, { name: "STRASBOURG", lat: 48.57, lon: 7.75, isAnchor: true }, { name: "BOURGES", lat: 47.08, lon: 2.39, isAnchor: true }, { name: "BELFORT", lat: 47.63, lon: 6.86 }, { name: "LIMOGES", lat: 45.83, lon: 1.26, isAnchor: true }, { name: "VICHY", lat: 46.12, lon: 3.42 }, { name: "CHALON/S.", lat: 46.78, lon: 4.85 }, { name: "LYON", lat: 45.76, lon: 4.83, isAnchor: true }, { name: "PONTARLIER", lat: 46.90, lon: 6.35 }, { name: "LA ROCHELLE", lat: 46.16, lon: -1.15, isAnchor: true }, { name: "BORDEAUX", lat: 44.83, lon: -0.57, isAnchor: true }, { name: "BIARRITZ", lat: 43.48, lon: -1.56, isAnchor: true }, { name: "TARBES", lat: 43.23, lon: 0.07 }, { name: "TOULOUSE", lat: 43.60, lon: 1.44, isAnchor: true }, { name: "AURILLAC", lat: 44.92, lon: 2.44, isAnchor: true }, { name: "GAP", lat: 44.55, lon: 6.07 }, { name: "PERPIGNAN", lat: 42.69, lon: 2.89, isAnchor: true }, { name: "MONTPELLIER", lat: 43.61, lon: 3.87, isAnchor: true }, { name: "MARSEILLE", lat: 43.296, lon: 5.381, isAnchor: true }, { name: "NICE", lat: 43.71, lon: 7.26, isAnchor: true }, { name: "AJACCIO", lat: 41.92, lon: 8.73, isAnchor: true }, { name: "BASTIA", lat: 42.69, lon: 9.45, isAnchor: true }, { name: "ALENÇON", lat: 48.43, lon: 0.09 }, { name: "BOURG-ST-M.", lat: 45.62, lon: 6.77 }, { name: "AGEN", lat: 44.20, lon: 0.61, isAnchor: true }, { name: "LAON", lat: 49.56, lon: 3.62, isAnchor: true }, { name: "CAEN", lat: 49.18, lon: -0.37, isAnchor: true }, { name: "POITIERS", lat: 46.58, lon: 0.34, isAnchor: true }, { name: "BESANÇON", lat: 47.23, lon: 6.02, isAnchor: true }, { name: "DIJON", lat: 47.32, lon: 5.04, isAnchor: true }, { name: "GRENOBLE", lat: 45.18, lon: 5.72, isAnchor: true }, { name: "CLERMONT-FERRAND", lat: 45.78, lon: 3.08, isAnchor: true }, { name: "VALENCE", lat: 44.93, lon: 4.89, isAnchor: true }, { name: "Gorges du Tarn Causses", lat: 44.318, lon: 3.447, isAnchor: true }, { name: "Saint-Paul-de-Jarrat", lat: 42.913, lon: 1.636, isAnchor: true }, { name: "Puylagarde", lat: 44.298, lon: 1.837, isAnchor: true }, { name: "Empuré", lat: 46.024, lon: 0.054, isAnchor: true }, { name: "Berné", lat: 47.994, lon: -3.391, isAnchor: true }, { name: "Attray", lat: 48.219, lon: 2.11, isAnchor: true }, { name: "Fontenoy-la-Joute", lat: 48.453, lon: 6.66, isAnchor: true }, { name: "Clermont-en-Argonne", lat: 49.102, lon: 5.071, isAnchor: true }, { name: "Boulogne-sur-Mer", lat: 50.726, lon: 1.614, isAnchor: true }, { name: "Prémont", lat: 50.012, lon: 3.414, isAnchor: true }, { name: "Morannes-sur-Sarthe-Daumeray", lat: 47.644, lon: -0.416, isAnchor: true }] },
+            france: { id: 'fra', name: "FRANCE ENTIÈRE", geoUrl: 'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/france.geojson', padding: [15, 15, 15, 15], center: [46.5, 2.5], zoom: 6, cities: [{ name: "AMIENS", lat: 49.894, lon: 2.295 }, { name: "BREST", lat: 48.39, lon: -4.48, isAnchor: true }, { name: "RENNES", lat: 48.11, lon: -1.67, isAnchor: true }, { name: "CHERBOURG", lat: 49.63, lon: -1.62 }, { name: "ROUEN", lat: 49.44, lon: 1.10, isAnchor: true }, { name: "PARIS", lat: 48.85, lon: 2.35, isAnchor: true }, { name: "LILLE", lat: 50.62, lon: 3.05, isAnchor: true }, { name: "REIMS", lat: 49.25, lon: 4.03 }, { name: "METZ", lat: 49.11, lon: 6.17, isAnchor: true }, { name: "NANTES", lat: 47.21, lon: -1.55, isAnchor: true }, { name: "TOURS", lat: 47.39, lon: 0.68, isAnchor: true }, { name: "AUXERRE", lat: 47.79, lon: 3.57 }, { name: "CHAUMONT", lat: 48.11, lon: 5.14 }, { name: "STRASBOURG", lat: 48.57, lon: 7.75, isAnchor: true }, { name: "BOURGES", lat: 47.08, lon: 2.39, isAnchor: true }, { name: "BELFORT", lat: 47.63, lon: 6.86 }, { name: "LIMOGES", lat: 45.83, lon: 1.26, isAnchor: true }, { name: "VICHY", lat: 46.12, lon: 3.42 }, { name: "CHALON/S.", lat: 46.78, lon: 4.85 }, { name: "LYON", lat: 45.76, lon: 4.83, isAnchor: true }, { name: "PONTARLIER", lat: 46.90, lon: 6.35 }, { name: "LA ROCHELLE", lat: 46.16, lon: -1.15, isAnchor: true }, { name: "BORDEAUX", lat: 44.83, lon: -0.57, isAnchor: true }, { name: "BIARRITZ", lat: 43.48, lon: -1.56, isAnchor: true }, { name: "TARBES", lat: 43.23, lon: 0.07 }, { name: "TOULOUSE", lat: 43.60, lon: 1.44, isAnchor: true }, { name: "AURILLAC", lat: 44.92, lon: 2.44, isAnchor: true }, { name: "GAP", lat: 44.55, lon: 6.07 }, { name: "PERPIGNAN", lat: 42.69, lon: 2.89, isAnchor: true }, { name: "MONTPELLIER", lat: 43.61, lon: 3.87, isAnchor: true }, { name: "MARSEILLE", lat: 43.296, lon: 5.381, isAnchor: true }, { name: "NICE", lat: 43.71, lon: 7.26, isAnchor: true }, { name: "AJACCIO", lat: 41.92, lon: 8.73, isAnchor: true }, { name: "BASTIA", lat: 42.69, lon: 9.45, isAnchor: true }, { name: "ALENÇON", lat: 48.43, lon: 0.09 }, { name: "BOURG-ST-M.", lat: 45.62, lon: 6.77 }, { name: "AGEN", lat: 44.20, lon: 0.61, isAnchor: true }, { name: "LAON", lat: 49.56, lon: 3.62, isAnchor: true }, { name: "CAEN", lat: 49.18, lon: -0.37, isAnchor: true }, { name: "POITIERS", lat: 46.58, lon: 0.34, isAnchor: true }, { name: "BESANÇON", lat: 47.23, lon: 6.02, isAnchor: true }, { name: "DIJON", lat: 47.32, lon: 5.04, isAnchor: true }, { name: "GRENOBLE", lat: 45.18, lon: 5.72, isAnchor: true }, { name: "CLERMONT-FERRAND", lat: 45.78, lon: 3.08, isAnchor: true }, { name: "VALENCE", lat: 44.93, lon: 4.89, isAnchor: true }, { name: "Gorges du Tarn Causses", lat: 44.318, lon: 3.447, isAnchor: true }, { name: "Saint-Paul-de-Jarrat", lat: 42.913, lon: 1.636, isAnchor: true }, { name: "Puylagarde", lat: 44.298, lon: 1.837, isAnchor: true }, { name: "Empuré", lat: 46.024, lon: 0.054, isAnchor: true }, { name: "Berné", lat: 47.994, lon: -3.391, isAnchor: true }, { name: "Attray", lat: 48.219, lon: 2.11, isAnchor: true }, { name: "Fontenoy-la-Joute", lat: 48.453, lon: 6.66, isAnchor: true }, { name: "Clermont-en-Argonne", lat: 49.102, lon: 5.071, isAnchor: true }, { name: "Castine-en-Plaine", lat: 49.13, lon: -0.31, isAnchor: true }, { name: "Boulogne-sur-Mer", lat: 50.726, lon: 1.614, isAnchor: true }, { name: "Prémont", lat: 50.012, lon: 3.414, isAnchor: true }, { name: "Morannes-sur-Sarthe-Daumeray", lat: 47.644, lon: -0.416, isAnchor: true }] },
             hdf: { id: 'hdf', name: "HAUTS-DE-FRANCE", geoUrl: 'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/regions/hauts-de-france/region-hauts-de-france.geojson', padding: [60, 20, 20, 20], center: [49.9, 2.8], zoom: 8, cities: [{ name: "Amiens", lat: 49.894, lon: 2.295 }, { name: "Château-Thierry", lat: 49.046, lon: 3.403 }, { name: "Laon", lat: 49.56, lon: 3.62 }, { name: "Saint-Quentin", lat: 49.85, lon: 3.29 }, { name: "Soissons", lat: 49.38, lon: 3.32 }, { name: "Vervins", lat: 49.83, lon: 3.91 }, { name: "Avesnes-sur-Helpe", lat: 50.12, lon: 3.93 }, { name: "Cambrai", lat: 50.17, lon: 3.23 }, { name: "Dunkerque", lat: 51.03, lon: 2.37 }, { name: "Hazebrouck", lat: 50.72, lon: 2.53 }, { name: "Lille", lat: 50.62, lon: 3.05 }, { name: "Valenciennes", lat: 50.36, lon: 3.52 }, { name: "Beauvais", lat: 49.43, lon: 2.08 }, { name: "Compiègne", lat: 49.41, lon: 2.82 }, { name: "Senlis", lat: 49.207, lon: 2.585 }, { name: "Feuquières", lat: 49.64, lon: 1.85 }, { name: "Rosoy-en-Multien", lat: 49.098, lon: 2.995 }, { name: "Arras", lat: 50.29, lon: 2.78 }, { name: "Berck", lat: 50.40, lon: 1.57 }, { name: "Calais", lat: 50.95, lon: 1.85 }, { name: "Renty", lat: 50.58, lon: 2.06 }, { name: "Saint-Pol-sur-Ternoise", lat: 50.38, lon: 2.33 }, { name: "Abbeville", lat: 50.11, lon: 1.83 }, { name: "Estrées-Deniécourt", lat: 49.87, lon: 2.82 }, { name: "Montdidier", lat: 49.65, lon: 2.57 }, { name: "Boulogne-sur-Mer", lat: 50.726, lon: 1.614 }] },
             normandie: { id: 'nor', name: "NORMANDIE", geoUrl: 'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/regions/normandie/region-normandie.geojson', padding: [60, 20, 20, 20], center: [49.1, 0.4], zoom: 8, cities: [{ name: "Bayeux", lat: 49.28, lon: -0.70 }, { name: "Caen", lat: 49.18, lon: -0.37 }, { name: "Clécy", lat: 48.91, lon: -0.48 }, { name: "Lisieux", lat: 49.14, lon: 0.22 }, { name: "Vire", lat: 48.84, lon: -0.89 }, { name: "Brionne", lat: 49.19, lon: 0.72 }, { name: "Étrépagny", lat: 49.30, lon: 1.61 }, { name: "Évreux", lat: 49.02, lon: 1.15 }, { name: "Giverny", lat: 49.07, lon: 1.53 }, { name: "Vesly", lat: 49.24, lon: 1.65 }, { name: "Verneuil-sur-Avre", lat: 48.74, lon: 0.93 }, { name: "Avranches", lat: 48.68, lon: -1.36 }, { name: "Cherbourg-Octeville", lat: 49.63, lon: -1.62 }, { name: "Coutances", lat: 49.05, lon: -1.44 }, { name: "Saint-Lô", lat: 49.11, lon: -1.09 }, { name: "Alençon", lat: 48.43, lon: 0.09 }, { name: "Argentan", lat: 48.74, lon: -0.02 }, { name: "Domfront", lat: 48.59, lon: -0.65 }, { name: "Mortagne-au-Perche", lat: 48.52, lon: 0.54 }, { name: "Villers-en-Ouche", lat: 48.86, lon: 0.57 }, { name: "Dieppe", lat: 49.92, lon: 1.07 }, { name: "Fécamp", lat: 49.75, lon: 0.37 }, { name: "Le Havre", lat: 49.49, lon: 0.10 }, { name: "Neufchâtel-en-Bray", lat: 49.73, lon: 1.44 }, { name: "Rouen", lat: 49.44, lon: 1.09 }, { name: "Le Tréport", lat: 50.06, lon: 1.37 }] },
             "ile-de-france": { id: 'idf', name: "ÎLE-DE-FRANCE", geoUrl: 'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/regions/ile-de-france/region-ile-de-france.geojson', padding: [60, 20, 20, 20], center: [48.8, 2.3], zoom: 9, cities: [{ name: "Paris", lat: 48.85, lon: 2.35 }, { name: "Chelles", lat: 48.88, lon: 2.59 }, { name: "Coulommiers", lat: 48.81, lon: 3.08 }, { name: "Fontainebleau", lat: 48.41, lon: 2.70 }, { name: "La Ferté-Gaucher", lat: 48.78, lon: 3.30 }, { name: "Meaux", lat: 48.96, lon: 2.89 }, { name: "Melun", lat: 48.54, lon: 2.66 }, { name: "Montereau-Fault-Yonne", lat: 48.38, lon: 2.95 }, { name: "Nangis", lat: 48.56, lon: 3.02 }, { name: "Nemours", lat: 48.27, lon: 2.69 }, { name: "Provins", lat: 48.56, lon: 3.30 }, { name: "Tournan-en-Brie", lat: 48.74, lon: 2.77 }, { name: "Houdan", lat: 48.79, lon: 1.60 }, { name: "Mantes-la-Jolie", lat: 48.99, lon: 1.72 }, { name: "Orgeval", lat: 48.92, lon: 1.98 }, { name: "Rambouillet", lat: 48.64, lon: 1.83 }, { name: "Versailles", lat: 48.80, lon: 2.13 }, { name: "Arpajon", lat: 48.59, lon: 2.25 }, { name: "Étampes", lat: 48.43, lon: 2.16 }, { name: "Évry", lat: 48.62, lon: 2.44 }, { name: "Milly-la-Forêt", lat: 48.40, lon: 2.47 }, { name: "Nanterre", lat: 48.89, lon: 2.20 }, { name: "Aulnay-sous-Bois", lat: 48.93, lon: 2.50 }, { name: "Bobigny", lat: 48.91, lon: 2.44 }, { name: "Créteil", lat: 48.79, lon: 2.46 }, { name: "Cergy", lat: 49.04, lon: 2.08 }, { name: "Magny-en-Vexin", lat: 49.16, lon: 1.79 }, { name: "Marly-la-Ville", lat: 49.08, lon: 2.50 }, { name: "Pontoise", lat: 49.05, lon: 2.10 }] },
@@ -2742,7 +2279,6 @@
                     { name: "ROUEN", lat: 49.44, lon: 1.10 },
                     { name: "PARIS", lat: 48.85, lon: 2.35 },
                     { name: "LILLE", lat: 50.62, lon: 3.05 },
-                    { name: "BOULOGNE-SUR-MER", lat: 50.726, lon: 1.614 },
                     { name: "REIMS", lat: 49.25, lon: 4.03 },
                     { name: "METZ", lat: 49.11, lon: 6.17 },
                     { name: "NANTES", lat: 47.21, lon: -1.55 },
@@ -2854,8 +2390,6 @@
         ];
 
         let map, markersGroup, drawingGroup, autoZoningGroup, fogGroup, geoLayer = null, maskLayer = null, globalWeatherData = null, currentConfig = zoneConfigs.france_pictos, globalGeoBoundary = null, globalBoundaryPolygon = null;
-        let geoJsonLoaded = false;
-        let isUsingMFData = false;
         let lastZoningMarkers = [], lastZoningGusts = [];
         let manualWeatherOverrides = {}; let manualTempOverrides = {}; let hiddenMarkers = new Set();
         let suppressedAutoZones = new Set();
@@ -3579,7 +3113,6 @@
                 'grey': { filter: "brightness(0.6) contrast(1.0) saturate(0)", bg: "#333333" },
                 'classic': { filter: "brightness(0.75) contrast(1.15)", bg: "#000" }
             };
-            const cfg = configs[styleMode] || configs['classic'];
 
             const autoZoningActive = document.getElementById('auto-zoning-check')?.checked;
             if (autoZoningActive) {
@@ -3751,13 +3284,11 @@
                 }
 
                 fitMapToZone();
-                geoJsonLoaded = true;
             } catch (e) {
                 console.error("GeoJSON Error:", e);
                 const loading = document.getElementById('loading');
                 if (loading) loading.style.display = 'none';
                 fitMapToZone();
-                geoJsonLoaded = true;
             }
         }
 
@@ -3765,38 +3296,15 @@
             if (!map) return;
             map.invalidateSize();
 
-            // Détecter l'orientation actuelle
-            const select = document.getElementById('orientation-select');
-            let orient = select ? select.value : 'landscape';
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('orientation')) {
-                orient = urlParams.get('orientation');
-            } else if (urlParams.get('portrait') === 'true') {
-                orient = 'portrait';
-            }
-
             if (currentConfig.preferCenter && currentConfig.center && currentConfig.zoom) {
-                // Pour le mode portrait ou carré, on dézoome légèrement si nécessaire
-                let zoomVal = currentConfig.zoom;
-                if (orient === 'portrait') zoomVal = Math.max(1, zoomVal - 1);
-                else if (orient === 'square') zoomVal = Math.max(1, zoomVal - 1);
-                map.setView(currentConfig.center, zoomVal, { animate: false });
+                map.setView(currentConfig.center, currentConfig.zoom, { animate: false });
                 return;
             }
 
+            // Utiliser le padding de la config ou une valeur par défaut, en forçant l'espace pour le titre
+            // On écrase le padding-top à 120px minimum pour éviter que le titre n'écrive sur la carte
             let pad = currentConfig.padding ? [...currentConfig.padding] : [50, 20, 20, 20];
-            
-            if (orient === 'portrait') {
-                // Espace restreint pour zoomer au maximum sur la carte en format vertical (portrait)
-                pad = [60, 10, 60, 10];
-            } else if (orient === 'square') {
-                // Espace modéré en haut et en bas pour s'ajuster au format carré
-                pad = [160, 40, 160, 40];
-            } else {
-                // Mode paysage (standard)
-                if (pad[0] < 120) pad[0] = 120; // espace pour titre
-            }
+            if (pad[0] < 50) pad[0] = 50;
 
             if (geoLayer) {
                 map.fitBounds(geoLayer.getBounds(), { padding: pad, animate: false });
@@ -3874,44 +3382,6 @@
             }
         }
 
-        function updateDaySelectorLabels() {
-            if (!globalWeatherData || globalWeatherData.length === 0 || !globalWeatherData[0].hourly || !globalWeatherData[0].hourly.time || !globalWeatherData[0].hourly.time[0]) return;
-            
-            const baseTimeStr = globalWeatherData[0].hourly.time[0].split('T')[0]; // "2026-07-08"
-            const baseDate = new Date(baseTimeStr + "T12:00:00");
-            const select = document.getElementById('day-select');
-            const savedValue = select.value;
-            
-            select.innerHTML = '';
-            
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            
-            const maxDays = globalWeatherData[0].daily ? globalWeatherData[0].daily.time.length : 8;
-            
-            for (let i = 0; i < maxDays; i++) {
-                const d = new Date(baseDate);
-                d.setDate(baseDate.getDate() + i);
-                
-                const compareDate = new Date(d);
-                compareDate.setHours(0,0,0,0);
-                const diffDays = Math.round((compareDate - today) / 86400000);
-                
-                let dayLabel = "";
-                if (diffDays === 0) dayLabel = "AUJ";
-                else if (diffDays === 1) dayLabel = "DEM";
-                else dayLabel = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }).toUpperCase();
-                
-                const opt = document.createElement('option');
-                opt.value = i;
-                opt.text = dayLabel;
-                select.appendChild(opt);
-            }
-            if (savedValue && parseInt(savedValue) < maxDays) {
-                select.value = savedValue;
-            }
-        }
-
         function clearManualOverrides() {
             manualWeatherOverrides = {};
             manualTempOverrides = {};
@@ -3966,45 +3436,17 @@
         }
 
         async function fetchWeatherData(model) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const loading = document.getElementById('loading');
-            
-            // Par defaut, on charge les donnees locales Meteo-France (sauf si use_openmeteo est demande)
-            if (!urlParams.has('use_openmeteo')) {
-                if (loading) {
-                    document.getElementById('loading-text').innerText = "CHARGEMENT DES DONNÉES METEO-FRANCE...";
-                    loading.style.display = 'flex';
-                    loading.style.backgroundColor = 'rgba(0,0,0,0.8)';
-                }
-                try {
-                    const zoneVal = document.getElementById('zone-select').value || 'france_pictos';
-                    const dataFile = zoneVal === 'france_pictos' ? 'meteofrance_data.json' : `meteofrance_data_${zoneVal}.json`;
-                    const res = await fetch(dataFile);
-                    if (res.ok) {
-                        globalWeatherData = await res.json();
-                        isUsingMFData = true;
-                        if (loading) loading.style.display = 'none';
-                        updateDaySelectorLabels();
-                        updateDisplay();
-                        return;
-                    }
-                } catch (e) {
-                    console.warn("Local Meteo-France data not found, falling back to Open-Meteo:", e);
-                }
-            }
-            isUsingMFData = false;
             const lats = currentConfig.cities.map(c => c.lat).join(',');
             const lons = currentConfig.cities.map(c => c.lon).join(',');
             const tempModel = (document.getElementById('temp-model-select')?.value) || 'ecmwf_ifs';
             const fetchKey = `${lats}|${lons}|${tempModel}`;
             const storageKey = 'weather_cache_' + CACHE_VERSION + '_' + fetchKey.replace(/[|,]/g, '_');
 
-            // loading is already declared at the top of fetchWeatherData
+            const loading = document.getElementById('loading');
 
             // 1. Cache en mémoirevive (Session en cours rapide)
             if (globalWeatherData && fetchKey === lastFetchKey && globalWeatherData[0].hourly && globalWeatherData[0].hourly.temperature_2m) {
                 if (loading) loading.style.display = 'none';
-                updateDaySelectorLabels();
                 updateDisplay();
                 return;
             }
@@ -4021,7 +3463,6 @@
                         lastFetchKey = fetchKey;
                         lastTempModel = tempModel;
                         if (loading) loading.style.display = 'none';
-                        updateDaySelectorLabels();
                         updateDisplay();
                         return;
                     }
@@ -4136,7 +3577,6 @@
 
                 lastFetchKey = fetchKey;
                 lastTempModel = activeTempModel;
-                updateDaySelectorLabels();
                 updateDisplay();
                 loading.style.display = 'none';
             } catch (e) {
@@ -4288,184 +3728,6 @@
             document.getElementById('icon-picker-modal').style.display = 'none';
             document.getElementById('temp-picker-modal').style.display = 'none';
             document.getElementById('zone-delete-modal').style.display = 'none';
-            const apiModal = document.getElementById('api-info-modal');
-            if (apiModal) apiModal.style.display = 'none';
-        }
-
-        let activeApiTab = 'forecast';
-
-        function switchApiTab(tabName) {
-            // Remove active style from all api tabs
-            const tabs = ['forecast', 'region', 'current', 'hourly', 'daily', 'alerts'];
-            tabs.forEach(t => {
-                const btn = document.getElementById('api-tab-' + t);
-                if (btn) {
-                    btn.style.background = 'transparent';
-                    btn.style.color = '#a1a1aa';
-                    btn.style.borderColor = '#3f3f46';
-                }
-            });
-
-            // Set active style for selected tab
-            const activeBtn = document.getElementById('api-tab-' + tabName);
-            if (activeBtn) {
-                activeBtn.style.background = 'rgba(124, 58, 237, 0.15)';
-                activeBtn.style.color = '#c084fc';
-                activeBtn.style.borderColor = '#3a6080';
-            }
-
-            activeApiTab = tabName;
-
-            // Toggle input visibility
-            const coordsDiv = document.getElementById('api-param-coords');
-            const regionDiv = document.getElementById('api-param-region');
-            
-            if (tabName === 'region') {
-                if (coordsDiv) coordsDiv.style.display = 'none';
-                if (regionDiv) regionDiv.style.display = 'flex';
-            } else {
-                if (coordsDiv) coordsDiv.style.display = 'flex';
-                if (regionDiv) regionDiv.style.display = 'none';
-            }
-
-            updateApiExplorerUrls();
-        }
-
-        function updateApiExplorerUrls() {
-            const projectSelect = document.getElementById('api-project-select');
-            if (!projectSelect) return;
-            const projectRef = projectSelect.value;
-            const baseUrl = `https://${projectRef}.supabase.co/functions/v1/weather`;
-            
-            let queryParams = '';
-            let description = '';
-
-            if (activeApiTab === 'forecast') {
-                const lat = document.getElementById('api-param-lat').value || '50.63';
-                const lon = document.getElementById('api-param-lon').value || '3.06';
-                queryParams = `forecast?lat=${lat}&lon=${lon}`;
-                description = "<strong>Description:</strong> Récupère les prévisions météo unifiées pour les coordonnées géographiques spécifiées. Renvoie la météo actuelle, les prévisions horaires (16 jours, 32 variables) et quotidiennes (16 jours, 19 variables) dans un seul et unique payload optimisé.";
-            } else if (activeApiTab === 'region') {
-                const regionId = document.getElementById('api-param-region-id').value || 'france_pictos';
-                const hourlyChecked = document.getElementById('api-param-region-hourly').checked;
-                queryParams = `region?id=${regionId}${hourlyChecked ? '&hourly=true' : ''}`;
-                description = "<strong>Description:</strong> Récupère les prévisions météo agrégées pour toutes les villes d'une région ou d'un lot en un seul appel API parallèle (ex: 39 villes pour la carte 'France Pictos'). Comporte des optimisations de parallélisation et de cache spatial/temporel.";
-            } else if (activeApiTab === 'current') {
-                const lat = document.getElementById('api-param-lat').value || '50.63';
-                const lon = document.getElementById('api-param-lon').value || '3.06';
-                queryParams = `current?lat=${lat}&lon=${lon}`;
-                description = "<strong>Description:</strong> Renvoie uniquement les conditions météorologiques actuelles pour les coordonnées géographiques spécifiées (température, vent, et condition verbale textuelle convertie).";
-            } else if (activeApiTab === 'hourly') {
-                const lat = document.getElementById('api-param-lat').value || '50.63';
-                const lon = document.getElementById('api-param-lon').value || '3.06';
-                queryParams = `hourly?lat=${lat}&lon=${lon}`;
-                description = "<strong>Description:</strong> Renvoie les données et grilles horaires uniquement (température, humidité, point de rosée, précipitations, couverture nuageuse, vitesse/rafales de vent, température/humidité du sol, etc.) pour 16 jours.";
-            } else if (activeApiTab === 'daily') {
-                const lat = document.getElementById('api-param-lat').value || '50.63';
-                const lon = document.getElementById('api-param-lon').value || '3.06';
-                queryParams = `daily?lat=${lat}&lon=${lon}`;
-                description = "<strong>Description:</strong> Renvoie les résumés quotidiens uniquement pour 16 jours (min/max température, levé/couché de soleil, indice UV, cumuls de pluie, heures de précipitations, vent maximum, etc.).";
-            } else if (activeApiTab === 'alerts') {
-                const lat = document.getElementById('api-param-lat').value || '50.63';
-                const lon = document.getElementById('api-param-lon').value || '3.06';
-                queryParams = `alerts?lat=${lat}&lon=${lon}`;
-                description = "<strong>Description:</strong> Analyse les conditions à venir et renvoie une alerte personnalisée en fonction de seuils critiques pré-paramétrés (rafales de vent > 45km/h, gel < 0°C, canicule > 35°C, pluies torrentielles > 20mm/j).";
-            }
-
-            const fullUrl = `${baseUrl}/${queryParams}`;
-            const urlDisplay = document.getElementById('api-url-display');
-            if (urlDisplay) urlDisplay.value = fullUrl;
-            
-            const descDiv = document.getElementById('endpoint-desc');
-            if (descDiv) descDiv.innerHTML = description;
-        }
-
-        function copyApiExplorerField(fieldId) {
-            const input = document.getElementById(fieldId);
-            if (!input) return;
-            
-            input.select();
-            input.setSelectionRange(0, 99999);
-            
-            try {
-                navigator.clipboard.writeText(input.value);
-                alert("Copié dans le presse-papiers avec succès !");
-            } catch (err) {
-                // Fallback
-                document.execCommand('copy');
-                alert("Copié dans le presse-papiers avec succès !");
-            }
-        }
-
-        function openApiExplorer() {
-            closePickers();
-            document.getElementById('modal-overlay').style.display = 'block';
-            document.getElementById('api-info-modal').style.display = 'block';
-            switchApiTab('forecast'); // default to forecast tab
-        }
-
-        async function runApiExplorerTest() {
-            const url = document.getElementById('api-url-display').value;
-            const apiKey = document.getElementById('api-key-input').value;
-            
-            const responsePre = document.getElementById('api-test-response');
-            const loader = document.getElementById('api-test-loader');
-            
-            if (!responsePre || !loader) return;
-            
-            responsePre.textContent = '';
-            loader.style.display = 'flex';
-            
-            try {
-                const startTime = Date.now();
-                const res = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'x-api-key': apiKey
-                    }
-                });
-                
-                const duration = Date.now() - startTime;
-                
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    responsePre.style.color = '#ef4444';
-                    responsePre.textContent = `Erreur HTTP ${res.status}: ${res.statusText}\n\n` + JSON.stringify(errData, null, 4);
-                } else {
-                    const data = await res.json();
-                    responsePre.style.color = '#2ecc71';
-                    
-                    // Truncate hourly/daily array display if it's too huge just to keep reading pleasant
-                    let displayData = {...data};
-                    if (displayData.hourly && displayData.hourly.length > 3) {
-                        displayData.hourly = [
-                            displayData.hourly[0],
-                            displayData.hourly[1],
-                            `... ${displayData.hourly.length - 2} heures masquées pour la clarté de l'affichage ...`
-                        ];
-                    }
-                    if (displayData.daily && displayData.daily.length > 3) {
-                        displayData.daily = [
-                            displayData.daily[0],
-                            displayData.daily[1],
-                            `... ${displayData.daily.length - 2} jours masqués pour la clarté de l'affichage ...`
-                        ];
-                    }
-                    if (displayData.cities && displayData.cities.length > 2) {
-                        displayData.cities = [
-                            displayData.cities[0],
-                            `... ${displayData.cities.length - 1} autres villes masquées pour la clarté de l'affichage ...`
-                        ];
-                    }
-                    
-                    responsePre.textContent = `// Requête réussie en ${duration}ms !\n// (Structure élaguée à l'affichage pour lisibilité)\n\n` + JSON.stringify(displayData, null, 4);
-                }
-            } catch (err) {
-                responsePre.style.color = '#ef4444';
-                responsePre.textContent = `Erreur de connexion réseau :\n\n${err.message}\n\nAssurez-vous que l'Edge function est déployée et active sur le projet sélectionné.`;
-            } finally {
-                loader.style.display = 'none';
-            }
         }
 
         function applyManualTemp() {
@@ -4605,1535 +3867,6 @@
 
             document.getElementById('hour-label').innerText = `${dayName} ${hourStr} (+${hOffset}h)`;
         }
-        function getDistanceKm(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Radius of the earth in km
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = 
-                Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        function toggleOrientationSelect() {
-            const select = document.getElementById('orientation-select');
-            const val = select ? select.value : 'landscape';
-            const captureArea = document.getElementById('capture-area');
-            const workArea = document.getElementById('work-area');
-            
-            captureArea.classList.remove('portrait-mode', 'square-mode');
-            captureArea.style.width = '';
-            captureArea.style.height = '';
-            if (workArea) workArea.style.overflow = '';
-            
-            if (val === 'portrait') {
-                captureArea.classList.add('portrait-mode');
-                captureArea.style.width = '1080px';
-                captureArea.style.height = '1920px';
-                if (workArea) workArea.style.overflow = 'auto';
-            } else if (val === 'square') {
-                captureArea.classList.add('square-mode');
-                captureArea.style.width = '1080px';
-                captureArea.style.height = '1080px';
-                if (workArea) workArea.style.overflow = 'auto';
-            }
-            
-            fitMapToZone();
-            updateDisplay();
-        }
-
-        window.EPHEMERIS_SAINTS = {
-            "january": [
-                        [
-                                    "Jour de l'An",
-                                    ""
-                        ],
-                        [
-                                    "Basile",
-                                    "Saint"
-                        ],
-                        [
-                                    "Geneviève",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Odilon",
-                                    "Saint"
-                        ],
-                        [
-                                    "Edouard",
-                                    "Saint"
-                        ],
-                        [
-                                    "Mélaine",
-                                    "Saint"
-                        ],
-                        [
-                                    "Raymond",
-                                    "Saint"
-                        ],
-                        [
-                                    "Lucien",
-                                    "Saint"
-                        ],
-                        [
-                                    "Alix",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Guillaume",
-                                    "Saint"
-                        ],
-                        [
-                                    "Pauline",
-                                    "Saint"
-                        ],
-                        [
-                                    "Tatiana",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Yvette",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Nina",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Rémi",
-                                    "Saint"
-                        ],
-                        [
-                                    "Marcel",
-                                    "Saint"
-                        ],
-                        [
-                                    "Roseline",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Prisca",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Marius",
-                                    "Saint"
-                        ],
-                        [
-                                    "Sébastien",
-                                    "Saint"
-                        ],
-                        [
-                                    "Agnès",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Vincent",
-                                    "Saint"
-                        ],
-                        [
-                                    "Barnard",
-                                    "Saint"
-                        ],
-                        [
-                                    "François de Sales",
-                                    "Saint"
-                        ],
-                        [
-                                    "Conversion de Paul",
-                                    ""
-                        ],
-                        [
-                                    "Paule",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Angèle",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Thomas d'Aquin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Gildas",
-                                    "Saint"
-                        ],
-                        [
-                                    "Martine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Marcelle",
-                                    "Sainte"
-                        ]
-            ],
-            "february": [
-                        [
-                                    "Ella",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Fête de la Présention",
-                                    ""
-                        ],
-                        [
-                                    "Blaise",
-                                    "Saint"
-                        ],
-                        [
-                                    "Véronique",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Agathe",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Gaston",
-                                    "Saint"
-                        ],
-                        [
-                                    "Eugènie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Jacqueline",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Apolline",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Arnaud",
-                                    "Saint"
-                        ],
-                        [
-                                    "Notre Dame de Lourdes",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Félix",
-                                    "Saint"
-                        ],
-                        [
-                                    "Béatrice",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Valentin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Claude",
-                                    "Saint"
-                        ],
-                        [
-                                    "Julienne",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Alexis",
-                                    "Saint"
-                        ],
-                        [
-                                    "Bernadette",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Gabin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Aimée",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Mercredi des Cendres",
-                                    ""
-                        ],
-                        [
-                                    "Isabelle",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Lazare",
-                                    "Saint"
-                        ],
-                        [
-                                    "Modeste",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Roméo",
-                                    "Saint"
-                        ],
-                        [
-                                    "Nestor",
-                                    "Saint"
-                        ],
-                        [
-                                    "Honorine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Romain",
-                                    "Saint"
-                        ],
-                        [
-                                    "Auguste",
-                                    "Saint"
-                        ]
-            ],
-            "march": [
-                        [
-                                    "Aubin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Charles le Bon",
-                                    "Saint"
-                        ],
-                        [
-                                    "Guénolé",
-                                    "Saint"
-                        ],
-                        [
-                                    "Casimir",
-                                    "Saint"
-                        ],
-                        [
-                                    "Olive",
-                                    "Saint"
-                        ],
-                        [
-                                    "Colette",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Félicité",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Jean de Dieu",
-                                    "Saint"
-                        ],
-                        [
-                                    "Françoise",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Vivien",
-                                    "Saint"
-                        ],
-                        [
-                                    "Rosine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Justine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Rodrigue",
-                                    "Saint"
-                        ],
-                        [
-                                    "Mathilde",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Louise",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Bénédicte",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Patrice",
-                                    "Saint"
-                        ],
-                        [
-                                    "Cyrille",
-                                    "Saint"
-                        ],
-                        [
-                                    "Joseph",
-                                    "Saint"
-                        ],
-                        [
-                                    "Herbert",
-                                    "Saint"
-                        ],
-                        [
-                                    "Clémence",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Léa",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Victorien",
-                                    "Saint"
-                        ],
-                        [
-                                    "Karine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Anne",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Larissa",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Habib",
-                                    "Saint"
-                        ],
-                        [
-                                    "Gontran",
-                                    "Saint"
-                        ],
-                        [
-                                    "Gwladys",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Amédée",
-                                    "Saint"
-                        ],
-                        [
-                                    "Benjamin",
-                                    "Saint"
-                        ]
-            ],
-            "april": [
-                        [
-                                    "Hugues",
-                                    "Saint"
-                        ],
-                        [
-                                    "Sandrine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Richard",
-                                    "Saint"
-                        ],
-                        [
-                                    "Isidore",
-                                    "Saint"
-                        ],
-                        [
-                                    "Irène",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Marcellin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Jean-Baptiste de la Salle",
-                                    "Saint"
-                        ],
-                        [
-                                    "Julie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Gautier",
-                                    "Saint"
-                        ],
-                        [
-                                    "Fulbert",
-                                    "Saint"
-                        ],
-                        [
-                                    "Stanislas",
-                                    "Saint"
-                        ],
-                        [
-                                    "Jules",
-                                    "Saint"
-                        ],
-                        [
-                                    "Ida",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Maxime",
-                                    "Saint"
-                        ],
-                        [
-                                    "Paterne",
-                                    "Saint"
-                        ],
-                        [
-                                    "Benoît-Joseph",
-                                    "Saint"
-                        ],
-                        [
-                                    "Anicet",
-                                    "Saint"
-                        ],
-                        [
-                                    "Parfait",
-                                    "Saint"
-                        ],
-                        [
-                                    "Emma",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Odette",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Anselme",
-                                    "Saint"
-                        ],
-                        [
-                                    "Alexandre",
-                                    "Saint"
-                        ],
-                        [
-                                    "Georges",
-                                    "Saint"
-                        ],
-                        [
-                                    "Fidèle",
-                                    "Saint"
-                        ],
-                        [
-                                    "Marc",
-                                    "Saint"
-                        ],
-                        [
-                                    "Alida",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Zita",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Valérie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Catherine de Sienne",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Robert",
-                                    "Saint"
-                        ]
-            ],
-            "may": [
-                        [
-                                    "Fête du travail",
-                                    ""
-                        ],
-                        [
-                                    "Boris",
-                                    "Saint"
-                        ],
-                        [
-                                    "Philippe",
-                                    "Saint"
-                        ],
-                        [
-                                    "Sylvain",
-                                    "Saint"
-                        ],
-                        [
-                                    "Judith",
-                                    "Saint"
-                        ],
-                        [
-                                    "Prudence",
-                                    "Saint"
-                        ],
-                        [
-                                    "Gisèle",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Armistice de 1945",
-                                    ""
-                        ],
-                        [
-                                    "Pacôme",
-                                    "Saint"
-                        ],
-                        [
-                                    "Solange",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Estelle",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Achille",
-                                    "Saint"
-                        ],
-                        [
-                                    "Rolande",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Matthias",
-                                    "Saint"
-                        ],
-                        [
-                                    "Denise",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Honoré",
-                                    "Saint"
-                        ],
-                        [
-                                    "Pascal",
-                                    "Saint"
-                        ],
-                        [
-                                    "Eric",
-                                    "Saint"
-                        ],
-                        [
-                                    "Yves",
-                                    "Saint"
-                        ],
-                        [
-                                    "Bernardin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Constantin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Emile",
-                                    "Saint"
-                        ],
-                        [
-                                    "Didier",
-                                    "Saint"
-                        ],
-                        [
-                                    "Donatien",
-                                    "Saint"
-                        ],
-                        [
-                                    "Sophie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Bérenger",
-                                    "Saint"
-                        ],
-                        [
-                                    "Augustin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Germain",
-                                    "Saint"
-                        ],
-                        [
-                                    "Aymar",
-                                    "Saint"
-                        ],
-                        [
-                                    "Ferdinand",
-                                    "Saint"
-                        ],
-                        [
-                                    "Ferdinand",
-                                    "Saint"
-                        ]
-            ],
-            "june": [
-                        [
-                                    "Justin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Blandine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Kévin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Clotilde",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Igor",
-                                    "Saint"
-                        ],
-                        [
-                                    "Norbert",
-                                    "Saint"
-                        ],
-                        [
-                                    "Gilbert",
-                                    "Saint"
-                        ],
-                        [
-                                    "Médard",
-                                    "Saint"
-                        ],
-                        [
-                                    "Diane",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Landry",
-                                    "Saint"
-                        ],
-                        [
-                                    "Barnabé",
-                                    "Saint"
-                        ],
-                        [
-                                    "Guy",
-                                    "Saint"
-                        ],
-                        [
-                                    "Antoine de Padoue",
-                                    "Saint"
-                        ],
-                        [
-                                    "Elisée",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Germaine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Jean-François Régis",
-                                    "Saint"
-                        ],
-                        [
-                                    "Hervé",
-                                    "Saint"
-                        ],
-                        [
-                                    "Léonce",
-                                    "Saint"
-                        ],
-                        [
-                                    "Romuald",
-                                    "Saint"
-                        ],
-                        [
-                                    "Silvère",
-                                    "Saint"
-                        ],
-                        [
-                                    "Solstice d'été",
-                                    ""
-                        ],
-                        [
-                                    "Alban",
-                                    "Saint"
-                        ],
-                        [
-                                    "Audrey",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Jean-Baptiste",
-                                    "Saint"
-                        ],
-                        [
-                                    "Prosper",
-                                    "Saint"
-                        ],
-                        [
-                                    "Anthelme",
-                                    "Saint"
-                        ],
-                        [
-                                    "Fernand",
-                                    "Saint"
-                        ],
-                        [
-                                    "Irénée",
-                                    "Saint"
-                        ],
-                        [
-                                    "Pierre",
-                                    "Saint"
-                        ],
-                        [
-                                    "Martial",
-                                    "Saint"
-                        ]
-            ],
-            "july": [
-                        [
-                                    "Thierry",
-                                    "Saint"
-                        ],
-                        [
-                                    "Martinien",
-                                    "Saint"
-                        ],
-                        [
-                                    "Thomas",
-                                    "Saint"
-                        ],
-                        [
-                                    "Florent",
-                                    "Saint"
-                        ],
-                        [
-                                    "Antoine",
-                                    "Saint"
-                        ],
-                        [
-                                    "Mariette",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Raoul",
-                                    "Saint"
-                        ],
-                        [
-                                    "Thibault",
-                                    "Saint"
-                        ],
-                        [
-                                    "Amandine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Ulrich",
-                                    "Saint"
-                        ],
-                        [
-                                    "Benoît",
-                                    "Saint"
-                        ],
-                        [
-                                    "Olivier",
-                                    "Saint"
-                        ],
-                        [
-                                    "Henri",
-                                    "Saint"
-                        ],
-                        [
-                                    "Fête Nationale",
-                                    ""
-                        ],
-                        [
-                                    "Donald",
-                                    ""
-                        ],
-                        [
-                                    "Fête de Notre Dame du Mont Carmel",
-                                    ""
-                        ],
-                        [
-                                    "Charlotte",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Frédéric",
-                                    "Saint"
-                        ],
-                        [
-                                    "Arsène",
-                                    "Saint"
-                        ],
-                        [
-                                    "Marina",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Victor",
-                                    "Saint"
-                        ],
-                        [
-                                    "Marie-Madeleine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Brigitte",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Christine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Jacques",
-                                    "Saint"
-                        ],
-                        [
-                                    "Anne",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Nathalie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Samson",
-                                    "Saint"
-                        ],
-                        [
-                                    "Marthe",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Juliette",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Ignace de Loyola",
-                                    "Saint"
-                        ]
-            ],
-            "august": [
-                        [
-                                    "Alphonse",
-                                    "Saint"
-                        ],
-                        [
-                                    "Julien Eymard",
-                                    "Saint"
-                        ],
-                        [
-                                    "Lydie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Jean-Marie Vianney",
-                                    "Saint"
-                        ],
-                        [
-                                    "Abel",
-                                    "Saint"
-                        ],
-                        [
-                                    "Fête de la Transfiguration",
-                                    ""
-                        ],
-                        [
-                                    "Gaétan",
-                                    "Saint"
-                        ],
-                        [
-                                    "Dominique",
-                                    "Saint"
-                        ],
-                        [
-                                    "Amour",
-                                    "Saint"
-                        ],
-                        [
-                                    "Laurent",
-                                    "Saint"
-                        ],
-                        [
-                                    "Claire",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Clarisse",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Hippolyte",
-                                    "Saint"
-                        ],
-                        [
-                                    "Evrard",
-                                    "Saint"
-                        ],
-                        [
-                                    "Fête de l'Assomption",
-                                    ""
-                        ],
-                        [
-                                    "Armel",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Hyacinthe",
-                                    "Saint"
-                        ],
-                        [
-                                    "Hélène",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Jean-Eudes",
-                                    "Saint"
-                        ],
-                        [
-                                    "Bernard",
-                                    "Saint"
-                        ],
-                        [
-                                    "Christophe",
-                                    "Saint"
-                        ],
-                        [
-                                    "Fabrice",
-                                    "Saint"
-                        ],
-                        [
-                                    "Rose de Lima",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Barthélémy",
-                                    "Saint"
-                        ],
-                        [
-                                    "Louis",
-                                    "Saint"
-                        ],
-                        [
-                                    "Natacha",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Monique",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Augustin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Sabine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Fiacre",
-                                    "Saint"
-                        ],
-                        [
-                                    "Aristide",
-                                    "Saint"
-                        ]
-            ],
-            "september": [
-                        [
-                                    "Gilles",
-                                    "Saint"
-                        ],
-                        [
-                                    "Ingrid",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Grégoire",
-                                    "Saint"
-                        ],
-                        [
-                                    "Rosalie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Raïssa",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Bertrand",
-                                    "Saint"
-                        ],
-                        [
-                                    "Reine",
-                                    "Sao,te"
-                        ],
-                        [
-                                    "Fête de la Nativité",
-                                    ""
-                        ],
-                        [
-                                    "Alain",
-                                    "Saint"
-                        ],
-                        [
-                                    "Inès",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Adelphe",
-                                    "Saint"
-                        ],
-                        [
-                                    "Apollinaire",
-                                    "Saint"
-                        ],
-                        [
-                                    "Aimé",
-                                    "Saint"
-                        ],
-                        [
-                                    "Fête de la Croix Glorieuse",
-                                    ""
-                        ],
-                        [
-                                    "Roland",
-                                    "Saint"
-                        ],
-                        [
-                                    "Edith",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Renaud",
-                                    "Saint"
-                        ],
-                        [
-                                    "Nadège",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Emilie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Davy",
-                                    "Saint"
-                        ],
-                        [
-                                    "Matthieu",
-                                    "Saint"
-                        ],
-                        [
-                                    "Maurice",
-                                    "Saint"
-                        ],
-                        [
-                                    "Equinoxe d'Automne",
-                                    ""
-                        ],
-                        [
-                                    "Thècle",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Hermann",
-                                    "Saint"
-                        ],
-                        [
-                                    "Côme",
-                                    "Saint"
-                        ],
-                        [
-                                    "Vincent de Paul",
-                                    "Saint"
-                        ],
-                        [
-                                    "Venceslas",
-                                    "Saint"
-                        ],
-                        [
-                                    "Michel",
-                                    "Saint"
-                        ],
-                        [
-                                    "Jérôme",
-                                    "Saint"
-                        ]
-            ],
-            "october": [
-                        [
-                                    "Thérèse de l'Enfant Jésus",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Léger",
-                                    "Saint"
-                        ],
-                        [
-                                    "Gérard",
-                                    "Saint"
-                        ],
-                        [
-                                    "François d'Assise",
-                                    "Saint"
-                        ],
-                        [
-                                    "Fleur",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Bruno",
-                                    "Saint"
-                        ],
-                        [
-                                    "Serge",
-                                    "Saint"
-                        ],
-                        [
-                                    "Pélagie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Denis",
-                                    "Saint"
-                        ],
-                        [
-                                    "Ghislain",
-                                    "Saint"
-                        ],
-                        [
-                                    "Firmin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Wilfried",
-                                    "Saint"
-                        ],
-                        [
-                                    "Géraud",
-                                    "Saint"
-                        ],
-                        [
-                                    "Juste",
-                                    "Saint"
-                        ],
-                        [
-                                    "Thérèse d'Avila",
-                                    "Saint"
-                        ],
-                        [
-                                    "Edwige",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Baudoin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Luc",
-                                    "Saint"
-                        ],
-                        [
-                                    "René",
-                                    "Saint"
-                        ],
-                        [
-                                    "Adeline",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Céline",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Elodie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Jean de Capistran",
-                                    "Saint"
-                        ],
-                        [
-                                    "Florentin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Crépin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Dimitri",
-                                    "Saint"
-                        ],
-                        [
-                                    "Emeline",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Jude",
-                                    "Saint"
-                        ],
-                        [
-                                    "Narcisse",
-                                    "Saint"
-                        ],
-                        [
-                                    "Bienvenue",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Quentin",
-                                    "Saint"
-                        ]
-            ],
-            "november": [
-                        [
-                                    "Toussaint",
-                                    ""
-                        ],
-                        [
-                                    "Fête des défunts",
-                                    ""
-                        ],
-                        [
-                                    "Hubert",
-                                    "Saint"
-                        ],
-                        [
-                                    "Charles",
-                                    "Saint"
-                        ],
-                        [
-                                    "Sylvie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Bertille",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Carine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Geoffroy",
-                                    "Saint"
-                        ],
-                        [
-                                    "Théodore",
-                                    "Saint"
-                        ],
-                        [
-                                    "Léon",
-                                    "Saint"
-                        ],
-                        [
-                                    "Armistice de 1918",
-                                    ""
-                        ],
-                        [
-                                    "Christian",
-                                    "Saint"
-                        ],
-                        [
-                                    "Brice",
-                                    "Saint"
-                        ],
-                        [
-                                    "Sidoine",
-                                    "Saint"
-                        ],
-                        [
-                                    "Albert",
-                                    "Saint"
-                        ],
-                        [
-                                    "Marguerite",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Elisabeth",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Aude",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Tanguy",
-                                    "Saint"
-                        ],
-                        [
-                                    "Edmond",
-                                    "Saint"
-                        ],
-                        [
-                                    "Présence de Marie",
-                                    ""
-                        ],
-                        [
-                                    "Cécile",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Clément",
-                                    "Saint"
-                        ],
-                        [
-                                    "Flora",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Catherine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Delphine",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Sévrin",
-                                    "Saint"
-                        ],
-                        [
-                                    "Jacques de la Marche",
-                                    "Saint"
-                        ],
-                        [
-                                    "Saturnin",
-                                    "Saint"
-                        ],
-                        [
-                                    "André",
-                                    "Saint"
-                        ]
-            ],
-            "december": [
-                        [
-                                    "Florence",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Viviane",
-                                    "Sainte"
-                        ],
-                        [
-                                    "François-Xavier",
-                                    "Saint"
-                        ],
-                        [
-                                    "Barbara",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Gérald",
-                                    "Saint"
-                        ],
-                        [
-                                    "Nicolas",
-                                    "Saint"
-                        ],
-                        [
-                                    "Ambroise",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Fête de l'Immaculée Conception",
-                                    ""
-                        ],
-                        [
-                                    "Pierre Fourier",
-                                    "Saint"
-                        ],
-                        [
-                                    "Romaric",
-                                    "Saint"
-                        ],
-                        [
-                                    "Daniel",
-                                    "Saint"
-                        ],
-                        [
-                                    "Jeanne-Françoise de Chantal",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Lucie",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Odile",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Ninon",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Alice",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Gaël",
-                                    "Saint"
-                        ],
-                        [
-                                    "Gatien",
-                                    "Saint"
-                        ],
-                        [
-                                    "Urbain",
-                                    "Saint"
-                        ],
-                        [
-                                    "Théophile",
-                                    "Saint"
-                        ],
-                        [
-                                    "Solstice d'Hiver",
-                                    ""
-                        ],
-                        [
-                                    "Françoise-Xavière",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Armand",
-                                    "Saint"
-                        ],
-                        [
-                                    "Adèle",
-                                    "Sainte"
-                        ],
-                        [
-                                    "Noël",
-                                    ""
-                        ],
-                        [
-                                    "Etienne",
-                                    "Saint"
-                        ],
-                        [
-                                    "Jean",
-                                    "Saint"
-                        ],
-                        [
-                                    "Innocents",
-                                    "Saints"
-                        ],
-                        [
-                                    "David",
-                                    "Saint"
-                        ],
-                        [
-                                    "Roger",
-                                    "Saint"
-                        ],
-                        [
-                                    "Sylvestre",
-                                    "Saint"
-                        ]
-            ]
-};
 
         function updateDisplay() {
             if (!globalWeatherData) return;
@@ -6164,110 +3897,6 @@
 
             if (isSoireeMode && period === 'afternoon') {
                 period = 'evening';
-            }
-            
-            // Éphémérides (Carte vierge)
-            const ephPanel = document.getElementById('ephemeris-panel');
-            if (period === 'ephemeride') {
-                if (ephPanel) ephPanel.style.display = 'block';
-                document.getElementById('legend').style.display = 'none';
-                document.getElementById('averages-container').style.display = 'none';
-                document.getElementById('lille-records-panel').style.display = 'none';
-                document.getElementById('auto-title-container').style.display = 'none';
-                
-                if (globalWeatherData && globalWeatherData.length > 0) {
-                    const mainLoc = globalWeatherData[0];
-                    let dateObj = new Date();
-                    if (mainLoc.hourly && mainLoc.hourly.time && mainLoc.hourly.time[0]) {
-                        const baseTimeStr = mainLoc.hourly.time[0].split('T')[0];
-                        dateObj = new Date(baseTimeStr + "T12:00:00");
-                    }
-                    dateObj.setDate(dateObj.getDate() + dayIdx);
-                    
-                    // City name (from ephemeris_city field set by generate_meteofrance_maps.py)
-                    const cityEl = document.getElementById('eph-city-val');
-                    if (cityEl) cityEl.innerText = (mainLoc.ephemeris_city || 'PARIS').toUpperCase();
-
-                    const dateStr = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-                    document.getElementById('eph-date-val').innerText = dateStr.toUpperCase();
-                    
-                    const dayNum = dateObj.getDate();
-                    const monthIdx = dateObj.getMonth();
-                    const monthsEng = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
-                    const monthKey = monthsEng[monthIdx];
-                    const saintData = (window.EPHEMERIS_SAINTS && window.EPHEMERIS_SAINTS[monthKey]) ? window.EPHEMERIS_SAINTS[monthKey][dayNum - 1] : null;
-                    let saintText = "SAINT DU JOUR";
-                    if (saintData) {
-                        const [name, prefix] = saintData;
-                        saintText = prefix ? `${prefix} ${name}` : name;
-                    }
-                    document.getElementById('eph-saint-val').innerText = saintText.toUpperCase();
-                    
-                    const riseIso = mainLoc.daily && mainLoc.daily.sunrise ? mainLoc.daily.sunrise[dayIdx] : null;
-                    const setIso = mainLoc.daily && mainLoc.daily.sunset ? mainLoc.daily.sunset[dayIdx] : null;
-                    
-                    const formatTime = (isoStr) => {
-                        if (!isoStr) return "--:--";
-                        const parts = isoStr.split('T');
-                        if (parts.length < 2) return "--:--";
-                        const timeParts = parts[1].split(':');
-                        if (timeParts.length < 2) return "--:--";
-                        return `${timeParts[0].padStart(2, '0')}:${timeParts[1].padStart(2, '0')}`;
-                    };
-                    
-                    document.getElementById('eph-sunrise-val').innerText = formatTime(riseIso);
-                    document.getElementById('eph-sunset-val').innerText = formatTime(setIso);
-                    
-                    const getDayLengthMinutes = (sunriseIso, sunsetIso) => {
-                        if (!sunriseIso || !sunsetIso) return 0;
-                        const riseParts = sunriseIso.split('T')[1].split(':');
-                        const setParts = sunsetIso.split('T')[1].split(':');
-                        const riseMin = parseInt(riseParts[0]) * 60 + parseInt(riseParts[1]);
-                        const setMin = parseInt(setParts[0]) * 60 + parseInt(setParts[1]);
-                        return setMin - riseMin;
-                    };
-                    
-                    const formatDuration = (minutes) => {
-                        const h = Math.floor(minutes / 60);
-                        const m = minutes % 60;
-                        return `${h}h ${m.toString().padStart(2, '0')}min`;
-                    };
-                    
-                    const todayLen = getDayLengthMinutes(riseIso, setIso);
-                    document.getElementById('eph-duration-val').innerText = formatDuration(todayLen);
-                    
-                    let diffText = "";
-                    let diffClass = "";
-                    if (mainLoc.daily && mainLoc.daily.sunrise && mainLoc.daily.sunrise.length > 1) {
-                        let diffVal = 0;
-                        if (dayIdx > 0) {
-                            const prevLen = getDayLengthMinutes(mainLoc.daily.sunrise[dayIdx - 1], mainLoc.daily.sunset[dayIdx - 1]);
-                            diffVal = todayLen - prevLen;
-                        } else {
-                            const nextLen = getDayLengthMinutes(mainLoc.daily.sunrise[dayIdx + 1], mainLoc.daily.sunset[dayIdx + 1]);
-                            diffVal = nextLen - todayLen;
-                        }
-                        
-                        if (diffVal > 0) {
-                            diffText = `(+${diffVal} min de soleil)`;
-                            diffClass = "gain";
-                        } else if (diffVal < 0) {
-                            diffText = `(${diffVal} min de soleil)`;
-                            diffClass = "";
-                        } else {
-                            diffText = "(stable)";
-                            diffClass = "gain";
-                        }
-                    }
-                    const diffEl = document.getElementById('eph-duration-diff-val');
-                    diffEl.innerText = diffText;
-                    diffEl.className = "eph-duration-diff " + diffClass;
-                }
-                return;
-            } else {
-                if (ephPanel) ephPanel.style.display = 'none';
-                document.getElementById('legend').style.display = 'block';
-                document.getElementById('auto-title-container').style.display = 'block';
             }
             const bank = document.getElementById('icon-bank-select').value;
 
@@ -6421,121 +4050,59 @@
 
             updateLegend(legendType, minV, maxV);
 
-            // 1. Calculate base weather codes for all cities (Option 3: 3-hour window)
-            const baseCodes = [];
-            globalWeatherData.forEach((loc, idx) => {
-                if (!loc) {
-                    baseCodes.push(null);
-                    return;
-                }
-                const city = currentConfig.cities[idx];
-                if (!city) {
-                    baseCodes.push(null);
-                    return;
-                }
-
-                let finalCode = 0;
-                if (period === 'morning' || period === 'afternoon' || period === 'evening') {
-                    // Option 3: 3-hour window (Matin = 8h-10h, Après-midi = 14h-16h, Soirée = 19h-21h)
-                    const hours = period === 'morning' ? [8, 9, 10] : (period === 'afternoon' ? [14, 15, 16] : [19, 20, 21]);
-                    const windowCodes = [];
-                    hours.forEach(h => {
-                        const hIdx = dayIdx * 24 + h;
-                        let code = loc.hourly.weathercode[hIdx] !== undefined ? loc.hourly.weathercode[hIdx] : loc.hourly.weathercode[dayIdx * 24 + 12];
-                        if (!isUsingMFData) {
-                            code = wmoMapping[code] !== undefined ? wmoMapping[code] : code;
-                        }
-                        windowCodes.push(code);
-                    });
-
-                    // Check if there are any severe codes (>= 6)
-                    const severeCodes = windowCodes.filter(c => c >= 6);
-                    if (severeCodes.length > 0) {
-                        // Priority list for severe codes (highest severity first)
-                        const priority = [11, 10, 9, 8, 7, 6, 12];
-                        severeCodes.sort((a, b) => priority.indexOf(a) - priority.indexOf(b));
-                        finalCode = severeCodes[0];
-                    } else {
-                        // Choose the most frequent code (mode)
-                        const counts = {};
-                        let maxCount = 0;
-                        let modeCode = windowCodes[0];
-                        windowCodes.forEach(c => {
-                            counts[c] = (counts[c] || 0) + 1;
-                            if (counts[c] > maxCount) {
-                                maxCount = counts[c];
-                                modeCode = c;
-                            } else if (counts[c] === maxCount) {
-                                // Tie breaker: choose the one with higher severity in [4, 3, 2, 1, 5, 0]
-                                const priority = [4, 3, 2, 1, 5, 0];
-                                if (priority.indexOf(c) < priority.indexOf(modeCode)) {
-                                    modeCode = c;
-                                }
-                            }
-                        });
-                        finalCode = modeCode;
-                    }
-                } else {
-                    // Fallback to single hour
-                    const hIdx = period === 'hourly' ? hGlobal : (dayIdx * 24 + 12);
-                    let code = loc.hourly.weathercode[hIdx] !== undefined ? loc.hourly.weathercode[hIdx] : loc.hourly.weathercode[dayIdx * 24 + 12];
-                    if (!isUsingMFData) {
-                        code = wmoMapping[code] !== undefined ? wmoMapping[code] : code;
-                    }
-                    finalCode = code;
-                }
-                
-                baseCodes.push(finalCode);
-            });
-
-            // 2. Apply spatial smoothing - REMOVED: perturbed maps
-            const smoothedCodes = [...baseCodes];
-
             const allMarkerData = [];
-            const renderedPositions = new Set();
             globalWeatherData.forEach((loc, idx) => {
-                if (!loc) return;
-                const city = currentConfig.cities[idx];
-                if (!city) return;
+                if (hiddenMarkers.has(idx) || !loc) return;
+                if (!values[idx]) return; 
 
-                const mappedCode = smoothedCodes[idx] !== null ? smoothedCodes[idx] : 0;
+                let hIdx = dayIdx * 24 + (period === 'morning' ? 9 : period === 'afternoon' ? 15 : period === 'evening' ? 20 : 12);
+                if (period === 'hourly') hIdx = hGlobal;
+
+                const rawCode = loc.hourly.weathercode[hIdx];
+                const highCloud = loc.hourly.cloud_cover_high[hIdx];
+                const lowCloud = loc.hourly.cloud_cover_low[hIdx];
+                const midCloud = loc.hourly.cloud_cover_mid[hIdx];
+
+                // Mapping vers nos 12 catégories
+                let mappedCode = wmoMapping[rawCode] !== undefined ? wmoMapping[rawCode] : rawCode;
+
+                // Logique dynamique Soleil Voilé (P13) :
+                // On l'active si on a bcp de nuages hauts (>30%) ET que les nuages bas/moyens sont peu présents (<40%)
+                // Même si le code brut est 3 (Couvert), s'il n'y a que des nuages hauts, c'est un voile.
+                if (rawCode <= 3 && highCloud > 30 && lowCloud < 40 && midCloud < 40) {
+                    mappedCode = 5;
+                }
+
+                // Override manuel (prioritaire)
                 const wCode = manualWeatherOverrides[idx] !== undefined ? manualWeatherOverrides[idx] : mappedCode;
-                const v = values[idx] ? values[idx].val : null;
-
-                // On remplit allMarkerData pour CHAQUE ville, même cachée, pour que l'export CNEWS puisse mapper dessus
-                allMarkerData.push({ 
-                    city: city, 
-                    val: v, 
-                    code: wCode, 
-                    lat: city.lat, 
-                    lon: city.lon,
-                    isAnchor: !!city.isAnchor 
-                });
-
-                // --- ANTI-DOUBLON VISUEL ---
-                const posKey = `${city.lat.toFixed(3)}_${city.lon.toFixed(3)}`;
-                if (renderedPositions.has(posKey)) return;
-                renderedPositions.add(posKey);
-
-                // Ensuite seulement, on gère l'affichage réel sur la carte
-                if (hiddenMarkers.has(idx)) return;
 
                 const isSmall = (currentConfig.id === 'fra' || !currentConfig.id.includes('world'));
                 const autoZoningActive = document.getElementById('auto-zoning-check')?.checked;
                 const showAnchors = document.getElementById('show-anchors-check')?.checked;
 
+                const city = currentConfig.cities[idx];
+
+                // Logique de visibilité des ancres :
+                // - En mode édition : visible si "show-anchors" est coché
+                // - En export Carte 1 (zonage actif) : masquées pour ne pas polluer l'export
+                // - En export Carte 2 (pictos, zonage inactif) : VISIBLES → la carte nationale doit avoir tous les pictos
+                // - En export CNEWS : pas d'ancres dans la config CNEWS, donc sans impact
                 let shouldRender;
                 if (!city.isAnchor) {
                     shouldRender = true;
                 } else if (isExporting) {
+                    // Pendant l'export : on masque les ancres SEULEMENT quand le zonage auto est actif (Carte 1)
                     shouldRender = !autoZoningActive;
                 } else {
+                    // En édition normale : on montre les ancres si la case "show anchors" est cochée
                     shouldRender = showAnchors;
                 }
 
                 if (shouldRender) {
-                    createMarker(city, v, param, wCode, bank, idx, isSmall, values[idx] ? values[idx].wind : null, colorType, minV, maxV);
+                    createMarker(city, values[idx].val, param, wCode, bank, idx, isSmall, values[idx].wind, colorType, minV, maxV);
                 }
+
+                allMarkerData.push({ city: city, val: values[idx].val, code: wCode, lat: city.lat, lon: city.lon });
             });
 
             // Collecte des données de rafales pour l'overlay du zonage auto
@@ -6644,10 +4211,6 @@
 
         function updateAutoTitles(param, dayIdx, period, hourOffset = null) {
             let dateObj = new Date();
-            if (globalWeatherData && globalWeatherData.length > 0 && globalWeatherData[0].hourly && globalWeatherData[0].hourly.time && globalWeatherData[0].hourly.time[0]) {
-                const baseTimeStr = globalWeatherData[0].hourly.time[0].split('T')[0]; // "2026-07-08"
-                dateObj = new Date(baseTimeStr + "T12:00:00");
-            }
             let periodLabel = "";
 
             if (period === 'hourly' && hourOffset !== null) {
@@ -7801,55 +5364,51 @@
 
             const shouldDoTripleExport = (zone === 'france') || (isNational && (isWeatherTemp || isAutoZoningActive));
 
+            // Noms pour l'archivage automatique
+            const mainTitle = document.getElementById('main-auto-title').innerText;
+            const subTitle = document.getElementById('sub-auto-title').innerText;
+            const now = new Date();
+            const timeStr = `${now.getHours()}h${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            const getArchiveName = (suffix) => `💾 ${timeStr} - ${mainTitle} ${subTitle} (${suffix})`;
+
             try {
                 if (shouldDoTripleExport) {
-                    // --- SNAPSHOT DES PICTOS FRANCE ---
-                    // On active temporairement le zonage auto pour capturer les codes picto de chaque ville
+                    // --- CARTE 1 : ZONAGE AUTO (Suffix _ZONAGE) ---
+                    document.getElementById('loading-text').innerText = "GÉNÉRATION DU ZONAGE...";
                     autoZoningCheck.checked = true;
                     hideMarkersCheck.checked = false;
-                    if (fogGroup) fogGroup.remove();
+                    if (fogGroup) fogGroup.remove(); // Masquer brouillards
                     toggleMarkers();
                     await updateGeoJson();
                     await updateDisplay();
+                    await performCapture("_ZONAGE");
 
+                    // --- SNAPSHOT DES PICTOS FRANCE APRÈS CARTE 1 ---
+                    // On capture ici le code picto de CHAQUE ville de la vue France (ancres incluses)
+                    // AVANT tout changement de zone. C'est cette référence qui servira pour
+                    // Carte 2 (france_pictos) ET pour la carte CNEWS.
                     const franceSnapshot = {};
                     const franceSnapshotList = [...lastZoningMarkers];
                     franceSnapshotList.forEach(m => {
-                        if (m && m.city) {
-                            const key = m.city.name.toUpperCase().trim();
-                            franceSnapshot[key] = m;
-                        }
+                        if (m && m.city) franceSnapshot[m.city.name.toUpperCase().trim()] = m;
                     });
-
                     const _distDeg = (a, b) => Math.sqrt(Math.pow(a.lat - b.lat, 2) + Math.pow(a.lon - b.lon, 2));
-                    const _findSnapshotMarker = (targetCity) => {
+                    const _findNearest = (targetCity) => {
                         const key = targetCity.name.toUpperCase().trim();
                         if (franceSnapshot[key]) return franceSnapshot[key];
                         let best = null, bestD = Infinity;
                         franceSnapshotList.forEach(m => {
                             if (!m || !m.city) return;
-                            let d = _distDeg(targetCity, m.city);
-                            if (m.isAnchor) d *= 0.5;
+                            const d = _distDeg(targetCity, m.city);
                             if (d < bestD) { bestD = d; best = m; }
                         });
                         return best;
                     };
 
-                    // --- CARTE NATIONALE : PICTOS FRANCE ---
-                    const pictoOverrides = {}, pictoTempOverrides = {};
-                    zoneConfigs.france_pictos.cities.forEach((city, idx) => {
-                        const m = _findSnapshotMarker(city);
-
-                        if (m) {
-                            pictoOverrides[idx] = m.code;
-                            pictoTempOverrides[idx] = m.val;
-                        }
-                    });
-
-                    manualWeatherOverrides = pictoOverrides;
-                    manualTempOverrides = pictoTempOverrides;
-
-                    document.getElementById('loading-text').innerText = "GÉNÉRATION CARTE NATIONALE...";
+                    // --- CARTE 2 : PICTOS FRANCE (Suffix _PICTOS_T) ---
+                    // On switche vers la config france_pictos (carte nationale standard)
+                    // et on applique les pictos depuis le snapshot.
+                    document.getElementById('loading-text').innerText = "GÉNÉRATION PICTOS FRANCE...";
                     const zoneSelectEl = document.getElementById('zone-select');
                     autoZoningCheck.checked = false;
                     hideMarkersCheck.checked = false;
@@ -7857,18 +5416,108 @@
 
                     zoneSelectEl.value = 'france_pictos';
                     await handleZoneChange(true);
+
+                    // Appliquer les overrides depuis le snapshot france
+                    const pictoOverrides = {}, pictoTempOverrides = {};
+                    zoneConfigs.france_pictos.cities.forEach((city, idx) => {
+                        const m = _findNearest(city);
+                        if (m) { pictoOverrides[idx] = m.code; pictoTempOverrides[idx] = m.val; }
+                    });
+                    manualWeatherOverrides = pictoOverrides;
+                    manualTempOverrides = pictoTempOverrides;
+
                     await updateDisplay();
-                    await performCapture("");
+                    await performCapture("_PICTOS_T");
+
+                    // Retour sur france pour les surcouches
+                    zoneSelectEl.value = 'france';
+                    await handleZoneChange(true);
+                    // Restaurer les overrides france depuis le snapshot
+                    const franceRestored = {}, franceTempRestored = {};
+                    zoneConfigs.france.cities.forEach((city, idx) => {
+                        const m = franceSnapshot[city.name.toUpperCase().trim()];
+                        if (m) { franceRestored[idx] = m.code; franceTempRestored[idx] = m.val; }
+                    });
+                    manualWeatherOverrides = franceRestored;
+                    manualTempOverrides = franceTempRestored;
+                    await updateDisplay();
+
+                    // --- CARTE 3 : SURCOUCHES ---
+                    const dayIdxValue = parseInt(document.getElementById('day-select').value);
+                    const periodValue = document.getElementById('period-select')?.value || 'day';
+
+                    const hasStrongGusts = lastZoningGusts.some(g => g.val >= 45);
+                    const hasSpecialMarkers = manualSpecialMarkers.length > 0;
+                    const isJ3Plus = (dayIdxValue >= 3);
+
+                    if (hasStrongGusts || hasSpecialMarkers || isJ3Plus) {
+                        document.getElementById('loading-text').innerText = "GÉNÉRATION SURCOUCHES...";
+                        autoZoningCheck.checked = false;
+                        hideMarkersCheck.checked = true;
+                        showAvgCheck.checked = true;
+                        forceShowOverlays = true;
+                        if (fogGroup) fogGroup.addTo(map);
+                        toggleMarkers();
+                        await updateGeoJson();
+                        await updateDisplay();
+
+                        await performCapture("_SURCOUCHES");
+                    }
+
+                    // --- CARTE CNEWS (Suffix _CNEWS) ---
+                    if (isNational) {
+                        forceShowOverlays = false;
+                        document.getElementById('loading-text').innerText = "GÉNÉRATION CARTE CNEWS...";
+                        const windCheck = document.getElementById('simple-wind-check');
+                        const wasWindChecked = windCheck ? windCheck.checked : false;
+
+                        // Overrides CNEWS depuis le snapshot france (par nom exact ou plus proche voisin GPS)
+                        const cnewsOverrides = {}, cnewsTempOvr = {};
+                        zoneConfigs.cnews.cities.forEach((city, idx) => {
+                            const m = _findNearest(city);
+                            if (m) { cnewsOverrides[idx] = m.code; cnewsTempOvr[idx] = m.val; }
+                        });
+
+                        zoneSelectEl.value = 'cnews';
+                        autoZoningCheck.checked = false;
+                        hideMarkersCheck.checked = false;
+                        if (windCheck) windCheck.checked = false;
+                        if (fogGroup) fogGroup.addTo(map);
+                        updateWindDisplay();
+                        await handleZoneChange(true);
+
+                        manualWeatherOverrides = cnewsOverrides;
+                        manualTempOverrides = cnewsTempOvr;
+
+                        await updateDisplay();
+                        await performCapture("_CNEWS");
+
+                        if (windCheck) windCheck.checked = wasWindChecked;
+                        updateWindDisplay();
+
+                        // Retour sur france : restaurer les overrides corrects (indices france)
+                        zoneSelectEl.value = 'france';
+                        await handleZoneChange(true);
+                        // Re-appliquer les overrides france depuis le snapshot (les indices CNEWS ne sont plus valides)
+                        const fnRestored = {}, fnTempRestored = {};
+                        zoneConfigs.france.cities.forEach((city, idx) => {
+                            const m = franceSnapshot[city.name.toUpperCase().trim()];
+                            if (m) { fnRestored[idx] = m.code; fnTempRestored[idx] = m.val; }
+                        });
+                        manualWeatherOverrides = fnRestored;
+                        manualTempOverrides = fnTempRestored;
+                    }
 
                     // Restauration de l'état initial
                     autoZoningCheck.checked = wasAutoZoningChecked;
                     hideMarkersCheck.checked = wasHideMarkersChecked;
                     showAvgCheck.checked = wasAvgChecked;
+                    // Restaurer le paramètre d'affichage (peut avoir été forcé à weather_temp par handleZoneChange)
                     document.getElementById('param-select').value = wasParam;
                     forceShowOverlays = false;
                     isExporting = false;
                     document.body.classList.remove('exporting-mode');
-                    if (fogGroup && !map.hasLayer(fogGroup)) fogGroup.addTo(map);
+                    if (fogGroup && !map.hasLayer(fogGroup)) fogGroup.addTo(map); // Toujours réafficher
                     toggleMarkers();
                     await updateGeoJson();
                     await updateDisplay();
@@ -8006,8 +5655,8 @@
                         const tChunk = mergedTemp.slice(d * 24, (d + 1) * 24).filter(x => x !== null);
                         const gChunk = mergedGusts.slice(d * 24, (d + 1) * 24).filter(x => x !== null);
                         
-                        let minVal = (loc.daily && loc.daily.temperature_2m_min && loc.daily.temperature_2m_min[d] !== undefined) ? loc.daily.temperature_2m_min[d] : (tChunk.length > 0 ? Math.min(...tChunk) : null);
-                        let maxVal = (loc.daily && loc.daily.temperature_2m_max && loc.daily.temperature_2m_max[d] !== undefined) ? loc.daily.temperature_2m_max[d] : (tChunk.length > 0 ? Math.max(...tChunk) : null);
+                        let minVal = tChunk.length > 0 ? Math.min(...tChunk) : null;
+                        let maxVal = tChunk.length > 0 ? Math.max(...tChunk) : null;
                         let gustMax = gChunk.length > 0 ? Math.max(...gChunk) : 0;
                         const roundedGust = Math.round(gustMax / 5) * 5;
                         
@@ -8040,173 +5689,6 @@
                 const filenameSuffix = startOffset > 0 ? "_veille" : "";
                 link.setAttribute("href", downloadUrl);
                 link.setAttribute("download", `meteo_export_complet_${ts}${filenameSuffix}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-            } catch (error) {
-                console.error("Export Error:", error);
-                alert("Erreur lors de la génération du CSV.");
-            } finally {
-                if (loading) loading.style.display = 'none';
-                isExporting = false;
-            }
-        }
-
-        async function generateRegionDailyCSV() {
-            if (isExporting) return;
-            isExporting = true;
-            closePickers();
-            const loading = document.getElementById('loading');
-            const loadingText = document.getElementById('loading-text');
-
-            const rKey = document.getElementById('zone-select').value || 'france_pictos';
-            const cities = zoneConfigs[rKey].cities;
-
-            if (loading) {
-                loadingText.innerText = "GÉNÉRATION DU CSV DAILY (" + cities.length + " VILLES)...";
-                loading.style.display = 'flex';
-                loading.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            }
-
-            try {
-                const lats = cities.map(c => c.lat).join(',');
-                const lons = cities.map(c => c.lon).join(',');
-                const dailyParams = "weathercode,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,uv_index_max,uv_index_clear_sky_max,precipitation_sum,rain_sum,showers_sum,snowfall_sum,precipitation_hours,precipitation_probability_max,windspeed_10m_max,windgusts_10m_max,winddirection_10m_dominant,shortwave_radiation_sum";
-                const forecastDays = 16;
-                
-                const fetchUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&daily=${dailyParams}&forecast_days=${forecastDays}&timezone=Europe/Paris`;
-                const res = await fetch(fetchUrl);
-                if (!res.ok) throw new Error("API Error: " + res.status);
-                const rawData = await res.json();
-                const locations = Array.isArray(rawData) ? rawData : [rawData];
-
-                const sampleDaily = locations[0].daily;
-                const dailyKeys = Object.keys(sampleDaily).filter(k => k !== "time");
-                const headers = ["Ville", "Latitude", "Longitude", "Date", ...dailyKeys];
-                const csvLines = [headers.join(";")];
-
-                locations.forEach((loc, cityIdx) => {
-                    const cityName = cities[cityIdx].name;
-                    const daily = loc.daily;
-                    const times = daily.time;
-
-                    times.forEach((t, dayIdx) => {
-                        const dateObj = new Date(t);
-                        const formattedDate = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        const row = [
-                            cityName,
-                            cities[cityIdx].lat,
-                            cities[cityIdx].lon,
-                            formattedDate
-                        ];
-                        dailyKeys.forEach(key => {
-                            let val = daily[key][dayIdx];
-                            if ((key === "sunrise" || key === "sunset") && val) {
-                                try {
-                                    val = val.split("T")[1].substring(0, 5);
-                                } catch(e) {}
-                            }
-                            row.push(val !== null && val !== undefined ? val : "");
-                        });
-                        csvLines.push(row.map(x => `"${x}"`).join(";"));
-                    });
-                });
-
-                const csvContent = "\uFEFF" + csvLines.join("\n");
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const downloadUrl = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                const firstDayDate = new Date();
-                const yyyy = firstDayDate.getFullYear();
-                const mm = String(firstDayDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(firstDayDate.getDate()).padStart(2, '0');
-                const ts = `${yyyy}-${mm}-${dd}`;
-                
-                link.setAttribute("href", downloadUrl);
-                link.setAttribute("download", `${rKey}_daily_${ts}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-            } catch (error) {
-                console.error("Export Error:", error);
-                alert("Erreur lors de la génération du CSV.");
-            } finally {
-                if (loading) loading.style.display = 'none';
-                isExporting = false;
-            }
-        }
-
-        async function generateRegionHourlyCSV() {
-            if (isExporting) return;
-            isExporting = true;
-            closePickers();
-            const loading = document.getElementById('loading');
-            const loadingText = document.getElementById('loading-text');
-
-            const rKey = document.getElementById('zone-select').value || 'france_pictos';
-            const cities = zoneConfigs[rKey].cities;
-
-            if (loading) {
-                loadingText.innerText = "GÉNÉRATION DU CSV HOURLY (" + cities.length + " VILLES)...";
-                loading.style.display = 'flex';
-                loading.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            }
-
-            try {
-                const lats = cities.map(c => c.lat).join(',');
-                const lons = cities.map(c => c.lon).join(',');
-                const hourlyParams = "temperature_2m,relativehumidity_2m,dewpoint_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,weathercode,pressure_msl,surface_pressure,cloudcover,cloudcover_low,cloudcover_mid,cloudcover_high,visibility,evapotranspiration,vapour_pressure_deficit,windspeed_10m,windgusts_10m,winddirection_10m,soil_temperature_0cm,soil_temperature_6cm,soil_temperature_18cm,soil_temperature_54cm,soil_moisture_0_1cm,soil_moisture_1_3cm,soil_moisture_3_9cm,soil_moisture_9_27cm,soil_moisture_27_81cm";
-                const forecastDays = 16;
-                
-                const fetchUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&hourly=${hourlyParams}&forecast_days=${forecastDays}&timezone=Europe/Paris`;
-                const res = await fetch(fetchUrl);
-                if (!res.ok) throw new Error("API Error: " + res.status);
-                const rawData = await res.json();
-                const locations = Array.isArray(rawData) ? rawData : [rawData];
-
-                const sampleHourly = locations[0].hourly;
-                const hourlyKeys = Object.keys(sampleHourly).filter(k => k !== "time");
-                const headers = ["Ville", "Latitude", "Longitude", "Date", "Heure", ...hourlyKeys];
-                const csvLines = [headers.join(";")];
-
-                locations.forEach((loc, cityIdx) => {
-                    const cityName = cities[cityIdx].name;
-                    const hourly = loc.hourly;
-                    const times = hourly.time;
-
-                    times.forEach((t, hourIdx) => {
-                        const dt = new Date(t);
-                        const formattedDate = dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        const formattedTime = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                        const row = [
-                            cityName,
-                            cities[cityIdx].lat,
-                            cities[cityIdx].lon,
-                            formattedDate,
-                            formattedTime
-                        ];
-                        hourlyKeys.forEach(key => {
-                            const val = hourly[key][hourIdx];
-                            row.push(val !== null && val !== undefined ? val : "");
-                        });
-                        csvLines.push(row.map(x => `"${x}"`).join(";"));
-                    });
-                });
-
-                const csvContent = "\uFEFF" + csvLines.join("\n");
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const downloadUrl = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                const firstDayDate = new Date();
-                const yyyy = firstDayDate.getFullYear();
-                const mm = String(firstDayDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(firstDayDate.getDate()).padStart(2, '0');
-                const ts = `${yyyy}-${mm}-${dd}`;
-                
-                link.setAttribute("href", downloadUrl);
-                link.setAttribute("download", `${rKey}_hourly_${ts}.csv`);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -8450,125 +5932,7 @@
         window.onload = function () {
             initLeafletMap();
             initDaySelector();
-            
-            // Query parameters support
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('highlight') || urlParams.get('temp_highlight') === 'true') {
-                const check = document.getElementById('temp-highlight-check');
-                if (check) check.checked = true;
-            }
-            if (urlParams.has('headless')) {
-                // Apply headless CSS/JS layout
-                document.getElementById('sidebar').style.display = 'none';
-                const workArea = document.getElementById('work-area');
-                const orient = urlParams.get('orientation') || 'landscape';
-                const isPortrait = orient === 'portrait';
-                const isSquare = orient === 'square';
-                
-                if (workArea) {
-                    workArea.style.left = '0';
-                    workArea.style.width = isPortrait ? '1080px' : (isSquare ? '1080px' : '100vw');
-                    workArea.style.height = isPortrait ? '1920px' : (isSquare ? '1080px' : '100vh');
-                    workArea.style.padding = '0';
-                }
-                const captureArea = document.getElementById('capture-area');
-                if (captureArea) {
-                    if (isPortrait) {
-                        captureArea.classList.add('portrait-mode');
-                        captureArea.style.width = '1080px';
-                        captureArea.style.height = '1920px';
-                    } else if (isSquare) {
-                        captureArea.classList.add('square-mode');
-                        captureArea.style.width = '1080px';
-                        captureArea.style.height = '1080px';
-                    } else {
-                        captureArea.style.width = '100vw';
-                        captureArea.style.height = '100vh';
-                    }
-                    captureArea.style.boxShadow = 'none';
-                }
-                if (isPortrait || isSquare) {
-                    const w = '1080px';
-                    const h = isPortrait ? '1920px' : '1080px';
-                    document.body.style.width = w;
-                    document.body.style.height = h;
-                    document.body.style.overflow = 'hidden';
-                    document.documentElement.style.width = w;
-                    document.documentElement.style.height = h;
-                    document.documentElement.style.overflow = 'hidden';
-                }
-            }
-
-            if (urlParams.has('zone')) {
-                document.getElementById('zone-select').value = urlParams.get('zone');
-            }
-            handleZoneChange(true);
-            
-            if (urlParams.has('headless')) {
-                // Set day, parameter, and period
-                if (urlParams.has('day')) {
-                    document.getElementById('day-select').value = urlParams.get('day');
-                }
-                if (urlParams.has('param')) {
-                    document.getElementById('param-select').value = urlParams.get('param');
-                }
-                if (urlParams.has('period')) {
-                    document.getElementById('period-select').value = urlParams.get('period');
-                }
-                
-                // Force size invalidation and fit bounds after layout rendering settled
-                setTimeout(() => {
-                    if (map) {
-                        map.invalidateSize();
-                        fitMapToZone();
-                    }
-                }, 200);
-
-                // Trigger day change to load the data
-                handleDayChange(true);
-
-                if (urlParams.has('auto_save')) {
-                    async function runCapture() {
-                        const startTime = Date.now();
-                        const isFrance = currentConfig.id === 'fra' || currentConfig.id === 'cnews' || currentConfig.id === 'fra_pic';
-                        // Attendre que le GeoJSON soit chargé (max 8 secondes)
-                        while (!geoJsonLoaded && !isFrance && (Date.now() - startTime) < 8000) {
-                            await new Promise(r => setTimeout(r, 100));
-                        }
-                        // Pause de stabilisation supplémentaire
-                        await new Promise(r => setTimeout(r, 800));
-                        
-                        try {
-                            if (map) {
-                                map.invalidateSize();
-                                fitMapToZone();
-                            }
-                            await new Promise(r => setTimeout(r, 300));
-                            const captureArea = document.getElementById('capture-area');
-                            const imgs = captureArea.querySelectorAll('img');
-                            await Promise.all(Array.from(imgs).map(img => {
-                                return img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; });
-                            }));
-                            
-                            const canvas = await html2canvas(captureArea, { scale: 1.5, useCORS: true });
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                            
-                            await fetch('/save_map', {
-                                method: 'POST',
-                                body: JSON.stringify({
-                                    image: dataUrl,
-                                    day: urlParams.get('day'),
-                                    period: urlParams.get('period')
-                                }),
-                                headers: { 'Content-Type': 'application/json' }
-                            });
-                        } catch (err) {
-                            console.error("Auto save failed:", err);
-                        }
-                    }
-                    runCapture();
-                }
-            }
+            handleZoneChange();
             updateModelStatus();
             // Refresh status every minute
             setInterval(updateModelStatus, 60000);

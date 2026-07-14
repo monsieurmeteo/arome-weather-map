@@ -588,8 +588,8 @@ def build_bilan_jour(rows):
     for param, theme, label, icon in [
         ("tmax",   "hot",  "TEMPÉRATURE MAXIMALE",   "🌡️"),
         ("tmin",   "cold", "TEMPÉRATURE MINIMALE",   "🧊"),
-        ("precip", "rain", "PLUS FORT CUMUL DE PLUIE", "🌧️"),
-        ("gust",   "wind", "PLUS FORTE RAFALE",      "💨"),
+        ("precip", "rain", "CUMUL DE PRÉCIPITATIONS", "🌧️"),
+        ("gust",   "wind", "RAFALES MAXIMALES",      "💨"),
     ]:
         sts = build_stations(rows, param, 0)
         if sts:
