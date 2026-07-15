@@ -55,12 +55,22 @@ ZONES = {
 }
 
 def get_smtp_config():
-    # 1. Tenter de lire depuis les variables d'environnement (GitHub Actions)
-    password = os.environ.get("SFR_PASSWORD")
-    if password:
+    # 1. Tenter de lire depuis les variables d'environnement (Gmail ou SFR)
+    gmail_email = os.environ.get("GMAIL_EMAIL")
+    gmail_password = os.environ.get("GMAIL_APP_PASSWORD")
+    if gmail_email and gmail_password:
+        return {
+            "email": gmail_email,
+            "password": gmail_password,
+            "smtp_server": "smtp.gmail.com",
+            "smtp_port": 587
+        }
+
+    sfr_password = os.environ.get("SFR_PASSWORD")
+    if sfr_password:
         return {
             "email": "gregory.langlet@sfr.fr",
-            "password": password,
+            "password": sfr_password,
             "smtp_server": "smtp.sfr.fr",
             "smtp_port": 587
         }
@@ -123,7 +133,7 @@ def main():
     # Configuration SMTP
     smtp_cfg = get_smtp_config()
     if not smtp_cfg:
-        print("❌ Configuration SMTP introuvable (SFR_PASSWORD ou config.json absent).")
+        print("❌ Configuration SMTP introuvable (GMAIL/SFR ou config.json absent).")
         return
 
     # Création du message

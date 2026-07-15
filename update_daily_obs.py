@@ -20,10 +20,9 @@ import argparse
 import sqlite3
 from datetime import date, timedelta
 
-# Ajout du chemin des scripts meteo si présent (environnement local)
-METEO_SCRIPTS = r"C:\Users\grego\.gemini\config\skills\meteo\scripts"
-if os.path.exists(METEO_SCRIPTS):
-    sys.path.insert(0, METEO_SCRIPTS)
+# Ajout du chemin courant pour importer meteo_core
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
 
 from meteo_core import scrape_national_archive, get_conn
 

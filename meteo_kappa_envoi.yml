@@ -1,0 +1,71 @@
+name: Météo Kappa - 3. Envoi Bulletins
+
+on:
+  workflow_run:
+    workflows: ["Météo Kappa - 2. Analyse Gemini Flash"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Mode test"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  run-envoi-kappa:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Récupérer le code du dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lancer la compression ZIP et l'envoi de l'e-mail Kappa
+        env:
+          PYTHONUNBUFFERED: "1"
+          GMAIL_EMAIL: "langlet.gregory@gmail.com"
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          # Lire le mode de test depuis le fichier propagé par l'étape 1
+          IS_TEST="false"
+          if [ -f cnews/test_mode.txt ]; then
+            IS_TEST=$(cat cnews/test_mode.txt | tr -d '\r\n[:space:]')
+          fi
+          echo "Mode de test détecté : $IS_TEST"
+          
+          if [ "$IS_TEST" = "true" ]; then
+            export RECIPIENT_EMAILS="gregory.langlet@sfr.fr, langlet.gregory@gmail.com"
+            echo "Envoi restreint à Grégory uniquement (mode test)."
+          else
+            export RECIPIENT_EMAILS="gregory.langlet@sfr.fr, langlet.gregory@gmail.com, patrick.marliere@wanadoo.fr"
+            echo "Envoi à Grégory et Patrick (mode production)."
+          fi
+          
+          python cnews/scripts/send_kappa_email.py --skip-generation
+
+      - name: Commiter et pousser l'archive ZIP (pour le lien de téléchargement)
+        run: |
+          git config --global user.name "Gregory LANGLET"
+          git config --global user.email "langlet.gregory@gmail.com"
+          git add cnews/AUTOMATISATION_*.zip
+          git commit -m "Mise à jour automatique du ZIP Kappa [GHA]" || echo "Aucune modification à commiter"
+          git checkout -- .
+          git clean -fd
+          git pull --rebase origin main
+          git push origin main

@@ -92,6 +92,13 @@ def run_command(cmd, cwd):
         return False
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Pilotage de la génération des 32 bulletins vidéo.")
+    parser.add_argument('--group', type=int, choices=range(1, 16), help="Numéro du groupe à générer (1 à 15)")
+    parser.add_argument('--collate', action='store_true', help="Rassembler toutes les vidéos, créer le ZIP, faire le release et envoyer l'e-mail")
+    parser.add_argument('--test-mode', action='store_true', help="Forcer le mode test")
+    args = parser.parse_args()
+
     scripts_dir = os.path.dirname(os.path.abspath(__file__))
     
     # Résolution dynamique des dossiers cartes_alertes
@@ -102,100 +109,96 @@ def main():
         cartes_dir = os.path.expanduser(r"~\Desktop\cartes_alertes")
         
     os.makedirs(cartes_dir, exist_ok=True)
-    
-    print("==================================================")
-    print("   GÉNÉRATION DES 32 BULLETINS VIDÉO (14 JOURS)  ")
-    print("==================================================")
-    
-    video_files_to_zip = []
-    
-    # --- PARTIE 1 : Bulletins Standards (14 jours - 14 zones) ---
-    print("\n--- Phase 1 : 28 bulletins régionaux et nationaux standards ---")
-    for zone in ZONES:
-        print(f"\n🌍 Traitement de la zone : {zone}...")
-        
-        # 1. Génération des cartes 14 jours (Paysage)
-        run_command(["python", "generate_meteofrance_maps.py", "--zone", zone, "--days", "14", "--orientation", "landscape"], scripts_dir)
-        # 2. Vidéo Paysage
-        if run_command(["python", "generate_video_bulletin.py", "--zone", zone, "--days", "14", "--orientation", "landscape", "--skip-maps"], scripts_dir):
-            video_files_to_zip.append(f"bulletin_{zone}_landscape.mp4")
-            
-        # 3. Génération des cartes 14 jours (Portrait)
-        run_command(["python", "generate_meteofrance_maps.py", "--zone", zone, "--days", "14", "--orientation", "portrait"], scripts_dir)
-        # 4. Vidéo Portrait
-        if run_command(["python", "generate_video_bulletin.py", "--zone", zone, "--days", "14", "--orientation", "portrait", "--skip-maps"], scripts_dir):
-            video_files_to_zip.append(f"bulletin_{zone}_portrait.mp4")
 
-    # --- PARTIE 2 : Bulletins Spécifiques Patrick (5 jours - 2 zones) ---
-    print("\n--- Phase 2 : 4 bulletins spécifiques Patrick (5 jours) ---")
-    patrick_zones = ["france_pictos", "hdf"]
-    for zone in patrick_zones:
-        print(f"\n👴 Traitement zone Patrick : {zone}...")
-        
-        # 1. Cartes Patrick Paysage
-        run_command(["python", "generate_meteofrance_maps.py", "--zone", zone, "--days", "5", "--orientation", "landscape", "--patrick", "--temp-highlight"], scripts_dir)
-        # 2. Vidéo Patrick Paysage
-        if run_command(["python", "generate_video_bulletin.py", "--zone", zone, "--days", "5", "--orientation", "landscape", "--patrick", "--skip-maps"], scripts_dir):
-            video_files_to_zip.append(f"bulletin_{zone}_patrick_landscape.mp4")
-            
-        # 3. Cartes Patrick Portrait
-        run_command(["python", "generate_meteofrance_maps.py", "--zone", zone, "--days", "5", "--orientation", "portrait", "--patrick", "--temp-highlight"], scripts_dir)
-        # 4. Vidéo Patrick Portrait
-        if run_command(["python", "generate_video_bulletin.py", "--zone", zone, "--days", "5", "--orientation", "portrait", "--patrick", "--skip-maps"], scripts_dir):
-            video_files_to_zip.append(f"bulletin_{zone}_patrick_portrait.mp4")
+    # Si aucun argument n'est fourni, on lance tout séquentiellement puis on fait la collation (comportement d'origine)
+    run_all_sequentially = (args.group is None and not args.collate)
 
-    # --- PARTIE 3 : Compression ZIP de tous les bulletins ---
-    print("\n--- Phase 3 : Compression ZIP des 32 vidéos ---")
-    zip_name = "bulletins_complets_14j.zip"
-    zip_path = os.path.join(cartes_dir, zip_name)
-    
-    try:
-        if os.path.exists(zip_path):
-            os.remove(zip_path)
-            
-        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for v_file in video_files_to_zip:
-                v_path = os.path.join(cartes_dir, v_file)
-                if os.path.exists(v_path):
+    if run_all_sequentially or (args.group is not None):
+        print("==================================================")
+        print(f"   GÉNÉRATION - GROUPE {args.group if args.group else 'TOUT'} ")
+        print("==================================================")
+        
+        # Déterminer quels groupes générer
+        groups_to_run = [args.group] if args.group else list(range(1, 16))
+        
+        for g in groups_to_run:
+            if 1 <= g <= 14:
+                zone = ZONES[g - 1]
+                print(f"\n🌍 Groupe {g} : Traitement de la zone standard (14 jours) : {zone}...")
+                # 1. Génération des cartes 14 jours (Paysage)
+                run_command(["python", "generate_meteofrance_maps.py", "--zone", zone, "--days", "14", "--orientation", "landscape"], scripts_dir)
+                # 2. Vidéo Paysage
+                run_command(["python", "generate_video_bulletin.py", "--zone", zone, "--days", "14", "--orientation", "landscape", "--skip-maps"], scripts_dir)
+                # 3. Génération des cartes 14 jours (Portrait)
+                run_command(["python", "generate_meteofrance_maps.py", "--zone", zone, "--days", "14", "--orientation", "portrait"], scripts_dir)
+                # 4. Vidéo Portrait
+                run_command(["python", "generate_video_bulletin.py", "--zone", zone, "--days", "14", "--orientation", "portrait", "--skip-maps"], scripts_dir)
+            elif g == 15:
+                print(f"\n👴 Groupe 15 : Traitement des 4 bulletins spécifiques Patrick (5 jours)...")
+                patrick_zones = ["france_pictos", "hdf"]
+                for zone in patrick_zones:
+                    # 1. Cartes Patrick Paysage
+                    run_command(["python", "generate_meteofrance_maps.py", "--zone", zone, "--days", "5", "--orientation", "landscape", "--patrick", "--temp-highlight"], scripts_dir)
+                    # 2. Vidéo Patrick Paysage
+                    run_command(["python", "generate_video_bulletin.py", "--zone", zone, "--days", "5", "--orientation", "landscape", "--patrick", "--skip-maps"], scripts_dir)
+                    # 3. Cartes Patrick Portrait
+                    run_command(["python", "generate_meteofrance_maps.py", "--zone", zone, "--days", "5", "--orientation", "portrait", "--patrick", "--temp-highlight"], scripts_dir)
+                    # 4. Vidéo Patrick Portrait
+                    run_command(["python", "generate_video_bulletin.py", "--zone", zone, "--days", "5", "--orientation", "portrait", "--patrick", "--skip-maps"], scripts_dir)
+
+    if run_all_sequentially or args.collate:
+        print("\n==================================================")
+        print("   COMPILATION ZIP ET ENVOI DE L'EMAIL            ")
+        print("==================================================")
+        
+        zip_name = "bulletins_complets_14j.zip"
+        zip_path = os.path.join(cartes_dir, zip_name)
+        
+        try:
+            if os.path.exists(zip_path):
+                os.remove(zip_path)
+                
+            # Trouver toutes les vidéos mp4 dans le dossier cartes_dir
+            video_files = [f for f in os.listdir(cartes_dir) if f.endswith(".mp4") and f.startswith("bulletin_")]
+            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+                for v_file in video_files:
+                    v_path = os.path.join(cartes_dir, v_file)
                     zipf.write(v_path, arcname=v_file)
                     print(f"  -> Ajouté au ZIP : {v_file}")
-                else:
-                    print(f"  -> ⚠️ Fichier manquant : {v_file}")
-        print("Archive ZIP créée avec succès.")
-    except Exception as e:
-        print(f"Erreur lors de la compression ZIP : {e}")
-        sys.exit(1)
+            print(f"Archive ZIP créée avec succès contenant {len(video_files)} vidéos.")
+        except Exception as e:
+            print(f"Erreur lors de la compression ZIP : {e}")
+            sys.exit(1)
+            
+        download_url = f"https://github.com/gregorylanglet59264-byte/meteo-kappa/releases/download/bulletins-14j-latest/{zip_name}"
+        tomorrow = datetime.date.today() + datetime.timedelta(days=1)
         
-    # --- PARTIE 4 : Envoi de l'e-mail ---
-    download_url = f"https://github.com/monsieurmeteo/europe-1-v2/releases/download/bulletins-14j-latest/{zip_name}"
-    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-    
-    email_body = (
-        f"<html><body style='font-family: \"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; color: #333; line-height: 1.6;'>"
-        f"Bonjour,<br><br>"
-        f"L'intégralité des 32 bulletins vidéo (prévisions régionales et nationales à 14 jours, et bulletins Patrick à 5 jours) pour demain (<strong>{get_french_date_string(tomorrow)}</strong>) a été générée et compilée avec succès.<br><br>"
-        f"👉 <a href='{download_url}' style='color: #1a73e8; font-weight: bold; text-decoration: underline;'>Cliquer sur ce lien pour télécharger le pack ZIP complet des 32 vidéos</a><br><br>"
-        f"Cordialement,<br>"
-        f"L'automatisation Météo CNews"
-        f"</body></html>"
-    )
-    
-    subject = f"Bulletins video complets (32 fichiers) du {get_french_date_string(tomorrow)}"
-    
-    # Mode Test / Prod
-    test_mode = os.environ.get("TEST_MODE", "false").lower() in ["true", "1", "yes"]
-    if len(sys.argv) > 1 and sys.argv[1] == "--test-mode":
-        test_mode = True
+        email_body = (
+            f"<html><body style='font-family: \"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; color: #333; line-height: 1.6;'>"
+            f"Bonjour,<br><br>"
+            f"L'intégralité des 32 bulletins vidéo (prévisions régionales et nationales à 14 jours, et bulletins Patrick à 5 jours) pour demain (<strong>{get_french_date_string(tomorrow)}</strong>) a été générée et compilée avec succès.<br><br>"
+            f"👉 <a href='{download_url}' style='color: #1a73e8; font-weight: bold; text-decoration: underline;'>Cliquer sur ce lien pour télécharger le pack ZIP complet des 32 vidéos</a><br><br>"
+            f"Cordialement,<br>"
+            f"L'automatisation Météo CNews"
+            f"</body></html>"
+        )
         
-    if test_mode:
-        recipients = "gregory.langlet@sfr.fr, langlet.gregory@gmail.com"
-        print("[MODE TEST] E-mail envoyé uniquement à Grégory.")
-    else:
-        recipients = "gregory.langlet@sfr.fr, langlet.gregory@gmail.com, patrick.marliere@wanadoo.fr"
-        print("[MODE PROD] E-mail envoyé à Grégory et Patrick.")
+        subject = f"Bulletins video complets (32 fichiers) du {get_french_date_string(tomorrow)}"
         
-    send_email(email_body, subject, recipients)
-    print("Génération et envoi du pack complet de bulletins terminés avec succès !")
+        # Mode Test / Prod
+        test_mode = os.environ.get("TEST_MODE", "false").lower() in ["true", "1", "yes"]
+        if args.test_mode or (len(sys.argv) > 1 and sys.argv[1] == "--test-mode"):
+            test_mode = True
+            
+        if test_mode:
+            recipients = "gregory.langlet@sfr.fr, langlet.gregory@gmail.com"
+            print("[MODE TEST] E-mail envoyé uniquement à Grégory.")
+        else:
+            recipients = "gregory.langlet@sfr.fr, langlet.gregory@gmail.com, patrick.marliere@wanadoo.fr"
+            print("[MODE PROD] E-mail envoyé à Grégory et Patrick.")
+            
+        send_email(email_body, subject, recipients)
+        print("Génération et envoi du pack complet de bulletins terminés avec succès !")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,35 @@
+name: Envoi Cartes de Vigilance - Email Automatique
+
+on:
+  workflow_dispatch: # Lancement manuel uniquement depuis le dashboard ou GitHub
+
+permissions:
+  contents: read
+
+jobs:
+  capture-and-email:
+    runs-on: windows-latest
+
+    steps:
+      - name: Récupérer le code du dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installer les dépendances
+        run: |
+          pip install playwright pillow
+          playwright install chromium
+
+      - name: Étape 1 - Capturer et Envoyer les Cartes de Vigilance par E-mail
+        env:
+          GMAIL_EMAIL: "langlet.gregory@gmail.com"
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
+          TRIGGER_ACTOR: ${{ github.actor }}
+        run: |
+          python "meteo_cnews_2/send_vigilance_images.py"

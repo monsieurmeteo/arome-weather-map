@@ -10,13 +10,12 @@ import json
 from datetime import datetime
 import concurrent.futures
 
-DB_PATH_GLOBAL = r"C:\Users\grego\.gemini\config\skills\meteo\data\meteo_data.db"
-DB_PATH_DOCS = r"C:\Users\grego\Documents\METEO_CLIMAT\data\meteo_data.db"
+current_dir = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(current_dir, "data")
+DB_PATH_LOCAL = os.path.join(DATA_DIR, "meteo_data.db")
 TIMEOUT = 15
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
-# Load mapping files for ID resolution
-DATA_DIR = r"C:\Users\grego\.gemini\config\skills\meteo\data"
 OFFICIAL_ID_MAP = {}
 STATION_TO_ID = {}
 METEOCIEL_ID_MAP = {}
@@ -38,9 +37,12 @@ try:
 except: pass
 
 def get_db_path():
+    if os.path.exists(DB_PATH_LOCAL):
+        return DB_PATH_LOCAL
+    DB_PATH_GLOBAL = r"C:\Users\grego\.gemini\config\skills\meteo\data\meteo_data.db"
     if os.path.exists(DB_PATH_GLOBAL):
         return DB_PATH_GLOBAL
-    return DB_PATH_DOCS
+    return r"C:\Users\grego\Documents\METEO_CLIMAT\data\meteo_data.db"
 
 def get_conn():
     conn = sqlite3.connect(get_db_path())

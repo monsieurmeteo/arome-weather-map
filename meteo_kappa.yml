@@ -1,0 +1,59 @@
+name: Météo Kappa - 1. Cartes & Données
+
+on:
+  workflow_dispatch:
+    inputs:
+      triggered_by:
+        description: "Qui déclenche ? (gregory = Gregory seulement, patrick = Patrick + Gregory en copie)"
+        required: false
+        default: "gregory"
+
+permissions:
+  contents: write
+
+jobs:
+  run-cartes-kappa:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code du dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Installer Playwright Chromium (pour les captures de cartes)
+        run: |
+          playwright install chromium
+
+      - name: Enregistrer le mode de test
+        run: |
+          echo "${{ github.event.inputs.triggered_by == 'patrick' && 'false' || 'true' }}" > cnews/test_mode.txt
+
+      - name: Lancer la génération des cartes et de la structure du programme
+        env:
+          PYTHONUNBUFFERED: "1"
+          CHROME_PATH: "/usr/bin/google-chrome"
+        run: |
+          python cnews/scripts/export_all_bulletins.py --day-offset 1 --generate-maps --skip-ai
+
+      - name: Commiter et pousser les cartes et données (pour mise à jour Vercel)
+        run: |
+          git config --global user.name "Gregory LANGLET"
+          git config --global user.email "langlet.gregory@gmail.com"
+          # Forcer l'ajout des cartes .jpg générées bien qu'elles soient dans le dossier ignoré cartes_alertes/
+          git add cnews/AUTOMATISATION.json cnews/BULLETINS_AUTOMATIQUES_DEMAIN.json cnews/BULLETINS_AUTOMATIQUES_DEMAIN.txt cnews/test_mode.txt
+          git add -f cartes_alertes/*.jpg || echo "Aucune carte jpg à ajouter"
+          git commit -m "Mise à jour automatique des cartes et données Kappa [GHA]" || echo "Aucune modification à commiter"
+          git checkout -- .
+          git clean -fd
+          git pull --rebase origin main
+          git push origin main

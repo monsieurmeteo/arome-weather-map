@@ -76,6 +76,12 @@ def run_command(cmd, cwd):
         return False
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Send CNews weather email")
+    parser.add_argument("--skip-generation", action="store_true", help="Skip map generation and video rendering")
+    parser.add_argument("--test-mode", action="store_true", help="Run in test mode (send only to Gregory)")
+    args = parser.parse_args()
+
     scripts_dir = os.path.dirname(os.path.abspath(__file__))
     repo_root = os.path.abspath(os.path.join(scripts_dir, "..", ".."))
     cnews_dir = os.path.join(repo_root, "meteo_cnews_2")
@@ -87,64 +93,79 @@ def main():
             cartes_dir = os.path.expanduser(r"~\Desktop\cartes_alertes")
             os.makedirs(cartes_dir, exist_ok=True)
         
-    print("=== ÉTAPE 0.1a : Génération cartes France paysage ===")
-    cmd_maps_france_land = ["python", "generate_meteofrance_maps.py", "--zone", "france_pictos", "--days", "5", "--orientation", "landscape", "--patrick", "--temp-highlight"]
-    if not run_command(cmd_maps_france_land, cnews_dir):
-        sys.exit(1)
+    if not args.skip_generation:
+        print("=== ÉTAPE 0.1a : Génération cartes France paysage ===")
+        cmd_maps_france_land = ["python", "generate_meteofrance_maps.py", "--zone", "france_pictos", "--days", "5", "--orientation", "landscape", "--patrick", "--temp-highlight"]
+        if not run_command(cmd_maps_france_land, cnews_dir):
+            sys.exit(1)
 
-    print("=== ÉTAPE 0.1b : Génération cartes France portrait (TikTok) ===")
-    cmd_maps_france_port = ["python", "generate_meteofrance_maps.py", "--zone", "france_pictos", "--days", "5", "--orientation", "portrait", "--patrick", "--temp-highlight"]
-    if not run_command(cmd_maps_france_port, cnews_dir):
-        sys.exit(1)
+        print("=== ÉTAPE 0.1b : Génération cartes France portrait (TikTok) ===")
+        cmd_maps_france_port = ["python", "generate_meteofrance_maps.py", "--zone", "france_pictos", "--days", "5", "--orientation", "portrait", "--patrick", "--temp-highlight"]
+        if not run_command(cmd_maps_france_port, cnews_dir):
+            sys.exit(1)
 
-    print("=== ÉTAPE 0.2a : Génération cartes Hauts-de-France paysage ===")
-    cmd_maps_hdf_land = ["python", "generate_meteofrance_maps.py", "--zone", "hdf", "--days", "5", "--orientation", "landscape", "--patrick", "--temp-highlight"]
-    if not run_command(cmd_maps_hdf_land, cnews_dir):
-        sys.exit(1)
+        print("=== ÉTAPE 0.2a : Génération cartes Hauts-de-France paysage ===")
+        cmd_maps_hdf_land = ["python", "generate_meteofrance_maps.py", "--zone", "hdf", "--days", "5", "--orientation", "landscape", "--patrick", "--temp-highlight"]
+        if not run_command(cmd_maps_hdf_land, cnews_dir):
+            sys.exit(1)
 
-    print("=== ÉTAPE 0.2b : Génération cartes Hauts-de-France portrait (TikTok) ===")
-    cmd_maps_hdf_port = ["python", "generate_meteofrance_maps.py", "--zone", "hdf", "--days", "5", "--orientation", "portrait", "--patrick", "--temp-highlight"]
-    if not run_command(cmd_maps_hdf_port, cnews_dir):
-        sys.exit(1)
+        print("=== ÉTAPE 0.2b : Génération cartes Hauts-de-France portrait (TikTok) ===")
+        cmd_maps_hdf_port = ["python", "generate_meteofrance_maps.py", "--zone", "hdf", "--days", "5", "--orientation", "portrait", "--patrick", "--temp-highlight"]
+        if not run_command(cmd_maps_hdf_port, cnews_dir):
+            sys.exit(1)
 
-    print("=== ÉTAPE 1 : Génération en parallèle des 4 vidéos du Pack Patrick CNews ===")
-    
-    cmds = [
-        # France Paysage
-        ["python", "generate_video_bulletin.py", "--zone", "france_pictos", "--days", "5", "--orientation", "landscape", "--patrick", "--skip-maps"],
-        # France Portrait (TikTok)
-        ["python", "generate_video_bulletin.py", "--zone", "france_pictos", "--days", "5", "--orientation", "portrait", "--patrick", "--skip-maps"],
-        # Hauts-de-France Paysage
-        ["python", "generate_video_bulletin.py", "--zone", "hdf", "--days", "5", "--orientation", "landscape", "--patrick", "--skip-maps"],
-        # Hauts-de-France Portrait (TikTok)
-        ["python", "generate_video_bulletin.py", "--zone", "hdf", "--days", "5", "--orientation", "portrait", "--patrick", "--skip-maps"]
-    ]
-    
-    processes = []
-    for cmd in cmds:
-        p = subprocess.Popen(cmd, cwd=cnews_dir)
-        processes.append((cmd, p))
+        print("=== ÉTAPE 1 : Génération en parallèle des 4 vidéos du Pack Patrick CNews ===")
         
-    success = True
-    for cmd, p in processes:
-        exit_code = p.wait()
-        if exit_code != 0:
-            print(f"Erreur lors de la génération de la vidéo : {' '.join(cmd)}")
-            success = False
+        cmds = [
+            # France Paysage
+            ["python", "generate_video_bulletin.py", "--zone", "france_pictos", "--days", "5", "--orientation", "landscape", "--patrick", "--skip-maps"],
+            # France Portrait (TikTok)
+            ["python", "generate_video_bulletin.py", "--zone", "france_pictos", "--days", "5", "--orientation", "portrait", "--patrick", "--skip-maps"],
+            # Hauts-de-France Paysage
+            ["python", "generate_video_bulletin.py", "--zone", "hdf", "--days", "5", "--orientation", "landscape", "--patrick", "--skip-maps"],
+            # Hauts-de-France Portrait (TikTok)
+            ["python", "generate_video_bulletin.py", "--zone", "hdf", "--days", "5", "--orientation", "portrait", "--skip-maps"]
+        ]
+        
+        processes = []
+        for cmd in cmds:
+            p = subprocess.Popen(cmd, cwd=cnews_dir)
+            processes.append((cmd, p))
             
-    if not success:
-        sys.exit(1)
+        success = True
+        for cmd, p in processes:
+            exit_code = p.wait()
+            if exit_code != 0:
+                print(f"Erreur lors de la génération de la vidéo : {' '.join(cmd)}")
+                success = False
+                
+        if not success:
+            sys.exit(1)
+    else:
+        print("=== ÉTAPE 1 (Sautée) : Utilisation des bulletins existants ===")
         
-    print("\n=== ÉTAPE 2 : Compression ZIP des 4 vidéos ===")
-    zip_name = "bulletins_cnews_patrick.zip"
+    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    date_suffix = tomorrow.strftime("%Y_%m_%d")
+
+    print("\n=== ÉTAPE 2 : Compression ZIP des vidéos ===")
+    zip_name = f"bulletins_cnews_patrick_{date_suffix}.zip"
     zip_path = os.path.join(cartes_dir, zip_name)
     
-    video_files = [
-        "bulletin_france_pictos_patrick_landscape.mp4",
-        "bulletin_france_pictos_patrick_portrait.mp4",
-        "bulletin_hdf_patrick_landscape.mp4",
-        "bulletin_hdf_patrick_portrait.mp4"
-    ]
+    # Lister dynamiquement tous les bulletins MP4 valides générés pour cette date
+    video_files = []
+    if os.path.exists(cartes_dir):
+        for f in os.listdir(cartes_dir):
+            if f.startswith("bulletin_") and f.endswith(f"_{date_suffix}.mp4"):
+                video_files.append(f)
+                
+    # Fallback de sécurité aux 4 fichiers d'origine si aucun fichier n'a été trouvé
+    if not video_files:
+        video_files = [
+            f"bulletin_france_pictos_patrick_landscape_{date_suffix}.mp4",
+            f"bulletin_france_pictos_patrick_portrait_{date_suffix}.mp4",
+            f"bulletin_hdf_patrick_landscape_{date_suffix}.mp4",
+            f"bulletin_hdf_patrick_portrait_{date_suffix}.mp4"
+        ]
     
     import zipfile
     print(f"Création de l'archive {zip_path}...")
@@ -166,11 +187,8 @@ def main():
         print(f"Erreur lors de la compression ZIP : {e}")
         sys.exit(1)
         
-    # Génération du lien de téléchargement (GitHub Releases — pas de limite de taille)
+    # Génération du lien de téléchargement (GitHub Releases)
     download_url = f"https://github.com/gregorylanglet59264-byte/meteo-kappa/releases/download/bulletins-patrick-latest/{zip_name}"
-    
-    # Calcul de la date du lendemain
-    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     
     # Corps HTML de l'e-mail avec style épuré et bouton/lien masqué
     email_body = (
@@ -187,15 +205,12 @@ def main():
     subject = f"bulletin vidéo du {get_french_date_string(tomorrow)}"
     
     # Gestion du mode test : si argument "test_mode" ou variable d'env GHA active
-    test_mode = os.environ.get("TEST_MODE", "false").lower() in ["true", "1", "yes"]
-    if len(sys.argv) > 1 and sys.argv[1] == "--test-mode":
-        test_mode = True
+    test_mode = args.test_mode or os.environ.get("TEST_MODE", "false").lower() in ["true", "1", "yes"]
         
     if test_mode:
         recipients = "gregory.langlet@sfr.fr, langlet.gregory@gmail.com"
         print("[MODE TEST ACTIVE] Envoi restreint à Grégory uniquement.")
     else:
-        # ponytail: temporairement restreint à Grégory pour la phase de test
         recipients = "gregory.langlet@sfr.fr, langlet.gregory@gmail.com"
         print("[MODE PRODUCTION - TEMPORAIREMENT TEST] Envoi restreint à Grégory uniquement.")
         
