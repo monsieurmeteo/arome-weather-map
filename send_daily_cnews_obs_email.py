@@ -44,6 +44,10 @@ def get_today_attachments():
     return attachments
 
 def main():
+    if not os.path.exists(MAIL_CLIENT):
+        print("⚠️ Client mail non trouvé. L'envoi d'e-mail est ignoré (normal en environnement GitHub Actions).")
+        return
+        
     attachments = get_today_attachments()
     if not attachments:
         print("❌ Aucune carte générée aujourd'hui à envoyer.")
