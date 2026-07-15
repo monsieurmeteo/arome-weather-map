@@ -35,6 +35,7 @@
     <!-- html2canvas & html2pdf -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <!-- Chart.js for Forecast Diagrams -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -2279,6 +2280,10 @@
                 <button onclick="exportMap()" class="export-btn"
                     style="margin-top: 5px; background: #FFD700; color: #000;">
                     <i class="fas fa-download"></i> EXPORTER CARTE HD
+                </button>
+                <button onclick="exportZipPack()" class="export-btn"
+                    style="margin-top: 5px; background: #e67e22; color: #fff;">
+                    <i class="fas fa-file-archive"></i> TÉLÉCHARGER LE PACK (ZIP)
                 </button>
 
                 <div class="sidebar-section">
@@ -7954,6 +7959,174 @@
                 fitMapToZone();
                 toggleMarkers(); // Re-synchronise la classe CSS auto-zoning-active
                 if (wasPaletteVisible) palette.style.display = 'flex';
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('loading-text').innerText = "CHARGEMENT...";
+                isExporting = false;
+            }
+        }
+
+        async function exportZipPack() {
+            if (isExporting) return;
+            isExporting = true;
+            
+            const zip = new JSZip();
+            const captureArea = document.getElementById('capture-area');
+            const palette = document.getElementById('draw-palette');
+            const wasPaletteVisible = palette ? (palette.style.display !== 'none') : false;
+            if (palette) palette.style.display = 'none';
+
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading-text').innerText = "PRÉPARATION DU ZIP PACK HD...";
+
+            // Sauvegarde de l'état d'origine du site
+            const originalStyle = {
+                width: captureArea.style.width, height: captureArea.style.height,
+                minWidth: captureArea.style.minWidth, minHeight: captureArea.style.minHeight,
+                position: captureArea.style.position, top: captureArea.style.top,
+                left: captureArea.style.left, zIndex: captureArea.style.zIndex,
+                flexShrink: captureArea.style.flexShrink, aspectRatio: captureArea.style.aspectRatio,
+                overflow: captureArea.style.overflow
+            };
+            
+            const originalDay = document.getElementById('day-select').value;
+            const originalPeriod = document.getElementById('period-select').value;
+            const originalScrollX = window.scrollX;
+            const originalScrollY = window.scrollY;
+            window.scrollTo(0, 0);
+
+            // Détecter l'orientation sélectionnée
+            const orientationSelect = document.getElementById('orientation-select');
+            const orientation = orientationSelect ? orientationSelect.value : 'landscape';
+            
+            let exportWidth = '1920px';
+            let exportHeight = '1080px';
+            let html2canvasWidth = 1920;
+            let html2canvasHeight = 1080;
+            
+            if (orientation === 'portrait') {
+                exportWidth = '1080px';
+                exportHeight = '1920px';
+                html2canvasWidth = 1080;
+                html2canvasHeight = 1920;
+            } else if (orientation === 'square') {
+                exportWidth = '1080px';
+                exportHeight = '1080px';
+                html2canvasWidth = 1080;
+                html2canvasHeight = 1080;
+            }
+
+            document.getElementById('loading').style.zIndex = '100000';
+            document.getElementById('loading').style.backgroundColor = 'rgba(0,0,0,1)';
+            captureArea.style.width = exportWidth;
+            captureArea.style.height = exportHeight;
+            captureArea.style.minWidth = exportWidth;
+            captureArea.style.minHeight = exportHeight;
+            captureArea.style.position = 'fixed';
+            captureArea.style.top = '0';
+            captureArea.style.left = '0';
+            captureArea.style.transform = 'none';
+            captureArea.style.zIndex = '99999';
+            captureArea.style.flexShrink = '0';
+            captureArea.style.aspectRatio = 'auto';
+            captureArea.style.overflow = 'visible';
+
+            // Déterminer la liste des captures à effectuer
+            const maxDays = document.getElementById('day-select').options.length;
+            const param = document.getElementById('param-select').value;
+            const captures = [];
+
+            // Pour la météo/température générale, on fait Matin et Après-midi pour J0 et J1, et Jour pour le reste
+            const isGeneralWeather = ['weather_temp', 'temp'].includes(param);
+
+            for (let d = 0; d < maxDays; d++) {
+                if (isGeneralWeather && (d === 0 || d === 1)) {
+                    captures.push({ day: d, period: 'morning', label: `J${d}_MATIN` });
+                    captures.push({ day: d, period: 'afternoon', label: `J${d}_APRES_MIDI` });
+                } else {
+                    captures.push({ day: d, period: 'afternoon', label: `J${d}` });
+                }
+            }
+
+            try {
+                for (let i = 0; i < captures.length; i++) {
+                    const cap = captures[i];
+                    document.getElementById('loading-text').innerText = `CAPTURE DE ${cap.label} (${i + 1}/${captures.length})...`;
+                    
+                    // Modifier l'état du selecteur et afficher
+                    document.getElementById('day-select').value = cap.day;
+                    document.getElementById('period-select').value = cap.period;
+                    
+                    await handleDayChange(true); // Rafraîchit les données du jour sans effacer les modifs manuelles si possible
+                    await updateDisplay();
+                    map.invalidateSize({ animate: false });
+                    fitMapToZone();
+                    
+                    // Attendre que la carte Leaflet et les tuiles chargent
+                    await new Promise(r => setTimeout(r, 1200));
+
+                    // Capturer via html2canvas
+                    const cvs = await html2canvas(captureArea, {
+                        useCORS: true, allowTaint: true, backgroundColor: '#111',
+                        scale: 1.0, width: html2canvasWidth, height: html2canvasHeight, logging: false,
+                        onclone: (clonedDoc) => {
+                            const clonedArea = clonedDoc.getElementById('capture-area');
+                            if (clonedArea) clonedArea.style.display = 'flex';
+                            clonedDoc.querySelectorAll('.leaflet-pane, .leaflet-marker-pane, .leaflet-icon-pane, .leaflet-tile-container').forEach(p => {
+                                p.style.visibility = 'visible'; p.style.opacity = '1';
+                            });
+                            clonedDoc.querySelectorAll('img').forEach(img => {
+                                img.style.visibility = 'visible';
+                                img.style.opacity = '1';
+                            });
+                            const isCitiesHidden = document.getElementById('hide-cities-check').checked;
+                            clonedDoc.querySelectorAll('.weather-marker *').forEach(el => {
+                                if (isCitiesHidden && el.classList.contains('city-label')) el.style.visibility = 'hidden';
+                                else { el.style.visibility = 'visible'; el.style.opacity = '1'; }
+                            });
+                            clonedDoc.querySelectorAll('.marker-content-wrapper, .icon-center-anchor, .weather-temp-hybrid').forEach(el => {
+                                el.style.display = 'flex';
+                            });
+                        }
+                    });
+
+                    // Convertir le canvas en blob JPEG
+                    const blob = await new Promise(resolve => cvs.toBlob(resolve, 'image/jpeg', 0.95));
+                    zip.file(`${cap.label}.jpg`, blob);
+                }
+
+                // Générer le ZIP et le télécharger
+                document.getElementById('loading-text').innerText = "COMPRESSION ZIP ET TÉLÉCHARGEMENT...";
+                const zipContent = await zip.generateAsync({ type: "blob" });
+                
+                const zone = document.getElementById('zone-select').value;
+                const model = document.getElementById('temp-model-select').value;
+                const zipName = `PACK_${zone.toUpperCase()}_${model.toUpperCase()}_${param.toUpperCase()}.zip`;
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(zipContent);
+                link.download = zipName;
+                link.click();
+                
+            } catch (err) {
+                console.error("ZIP Export Error:", err);
+                alert("Erreur lors de la génération du ZIP.");
+            } finally {
+                // Restaurer l'état
+                Object.assign(captureArea.style, originalStyle);
+                captureArea.style.transform = '';
+                document.getElementById('day-select').value = originalDay;
+                document.getElementById('period-select').value = originalPeriod;
+                
+                if (typeof originalScrollX !== 'undefined') window.scrollTo(originalScrollX, originalScrollY);
+                document.getElementById('loading').style.zIndex = '';
+                document.getElementById('loading').style.backgroundColor = '';
+                
+                await handleDayChange(true);
+                await updateDisplay();
+                map.invalidateSize({ animate: false });
+                fitMapToZone();
+                toggleMarkers();
+                if (wasPaletteVisible && palette) palette.style.display = 'flex';
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('loading-text').innerText = "CHARGEMENT...";
                 isExporting = false;
