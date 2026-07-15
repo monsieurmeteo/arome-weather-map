@@ -238,7 +238,9 @@ ZONE_LABELS = {
     "hdf":           "HAUTS-DE-FRANCE",
     "normandie":     "NORMANDIE",
     "ile-de-france": "ILE-DE-FRANCE",
+    "idf":           "ILE-DE-FRANCE",
     "grand-est":     "GRAND EST",
+    "grandest":      "GRAND EST",
     "ara":           "AUVERGNE-RHONE-ALPES",
     "naq":           "NOUVELLE-AQUITAINE",
     "occitanie":     "OCCITANIE",
@@ -248,6 +250,9 @@ ZONE_LABELS = {
     "pdl":           "PAYS DE LA LOIRE",
     "cvl":           "CENTRE-VAL DE LOIRE",
     "corse":         "CORSE",
+    "cnews":         "BULLETIN NATIONAL",
+    "france":        "BULLETIN NATIONAL",
+    "france_pictos": "BULLETIN NATIONAL",
 }
 
 
@@ -817,11 +822,11 @@ def capture_and_compose_vigilance(zone, orientation, output_path, period=1):
                     logo_target_h = int(v_height * 0.08)
                     logo_target_w = int(logo_img.width * (logo_target_h / logo_img.height))
                     logo_resized = logo_img.resize((logo_target_w, logo_target_h), Image.Resampling.LANCZOS)
-                    # Position en haut à droite
+                    # Position en bas à droite
                     logo_x = v_width - logo_target_w - 45
-                    logo_y = 35
+                    logo_y = v_height - logo_target_h - 45
                     bg.paste(logo_resized, (logo_x, logo_y), logo_resized)
-                    log(f"Logo Météo Climat Pro incrusté en haut à droite (x={logo_x}, y={logo_y})")
+                    log(f"Logo Météo Climat Pro incrusté en bas à droite (x={logo_x}, y={logo_y})")
                 except Exception as e:
                     log(f"Erreur d'incrustation du logo: {e}")
             else:

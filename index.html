@@ -3798,8 +3798,22 @@
                 if (pad[0] < 120) pad[0] = 120; // espace pour titre
             }
 
-            if (geoLayer) {
-                map.fitBounds(geoLayer.getBounds(), { padding: pad, animate: false });
+            if (geoLayer && map.hasLayer(geoLayer)) {
+                try {
+                    map.fitBounds(geoLayer.getBounds(), { padding: pad, animate: false });
+                    return;
+                } catch (e) {
+                    console.error("Erreur fitBounds, bascule sur center/zoom :", e);
+                }
+            }
+
+            // Sécurité de Secours (Offline/Panne de CDN) : Recentrage automatique
+            if (currentConfig.center && currentConfig.zoom) {
+                let zoomVal = currentConfig.zoom;
+                if (orient === 'portrait' || orient === 'square') {
+                    zoomVal = Math.max(1, zoomVal - 1);
+                }
+                map.setView(currentConfig.center, zoomVal, { animate: false });
             }
         }
 

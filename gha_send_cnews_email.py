@@ -83,8 +83,8 @@ def main():
     args = parser.parse_args()
 
     scripts_dir = os.path.dirname(os.path.abspath(__file__))
-    repo_root = os.path.abspath(os.path.join(scripts_dir, "..", ".."))
-    cnews_dir = os.path.join(repo_root, "meteo_cnews_2")
+    repo_root = scripts_dir
+    cnews_dir = scripts_dir
     cartes_dir = os.path.join(repo_root, "cartes_alertes")
     if os.environ.get("GITHUB_ACTIONS"):
         os.makedirs(cartes_dir, exist_ok=True)
