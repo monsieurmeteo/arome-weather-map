@@ -1,4 +1,4 @@
-name: Routine quotidienne - Cartes d'Observations Météo CNews
+name: Actualisation Prévisions - Site Web Météo-France
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Permet de lancer la génération manuellement depuis GitHub
 
 jobs:
-  build-and-generate:
+  generate-and-publish:
     runs-on: windows-latest
 
     steps:
@@ -20,30 +20,7 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
 
-      - name: Installer les dépendances
-        run: |
-          pip install playwright
-          playwright install chromium
-
-      - name: Étape 1 - Mise à jour des Observations (SQLite)
-        run: |
-          python "update_daily_obs.py"
-
-      - name: Étape 2 - Générer les packs d'images (CNews)
-        run: |
-          # Liste des zones à générer : France entière + les 13 régions
-          $zones = @("france", "hdf", "normandie", "idf", "ges", "ara", "naq", "occ", "paca", "bfc", "bre", "pdl", "cvl", "cor")
-          # Paramètres d'observations climatologiques demandés
-          $params = @("bilan_jour", "tmax", "tmin", "precip", "gust")
-
-          foreach ($zone in $zones) {
-              foreach ($param in $params) {
-                  # Génération des cartes en format Paysage et Portrait
-                  python "generate_meteociel_obs_maps.py" --date today --zone $zone --param $param --orientation both
-              }
-          }
-
-      - name: Étape 2b - Générer les données de prévisions Météo-France (JSON & CSV)
+      - name: Étape 1 - Générer les données de prévisions Météo-France (JSON & CSV)
         run: |
           # Générer les données de prévisions nationales (16 jours par défaut en json-only)
           python "generate_meteofrance_maps.py" --zone france_pictos --json-only
@@ -54,15 +31,10 @@ jobs:
               python "generate_meteofrance_maps.py" --zone $zone --json-only
           }
 
-      - name: Étape 3 - Envoyer les cartes par E-mail à Grégoire et Patrick
-        run: |
-          python "send_daily_cnews_obs_email.py"
-
-      - name: Étape 4 - Enregistrer et pousser les images, prévisions, CSV et token sur GitHub
+      - name: Étape 2 - Enregistrer et pousser les prévisions, CSV et token sur GitHub
         run: |
           git config --global user.name "Météo Automatique"
           git config --global user.email "meteo-bot@cnews.fr"
-          git add Desktop/cartes_alertes/
           git add meteofrance_data*.json meteofrance_*.csv meteofrance_token.json
-          git commit -m "Mise à jour automatique des cartes d'observations, prévisions Météo-France, CSV et token"
+          git commit -m "Mise à jour automatique des prévisions Météo-France, CSV et token"
           git push origin main
