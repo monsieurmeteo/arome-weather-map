@@ -6,6 +6,9 @@ on:
     - cron: '45 5,11,17 * * *'
   workflow_dispatch: # Permet de lancer la génération manuellement depuis GitHub
 
+permissions:
+  contents: write
+
 jobs:
   generate-and-publish:
     runs-on: windows-latest
