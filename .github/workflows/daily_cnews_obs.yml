@@ -19,6 +19,10 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Installer tzdata (Requis sous Windows)
+        run: |
+          pip install tzdata
+
       - name: Étape 1 - Générer les données de prévisions Météo-France (JSON & CSV)
         run: |
           # Générer les données de prévisions nationales (16 jours par défaut en json-only)
