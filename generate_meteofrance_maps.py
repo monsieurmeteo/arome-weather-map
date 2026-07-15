@@ -33,8 +33,14 @@ def utc_to_paris_local(iso_str):
 
 # 1. Configuration of paths
 CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-PROJECT_DIR = r"C:\Users\grego\Documents\METEO_CLIMAT\meteo cnews 2"
+
+# Détection dynamique du répertoire du projet
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Dossier d'export des cartes (sur le bureau en local, ou relatif sur GitHub Actions)
 DEST_DIR = r"C:\Users\grego\Desktop\cartes_alertes"
+if not os.path.exists(r"C:\Users\grego"):
+    DEST_DIR = os.path.join(PROJECT_DIR, "Desktop", "cartes_alertes")
 
 # Fallback master cities list for france_pictos (in case of index.html parsing issue)
 FALLBACK_CITIES = [
