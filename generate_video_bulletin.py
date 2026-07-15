@@ -214,7 +214,7 @@ ZONE_LABELS = {
 }
 
 
-def capture_and_compose_vigilance(zone, orientation, output_path):
+def capture_and_compose_vigilance(zone, orientation, output_path, period=1):
     zone_to_region = {
         "france_pictos": None,
         "hdf": "HDF",
@@ -232,7 +232,7 @@ def capture_and_compose_vigilance(zone, orientation, output_path):
         "paca": "PAC"
     }
     region_id = zone_to_region.get(zone)
-    url = f"https://minisite-douai.vercel.app/vigilance?period=1"
+    url = f"https://minisite-douai.vercel.app/vigilance?period={period}"
     if region_id:
         url += f"&region={region_id}"
         
@@ -757,6 +757,38 @@ def capture_and_compose_vigilance(zone, orientation, output_path):
             card_img = Image.open(temp_png).convert("RGBA")
             # Superposer à (0, 0) car card_img est exactement de taille v_width x v_height
             bg.paste(card_img, (0, 0), card_img)
+            
+            # Superposer le logo Météo Climat Pro en haut à droite
+            logo_names = ["logo meteo climat pro 3.png", "logo.png"]
+            logo_path = None
+            for l_name in logo_names:
+                for p_check in [
+                    os.path.join(script_dir, l_name),
+                    os.path.join(script_dir, "A_CONSERVER_ABSOLUMENT", l_name),
+                    os.path.join(cartes_dir, "A_CONSERVER_ABSOLUMENT", l_name),
+                ]:
+                    if os.path.exists(p_check):
+                        logo_path = p_check
+                        break
+                if logo_path:
+                    break
+                    
+            if logo_path and os.path.exists(logo_path):
+                try:
+                    logo_img = Image.open(logo_path).convert("RGBA")
+                    logo_target_h = int(v_height * 0.08)
+                    logo_target_w = int(logo_img.width * (logo_target_h / logo_img.height))
+                    logo_resized = logo_img.resize((logo_target_w, logo_target_h), Image.Resampling.LANCZOS)
+                    # Position en haut à droite
+                    logo_x = v_width - logo_target_w - 45
+                    logo_y = 35
+                    bg.paste(logo_resized, (logo_x, logo_y), logo_resized)
+                    log(f"Logo Météo Climat Pro incrusté en haut à droite (x={logo_x}, y={logo_y})")
+                except Exception as e:
+                    log(f"Erreur d'incrustation du logo: {e}")
+            else:
+                log("Warning: logo Météo Climat Pro introuvable pour incrustation")
+                
             bg.convert("RGB").save(output_path, "JPEG", quality=95)
             log(f"Carte de vigilance CNews TV Studio générée avec succès : {output_path}")
             
