@@ -2,8 +2,8 @@ name: Routine quotidienne - Cartes d'Observations Météo CNews
 
 on:
   schedule:
-    # Tous les jours à 17h45 UTC (soit 18h45 en heure d'hiver française, ou 19h45 en heure d'été)
-    - cron: '45 17 * * *'
+    # Trois fois par jour à 5h45, 11h45 et 17h45 UTC (soit Matin, Midi et Soir en France)
+    - cron: '45 5,11,17 * * *'
   workflow_dispatch: # Permet de lancer la génération manuellement depuis GitHub
 
 jobs:
@@ -43,14 +43,26 @@ jobs:
               }
           }
 
+      - name: Étape 2b - Générer les données de prévisions Météo-France (JSON & CSV)
+        run: |
+          # Générer les données de prévisions nationales (16 jours par défaut en json-only)
+          python "generate_meteofrance_maps.py" --zone france_pictos --json-only
+
+          # Liste des zones régionales
+          $zones = @("hdf", "normandie", "idf", "grandest", "ara", "naq", "occitanie", "paca", "bfc", "bretagne", "pdl", "cvl", "corse")
+          foreach ($zone in $zones) {
+              python "generate_meteofrance_maps.py" --zone $zone --json-only
+          }
+
       - name: Étape 3 - Envoyer les cartes par E-mail à Grégoire et Patrick
         run: |
           python "send_daily_cnews_obs_email.py"
 
-      - name: Étape 4 - Enregistrer et pousser les images sur GitHub
+      - name: Étape 4 - Enregistrer et pousser les images, prévisions, CSV et token sur GitHub
         run: |
           git config --global user.name "Météo Automatique"
           git config --global user.email "meteo-bot@cnews.fr"
           git add Desktop/cartes_alertes/
-          git commit -m "Mise à jour automatique des cartes d'observations et envoi e-mail"
+          git add meteofrance_data*.json meteofrance_*.csv meteofrance_token.json
+          git commit -m "Mise à jour automatique des cartes d'observations, prévisions Météo-France, CSV et token"
           git push origin main
