@@ -2,8 +2,8 @@ name: Actualisation Prévisions - Site Web Météo-France
 
 on:
   schedule:
-    # Trois fois par jour à 5h45, 11h45 et 17h45 UTC (soit Matin, Midi et Soir en France)
-    - cron: '45 5,11,17 * * *'
+    # Toutes les 2 heures (à la minute 45)
+    - cron: '45 */2 * * *'
   workflow_dispatch: # Permet de lancer la génération manuellement depuis GitHub
 
 permissions:
