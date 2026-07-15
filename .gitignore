@@ -1,11 +1,10 @@
-﻿.chrome_profile*/
+.chrome_profile*/
 .vercel/
 __pycache__/
 bulletin_final.html
 exemple_*.html
 exports_csv/
 temp_captures/
-meteofrance_data*.json
 meteociel_obs_data.json
 test.json
 svg_dump.html
