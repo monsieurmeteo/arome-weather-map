@@ -850,6 +850,9 @@ def generate_video(zone, days, orientation, temp_highlight=False, skip_maps=Fals
     
     # Répertoires
     cartes_dir = r"C:\Users\grego\Desktop\cartes_alertes"
+    if not os.path.exists(r"C:\Users\grego"):
+        project_dir = os.path.dirname(os.path.abspath(__file__))
+        cartes_dir = os.path.join(project_dir, "Desktop", "cartes_alertes")
     temp_dir = os.path.join(cartes_dir, f"temp_transitions_period_{os.getpid()}")
     if os.path.exists(temp_dir):
         safe_rmtree(temp_dir)
