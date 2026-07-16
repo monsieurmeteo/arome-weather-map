@@ -209,10 +209,10 @@ def main():
         
     if test_mode:
         recipients = "gregory.langlet@sfr.fr, langlet.gregory@gmail.com"
-        print("[MODE TEST ACTIVE] Envoi restreint à Grégory uniquement.")
+        print("[MODE TEST] Envoi restreint à Grégory uniquement.")
     else:
-        recipients = "gregory.langlet@sfr.fr, langlet.gregory@gmail.com"
-        print("[MODE PRODUCTION - TEMPORAIREMENT TEST] Envoi restreint à Grégory uniquement.")
+        recipients = "gregory.langlet@sfr.fr, langlet.gregory@gmail.com, patrick.marliere@wanadoo.fr"
+        print("[MODE PRODUCTION] Envoi à Patrick + Grégory.")
         
     send_email(email_body, subject, recipients)
 
