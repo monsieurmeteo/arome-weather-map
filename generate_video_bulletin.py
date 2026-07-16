@@ -483,20 +483,10 @@ def capture_and_compose_vigilance(zone, orientation, output_path, period=1):
                          svg.fb-svg-map path {
                              stroke: transparent !important;
                          }
-                         svg.fb-svg-map path[fill="#34d399"]:not([data-dep="2A"]):not([data-dep="2B"]),
-                         svg.fb-svg-map path[fill="#10b981"]:not([data-dep="2A"]):not([data-dep="2B"]),
-                         svg.fb-svg-map path[fill="#22c55e"]:not([data-dep="2A"]):not([data-dep="2B"]),
-                         svg.fb-svg-map path[fill="#34c759"]:not([data-dep="2A"]):not([data-dep="2B"]) {
-                             fill: transparent !important;
-                         }
-                         svg.fb-svg-map path[data-dep="2A"][fill="#34d399"],
-                         svg.fb-svg-map path[data-dep="2A"][fill="#10b981"],
-                         svg.fb-svg-map path[data-dep="2A"][fill="#22c55e"],
-                         svg.fb-svg-map path[data-dep="2A"][fill="#34c759"],
-                         svg.fb-svg-map path[data-dep="2B"][fill="#34d399"],
-                         svg.fb-svg-map path[data-dep="2B"][fill="#10b981"],
-                         svg.fb-svg-map path[data-dep="2B"][fill="#22c55e"],
-                         svg.fb-svg-map path[data-dep="2B"][fill="#34c759"] {
+                         svg.fb-svg-map path[fill="#34d399"],
+                         svg.fb-svg-map path[fill="#10b981"],
+                         svg.fb-svg-map path[fill="#22c55e"],
+                         svg.fb-svg-map path[fill="#34c759"] {
                              fill: #22c55e !important;
                              stroke: #1e293b !important;
                              stroke-width: 1.2px !important;
