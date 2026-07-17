@@ -63,14 +63,17 @@ const FoudreCommunes = () => {
             const json = await res.json();
             if (json.success && Array.isArray(json.data)) {
                 setStrikes(json.data.map(s => {
-                    const d = new Date(s.unix_timestamp * 1000);
+                    const d = new Date(s.timestamp ? s.timestamp.replace(' ', 'T') : Date.now());
+                    const timeMs = d.getTime();
+                    const validTime = isNaN(timeMs) ? Date.now() : timeMs;
+                    const validD = new Date(validTime);
                     return {
-                        lat: s.latitude,
-                        lon: s.longitude,
-                        time: d.getTime(),
-                        h: d.getUTCHours(),
-                        raw: d.toISOString().substring(11, 19),
-                        date: d.toISOString().substring(0, 10),
+                        lat: parseFloat(s.latitude),
+                        lon: parseFloat(s.longitude),
+                        time: validTime,
+                        h: validD.getUTCHours(),
+                        raw: validD.toISOString().substring(11, 19),
+                        date: validD.toISOString().substring(0, 10),
                         isLive: true
                     };
                 }).sort((a, b) => b.time - a.time));

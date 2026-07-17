@@ -142,13 +142,16 @@ const RegionalMapGenerator = () => {
                 const json = await res.json();
                 if (json.success && Array.isArray(json.data)) {
                     setLightningData(json.data.map((s, i) => {
-                        const dateObj = new Date(s.unix_timestamp * 1000);
+                        const dateObj = new Date(s.timestamp ? s.timestamp.replace(' ', 'T') : Date.now());
+                        const timeMs = dateObj.getTime();
+                        const validTime = isNaN(timeMs) ? Date.now() : timeMs;
+                        const validDObj = new Date(validTime);
                         return {
-                            lat: s.latitude,
-                            lon: s.longitude,
-                            time: dateObj.getTime(),
-                            h: dateObj.getHours(),
-                            raw: dateObj.toISOString().substring(11, 19)
+                            lat: parseFloat(s.latitude),
+                            lon: parseFloat(s.longitude),
+                            time: validTime,
+                            h: validDObj.getHours(),
+                            raw: validDObj.toISOString().substring(11, 19)
                         };
                     }));
                 } else {

@@ -323,14 +323,15 @@ const SupervisionMap = () => {
                     const json = await res.json();
                     if (json.success && Array.isArray(json.data)) {
                         allData = json.data.map((s, i) => {
-                            const d = new Date(s.unix_timestamp * 1000);
+                            const d = new Date(s.timestamp ? s.timestamp.replace(' ', 'T') : Date.now());
+                            const timeMs = d.getTime();
                             return {
-                                lat: s.latitude,
-                                lon: s.longitude,
-                                time: d.getTime(),
-                                h: d.getHours(),
-                                isRecent: (Date.now() - d.getTime()) / 60000 < 15,
-                                id: `live-super-${s.unix_timestamp}-${i}`
+                                lat: parseFloat(s.latitude),
+                                lon: parseFloat(s.longitude),
+                                time: isNaN(timeMs) ? Date.now() : timeMs,
+                                h: isNaN(timeMs) ? new Date().getHours() : d.getHours(),
+                                isRecent: isNaN(timeMs) ? false : (Date.now() - timeMs) / 60000 < 15,
+                                id: `live-super-${s.timestamp || i}-${i}`
                             };
                         });
                         console.log(`✅ Supervision: ${allData.length} impacts récupérés via meteo-npdc.fr.`);

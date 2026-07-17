@@ -411,15 +411,18 @@ const RadarFrance = () => {
             if (!json.success || !Array.isArray(json.data)) throw new Error('Format inattendu');
 
             const allStrikes = json.data.map((s, i) => {
-                const dObj = new Date(s.unix_timestamp * 1000);
+                const dObj = new Date(s.timestamp ? s.timestamp.replace(' ', 'T') : Date.now());
+                const timeMs = dObj.getTime();
+                const validTime = isNaN(timeMs) ? Date.now() : timeMs;
+                const validDObj = new Date(validTime);
                 return {
-                    lat: s.latitude,
-                    lon: s.longitude,
-                    time: dObj.getTime(),
-                    h: dObj.getUTCHours(),
-                    raw: dObj.toISOString().substring(11, 19),
-                    date: dObj.toISOString().substring(0, 10),
-                    id: `live-${s.unix_timestamp}-${i}`
+                    lat: parseFloat(s.latitude),
+                    lon: parseFloat(s.longitude),
+                    time: validTime,
+                    h: validDObj.getUTCHours(),
+                    raw: validDObj.toISOString().substring(11, 19),
+                    date: validDObj.toISOString().substring(0, 10),
+                    id: `live-${s.timestamp || i}-${i}`
                 };
             });
 

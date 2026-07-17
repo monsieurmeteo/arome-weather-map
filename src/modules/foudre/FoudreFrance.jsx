@@ -254,15 +254,17 @@ const FoudreFrance = () => {
                     if (json.success && Array.isArray(json.data)) {
                         console.log(`✅ ${json.data.length} impacts récupérés via meteo-npdc.fr.`);
                         allData = json.data.map((s, i) => {
-                            const d = new Date(s.unix_timestamp * 1000);
-                            const localH = d.getHours();
+                            const d = new Date(s.timestamp ? s.timestamp.replace(' ', 'T') : Date.now());
+                            const timeMs = d.getTime();
+                            const validTime = isNaN(timeMs) ? Date.now() : timeMs;
+                            const validD = new Date(validTime);
                             return {
-                                lat: s.latitude,
-                                lon: s.longitude,
-                                time: d.getTime(),
-                                h: localH,
-                                isRecent: (Date.now() - d.getTime()) / 60000 < 15,
-                                id: `live-${s.unix_timestamp}-${i}`
+                                lat: parseFloat(s.latitude),
+                                lon: parseFloat(s.longitude),
+                                time: validTime,
+                                h: validD.getHours(),
+                                isRecent: (Date.now() - validTime) / 60000 < 15,
+                                id: `live-${s.timestamp || i}-${i}`
                             };
                         });
                     }
