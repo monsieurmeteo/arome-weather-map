@@ -25,6 +25,12 @@ jobs:
       - name: Install Playwright/Puppeteer dependencies
         run: sudo apt-get update && sudo apt-get install -y libgbm-dev
         
+      - name: Sync Lightning Data to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sync_foudre_week.mjs
+        
       - name: Run Lightning Archive Script
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
