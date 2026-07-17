@@ -304,6 +304,7 @@ const SupervisionMap = () => {
             const now = new Date();
             const today = now.toLocaleDateString('sv-SE');
             const isLive = selectedDate === today;
+            let allData = [];
 
             // Pour le mode LIVE : récupérer les dernières 24h glissantes (aujourd'hui + hier)
             // Pour le mode ARCHIVE : récupérer uniquement la date sélectionnée
