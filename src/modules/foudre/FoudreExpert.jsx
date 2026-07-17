@@ -152,11 +152,27 @@ export default function FoudreExpert() {
             const todayStr=format(new Date(),"yyyy-MM-dd");
             let allAcc=[];
             if (startDate===todayStr&&!isRange) {
-                const ds=startDate.replace(/-/g,'');
-                let res=await fetch(`/api-agate/ORAGE/orage/ws/wsOragesGMaps.php?date=${ds}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`);
-                const ct=res.headers.get("content-type");
-                if (res.status===404||(ct&&ct.includes("text/html"))) res=await fetch(`/ORAGE/orage/ws/wsOragesGMaps.php?date=${ds}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`);
-                if (res.ok){const api=await res.json();if(Array.isArray(api))allAcc=api.map((s,i)=>{const d=new Date(`${s.date.replace(/\//g,'-')}T${s.heure}+01:00`);return{lat:parseFloat(s.lat),lon:parseFloat(s.lon),time:d.getTime(),h:d.getHours(),raw:s.heure,date:s.date,id:`live-${d.getTime()}-${i}`,isRecent:(Date.now()-d.getTime())/60000<30};}).sort((a,b)=>b.time-a.time);}
+                const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+                    referrerPolicy: "no-referrer"
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success && Array.isArray(json.data)) {
+                        allAcc = json.data.map((s, i) => {
+                            const d = new Date(s.unix_timestamp * 1000);
+                            return {
+                                lat: s.latitude,
+                                lon: s.longitude,
+                                time: d.getTime(),
+                                h: d.getUTCHours(),
+                                raw: d.toISOString().substring(11, 19),
+                                date: d.toISOString().substring(0, 10),
+                                id: `live-${s.unix_timestamp}-${i}`,
+                                isRecent: (Date.now() - d.getTime()) / 60000 < 30
+                            };
+                        }).sort((a, b) => b.time - a.time);
+                    }
+                }
             } else {
                 const days=isRange?getDays(startDate,endDate):[startDate];
                 let all=[];

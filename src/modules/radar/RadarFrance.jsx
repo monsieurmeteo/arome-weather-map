@@ -403,43 +403,27 @@ const RadarFrance = () => {
 
     const fetchLightningData = async () => {
         try {
-            // Fetch Today AND Yesterday to cover rolling 24h
-            const now = new Date();
-            const datesToFetch = [now];
-            const yesterday = new Date(now);
-            yesterday.setHours(yesterday.getHours() - 24);
-            // Gets yesterday full day
-            const yDay = new Date();
-            yDay.setDate(yDay.getDate() - 1);
-            datesToFetch.push(yDay);
+            // API publique meteo-npdc.fr (Blitzortung) — 24h, zéro clé API
+            const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-            let allStrikes = [];
+            const json = await res.json();
+            if (!json.success || !Array.isArray(json.data)) throw new Error('Format inattendu');
 
-            for (const d of datesToFetch) {
-                const dateStr = d.toISOString().split('T')[0];
-                const ds = dateStr.replace(/-/g, '');
-                const url = `/api-agate/orage/ws/wsOragesGMaps.php?date=${ds}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`;
+            const allStrikes = json.data.map((s, i) => {
+                const dObj = new Date(s.unix_timestamp * 1000);
+                return {
+                    lat: s.latitude,
+                    lon: s.longitude,
+                    time: dObj.getTime(),
+                    h: dObj.getUTCHours(),
+                    raw: dObj.toISOString().substring(11, 19),
+                    date: dObj.toISOString().substring(0, 10),
+                    id: `live-${s.unix_timestamp}-${i}`
+                };
+            });
 
-                let res = await fetch(url);
-                if (!res.ok) continue;
-
-                const api = await res.json();
-                if (Array.isArray(api)) {
-                    allStrikes.push(...api.map((s, i) => {
-                        const dObj = new Date(`${s.date.replace(/\//g, '-')}T${s.heure}+01:00`);
-                        return {
-                            lat: parseFloat(s.lat), lon: parseFloat(s.lon),
-                            time: dObj.getTime(),
-                            h: dObj.getHours(),
-                            raw: s.heure,
-                            date: s.date,
-                            id: `live-${dObj.getTime()}-${i}-${Math.random()}`
-                        };
-                    }));
-                }
-            }
-
-            const limit24h = new Date().getTime() - (24 * 60 * 60 * 1000);
+            const limit24h = Date.now() - (24 * 60 * 60 * 1000);
             const filtered = allStrikes.filter(s => s.time > limit24h).sort((a, b) => a.time - b.time);
             setLightningStrikes(filtered);
 

@@ -54,19 +54,24 @@ const FoudreCommunes = () => {
         setLoading(true);
         setIsRefreshing(true);
         try {
-            // ALWAYS LIVE
-            const now = new Date();
-            const ds = now.toLocaleDateString('fr-CA').replace(/-/g, '');
-            const url = `/api-agate/ORAGE/orage/ws/wsOragesGMaps.php?date=${ds}&heureD=00&heureF=23&pass=jh2kH3,R&_=${now.getTime()}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                setStrikes(data.map(s => {
-                    const d = new Date(`${s.date.replace(/\//g, '-')}T${s.heure}`);
+            // API publique meteo-npdc.fr (Blitzortung) — 24h, anonyme
+            const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+                referrerPolicy: "no-referrer"
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+                setStrikes(json.data.map(s => {
+                    const d = new Date(s.unix_timestamp * 1000);
                     return {
-                        lat: parseFloat(s.lat), lon: parseFloat(s.lon),
-                        time: d.getTime(), h: d.getHours(),
-                        raw: s.heure, date: s.date, isLive: true
+                        lat: s.latitude,
+                        lon: s.longitude,
+                        time: d.getTime(),
+                        h: d.getUTCHours(),
+                        raw: d.toISOString().substring(11, 19),
+                        date: d.toISOString().substring(0, 10),
+                        isLive: true
                     };
                 }).sort((a, b) => b.time - a.time));
             }

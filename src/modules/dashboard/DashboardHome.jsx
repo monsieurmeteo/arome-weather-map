@@ -83,13 +83,16 @@ export default function DashboardHome() {
                 };
             }
 
-            // 3. Fetch Lightning (Partial count from Agate API or similar)
+            // 3. Fetch Lightning (24h count from meteo-npdc.fr public API)
             try {
-                const ds = today.replace(/-/g, '');
-                const res = await fetch(`/api-agate/ORAGE/orage/ws/wsOragesGMaps.php?date=${ds}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`);
-                const api = await res.json();
-                if (Array.isArray(api)) {
-                    nationalStats.lightningCount = api.length;
+                const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+                    referrerPolicy: "no-referrer"
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success && Array.isArray(json.data)) {
+                        nationalStats.lightningCount = json.data.length;
+                    }
                 }
             } catch (e) { console.warn("Lightning fetch failed", e); }
 

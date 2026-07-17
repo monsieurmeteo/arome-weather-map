@@ -231,19 +231,21 @@ const VectorRegionPreview = () => {
 
                 try {
                     if (isToday) {
-                        const dateStr = selectedDate.replace(/-/g, '');
-                        const res = await fetch(`/api-agate/ORAGE/orage/ws/wsOragesGMaps.php?date=${dateStr}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`);
-                        const api = await res.json();
+                        const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+                            referrerPolicy: "no-referrer"
+                        });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                        if (Array.isArray(api)) {
-                            setStrikes(api.map(s => {
-                                const d = new Date(`${s.date.replace(/\//g, '-')}T${s.heure}`);
+                        const json = await res.json();
+                        if (json.success && Array.isArray(json.data)) {
+                            setStrikes(json.data.map(s => {
+                                const d = new Date(s.unix_timestamp * 1000);
                                 return {
-                                    lat: parseFloat(s.lat),
-                                    lon: parseFloat(s.lon),
+                                    lat: s.latitude,
+                                    lon: s.longitude,
                                     time: d.getTime(),
                                     h: d.getHours(),
-                                    raw: s.heure
+                                    raw: d.toISOString().substring(11, 19)
                                 };
                             }));
                         } else {

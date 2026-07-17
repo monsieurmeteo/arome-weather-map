@@ -244,62 +244,31 @@ const FoudreFrance = () => {
             let allData = [];
 
             if (isLiveMode) {
-                // En mode LIVE : récupérer aujourd'hui ET hier (+ avant-hier pour couvrir le cas UTC+2)
-                const datesToFetch = [
-                    today,
-                    new Date(now.getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('sv-SE'),
-                    new Date(now.getTime() - 48 * 60 * 60 * 1000).toLocaleDateString('sv-SE')
-                ];
-                // Dédupliquer
-                const uniqueDates = [...new Set(datesToFetch)];
+                try {
+                    const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+                        referrerPolicy: "no-referrer"
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                for (const date of uniqueDates) {
-                    const ds = date.replace(/-/g, '');
-                    const agateUrl = `/api-agate/ORAGE/orage/ws/wsOragesGMaps.php?date=${ds}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`;
-
-                    try {
-                        let resAgate = await fetch(agateUrl);
-                        let apiData;
-
-                        const contentType = resAgate.headers.get("content-type");
-                        if (resAgate.status === 404 || (contentType && contentType.includes("text/html"))) {
-                            console.warn("⚠️ Proxy /api-agate HS, tentative via /ORAGE...");
-                            const backupUrl = `/ORAGE/orage/ws/wsOragesGMaps.php?date=${ds}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`;
-                            resAgate = await fetch(backupUrl);
-                        }
-
-                        if (resAgate.ok) {
-                            try {
-                                apiData = await resAgate.json();
-                            } catch (e) {
-                                console.warn("Agate JSON parse error", e);
-                                apiData = [];
-                            }
-                        } else {
-                            apiData = [];
-                        }
-
-                        if (Array.isArray(apiData) && apiData.length > 0) {
-                            console.log(`✅ ${apiData.length} impacts récupérés pour ${date}.`);
-                            const parsed = apiData.map((s, i) => {
-                                const isoDate = (s.date || '').replace(/\//g, '-');
-                                // Utiliser l'offset timezone dynamique (UTC+1 hiver, UTC+2 été)
-                                const d = new Date(`${isoDate}T${s.heure}${tzString}`);
-                                const localH = isNaN(d.getTime()) ? 0 : d.getHours();
-                                return {
-                                    lat: parseFloat(s.lat), lon: parseFloat(s.lon),
-                                    time: isNaN(d.getTime()) ? 0 : d.getTime(),
-                                    h: localH,
-                                    isRecent: (Date.now() - d.getTime()) / 60000 < 15,
-                                    id: `live-${date}-${i}`
-                                };
-                            });
-                            allData = allData.concat(parsed);
-                        }
-                    } catch (err) {
-                        console.warn(`⚠️ Fetch Agate warning for ${date}:`, err.message);
-                        setDebugInfo(prev => ({ ...prev, error: `Agate: ${err.message}` }));
+                    const json = await res.json();
+                    if (json.success && Array.isArray(json.data)) {
+                        console.log(`✅ ${json.data.length} impacts récupérés via meteo-npdc.fr.`);
+                        allData = json.data.map((s, i) => {
+                            const d = new Date(s.unix_timestamp * 1000);
+                            const localH = d.getHours();
+                            return {
+                                lat: s.latitude,
+                                lon: s.longitude,
+                                time: d.getTime(),
+                                h: localH,
+                                isRecent: (Date.now() - d.getTime()) / 60000 < 15,
+                                id: `live-${s.unix_timestamp}-${i}`
+                            };
+                        });
                     }
+                } catch (err) {
+                    console.warn(`⚠️ Fetch lightning warning:`, err.message);
+                    setDebugInfo(prev => ({ ...prev, error: `Lightning: ${err.message}` }));
                 }
 
                 // Filtrer pour ne garder que les dernières 24h
@@ -307,7 +276,7 @@ const FoudreFrance = () => {
                     const cutoff = now.getTime() - 24 * 60 * 60 * 1000;
                     const before = allData.length;
                     allData = allData.filter(s => s.time > 0 && s.time >= cutoff);
-                    console.log(`📊 Filtrage 24h: ${before} → ${allData.length} impacts (TZ: ${tzString})`);
+                    console.log(`📊 Filtrage 24h: ${before} → ${allData.length} impacts`);
                 }
             }
 

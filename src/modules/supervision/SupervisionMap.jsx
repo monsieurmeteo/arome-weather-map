@@ -313,42 +313,34 @@ const SupervisionMap = () => {
 
             console.log(`⚡ Supervision: Fetching strikes for ${datesToFetch.join(' + ')} (Live 24h: ${isLive})...`);
 
-            let allData = [];
-
-            // Récupérer les données de chaque date via Agate
-            for (const date of datesToFetch) {
-                const ds = date.replace(/-/g, '');
-                const agateUrl = `/ORAGE/orage/ws/wsOragesGMaps.php?date=${ds}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`;
-
+            if (isLive) {
                 try {
-                    let resAgate = await fetch(agateUrl);
-                    const contentType = resAgate.headers.get("content-type");
+                    const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+                        referrerPolicy: "no-referrer"
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                    if (resAgate.status === 404 || (contentType && contentType.includes("text/html"))) {
-                        const backupUrl = `/ORAGE/orage/ws/wsOragesGMaps.php?date=${ds}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`;
-                        resAgate = await fetch(backupUrl);
-                    }
-
-                    if (resAgate.ok) {
-                        const apiData = await resAgate.json();
-                        if (Array.isArray(apiData) && apiData.length > 0) {
-                            const parsed = apiData.filter(s => s.lat && s.lon).map((s, i) => {
-                                const isoDate = (s.date || '').replace(/\//g, '-');
-                                const d = new Date(`${isoDate}T${s.heure}+01:00`);
-                                return {
-                                    lat: parseFloat(s.lat), lon: parseFloat(s.lon),
-                                    time: d.getTime(), h: isNaN(d.getHours()) ? 0 : d.getHours(),
-                                    isRecent: (Date.now() - d.getTime()) / 60000 < 15,
-                                    id: `live-super-${date}-${i}`
-                                };
-                            });
-                            allData = allData.concat(parsed);
-                            console.log(`✅ Supervision: ${parsed.length} impacts Agate pour ${date}.`);
-                        }
+                    const json = await res.json();
+                    if (json.success && Array.isArray(json.data)) {
+                        allData = json.data.map((s, i) => {
+                            const d = new Date(s.unix_timestamp * 1000);
+                            return {
+                                lat: s.latitude,
+                                lon: s.longitude,
+                                time: d.getTime(),
+                                h: d.getHours(),
+                                isRecent: (Date.now() - d.getTime()) / 60000 < 15,
+                                id: `live-super-${s.unix_timestamp}-${i}`
+                            };
+                        });
+                        console.log(`✅ Supervision: ${allData.length} impacts récupérés via meteo-npdc.fr.`);
                     }
                 } catch (err) {
-                    console.warn(`⚠️ Supervision: Agate fetch failed for ${date}:`, err.message);
+                    console.warn(`⚠️ Supervision: Fetch lightning warning:`, err.message);
                 }
+            } else {
+                // ARCHIVE MODE - Utilise Supabase (inchangé)
+                allData = [];
             }
 
             // Fallback Supabase si Agate n'a rien retourné

@@ -129,28 +129,33 @@ const RegionalMapGenerator = () => {
     const loadLightning = async () => {
         setLoading(true);
         try {
-            // Uniquement pour la date du jour en LIVE via API Agate
-            // (L'API Agate ne donne que le live/24h glissant, pas d'historique lointain)
-            // Si l'utilisateur choisit une autre date, on ne pourrais pas... 
-            // Mais supposons qu'il veut le live ou que l'API Agate gère basic date si c'est format 'YYYYMMDD'
-            // L'API Agate gère la date ? "wsOragesGMaps.php?date=20240101"
+            // API publique meteo-npdc.fr (Blitzortung) — 24h, anonyme
+            const todayStr = new Date().toISOString().split('T')[0];
+            
+            // L'API meteo-npdc ne donne que les dernières 24h glissantes, donc on ne peut charger que si c'est aujourd'hui
+            if (selectedDate === todayStr) {
+                const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+                    referrerPolicy: "no-referrer"
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-            const d = selectedDate.replace(/-/g, '');
-            const res = await fetch(`/api-agate/ORAGE/orage/ws/wsOragesGMaps.php?date=${d}&heureD=00&heureF=23&pass=jh2kH3,R&_=${Date.now()}`);
-            const api = await res.json();
-
-            if (Array.isArray(api)) {
-                setLightningData(api.map((s, i) => {
-                    const dateObj = new Date(`${s.date.replace(/\//g, '-')}T${s.heure}`);
-                    return {
-                        lat: parseFloat(s.lat),
-                        lon: parseFloat(s.lon),
-                        time: dateObj.getTime(),
-                        h: dateObj.getHours(), // Heure 0-23
-                        raw: s.heure
-                    };
-                }));
+                const json = await res.json();
+                if (json.success && Array.isArray(json.data)) {
+                    setLightningData(json.data.map((s, i) => {
+                        const dateObj = new Date(s.unix_timestamp * 1000);
+                        return {
+                            lat: s.latitude,
+                            lon: s.longitude,
+                            time: dateObj.getTime(),
+                            h: dateObj.getHours(),
+                            raw: dateObj.toISOString().substring(11, 19)
+                        };
+                    }));
+                } else {
+                    setLightningData([]);
+                }
             } else {
+                // Autre date : pas de support d'archive directe via meteo-npdc (car seulement 24h live)
                 setLightningData([]);
             }
         } catch (e) {
