@@ -12,3 +12,4 @@ __pycache__/
 
 data/icon-eu/
 data/output/
+.vercel
