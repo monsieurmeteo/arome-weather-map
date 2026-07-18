@@ -7,14 +7,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 async function captureMap() {
     const args = process.argv.slice(2);
     if (args.length < 2) {
-        console.error("❌ Usage: node generate_map_image.mjs <input_html_path> <output_png_path>");
+        console.error("❌ Usage: node generate_map_image.mjs <input_html_path> <output_png_path> [width] [height]");
         process.exit(1);
     }
 
     const inputHtml = path.resolve(args[0]);
     const outputPng = path.resolve(args[1]);
+    const width = args[2] ? parseInt(args[2], 10) : 1200;
+    const height = args[3] ? parseInt(args[3], 10) : 750;
 
-    console.log(`🚀 Démarrage de Puppeteer pour capturer : ${inputHtml}...`);
+    console.log(`🚀 Démarrage de Puppeteer pour capturer : ${inputHtml} (${width}x${height})...`);
     
     const browser = await puppeteer.launch({
         headless: true,
@@ -24,8 +26,8 @@ async function captureMap() {
     try {
         const page = await browser.newPage();
         
-        // Configuration de la taille de l'image (Format 16:9 HD standard pour rapports et emails)
-        await page.setViewport({ width: 1200, height: 750 });
+        // Configuration dynamique du Viewport
+        await page.setViewport({ width, height });
 
         // Charger le fichier HTML local
         await page.goto(`file://${inputHtml}`, {
