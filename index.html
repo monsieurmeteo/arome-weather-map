@@ -4548,9 +4548,21 @@
                 if (codeData && codeData.label) return codeData.label;
             }
             const labelMap = {
-                0: 'SOLEIL', 1: 'PEU NUAGEUX', 2: 'VOILÉ', 3: 'NUAGEUX',
-                45: 'BROUILLARD', 48: 'GIVRE', 51: 'BRUINE', 61: 'PLUIES FAIBLES',
-                63: 'PLUIE', 80: 'AVERSES', 95: 'ORAGE'
+                0: 'SOLEIL', 1: 'PEU NUAGEUX', 2: 'NUAGEUX', 3: 'TRÈS NUAGEUX',
+                4: 'COUVERT', 5: 'SOLEIL VOILÉ', 6: 'AVERSES', 7: 'PLUIES FAIBLES',
+                8: 'FORTES PLUIES', 9: 'NEIGE', 10: 'ORAGES', 11: 'ORAGES + GRÊLE',
+                12: 'BROUILLARD',
+                13: 'SOLEIL VOILÉ',
+                45: 'BROUILLARD', 48: 'BROUILLARD',
+                51: 'BRUINE', 53: 'BRUINE', 55: 'BRUINE',
+                56: 'BRUINE VERGLAÇANTE', 57: 'BRUINE VERGLAÇANTE',
+                61: 'PLUIES FAIBLES', 63: 'PLUIE', 65: 'FORTES PLUIES',
+                66: 'PLUIE VERGLAÇANTE', 67: 'PLUIE VERGLAÇANTE',
+                71: 'NEIGE FAIBLE', 73: 'NEIGE', 75: 'NEIGE FORTE',
+                77: 'NEIGE EN GRAINS',
+                80: 'AVERSES', 81: 'AVERSES', 82: 'AVERSES',
+                85: 'AVERSES DE NEIGE', 86: 'AVERSES DE NEIGE',
+                95: 'ORAGE', 96: 'ORAGE', 99: 'ORAGE'
             };
             return labelMap[cNum] || 'ENSOLEILLÉ';
         }
