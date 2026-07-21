@@ -232,53 +232,32 @@ def fetch_city_forecast(token, lat, lon):
         print(f"Error fetching forecast for lat={lat}, lon={lon}: {e}")
         return None
 
-def fetch_openmeteo_gusts(lat, lon, start_tomorrow=False):
-    """Fetch wind_gusts_10m hourly from Open-Meteo (free, no auth, 16-day forecast).
-    Returns a list of 192 floats (km/h) aligned to the same hourly grid as build_openmeteo_mock.
-    Falls back to None on any error so the caller can keep the MF value.
-    """
-    import time
-    now = datetime.now()
-    start_dt = datetime(now.year, now.month, now.day) + timedelta(days=(1 if start_tomorrow else 0))
-    end_dt = start_dt + timedelta(hours=191)
-    start_str = start_dt.strftime("%Y-%m-%d")
-    end_str = end_dt.strftime("%Y-%m-%d")
+def fetch_openmeteo_gusts(lat, lon, start_tomorrow=False, days=8):
     url = (
         f"https://api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lon}"
         f"&hourly=wind_gusts_10m"
         f"&wind_speed_unit=kmh"
         f"&timezone=Europe%2FParis"
-        f"&start_date={start_str}&end_date={end_str}"
+        f"&forecast_days={days}"
     )
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read().decode('utf-8'))
         gusts = data.get('hourly', {}).get('wind_gusts_10m', [])
-        # Pad or truncate to exactly 192 entries
-        if len(gusts) >= 192:
-            return [float(v or 0) for v in gusts[:192]]
-        return [float(v or 0) for v in gusts] + [0.0] * (192 - len(gusts))
+        target_len = days * 24
+        if len(gusts) >= target_len:
+            return [float(v or 0) for v in gusts[:target_len]]
+        return [float(v or 0) for v in gusts] + [0.0] * (target_len - len(gusts))
     except Exception as e:
         print(f"  [open-meteo gusts] fetch failed for lat={lat},lon={lon}: {e}")
         return None
 
 
-def fetch_all_openmeteo_gusts(cities_list, start_tomorrow=False):
-    """Fetch wind_gusts_10m hourly for all cities in a single batch request to Open-Meteo."""
+def fetch_all_openmeteo_gusts(cities_list, start_tomorrow=False, days=8):
     if not cities_list:
         return {}
-    
-    import json
-    import urllib.request
-    from datetime import datetime, timedelta
-    
-    now = datetime.now()
-    start_dt = datetime(now.year, now.month, now.day) + timedelta(days=(1 if start_tomorrow else 0))
-    end_dt = start_dt + timedelta(hours=191)
-    start_str = start_dt.strftime("%Y-%m-%d")
-    end_str = end_dt.strftime("%Y-%m-%d")
     
     lats = ",".join(str(c['lat']) for c in cities_list)
     lons = ",".join(str(c['lon']) for c in cities_list)
@@ -289,8 +268,9 @@ def fetch_all_openmeteo_gusts(cities_list, start_tomorrow=False):
         f"&hourly=wind_gusts_10m"
         f"&wind_speed_unit=kmh"
         f"&timezone=Europe%2FParis"
-        f"&start_date={start_str}&end_date={end_str}"
+        f"&forecast_days={days}"
     )
+    print("DEBUG URL (Batch):", url)
     
     gusts_map = {}
     print(f"  [open-meteo gusts] Batch fetching gusts for {len(cities_list)} locations...")
@@ -304,10 +284,11 @@ def fetch_all_openmeteo_gusts(cities_list, start_tomorrow=False):
             city = cities_list[idx]
             gusts = r.get('hourly', {}).get('wind_gusts_10m', [])
             
-            if len(gusts) >= 192:
-                final_gusts = [float(v or 0) for v in gusts[:192]]
+            target_len = days * 24
+            if len(gusts) >= target_len:
+                final_gusts = [float(v or 0) for v in gusts[:target_len]]
             else:
-                final_gusts = [float(v or 0) for v in gusts] + [0.0] * (192 - len(gusts))
+                final_gusts = [float(v or 0) for v in gusts] + [0.0] * (target_len - len(gusts))
             
             key = f"{round(float(city['lat']), 2)}_{round(float(city['lon']), 2)}"
             gusts_map[key] = final_gusts
@@ -319,7 +300,7 @@ def fetch_all_openmeteo_gusts(cities_list, start_tomorrow=False):
     return gusts_map
 
 
-def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None):
+def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None, days=8):
     if not mf_data or 'properties' not in mf_data:
         return None
         
@@ -340,7 +321,7 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None):
     hourly_precip = []
     hourly_clouds = []
     
-    for h in range(192):
+    for h in range(days * 24):
         target_dt = start_of_today + timedelta(hours=h)
         target_iso = target_dt.strftime("%Y-%m-%dT%H:00")
         hourly_times.append(target_iso)
@@ -402,7 +383,7 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None):
     daily_sunrise = []
     daily_sunset = []
     
-    for d in range(8):
+    for d in range(days):
         target_date = start_of_today + timedelta(days=d)
         date_str = target_date.strftime("%Y-%m-%d")
         daily_times.append(date_str)
@@ -448,13 +429,13 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None):
             "windspeed_10m": hourly_ws,
             "wind_gusts_10m": om_gusts if om_gusts else hourly_wg,
             "precipitation": hourly_precip,
-            "relativehumidity_2m": [50] * 192,
-            "pressure_msl": [1013] * 192,
-            "winddirection_10m": [180] * 192,
+            "relativehumidity_2m": [50] * (days * 24),
+            "pressure_msl": [1013] * (days * 24),
+            "winddirection_10m": [180] * (days * 24),
             "cloud_cover": hourly_clouds,
-            "cloud_cover_low": [0] * 192,
-            "cloud_cover_mid": [0] * 192,
-            "cloud_cover_high": [0] * 192
+            "cloud_cover_low": [0] * (days * 24),
+            "cloud_cover_mid": [0] * (days * 24),
+            "cloud_cover_high": [0] * (days * 24)
         },
         "daily": {
             "time": daily_times,
@@ -574,6 +555,7 @@ def main():
     parser.add_argument("--start-tomorrow", action="store_true", default=default_start_tomorrow, help="Commencer les prévisions à partir de demain au lieu d'aujourd'hui")
     parser.add_argument("--temp-highlight", action="store_true", help="Mise en avant min/max des températures (bleu min, rouge max, noir pour le reste)")
     parser.add_argument("--patrick", action="store_true", help="Générer les cartes spécifiques pour le Bulletin Patrick")
+    parser.add_argument("--json-only", action="store_true", help="Générer uniquement les fichiers JSON et CSV, sans captures d'images")
     args = parser.parse_args()
 
     zone_key = args.zone
@@ -585,9 +567,12 @@ def main():
     if patrick_mode:
         temp_highlight = True
     
+    json_only = args.json_only
     # By default: 8 days for france_pictos (national), 3 days (J0, J1, J2) for regional maps
     if days_to_capture is None:
-        if patrick_mode:
+        if json_only:
+            days_to_capture = 16
+        elif patrick_mode:
             days_to_capture = 5
         else:
             days_to_capture = 8 if zone_key == "france_pictos" else 3
@@ -640,7 +625,7 @@ def main():
     all_cities_for_gusts = list(cities_list)
     if not eph_in_list:
         all_cities_for_gusts.append(eph_city)
-    all_gusts = fetch_all_openmeteo_gusts(all_cities_for_gusts, start_tomorrow=start_tomorrow)
+    all_gusts = fetch_all_openmeteo_gusts(all_cities_for_gusts, start_tomorrow=start_tomorrow, days=days_to_capture)
 
     # Fetch forecasts for all zone cities
     print(f"Fetching Météo-France forecasts for {len(cities_list)} cities...")
@@ -655,7 +640,7 @@ def main():
         om_gusts = all_gusts.get(key)
         
         if mf_json:
-            mock = build_openmeteo_mock(mf_json, start_tomorrow=start_tomorrow, om_gusts=om_gusts)
+            mock = build_openmeteo_mock(mf_json, start_tomorrow=start_tomorrow, om_gusts=om_gusts, days=days_to_capture)
             if mock:
                 weather_data_list.append(mock)
             else:
@@ -672,7 +657,7 @@ def main():
         key = f"{round(float(eph_city['lat']), 2)}_{round(float(eph_city['lon']), 2)}"
         eph_gusts = all_gusts.get(key)
         
-        eph_mock = build_openmeteo_mock(eph_mf, start_tomorrow=start_tomorrow, om_gusts=eph_gusts) if eph_mf else None
+        eph_mock = build_openmeteo_mock(eph_mf, start_tomorrow=start_tomorrow, om_gusts=eph_gusts, days=days_to_capture) if eph_mf else None
         if eph_mock:
             eph_mock['ephemeris_city'] = eph_city['name']
             weather_data_list.insert(0, eph_mock)
@@ -688,6 +673,10 @@ def main():
     with open(JSON_OUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(weather_data_list, f, indent=2)
     print(f"Successfully generated weather data file: {JSON_OUT_PATH}")
+
+    if json_only:
+        print("Mode JSON-only actif. Fin de l'exécution sans capture d'images.")
+        return
 
     # Generate daily CSV
     daily_csv_path = os.path.join(PROJECT_DIR, f"meteofrance_daily_forecast_{zone_key}.csv" if zone_key != "france_pictos" else "meteofrance_daily_forecast.csv")
