@@ -1956,20 +1956,20 @@
                     </button>
 
                     <div style="font-size: 11px; font-weight: 800; color: #4db8ff; text-transform: uppercase; margin-top: 8px; margin-bottom: 2px;">
-                        <i class="fas fa-calendar-alt"></i> INFOGRAPHIES 15 JOURS
+                        <i class="fas fa-calendar-alt"></i> INFOGRAPHIES 14 JOURS
                     </div>
-                    <button class="sidebar-btn" onclick="exportCommuneInfographic('landscape', 15)" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none;">
-                        <i class="fas fa-desktop"></i> 15J PAYSAGE (16:9)
+                    <button class="sidebar-btn" onclick="exportCommuneInfographic('landscape', 14)" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none;">
+                        <i class="fas fa-desktop"></i> 14J PAYSAGE (16:9)
                     </button>
-                    <button class="sidebar-btn" onclick="exportCommuneInfographic('tiktok', 15)" style="background: linear-gradient(135deg, #d946ef, #a855f7); color: white; border: none;">
-                        <i class="fas fa-mobile-alt"></i> 15J TIKTOK (9:16)
+                    <button class="sidebar-btn" onclick="exportCommuneInfographic('tiktok', 14)" style="background: linear-gradient(135deg, #d946ef, #a855f7); color: white; border: none;">
+                        <i class="fas fa-mobile-alt"></i> 14J TIKTOK (9:16)
                     </button>
 
                     <div style="font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; margin-top: 8px; margin-bottom: 2px;">
                         <i class="fas fa-file-download"></i> EXPORTS BRUTS
                     </div>
                     <button class="sidebar-btn" onclick="exportCommuneJPG()" style="background:#f39c12; color:white; border-color:#e67e22;">
-                        <i class="fas fa-file-image"></i> EXPORT TABLEAU (15J)
+                        <i class="fas fa-file-image"></i> EXPORT TABLEAU (14J)
                     </button>
                     <button class="sidebar-btn" onclick="exportCommunePDF()">
                         <i class="fas fa-file-pdf"></i> PDF EXPERT
@@ -7663,7 +7663,7 @@ function parsePicto(s) {
                 <!-- BLOC APERÇU 15 CARTES WEB -->
                 <div style="margin-bottom: 25px;">
                     <h3 style="font-weight: 900; color: #1a2a3a; font-size: 16px; margin: 0 0 15px 0; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
-                        <i class="fas fa-calendar-alt" style="color: #00bcff;"></i> APERÇU DES PRÉVISIONS (J+1 À J+15)
+                        <i class="fas fa-calendar-alt" style="color: #00bcff;"></i> APERÇU DES PRÉVISIONS (J+1 À J+14)
                     </h3>
                     <div id="web-daily-cards" style="display: grid; grid-template-columns: repeat(3, 1fr); border: 2px solid #1a2a3a; border-radius: 16px; overflow: hidden; background: #ffffff; max-width: 850px; margin: 0 auto 25px auto; box-shadow: 0 8px 24px rgba(0,0,0,0.08);"></div>
                 </div>
@@ -7814,7 +7814,7 @@ function parsePicto(s) {
 
         
         async function exportCommuneInfographic(format, days) {
-            days = days || 15;
+            days = days || 14;
             if (!currentCityData || !window.lastCommuneData) {
                 alert("Veuillez d'abord rechercher une commune.");
                 return;
@@ -7857,8 +7857,8 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
             var now2      = new Date();
             var dateStr2  = now2.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-            var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 3 : 5);
-            var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 5 : 3);
+            var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 2 : 7);
+            var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 7 : 2);
 
             var gridHtml =
                 '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);' +
@@ -8020,7 +8020,7 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
 
 
         async function exportCommuneInfographic(format, days) {
-            days = days || 15;
+            days = days || 14;
             if (!currentCityData || !window.lastCommuneData) {
                 alert("Veuillez d'abord rechercher une commune.");
                 return;
@@ -8063,8 +8063,8 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
             var now2      = new Date();
             var dateStr2  = now2.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-            var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 3 : 5);
-            var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 5 : 3);
+            var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 2 : 7);
+            var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 7 : 2);
 
             var gridHtml =
                 '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);' +
@@ -8240,7 +8240,7 @@ async function exportCommuneJPG() {
                 });
 
                 const link = document.createElement('a');
-                link.download = `Meteo_${cityName}_15jours.jpg`;
+                link.download = `Meteo_${cityName}_14jours.jpg`;
                 link.href = canvas.toDataURL('image/jpeg', 0.9);
                 link.click();
             } catch (e) {
