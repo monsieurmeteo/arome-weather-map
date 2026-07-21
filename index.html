@@ -7413,6 +7413,7 @@
 
         function renderCommuneForecast(data, city) {
             window.lastCommuneData = data;
+            window.lastCommuneData = data;
             const content = document.getElementById('forecast-content');
             const sunrise = new Date(data.daily.sunrise[0]).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
             const sunset = new Date(data.daily.sunset[0]).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -7446,6 +7447,14 @@
                     </div>
                 </div>
                 
+                <!-- BLOC APERÇU 15 CARTES WEB -->
+                <div style="margin-bottom: 25px;">
+                    <h3 style="font-weight: 900; color: #1a2a3a; font-size: 16px; margin: 0 0 15px 0; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
+                        <i class="fas fa-calendar-alt" style="color: #00bcff;"></i> APERÇU DES PRÉVISIONS (J+1 À J+15)
+                    </h3>
+                    <div id="web-daily-cards" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px;"></div>
+                </div>
+
                 <!-- BLOC APERÇU 15 CARTES WEB -->
                 <div style="margin-bottom: 25px;">
                     <h3 style="font-weight: 900; color: #1a2a3a; font-size: 16px; margin: 0 0 15px 0; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
@@ -7545,6 +7554,212 @@
         }
 
         
+        async function exportCommuneInfographic(format, days) {
+            days = days || 15;
+            if (!currentCityData || !window.lastCommuneData) {
+                alert("Veuillez d'abord rechercher une commune.");
+                return;
+            }
+            const cityName = currentCityData.nom;
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading-text').innerText = 'GÉNÉRATION ' + format.toUpperCase() + ' ' + days + 'J...';
+
+            const isTikTok  = format === 'tiktok';
+            const is7days   = days === 7;
+            const width     = isTikTok ? 720  : 1280;
+            const height    = isTikTok ? 1280 : 720;
+
+            var gridH;
+            if      (isTikTok && is7days) gridH = 1000;
+            else if (isTikTok)            gridH = 920;
+            else if (is7days)             gridH = 300;
+            else                          gridH = 540;
+
+            var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
+            if      (is7days && isTikTok)  { pxPicto='100px'; pxTemp='36px'; pxDate='20px'; pxLabel='13px'; pxWind='16px'; }
+            else if (is7days)              { pxPicto='90px';  pxTemp='26px'; pxDate='14px'; pxLabel='11px'; pxWind='13px'; }
+            else if (isTikTok)             { pxPicto='58px';  pxTemp='20px'; pxDate='12px'; pxLabel='9px';  pxWind='11px'; }
+            else                           { pxPicto='70px';  pxTemp='22px'; pxDate='13px'; pxLabel='10px'; pxWind='12px'; }
+
+            var exportContainer = document.createElement('div');
+            exportContainer.style.cssText =
+                'position:fixed;left:0;top:0;z-index:99999;' +
+                'width:' + width + 'px;height:' + height + 'px;' +
+                'background:' + (isTikTok ? 'linear-gradient(160deg,#f0f6fc,#e8f0f9)' : '#ffffff') + ';' +
+                'padding:' + (isTikTok ? '28px 20px' : '20px 26px') + ';' +
+                'box-sizing:border-box;display:flex;flex-direction:column;' +
+                'justify-content:space-between;font-family:Outfit,sans-serif;overflow:hidden;';
+
+            var hourly2   = window.lastCommuneData.hourly;
+            var sunrise2  = new Date(window.lastCommuneData.daily.sunrise[0]).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+            var sunset2   = new Date(window.lastCommuneData.daily.sunset[0]).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+            var durMin2   = (new Date(window.lastCommuneData.daily.sunset[0]) - new Date(window.lastCommuneData.daily.sunrise[0])) / 60000;
+            var dH2       = Math.floor(durMin2/60), dM2 = Math.round(durMin2%60);
+            var now2      = new Date();
+            var dateStr2  = now2.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+            var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 3 : 5);
+            var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 5 : 3);
+
+            var gridHtml =
+                '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);' +
+                'grid-template-rows:repeat(' + rows + ',1fr);' +
+                'border:2px solid #1a2a3a;border-radius:12px;overflow:hidden;' +
+                'background:#fff;width:100%;height:' + gridH + 'px;box-sizing:border-box;">';
+
+            for (var d = 1; d <= days; d++) {
+                var dStart = d * 24, dRep = d * 24 + 13;
+                var minT=Infinity, maxT=-Infinity, maxGust2=0, totDir2=0, hCnt2=0;
+                for (var hh=0; hh<24; hh++) {
+                    var idx2 = dStart + hh;
+                    if (idx2 < hourly2.time.length) {
+                        var t2=hourly2.temperature_2m[idx2], g2=hourly2.wind_gusts_10m[idx2], dir2=hourly2.winddirection_10m[idx2];
+                        if (t2!==null && t2<minT) minT=t2;
+                        if (t2!==null && t2>maxT) maxT=t2;
+                        if (g2!==null && g2>maxGust2) maxGust2=g2;
+                        if (dir2!==null) { totDir2+=dir2; hCnt2++; }
+                    }
+                }
+                minT=Math.round(minT); maxT=Math.round(maxT);
+                var gustVal = Math.round(maxGust2/5)*5;
+                var gustCol = gustVal>50 ? '#d32f2f' : (gustVal>35 ? '#e65100' : '#1a2a3a');
+                var avgDir2  = hCnt2>0 ? Math.round(totDir2/hCnt2) : 0;
+
+                var dd2      = new Date(hourly2.time[dStart]);
+                var dayName2 = dd2.toLocaleDateString('fr-FR',{weekday:'long'}).toUpperCase();
+                var dayNum2  = String(dd2.getDate()).padStart(2,'0');
+                var dateHdr2 = dayName2 + ' ' + dayNum2;
+
+                var wcode2 = hourly2.weathercode[dRep]!==null ? hourly2.weathercode[dRep] : 0;
+                var picto2 = getPictoFile(wcode2, dRep, hourly2);
+                var lbl2   = getPictoLabel(wcode2, dRep, hourly2);
+
+                var colIdx2 = (d-1)%cols, rowIdx2 = Math.floor((d-1)/cols);
+                var bR2 = colIdx2===cols-1 ? 'none' : '1px solid #b8d4e8';
+                var bB2 = rowIdx2===rows-1 ? 'none' : '1px solid #b8d4e8';
+
+                if (is7days && isTikTok) {
+                    gridHtml +=
+                        '<div style="box-sizing:border-box;padding:8px 22px;display:flex;align-items:center;' +
+                        'justify-content:space-between;border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
+                        '<div style="flex:1.1;display:flex;flex-direction:column;gap:4px;">' +
+                        '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;">' + dateHdr2 + '</div>' +
+                        '<div style="font-size:' + pxLabel + ';font-weight:700;color:#666;text-transform:uppercase;">' + lbl2 + '</div></div>' +
+                        '<div style="width:115px;display:flex;align-items:center;justify-content:center;">' +
+                        '<img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
+                        '<div style="flex:1.3;display:flex;align-items:center;justify-content:flex-end;gap:16px;">' +
+                        '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;gap:4px;">' +
+                        '<span style="color:#1d70b8;">' + minT + '°</span><span style="color:#ccc;font-weight:300;">/</span>' +
+                        '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
+                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:3px;font-weight:800;color:' + gustCol + ';">' +
+                        '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
+                        '<span>' + gustVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div></div>';
+                } else if (is7days && !isTikTok) {
+                    gridHtml +=
+                        '<div style="box-sizing:border-box;padding:18px 8px 14px;text-align:center;' +
+                        'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
+                        'border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
+                        '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;letter-spacing:0.3px;">' + dateHdr2 + '</div>' +
+                        '<div><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
+                        '<div style="font-size:' + pxLabel + ';font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.3px;">' + lbl2 + '</div>' +
+                        '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;justify-content:center;gap:3px;">' +
+                        '<span style="color:#1d70b8;">' + minT + '°</span>' +
+                        '<span style="color:#ccc;font-weight:300;font-size:' + (parseInt(pxTemp)-10) + 'px;">/</span>' +
+                        '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
+                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;justify-content:center;gap:3px;font-weight:800;color:' + gustCol + ';">' +
+                        '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
+                        '<span>' + gustVal + '</span>' +
+                        '<span style="font-size:11px;font-weight:500;">km/h</span></div>' +
+                        '</div>';
+                } else {
+                    var cPad2 = isTikTok ? '10px 5px' : '10px 5px 8px';
+                    gridHtml +=
+                        '<div style="box-sizing:border-box;padding:' + cPad2 + ';text-align:center;' +
+                        'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
+                        'border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
+                        '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;letter-spacing:0.3px;">' + dateHdr2 + '</div>' +
+                        '<div><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
+                        '<div style="font-size:' + pxLabel + ';font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.2px;">' + lbl2 + '</div>' +
+                        '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;gap:2px;">' +
+                        '<span style="color:#1d70b8;">' + minT + '°</span>' +
+                        '<span style="color:#ccc;font-weight:300;">/</span>' +
+                        '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
+                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:2px;font-weight:800;color:' + gustCol + ';">' +
+                        '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
+                        '<span>' + gustVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div>';
+                }
+            }
+            gridHtml += '</div>';
+
+            var headerHtml2;
+            if (isTikTok) {
+                headerHtml2 =
+                    '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;' +
+                    'border-bottom:2px solid #3498db;padding-bottom:12px;margin-bottom:10px;width:100%;">' +
+                    '<img src="logo meteo climat pro 3.png" style="height:62px;width:auto;margin-bottom:10px;">' +
+                    '<h1 style="font-weight:900;color:#1a2a3a;font-size:27px;margin:0;letter-spacing:0.4px;">MÉTÉO ' + cityName.toUpperCase() + '</h1>' +
+                    '<p style="margin:4px 0 9px;color:#3498db;font-weight:700;text-transform:uppercase;font-size:12px;letter-spacing:0.5px;">' + dateStr2.toUpperCase() + '</p>' +
+                    '<div style="background:#fff;border:2px solid #3498db;padding:6px 14px;border-radius:8px;font-size:12px;color:#333;display:flex;gap:12px;font-weight:700;">' +
+                    '<span>☀️ <b>' + sunrise2 + '</b></span>' +
+                    '<span>🌙 <b>' + sunset2 + '</b></span>' +
+                    '<span>🕒 <b>' + dH2 + 'h' + dM2 + 'min</b></span></div>' +
+                    '<div style="font-size:12px;font-weight:900;color:#1a2a3a;text-transform:uppercase;margin-top:9px;letter-spacing:0.5px;">APERÇU DES PRÉVISIONS (J+1 À J+' + days + ')</div>' +
+                    '</div>';
+            } else {
+                headerHtml2 =
+                    '<div style="display:flex;justify-content:space-between;align-items:center;' +
+                    'border-bottom:2px solid #3498db;padding-bottom:12px;margin-bottom:10px;width:100%;">' +
+                    '<div style="display:flex;align-items:center;gap:14px;">' +
+                    '<img src="logo meteo climat pro 3.png" style="height:55px;width:auto;">' +
+                    '<div>' +
+                    '<h1 style="font-weight:900;color:#1a2a3a;font-size:22px;margin:0;letter-spacing:0.3px;">MÉTÉO ' + cityName.toUpperCase() + '</h1>' +
+                    '<p style="margin:2px 0 0;color:#3498db;font-weight:700;text-transform:uppercase;font-size:12px;letter-spacing:0.4px;">' + dateStr2.toUpperCase() + '</p>' +
+                    '</div></div>' +
+                    '<div style="background:#f8fafc;border:1.5px solid #3498db;padding:8px 12px;border-radius:8px;font-size:11.5px;color:#2c3e50;font-weight:700;line-height:1.7;text-align:right;">' +
+                    '☀️ Lever : <b>' + sunrise2 + '</b><br>' +
+                    '🌙 Coucher : <b>' + sunset2 + '</b><br>' +
+                    '🕒 Durée : <b>' + dH2 + 'h ' + dM2 + 'min</b>' +
+                    '</div></div>' +
+                    '<div style="font-size:13px;font-weight:900;color:#1a2a3a;text-transform:uppercase;margin-bottom:8px;letter-spacing:0.5px;">' +
+                    'APERÇU DES PRÉVISIONS (J+1 À J+' + days + ')</div>';
+            }
+
+            var footerHtml2 =
+                '<div style="text-align:center;color:#7f8c8d;font-size:10.5px;border-top:1px solid #dce3ea;' +
+                'padding-top:9px;margin-top:6px;font-weight:600;letter-spacing:0.3px;">' +
+                'Données Open-Meteo • © MÉTÉO-CLIMAT PRO</div>';
+
+            exportContainer.innerHTML = headerHtml2 + gridHtml + footerHtml2;
+            document.body.appendChild(exportContainer);
+
+            // Attente maximale 200ms pour rendu DOM
+            await new Promise(function(r) { setTimeout(r, 200); });
+
+            try {
+                var scale2 = isTikTok ? 2 : 1.5;
+                var canvas2 = await html2canvas(exportContainer, {
+                    scale: scale2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: isTikTok ? '#f0f6fc' : '#ffffff'
+                });
+                var link2 = document.createElement('a');
+                link2.download = 'Infographie_' + cityName + '_' + days + 'J_' + format.toUpperCase() + '.jpg';
+                link2.href = canvas2.toDataURL('image/jpeg', 0.95);
+                link2.click();
+            } catch(e) {
+                console.error(e);
+                alert('Erreur lors de l exportation ' + format.toUpperCase());
+            } finally {
+                if (document.body.contains(exportContainer)) {
+                    document.body.removeChild(exportContainer);
+                }
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('loading-text').innerText = 'CHARGEMENT DES DONNÉES...';
+            }
+        }
+
+
         async function exportCommuneInfographic(format, days) {
             days = days || 15;
             if (!currentCityData || !window.lastCommuneData) {
