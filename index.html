@@ -7405,15 +7405,16 @@
                 const merged = JSON.parse(JSON.stringify(base));
                 merged._source = 'meteofrance-hybrid';
 
-                // Mapping picto Météo-France → index weatherCodes (0-12)
+// Mapping picto Météo-France → index weatherCodes (0-12)
                 const pictoMap = {
                     'p1':0,'p1bis':1,'p2':2,'p3':2,'p4':5,'p5':3,'p6':4,'p6bis':12,
                     'p7':6,'p8':7,'p9':8,'p10':9,'p11':9,'p12':9,'p12bis':6,
-                    'p13':10,'p14':10,'p15':10,'p16':11,'p17':11,'p18':11,'p19':9
+                    'p13':6,'p14':6,'p15':12,'p16':12,'p16bis':10,'p17':12,
+                    'p26':10,'p27':10,'p28':10,'p29':10,'p30':10
                 };
-                function parsePicto(s) {
+function parsePicto(s) {
                     if (!s) return 0;
-                    const key = s.toLowerCase().replace(/[jn]$/, '');
+                    const key = s.toLowerCase().replace(/[jn]$/, '').replace('bis', '');
                     return pictoMap[key] ?? 0;
                 }
 
@@ -7441,7 +7442,7 @@
                     }
                 }
 
-                // ── 2. Étape 2 : Injecter les prévisions quotidiennes MF (jusqu'à J+14) ──
+// ── 2. Étape 2 : Injecter les prévisions quotidiennes MF (jusqu'à J+14) ──
                 for (let d = 0; d < dailyMF.length; d++) {
                     const df = dailyMF[d];
                     const dateStr = (df.time || '').slice(0, 10);
@@ -7452,10 +7453,14 @@
                     if (dailyIdx !== -1) {
                         if (df.sunrise_time) merged.daily.sunrise[dailyIdx] = df.sunrise_time.replace('Z', '').slice(0, 16);
                         if (df.sunset_time) merged.daily.sunset[dailyIdx] = df.sunset_time.replace('Z', '').slice(0, 16);
+                    } else {
+                        continue; // Si le jour n'est pas présent dans Open-Meteo, on ignore
                     }
 
-                    // Pour les jours > 3 (où on n'a plus d'heures MF), on force le picto et les températures min/max
-                    const dStart = d * 24;
+// Pour les jours > 3 (où on n'a plus d'heures MF), on force le picto et les températures min/max
+                    const hourlyIdx = merged.hourly.time.findIndex(t => t.startsWith(dateStr));
+                    if (hourlyIdx === -1) continue;
+                    const dStart = hourlyIdx;
                     if (dStart < merged.hourly.time.length) {
                         const tMin = df.T_min != null ? parseFloat(df.T_min) : null;
                         const tMax = df.T_max != null ? parseFloat(df.T_max) : null;
@@ -7767,7 +7772,7 @@
                             if (w !== null) { totSpd += w; totD += dir; cnt++; }
                         }
                     }
-                    minT = Math.round(minT); maxT = Math.round(maxT); maxG = Math.round(maxG);
+                    minT = Math.round(minT); maxT = Math.round(maxT); maxG = Math.round(maxG / 5) * 5;
                     const avgW = cnt > 0 ? Math.round(totSpd / cnt) : 0;
                     const avgD = cnt > 0 ? Math.round(totD / cnt) : 0;
 
@@ -7829,11 +7834,11 @@
             else if (is7days)             gridH = 300;
             else                          gridH = 540;
 
-            var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
-            if      (is7days && isTikTok)  { pxPicto='100px'; pxTemp='36px'; pxDate='20px'; pxLabel='13px'; pxWind='16px'; }
-            else if (is7days)              { pxPicto='90px';  pxTemp='26px'; pxDate='14px'; pxLabel='11px'; pxWind='13px'; }
-            else if (isTikTok)             { pxPicto='58px';  pxTemp='20px'; pxDate='12px'; pxLabel='9px';  pxWind='11px'; }
-            else                           { pxPicto='70px';  pxTemp='22px'; pxDate='13px'; pxLabel='10px'; pxWind='12px'; }
+var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
+            if      (is7days && isTikTok)  { pxPicto='100px'; pxTemp='36px'; pxDate='20px'; pxLabel='13px'; pxWind='20px'; }
+            else if (is7days)              { pxPicto='90px';  pxTemp='26px'; pxDate='14px'; pxLabel='11px'; pxWind='16px'; }
+            else if (isTikTok)             { pxPicto='58px';  pxTemp='20px'; pxDate='12px'; pxLabel='9px';  pxWind='14px'; }
+            else                           { pxPicto='70px';  pxTemp='22px'; pxDate='13px'; pxLabel='10px'; pxWind='15px'; }
 
             var exportContainer = document.createElement('div');
             exportContainer.style.cssText =
@@ -8035,11 +8040,11 @@
             else if (is7days)             gridH = 300;
             else                          gridH = 540;
 
-            var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
-            if      (is7days && isTikTok)  { pxPicto='100px'; pxTemp='36px'; pxDate='20px'; pxLabel='13px'; pxWind='16px'; }
-            else if (is7days)              { pxPicto='90px';  pxTemp='26px'; pxDate='14px'; pxLabel='11px'; pxWind='13px'; }
-            else if (isTikTok)             { pxPicto='58px';  pxTemp='20px'; pxDate='12px'; pxLabel='9px';  pxWind='11px'; }
-            else                           { pxPicto='70px';  pxTemp='22px'; pxDate='13px'; pxLabel='10px'; pxWind='12px'; }
+var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
+            if      (is7days && isTikTok)  { pxPicto='100px'; pxTemp='36px'; pxDate='20px'; pxLabel='13px'; pxWind='20px'; }
+            else if (is7days)              { pxPicto='90px';  pxTemp='26px'; pxDate='14px'; pxLabel='11px'; pxWind='16px'; }
+            else if (isTikTok)             { pxPicto='58px';  pxTemp='20px'; pxDate='12px'; pxLabel='9px';  pxWind='14px'; }
+            else                           { pxPicto='70px';  pxTemp='22px'; pxDate='13px'; pxLabel='10px'; pxWind='15px'; }
 
             var exportContainer = document.createElement('div');
             exportContainer.style.cssText =
