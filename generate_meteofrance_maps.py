@@ -469,10 +469,47 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None):
 save_done_event = threading.Event()
 saved_image_data = {}
 
+def capture_map_playwright(target_url, orientation="landscape"):
+    """Capture #capture-area via Playwright (pixels réels, pas de re-fetch CORS)."""
+    from playwright.sync_api import sync_playwright
+    from PIL import Image
+    import io
+    w, h = (1080, 1920) if orientation == "portrait" else ((1080, 1080) if orientation == "square" else (1920, 1080))
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-gpu'])
+        ctx = browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=1)
+        # Injecter la session auth avant le chargement de la page (bypass login)
+        ctx.add_init_script("sessionStorage.setItem('mcp_auth', '1');")
+        page = ctx.new_page()
+        page.goto(target_url, wait_until='networkidle', timeout=30000)
+        # Attendre que les tuiles Leaflet soient chargées (classe leaflet-tile-loaded)
+        try:
+            page.wait_for_function(
+                "() => { const t = document.querySelectorAll('.leaflet-tile-loaded'); return t.length > 0 && Array.from(t).every(i => i.complete && i.naturalWidth > 0); }",
+                timeout=20000
+            )
+        except Exception:
+            pass  # timeout = on capture quand même ce qui est rendu
+        page.wait_for_timeout(1500)  # délai peinture GPU
+        el = page.query_selector('#capture-area')
+        if not el:
+            browser.close()
+            return None
+        png = el.screenshot(type='png')
+        browser.close()
+    img = Image.open(io.BytesIO(png))
+    if img.mode == 'RGBA':
+        bg = Image.new('RGB', img.size, (255, 255, 255))
+        bg.paste(img, mask=img.split()[3])
+        img = bg
+    buf = io.BytesIO()
+    img.save(buf, format='JPEG', quality=95)
+    return buf.getvalue()
+
 class DualHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
-        
+
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -480,30 +517,33 @@ class DualHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
 
+    def do_GET(self):
+        super().do_GET()
+
     def do_POST(self):
         global saved_image_data
         if self.path == '/save_map':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
-            
+
             try:
                 payload = json.loads(post_data.decode('utf-8'))
                 img_b64 = payload['image'].split(',')[1]
                 day = payload['day']
                 period = payload['period']
-                
+
                 saved_image_data = {
                     'data': base64.b64decode(img_b64),
                     'day': day,
                     'period': period
                 }
-                
+
                 self.send_response(200)
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(b'{"status":"ok"}')
-                
+
                 save_done_event.set()
             except Exception as e:
                 print("Error receiving image on server:", e)
@@ -515,9 +555,9 @@ class DualHandler(http.server.SimpleHTTPRequestHandler):
 
 def run_local_server():
     os.chdir(PROJECT_DIR)
-    socketserver.TCPServer.allow_reuse_address = True
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
     try:
-        with socketserver.TCPServer(("127.0.0.1", 8001), DualHandler) as httpd:
+        with socketserver.ThreadingTCPServer(("127.0.0.1", 8001), DualHandler) as httpd:
             httpd.serve_forever()
     except Exception as e:
         pass
@@ -770,112 +810,40 @@ def main():
         actual_day = day + 1 if start_tomorrow else day
         current_render += 1
         print(f"[{current_render}/{total_renders}] Rendering J{actual_day} - {period_name.upper()} ({param})...")
-        
+
         target_url = f"http://127.0.0.1:8001/index.html?headless=true&use_mf=true&day={day}&period={period_key}&zone={zone_key}&param={param}&auto_save=true"
         if temp_highlight:
             target_url += "&highlight=true"
         if orientation != 'landscape':
             target_url += f"&orientation={orientation}"
-            
-        save_done_event.clear()
-        
-        w_size = "1080,1920" if orientation == "portrait" else ("1080,1080" if orientation == "square" else "1920,1080")
-        args = [
-            CHROME_PATH,
-            "--headless=new",
-            "--disable-gpu",
-            "--no-sandbox",
-            "--disable-dev-shm-usage",
-            f"--window-size={w_size}",
-            "--force-device-scale-factor=1",
-            "--mute-audio",
-            "--hide-scrollbars",
-            "--enable-logging",
-            "--disable-background-networking",
-            "--disable-default-apps",
-            "--disable-sync",
-            "--no-first-run",
-            "--disable-extensions",
-            f"--user-data-dir={chrome_profile_dir}",
-            target_url
-        ]
-        
-        creationflags = 0x08000000 if os.name == 'nt' else 0
-        proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creationflags)
-        
-        # Print Chrome output in background thread to see warnings/errors
-        def log_chrome(p):
-            try:
-                for line in p.stderr:
-                    print("  [Chrome Err]", line.decode('utf-8', errors='ignore').strip())
-            except:
-                pass
-        threading.Thread(target=log_chrome, args=(proc,), daemon=True).start()
-        
-        success = save_done_event.wait(timeout=25)
-        proc.terminate()
-        try:
-            proc.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            
-        if success and saved_image_data:
-            # Regional maps are prefixed, national maps keep default filenames
+
+        img_bytes = capture_map_playwright(target_url, orientation)
+        if img_bytes:
             suffix = f"_{orientation}" if orientation != "landscape" else ""
             filename = f"carte_{zone_key}_J{actual_day}_{period_name}{suffix}.jpg" if zone_key != "france_pictos" else f"carte_J{actual_day}_{period_name}{suffix}.jpg"
             filepath = os.path.join(DEST_DIR, filename)
             with open(filepath, 'wb') as f_img:
-                f_img.write(saved_image_data['data'])
+                f_img.write(img_bytes)
             print(f"   -> Saved: {filepath}")
         else:
-            print(f"   -> Error: Timeout waiting for render of J{actual_day} {period_name}.")
-            
-        time.sleep(0.5)
+            print(f"   -> Error: Playwright capture failed for J{actual_day} {period_name}.")
 
-    # 4. Render ephemeris card (J0) at the end of the bulletin
+        time.sleep(0.3)
+
+    # 4. Render ephemeris card (J0)
     print(f"\n[{total_renders+1}/{total_renders+1}] Rendering J0 - EPHEMERIDE...")
-    target_url = f"http://127.0.0.1:8001/index.html?headless=true&use_mf=true&day=0&period=ephemeride&zone={zone_key}&auto_save=true"
+    eph_url = f"http://127.0.0.1:8001/index.html?headless=true&use_mf=true&day=0&period=ephemeride&zone={zone_key}&auto_save=true"
     if orientation != 'landscape':
-        target_url += f"&orientation={orientation}"
-    
-    save_done_event.clear()
-    
-    w_size = "1080,1920" if orientation == "portrait" else ("1080,1080" if orientation == "square" else "1920,1080")
-    args = [
-        CHROME_PATH,
-        "--headless=new",
-        "--disable-gpu",
-        f"--window-size={w_size}",
-        "--force-device-scale-factor=1",
-        "--mute-audio",
-        "--hide-scrollbars",
-        "--disable-background-networking",
-        "--disable-default-apps",
-        "--disable-sync",
-        "--no-first-run",
-        "--disable-extensions",
-        f"--user-data-dir={chrome_profile_dir}",
-        target_url
-    ]
-    
-    creationflags = 0x08000000 if os.name == 'nt' else 0
-    proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=creationflags)
-    success = save_done_event.wait(timeout=25)
-    proc.terminate()
-    try:
-        proc.wait(timeout=2)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        
-    if success and saved_image_data:
+        eph_url += f"&orientation={orientation}"
+    img_bytes = capture_map_playwright(eph_url, orientation)
+    if img_bytes:
         suffix = f"_{orientation}" if orientation != "landscape" else ""
-        filename = f"carte_{zone_key}_ephemeride{suffix}.jpg" if zone_key != "france_pictos" else f"carte_ephemeride{suffix}.jpg"
-        filepath = os.path.join(DEST_DIR, filename)
-        with open(filepath, 'wb') as f_img:
-            f_img.write(saved_image_data['data'])
-        print(f"   -> Saved: {filepath}")
+        eph_file = os.path.join(DEST_DIR, f"carte_{zone_key}_ephemeride{suffix}.jpg")
+        with open(eph_file, 'wb') as f_img:
+            f_img.write(img_bytes)
+        print(f"   -> Saved: {eph_file}")
     else:
-        print("   -> Error: Timeout waiting for render of ephemeride.")
+        print("   -> Error: Playwright capture failed for ephemeride.")
 
     # 5. Capture vigilance map at the end
     print(f"\nRendering vigilance map for {zone_key}...")

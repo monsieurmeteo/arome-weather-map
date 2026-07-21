@@ -11,3 +11,6 @@ svg_dump.html
 carte_jours_suivants_page_*.png
 vigilance_carte.png
 vigilance_output.txt
+.vercel
+
+.chrome_profile_*
