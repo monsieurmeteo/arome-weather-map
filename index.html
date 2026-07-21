@@ -1944,8 +1944,31 @@
                 <div id="search-results" style="margin-top: 10px; font-size: 12px; color: #FFD700;"></div>
                 
                 <div id="commune-actions" style="display:none; flex-direction:column; gap:8px; margin-top:20px; border-top:1px solid rgba(255,215,0,0.3); padding-top:15px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #4db8ff; text-transform: uppercase; margin-bottom: 2px;">
+                        <i class="fas fa-calendar-week"></i> INFOGRAPHIES 7 JOURS
+                    </div>
+                    <button class="sidebar-btn" onclick="exportCommuneInfographic('landscape', 7)" style="background: linear-gradient(135deg, #0066cc, #004499); color: white; border: none;">
+                        <i class="fas fa-desktop"></i> 7J PAYSAGE (16:9)
+                    </button>
+                    <button class="sidebar-btn" onclick="exportCommuneInfographic('tiktok', 7)" style="background: linear-gradient(135deg, #e1306c, #fd1d1d); color: white; border: none;">
+                        <i class="fas fa-mobile-alt"></i> 7J TIKTOK (9:16)
+                    </button>
+
+                    <div style="font-size: 11px; font-weight: 800; color: #4db8ff; text-transform: uppercase; margin-top: 8px; margin-bottom: 2px;">
+                        <i class="fas fa-calendar-alt"></i> INFOGRAPHIES 15 JOURS
+                    </div>
+                    <button class="sidebar-btn" onclick="exportCommuneInfographic('landscape', 15)" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none;">
+                        <i class="fas fa-desktop"></i> 15J PAYSAGE (16:9)
+                    </button>
+                    <button class="sidebar-btn" onclick="exportCommuneInfographic('tiktok', 15)" style="background: linear-gradient(135deg, #d946ef, #a855f7); color: white; border: none;">
+                        <i class="fas fa-mobile-alt"></i> 15J TIKTOK (9:16)
+                    </button>
+
+                    <div style="font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; margin-top: 8px; margin-bottom: 2px;">
+                        <i class="fas fa-file-download"></i> EXPORTS BRUTS
+                    </div>
                     <button class="sidebar-btn" onclick="exportCommuneJPG()" style="background:#f39c12; color:white; border-color:#e67e22;">
-                        <i class="fas fa-file-image"></i> EXPORT IMAGE (15J)
+                        <i class="fas fa-file-image"></i> EXPORT TABLEAU (15J)
                     </button>
                     <button class="sidebar-btn" onclick="exportCommunePDF()">
                         <i class="fas fa-file-pdf"></i> PDF EXPERT
