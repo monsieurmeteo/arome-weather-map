@@ -1740,75 +1740,7 @@
 
 <body>
 
-    <!-- ===== ÉCRAN DE CONNEXION ===== -->
-    <div id="login-overlay" style="
-        position:fixed; inset:0; z-index:99999;
-        background:linear-gradient(135deg,#060d1a 0%,#0f1e3a 50%,#091228 100%);
-        display:flex; align-items:center; justify-content:center;
-        font-family:'Outfit',sans-serif;">
-        <div style="
-            background:rgba(255,255,255,0.04);
-            border:1px solid rgba(77,184,255,0.25);
-            border-radius:20px;
-            padding:48px 40px 40px;
-            width:360px; max-width:90vw;
-            backdrop-filter:blur(12px);
-            box-shadow:0 0 60px rgba(77,184,255,0.12), 0 20px 40px rgba(0,0,0,0.6);
-            text-align:center;">
-            <!-- Logo / titre -->
-            <div style="
-                font-size:13px; font-weight:900; letter-spacing:4px; color:#4db8ff;
-                text-transform:uppercase; margin-bottom:4px;">MÉTÉO-CLIMAT PRO</div>
-            <div style="font-size:28px; font-weight:900; color:#fff; margin-bottom:6px;">
-                Espace<span style="color:#4db8ff;"> CNews</span>
-            </div>
-            <div style="font-size:12px; color:#7a9cbb; margin-bottom:32px; letter-spacing:1px;">
-                Accès réservé — identifiez-vous
-            </div>
-
-            <div id="login-error" style="
-                display:none; margin-bottom:16px; padding:10px 14px;
-                background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.4);
-                border-radius:8px; color:#e74c3c; font-size:12px; font-weight:700;">
-                Identifiant ou mot de passe incorrect.
-            </div>
-
-            <!-- Champ identifiant -->
-            <input id="login-user" type="text" placeholder="Identifiant"
-                onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()" style="
-                    width:100%; box-sizing:border-box; margin-bottom:12px;
-                    padding:13px 16px; border-radius:10px;
-                    background:rgba(255,255,255,0.06); border:1px solid rgba(77,184,255,0.25);
-                    color:#fff; font-size:14px; font-family:'Outfit',sans-serif; outline:none;
-                    transition:border 0.2s;" onfocus="this.style.borderColor='#4db8ff'"
-                onblur="this.style.borderColor='rgba(77,184,255,0.25)'">
-
-            <!-- Champ mot de passe -->
-            <input id="login-pass" type="password" placeholder="Mot de passe"
-                onkeydown="if(event.key==='Enter')doLogin()" style="
-                    width:100%; box-sizing:border-box; margin-bottom:24px;
-                    padding:13px 16px; border-radius:10px;
-                    background:rgba(255,255,255,0.06); border:1px solid rgba(77,184,255,0.25);
-                    color:#fff; font-size:14px; font-family:'Outfit',sans-serif; outline:none;
-                    transition:border 0.2s;" onfocus="this.style.borderColor='#4db8ff'"
-                onblur="this.style.borderColor='rgba(77,184,255,0.25)'">
-
-            <!-- Bouton connexion -->
-            <button onclick="doLogin()" style="
-                width:100%; padding:14px; border:none; border-radius:10px;
-                background:linear-gradient(135deg,#1a6fcf,#0d3f7a);
-                color:#fff; font-size:15px; font-weight:900; letter-spacing:2px;
-                cursor:pointer; transition:opacity 0.2s;
-                box-shadow:0 4px 20px rgba(26,111,207,0.4);" onmouseover="this.style.opacity='0.85'"
-                onmouseout="this.style.opacity='1'">
-                SE CONNECTER
-            </button>
-
-            <div style="margin-top:22px; font-size:10px; color:#344a60; letter-spacing:1px;">
-                © MÉTÉO-CLIMAT PRO — USAGE PROFESSIONNEL
-            </div>
-        </div>
-    </div>
+    
 
     <script>
         // Vérification au chargement : déjà connecté dans cette session ?
@@ -1934,11 +1866,11 @@
                 </div>
             </div>
 
-            <div id="commune-search-section" class="sidebar-section" style="display:none;">
+            <div id="commune-search-section" class="sidebar-section" style="display:block;">
                 <h3>RECHERCHE COMMUNE</h3>
                 <div class="search-container">
                     <input type="text" id="postal-code-input" class="search-input"
-                        placeholder="CODE POSTAL (Ex: 75001)">
+                        placeholder="COMMUNE OU CODE POSTAL (Ex: 59283)" onkeydown="if(event.key==='Enter') searchCommune()">
                     <button class="search-btn" onclick="searchCommune()"><i class="fas fa-search"></i></button>
                 </div>
                 <div id="search-results" style="margin-top: 10px; font-size: 12px; color: #FFD700;"></div>
@@ -2861,19 +2793,19 @@
         // Les 'code' ici servent d'identifiants internes pour la logique de mapping ci-dessus.
         // P1=0, P2=1, P3=2, P4=3, P5=45, P6=71, P7=51, P8=61, P9=65, P10=80, P11=81, P12=95
         const weatherCodes = [
-            { code: 0, label: "P1 (soleil)", icon: "fa-sun", color: "#FF0000", emoji: "☀️", img: "P1 (soleil).png" },
-            { code: 1, label: "P2 (peu nuageux)", icon: "fa-cloud-sun", color: "#00FF00", emoji: "🌤️", img: "P2 (peu nuageux).png" },
-            { code: 2, label: "P8 (nuageux)", icon: "fa-cloud-sun", color: "#0000FF", emoji: "⛅", img: "P8 (nuageux).png" },
-            { code: 3, label: "P4 (très nuageux)", icon: "fa-cloud", color: "#00A0E3", emoji: "☁️", img: "P4 (très nuageux).png" },
-            { code: 4, label: "P5 (couvert)", icon: "fa-cloud", color: "#F5B2B6", emoji: "☁️", img: "P5 (couvert).png" },
-            { code: 5, label: "P6 (soleil voilé)", icon: "fa-cloud-sun", color: "#8A00FF", emoji: "🌤️", img: "P6 (soleil voilé).png" },
-            { code: 6, label: "P9 (averses)", icon: "fa-cloud-sun-rain", color: "#FF1493", emoji: "🌦️", img: "P9 (averses).png" },
-            { code: 7, label: "P10 (pluies faibles)", icon: "fa-cloud-rain", color: "#FF00FF", emoji: "🌧️", img: "P10 (pluies faibles).png" },
-            { code: 8, label: "P11 (fortes pluies)", icon: "fa-cloud-showers-heavy", color: "#00FFFF", emoji: "🌧️", img: "P11 (fortes pluies).png" },
-            { code: 9, label: "P12 (neige)", icon: "fa-snowflake", color: "#FF6A00", emoji: "🌨️", img: "P12 (neige).png" },
-            { code: 10, label: "orages", icon: "fa-bolt", color: "#0000FF", emoji: "⚡", img: "orages.png" },
-            { code: 11, label: "Orages accompagnés de grêle", icon: "fa-cloud-meatball", color: "#7F00FF", emoji: "⛈️", img: "Orages accompagnés de grêle.png" },
-            { code: 12, label: "brouillards", icon: "fa-smog", color: "#ccc", emoji: "🌫️", img: "brouillards.png" }
+            { code: 0, label: "SOLEIL", icon: "fa-sun", color: "#FF0000", emoji: "☀️", img: "P1 (soleil).png" },
+            { code: 1, label: "PEU NUAGEUX", icon: "fa-cloud-sun", color: "#00FF00", emoji: "🌤️", img: "P2 (peu nuageux).png" },
+            { code: 2, label: "NUAGEUX", icon: "fa-cloud-sun", color: "#0000FF", emoji: "⛅", img: "P8 (nuageux).png" },
+            { code: 3, label: "TRÈS NUAGEUX", icon: "fa-cloud", color: "#00A0E3", emoji: "☁️", img: "P4 (très nuageux).png" },
+            { code: 4, label: "COUVERT", icon: "fa-cloud", color: "#F5B2B6", emoji: "☁️", img: "P5 (couvert).png" },
+            { code: 5, label: "SOLEIL VOILÉ", icon: "fa-cloud-sun", color: "#8A00FF", emoji: "🌤️", img: "P6 (soleil voilé).png" },
+            { code: 6, label: "AVERSES", icon: "fa-cloud-sun-rain", color: "#FF1493", emoji: "🌦️", img: "P9 (averses).png" },
+            { code: 7, label: "PLUIES FAIBLES", icon: "fa-cloud-rain", color: "#FF00FF", emoji: "🌧️", img: "P10 (pluies faibles).png" },
+            { code: 8, label: "FORTES PLUIES", icon: "fa-cloud-showers-heavy", color: "#00FFFF", emoji: "🌧️", img: "P11 (fortes pluies).png" },
+            { code: 9, label: "NEIGE", icon: "fa-snowflake", color: "#FF6A00", emoji: "🌨️", img: "P12 (neige).png" },
+            { code: 10, label: "ORAGES", icon: "fa-bolt", color: "#0000FF", emoji: "⚡", img: "orages.png" },
+            { code: 11, label: "ORAGES + GRÊLE", icon: "fa-cloud-meatball", color: "#7F00FF", emoji: "⛈️", img: "Orages accompagnés de grêle.png" },
+            { code: 12, label: "BROUILLARD", icon: "fa-smog", color: "#ccc", emoji: "🌫️", img: "brouillards.png" }
         ];
 
         let map, markersGroup, drawingGroup, autoZoningGroup, fogGroup, geoLayer = null, maskLayer = null, globalWeatherData = null, currentConfig = zoneConfigs.france_pictos, globalGeoBoundary = null, globalBoundaryPolygon = null;
@@ -4524,6 +4456,35 @@
         }
 
         function getBankClass(bank) { return 'bank-' + bank; }
+
+        function getPictoFile(code) {
+            const cNum = parseInt(code);
+            if (typeof weatherCodes !== 'undefined') {
+                const codeData = weatherCodes.find(c => c.code === cNum);
+                if (codeData && codeData.img) return encodeURI(codeData.img);
+            }
+            const fallbackMap = {
+                0: 'P1 (soleil).png', 1: 'P2 (peu nuageux).png', 2: 'P6 (soleil voilé).png',
+                3: 'P8 (nuageux).png', 45: 'P18 (brouillard).png', 48: 'P18 (brouillard).png',
+                51: 'P10 (pluies faibles).png', 61: 'P10 (pluies faibles).png', 63: 'P11 (pluie modérée).png',
+                80: 'P13 (averses).png', 95: 'P16 (orage).png'
+            };
+            return fallbackMap[cNum] || 'P1 (soleil).png';
+        }
+
+        function getPictoLabel(code) {
+            const cNum = parseInt(code);
+            if (typeof weatherCodes !== 'undefined') {
+                const codeData = weatherCodes.find(c => c.code === cNum);
+                if (codeData && codeData.label) return codeData.label;
+            }
+            const labelMap = {
+                0: 'SOLEIL', 1: 'PEU NUAGEUX', 2: 'VOILÉ', 3: 'NUAGEUX',
+                45: 'BROUILLARD', 48: 'GIVRE', 51: 'BRUINE', 61: 'PLUIES FAIBLES',
+                63: 'PLUIE', 80: 'AVERSES', 95: 'ORAGE'
+            };
+            return labelMap[cNum] || 'ENSOLEILLÉ';
+        }
 
         function getWeatherIcon(code, bank) {
             // Sécurité : conversion en nombre si nécessaire
@@ -7313,18 +7274,26 @@
         }
 
         async function searchCommune() {
-            const code = document.getElementById('postal-code-input').value;
-            if (!code || code.length < 5) return alert("Veuillez saisir un code postal valide.");
+            console.log("Executing searchCommune...");
+            const query = document.getElementById('postal-code-input').value.trim();
+            if (!query || query.length < 2) return alert("Veuillez saisir une commune ou un code postal valide.");
 
             const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = "Recherche...";
+            resultsDiv.innerHTML = "Recherche en cours...";
 
             try {
-                const res = await fetch(`https://geo.api.gouv.fr/communes?codePostal=${code}&fields=nom,centre,code,population&format=json`);
+                let url;
+                if (/^\d{5}$/.test(query)) {
+                    url = `https://geo.api.gouv.fr/communes?codePostal=${query}&fields=nom,code,codesPostaux,centre,codeDepartement&format=json`;
+                } else {
+                    url = `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(query)}&fields=nom,code,codesPostaux,centre,codeDepartement&format=json`;
+                }
+
+                const res = await fetch(url);
                 const data = await res.json();
 
-                if (data.length === 0) {
-                    resultsDiv.innerHTML = "Aucune commune trouvée.";
+                if (!data || data.length === 0) {
+                    resultsDiv.innerHTML = "<span style='color:#ff4d4d;'>Aucune commune trouvée.</span>";
                     return;
                 }
 
@@ -7335,80 +7304,250 @@
                     btn.style.fontSize = '12px';
                     btn.style.padding = '8px';
                     btn.style.marginTop = '4px';
-                    btn.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${city.nom}`;
+                    btn.style.background = '#34495e';
+                    btn.style.color = '#ffffff';
+                    btn.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${city.nom} (${city.codeDepartement || ''})`;
                     btn.onclick = () => fetchCommuneForecast(city);
                     resultsDiv.appendChild(btn);
                 });
 
-                if (data.length === 1) fetchCommuneForecast(data[0]);
+                if (data.length === 1) {
+                    fetchCommuneForecast(data[0]);
+                }
 
             } catch (e) {
-                resultsDiv.innerHTML = "Erreur de recherche.";
+                console.error(e);
+                resultsDiv.innerHTML = "<span style='color:#ff4d4d;'>Erreur de recherche.</span>";
             }
         }
 
         let currentCityData = null;
 
+        
+        // Convertit la réponse rwg.meteofrance.com → format Open-Meteo
+        function mergeMFIntoBase(raw, base) {
+            try {
+                const props = raw.properties || {};
+                const hourlyMF = props.forecast || [];
+                const dailyMF  = props.daily_forecast || [];
+                if (!hourlyMF.length && !dailyMF.length) return base;
+
+                // Cloner la base Open-Meteo pour éviter les effets de bord
+                const merged = JSON.parse(JSON.stringify(base));
+                merged._source = 'meteofrance-hybrid';
+
+                // Mapping picto Météo-France → index weatherCodes (0-12)
+                const pictoMap = {
+                    'p1':0,'p1bis':1,'p2':2,'p3':2,'p4':5,'p5':3,'p6':4,'p6bis':12,
+                    'p7':6,'p8':7,'p9':8,'p10':9,'p11':9,'p12':9,'p12bis':6,
+                    'p13':10,'p14':10,'p15':10,'p16':11,'p17':11,'p18':11,'p19':9
+                };
+                function parsePicto(s) {
+                    if (!s) return 0;
+                    const key = s.toLowerCase().replace(/[jn]$/, '');
+                    return pictoMap[key] ?? 0;
+                }
+
+                // ── 1. Étape 1 : Remplacer les 3-4 premiers jours par les heures réelles MF ──
+                for (const e of hourlyMF) {
+                    let dt = e.time || '';
+                    if (!dt) continue;
+                    dt = dt.replace('Z', '').replace(' ', 'T').slice(0, 16);
+                    
+                    const idx = merged.hourly.time.indexOf(dt);
+                    if (idx !== -1) {
+                        if (e.T != null) merged.hourly.temperature_2m[idx] = parseFloat(e.T);
+                        if (e.rain_1h != null) merged.hourly.precipitation[idx] = parseFloat(e.rain_1h);
+                        if (e.weather_icon != null) merged.hourly.weathercode[idx] = parsePicto(e.weather_icon);
+                        if (e.wind_speed != null) merged.hourly.windspeed_10m[idx] = parseFloat(e.wind_speed);
+                        if (e.wind_direction != null) merged.hourly.winddirection_10m[idx] = parseFloat(e.wind_direction);
+                        if (e.relative_humidity != null) merged.hourly.relativehumidity_2m[idx] = parseFloat(e.relative_humidity);
+                        if (e.P_sea != null) merged.hourly.pressure_msl[idx] = parseFloat(e.P_sea);
+                        if (e.total_cloud_cover != null) {
+                            merged.hourly.cloud_cover[idx] = parseFloat(e.total_cloud_cover);
+                            merged.hourly.cloud_cover_low[idx] = parseFloat(e.total_cloud_cover);
+                            merged.hourly.cloud_cover_mid[idx] = parseFloat(e.total_cloud_cover);
+                            merged.hourly.cloud_cover_high[idx] = parseFloat(e.total_cloud_cover);
+                        }
+                    }
+                }
+
+                // ── 2. Étape 2 : Injecter les prévisions quotidiennes MF (jusqu'à J+14) ──
+                for (let d = 0; d < dailyMF.length; d++) {
+                    const df = dailyMF[d];
+                    const dateStr = (df.time || '').slice(0, 10);
+                    if (!dateStr) continue;
+
+                    // Lever / Coucher officiels
+                    const dailyIdx = merged.daily.time.indexOf(dateStr);
+                    if (dailyIdx !== -1) {
+                        if (df.sunrise_time) merged.daily.sunrise[dailyIdx] = df.sunrise_time.replace('Z', '').slice(0, 16);
+                        if (df.sunset_time) merged.daily.sunset[dailyIdx] = df.sunset_time.replace('Z', '').slice(0, 16);
+                    }
+
+                    // Pour les jours > 3 (où on n'a plus d'heures MF), on force le picto et les températures min/max
+                    const dStart = d * 24;
+                    if (dStart < merged.hourly.time.length) {
+                        const tMin = df.T_min != null ? parseFloat(df.T_min) : null;
+                        const tMax = df.T_max != null ? parseFloat(df.T_max) : null;
+                        const pCode = df.daily_weather_icon ? parsePicto(df.daily_weather_icon) : null;
+
+                        // Remplacer le picto à 13h (l'index représentatif utilisé pour les cartes)
+                        if (pCode !== null) {
+                            merged.hourly.weathercode[dStart + 13] = pCode;
+                        }
+
+                        // Re-générer les températures horaires de la journée sous forme de courbe lisse entre T_min et T_max
+                        if (tMin !== null && tMax !== null) {
+                            for (let h = 0; h < 24; h++) {
+                                const idx = dStart + h;
+                                if (idx < merged.hourly.time.length) {
+                                    // Interpolation cosinusoïdale simplifiée
+                                    let temp;
+                                    if (h >= 4 && h <= 15) {
+                                        temp = tMin + (tMax - tMin) * (1 - Math.cos(Math.PI * (h - 4) / 11)) / 2;
+                                    } else {
+                                        const hNorm = h < 4 ? h + 24 : h;
+                                        temp = tMin + (tMax - tMin) * (1 + Math.cos(Math.PI * (hNorm - 15) / 13)) / 2;
+                                    }
+                                    merged.hourly.temperature_2m[idx] = Math.round(temp * 10) / 10;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return merged;
+            } catch (err) {
+                console.error("mergeMFIntoBase error :", err);
+                return base;
+            }
+        }
+
         async function fetchCommuneForecast(city) {
+            const mapArea    = document.getElementById('capture-area');
+            const communeArea = document.getElementById('commune-forecast-area');
+            if (mapArea)    mapArea.style.display    = 'none';
+            if (communeArea) communeArea.style.display = 'block';
             currentCityData = city;
             const [lon, lat] = city.centre.coordinates;
             document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading-text').innerText = 'CHARGEMENT DES DONNÉES...';
             document.getElementById('commune-actions').style.display = 'flex';
 
-            const models = "arome_france,ecmwf_ifs";
-            const hourlyParams = "temperature_2m,relativehumidity_2m,precipitation,weathercode,pressure_msl,windspeed_10m,wind_gusts_10m,winddirection_10m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high";
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=${hourlyParams}&daily=sunrise,sunset&timezone=Europe/Paris&forecast_days=16&models=${models}`;
-
+            // ── 1. Charger d'abord Open-Meteo pour avoir la base complète ──
+            let baseData = null;
             try {
+                const models = "arome_france,ecmwf_ifs";
+                const hourlyParams = "temperature_2m,relativehumidity_2m,precipitation,weathercode,pressure_msl,windspeed_10m,wind_gusts_10m,winddirection_10m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high";
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=${hourlyParams}&daily=sunrise,sunset&timezone=Europe/Paris&forecast_days=16&models=${models}`;
                 const res = await fetch(url);
-                const loc = await res.json();
+                if (res.ok) {
+                    const loc = await res.json();
+                    baseData = {
+                        ...loc,
+                        hourly: { time: loc.hourly.time },
+                        daily: { time: loc.daily.time }
+                    };
 
-                const merged = {
-                    ...loc,
-                    hourly: { time: loc.hourly.time },
-                    daily: { time: loc.daily.time }
-                };
+                    const vars = ["temperature_2m", "relativehumidity_2m", "precipitation", "weathercode", "pressure_msl", "windspeed_10m", "wind_gusts_10m", "winddirection_10m", "cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high"];
+                    const modelList = ["arome_france", "ecmwf_ifs"];
 
-                const vars = ["temperature_2m", "relativehumidity_2m", "precipitation", "weathercode", "pressure_msl", "windspeed_10m", "wind_gusts_10m", "winddirection_10m", "cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high"];
-                const modelList = ["arome_france", "ecmwf_ifs"];
-
-                vars.forEach(v => {
-                    let dataTable = new Array(loc.hourly.time.length).fill(null);
-                    for (const m of modelList) {
-                        const modelData = loc.hourly[`${v}_${m}`] || loc.hourly[v];
-                        if (modelData) {
-                            for (let i = 0; i < Math.min(dataTable.length, modelData.length); i++) {
-                                // A partir de J+1 (24h), on ignore AROME pour ne garder que ECMWF
-                                if (i >= 24 && m === "arome_france") continue;
-                                if (dataTable[i] === null && modelData[i] !== null) dataTable[i] = modelData[i];
+                    vars.forEach(v => {
+                        let dataTable = new Array(loc.hourly.time.length).fill(null);
+                        for (const m of modelList) {
+                            const modelData = loc.hourly[`${v}_${m}`] || loc.hourly[v];
+                            if (modelData) {
+                                for (let i = 0; i < Math.min(dataTable.length, modelData.length); i++) {
+                                    if (i >= 24 && m === "arome_france") continue;
+                                    if (dataTable[i] === null && modelData[i] !== null) dataTable[i] = modelData[i];
+                                }
                             }
                         }
-                    }
-                    merged.hourly[v] = dataTable;
-                });
+                        baseData.hourly[v] = dataTable;
+                    });
 
-                ["sunrise", "sunset"].forEach(v => {
-                    let dailyTable = new Array(loc.daily.time.length).fill(null);
-                    for (const m of modelList) {
-                        const modelData = loc.daily[`${v}_${m}`] || loc.daily[v];
-                        if (modelData) {
-                            for (let i = 0; i < Math.min(dailyTable.length, dailyTable.length); i++) {
-                                // A partir de J+1 (index 1), on ignore AROME
-                                if (i >= 1 && m === "arome_france") continue;
-                                if (dailyTable[i] === null && modelData[i] !== null) dailyTable[i] = modelData[i];
+                    ["sunrise", "sunset"].forEach(v => {
+                        let dailyTable = new Array(loc.daily.time.length).fill(null);
+                        for (const m of modelList) {
+                            const modelData = loc.daily[`${v}_${m}`] || loc.daily[v];
+                            if (modelData) {
+                                for (let i = 0; i < dailyTable.length; i++) {
+                                    if (i >= 1 && m === "arome_france") continue;
+                                    if (dailyTable[i] === null && modelData[i] !== null) dailyTable[i] = modelData[i];
+                                }
                             }
                         }
-                    }
-                    merged.daily[v] = dailyTable;
-                });
-
-                renderCommuneForecast(merged, city);
-            } catch (e) {
-                console.error(e);
-                alert("Erreur lors de la récupération des prévisions.");
-            } finally {
-                document.getElementById('loading').style.display = 'none';
+                        baseData.daily[v] = dailyTable;
+                    });
+                }
+            } catch (err) {
+                console.warn("Échec chargement base Open-Meteo", err);
             }
+
+            // ── 2. Récupérer le token Météo-France (Local + GitHub fallback) ──
+            let token = null;
+            try {
+                const tokenRes = await fetch('meteofrance_token.json?t=' + Date.now());
+                if (tokenRes.ok) {
+                    const data = await tokenRes.json();
+                    token = data.token;
+                }
+            } catch(e) {
+                console.warn("Impossible de lire le token local, essai depuis GitHub...");
+            }
+
+            function isTokenExpired(t) {
+                if (!t) return true;
+                try {
+                    const payload = JSON.parse(atob(t.split('.')[1]));
+                    return (payload.exp * 1000) < Date.now();
+                } catch(e) {
+                    return true;
+                }
+            }
+
+            if (!token || isTokenExpired(token)) {
+                try {
+                    const ghRes = await fetch('https://raw.githubusercontent.com/monsieurmeteo/europe-1-v2/main/meteofrance_token.json?t=' + Date.now());
+                    if (ghRes.ok) {
+                        const data = await ghRes.json();
+                        token = data.token;
+                    }
+                } catch(e) {
+                    console.warn("Échec récupération token depuis GitHub");
+                }
+            }
+
+            // ── 3. Appeler l'API Météo-France et fusionner ──
+            if (token && baseData) {
+                document.getElementById('loading-text').innerText = 'FUSION MÉTÉO-FRANCE...';
+                try {
+                    const mfUrl  = `https://rwg.meteofrance.com/internet2018client/2.0/forecast?lat=${lat}&lon=${lon}&token=${token}&_=${Date.now()}`;
+                    const mfRes  = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(mfUrl));
+                    if (mfRes.ok) {
+                        const rawMF  = await mfRes.json();
+                        const merged = mergeMFIntoBase(rawMF, baseData);
+                        if (merged) {
+                            console.log('✅ Météo-France Token 0 injecté pour', city.nom);
+                            renderCommuneForecast(merged, city);
+                            document.getElementById('loading').style.display = 'none';
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Échec injection Météo-France, affichage Open-Meteo seul :', e.message);
+                }
+            }
+
+            // Fallback total sur Open-Meteo si Météo-France échoue
+            if (baseData) {
+                console.log('⚠️ Affichage Open-Meteo pur (Météo-France indisponible)');
+                renderCommuneForecast(baseData, city);
+            } else {
+                alert('Impossible de charger les prévisions.');
+            }
+            document.getElementById('loading').style.display = 'none';
         }
 
         function renderCommuneForecast(data, city) {
@@ -7452,15 +7591,7 @@
                     <h3 style="font-weight: 900; color: #1a2a3a; font-size: 16px; margin: 0 0 15px 0; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
                         <i class="fas fa-calendar-alt" style="color: #00bcff;"></i> APERÇU DES PRÉVISIONS (J+1 À J+15)
                     </h3>
-                    <div id="web-daily-cards" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px;"></div>
-                </div>
-
-                <!-- BLOC APERÇU 15 CARTES WEB -->
-                <div style="margin-bottom: 25px;">
-                    <h3 style="font-weight: 900; color: #1a2a3a; font-size: 16px; margin: 0 0 15px 0; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
-                        <i class="fas fa-calendar-alt" style="color: #00bcff;"></i> APERÇU DES PRÉVISIONS (J+1 À J+15)
-                    </h3>
-                    <div id="web-daily-cards" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px;"></div>
+                    <div id="web-daily-cards" style="display: grid; grid-template-columns: repeat(3, 1fr); border: 2px solid #1a2a3a; border-radius: 16px; overflow: hidden; background: #ffffff; max-width: 850px; margin: 0 auto 25px auto; box-shadow: 0 8px 24px rgba(0,0,0,0.08);"></div>
                 </div>
 
                 <div style="overflow-x: auto; margin-top: 15px;">
@@ -7544,6 +7675,60 @@
             `;
 
             content.innerHTML = html;
+            
+            // Génération dynamique des 15 cartes quotidiennes (Style 3 Juillet)
+            const cardsContainer = document.getElementById('web-daily-cards');
+            if (cardsContainer && data.hourly) {
+                let cardsHtml = '';
+                for (let d = 1; d <= 15; d++) {
+                    const dStart = d * 24, dRep = d * 24 + 13;
+                    if (dStart >= data.hourly.time.length) break;
+
+                    let minT = Infinity, maxT = -Infinity, maxG = 0, totSpd = 0, totD = 0, cnt = 0;
+                    for (let h = 0; h < 24; h++) {
+                        const idx = dStart + h;
+                        if (idx < data.hourly.time.length) {
+                            const t = data.hourly.temperature_2m[idx];
+                            const g = data.hourly.wind_gusts_10m[idx];
+                            const w = data.hourly.windspeed_10m[idx];
+                            const dir = data.hourly.winddirection_10m[idx];
+                            if (t !== null && t < minT) minT = t;
+                            if (t !== null && t > maxT) maxT = t;
+                            if (g !== null && g > maxG) maxG = g;
+                            if (w !== null) { totSpd += w; totD += dir; cnt++; }
+                        }
+                    }
+                    minT = Math.round(minT); maxT = Math.round(maxT); maxG = Math.round(maxG);
+                    const avgW = cnt > 0 ? Math.round(totSpd / cnt) : 0;
+                    const avgD = cnt > 0 ? Math.round(totD / cnt) : 0;
+
+                    const dDate = new Date(data.hourly.time[dStart]);
+                    const dayName = dDate.toLocaleDateString('fr-FR', { weekday: 'long' }).toUpperCase();
+                    const dayNum = String(dDate.getDate()).padStart(2, '0');
+                    const dateHdr = dayName + ' ' + dayNum;
+
+                    const wCode = data.hourly.weathercode[dRep] !== null ? data.hourly.weathercode[dRep] : 0;
+                    const picto = getPictoFile(wCode, dRep, data.hourly);
+                    const label = getPictoLabel(wCode, dRep, data.hourly);
+
+                    const gBadge = maxG > 40 ? '<div style="background:#d4351c; color:#fff; font-size:10px; font-weight:900; padding:2px 6px; border-radius:4px; margin-top:4px;">' + maxG + ' km/h</div>' : '';
+
+                    const colIdx = (d - 1) % 3;
+                    const rowIdx = Math.floor((d - 1) / 3);
+                    const borderR = colIdx === 2 ? 'none' : '1px solid #dce6f2';
+                    const borderB = rowIdx === 4 ? 'none' : '1px solid #dce6f2';
+
+                    cardsHtml += '<div style="box-sizing:border-box; padding:12px 6px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:space-between; min-height:175px; border-right:' + borderR + '; border-bottom:' + borderB + '; background:#fff; font-family:Outfit,sans-serif;">' +
+                        '<div style="font-size:12px; font-weight:800; color:#0066cc; text-transform:uppercase; letter-spacing:0.4px;">' + dateHdr + '</div>' +
+                        '<div style="margin:4px 0; height:48px; display:flex; align-items:center; justify-content:center;"><img src="pictogramme/' + picto + '" style="max-height:46px; max-width:46px; object-fit:contain;"></div>' +
+                        '<div style="font-size:10px; font-weight:700; color:#555; text-transform:uppercase; min-height:14px; letter-spacing:0.2px;">' + label + '</div>' +
+                        '<div style="font-size:17px; font-weight:900; margin:2px 0;"><span style="color:#1d70b8;">' + minT + '°</span> <span style="color:#ccc; font-weight:300;">/</span> <span style="color:#d4351c;">' + maxT + '°</span></div>' +
+                        '<div style="font-size:11px; display:flex; align-items:center; justify-content:center; gap:3px; font-weight:800; color:#1a2a3a;"><span style="display:inline-block; transform:rotate(' + (avgD + 135) + 'deg);">➤</span><span>' + avgW + '</span><span style="font-size:9px; font-weight:400;">km/h</span></div>' +
+                        gBadge +
+                        '</div>';
+                }
+                cardsContainer.innerHTML = cardsHtml;
+            }
             setTimeout(() => initCommuneCharts(data), 100);
         }
 
