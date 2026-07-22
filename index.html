@@ -7694,7 +7694,7 @@ function parsePicto(s) {
                 <!-- BLOC APERÇU 15 CARTES WEB -->
                 <div style="margin-bottom: 25px;">
                     <h3 style="font-weight: 900; color: #1a2a3a; font-size: 16px; margin: 0 0 15px 0; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
-                        <i class="fas fa-calendar-alt" style="color: #00bcff;"></i> APERÇU DES PRÉVISIONS (J+1 À J+14)
+                        <i class="fas fa-calendar-alt" style="color: #00bcff;"></i> APERÇU DES PRÉVISIONS (J0 À J14)
                     </h3>
                     <div id="web-daily-cards" style="display: grid; grid-template-columns: repeat(3, 1fr); border: 2px solid #1a2a3a; border-radius: 16px; overflow: hidden; background: #ffffff; max-width: 850px; margin: 0 auto 25px auto; box-shadow: 0 8px 24px rgba(0,0,0,0.08);"></div>
                 </div>
@@ -7785,7 +7785,7 @@ function parsePicto(s) {
             const cardsContainer = document.getElementById('web-daily-cards');
             if (cardsContainer && data.hourly) {
                 let cardsHtml = '';
-                for (let d = 1; d <= 14; d++) {
+                for (let d = 0; d <= 14; d++) {
                     const dStart = d * 24, dRep = d * 24 + 13;
                     if (dStart >= data.hourly.time.length) break;
 
@@ -7812,7 +7812,7 @@ function parsePicto(s) {
                     const avgD = Math.round(maxWDir);
 
                     const dDate = new Date(data.hourly.time[dStart]);
-                    const dayName = dDate.toLocaleDateString('fr-FR', { weekday: 'long' }).toUpperCase();
+                    const dayName = d === 0 ? "AUJOURD'HUI" : dDate.toLocaleDateString('fr-FR', { weekday: 'long' }).toUpperCase();
                     const dayNum = String(dDate.getDate()).padStart(2, '0');
                     const dateHdr = dayName + ' ' + dayNum;
 
@@ -7896,8 +7896,12 @@ function parsePicto(s) {
                 'border:2px solid #1a2a3a;border-radius:12px;overflow:hidden;' +
                 'background:#fff;width:100%;height:' + gridH + 'px;box-sizing:border-box;">';
 
-            for (var d = 1; d <= days; d++) {
+            var countDays = days;
+            var startDayIdx = (days === 14) ? 0 : 1; // J0 à J14 pour 14J, J1 à J7 pour 7J
+            for (var d = startDayIdx; d < startDayIdx + countDays; d++) {
                 var dStart = d * 24, dRep = d * 24 + 13;
+                if (dStart >= hourly2.time.length) break;
+
                 var minT=Infinity, maxT=-Infinity, maxGust2=0, maxW2=0, maxWDir2=0;
                 for (var hh=0; hh<24; hh++) {
                     var idx2 = dStart + hh;
@@ -7916,18 +7920,22 @@ function parsePicto(s) {
                 var gustVal = Math.round(maxGust2/5)*5;
                 var avgW2 = Math.round(maxW2/5)*5;
                 var windDispVal = avgW2;
-                var gustCol = gustVal>=45 ? '#d32f2f' : (gustVal>=30 ? '#e65100' : '#1a2a3a');
                 var avgDir2 = Math.round(maxWDir2);
 
+                var badgeBg2 = gustVal >= 45 ? '#d4351c' : (gustVal >= 30 ? '#e67e22' : '#edf2f7');
+                var badgeTxt2 = gustVal >= 30 ? '#ffffff' : '#4a5568';
+                var gBadge2 = '<div style="background:' + badgeBg2 + '; color:' + badgeTxt2 + '; font-size:9px; font-weight:900; padding:2px 5px; border-radius:4px; margin-top:2px; white-space:nowrap;">Raf. ' + gustVal + ' km/h</div>';
+
                 var dd2      = new Date(hourly2.time[dStart]);
-                var dayName2 = dd2.toLocaleDateString('fr-FR',{weekday:'long'}).toUpperCase();
+                var dayName2 = d === 0 ? "AUJOURD'HUI" : dd2.toLocaleDateString('fr-FR',{weekday:'long'}).toUpperCase();
                 var dayNum2  = String(dd2.getDate()).padStart(2,'0');
                 var dateHdr2 = dayName2 + ' ' + dayNum2;
 
                 var wcode2 = hourly2.weathercode[dRep]!==null ? hourly2.weathercode[dRep] : 0;
                 var picto2 = getPictoFile(wcode2, dRep, hourly2);
 
-                var colIdx2 = (d-1)%cols, rowIdx2 = Math.floor((d-1)/cols);
+                var currIdx = d - startDayIdx;
+                var colIdx2 = currIdx % cols, rowIdx2 = Math.floor(currIdx / cols);
                 var bR2 = colIdx2===cols-1 ? 'none' : '1px solid #b8d4e8';
                 var bB2 = rowIdx2===rows-1 ? 'none' : '1px solid #b8d4e8';
 
@@ -7943,40 +7951,44 @@ function parsePicto(s) {
                         '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;gap:4px;">' +
                         '<span style="color:#1d70b8;">' + minT + '°</span><span style="color:#ccc;font-weight:300;">/</span>' +
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
-                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:3px;font-weight:800;color:' + gustCol + ';">' +
+                        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">' +
+                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:3px;font-weight:800;color:#1a2a3a;">' +
                         '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
-                        '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div></div>';
+                        '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div>' +
+                        gBadge2 + '</div></div></div>';
                 } else if (is7days && !isTikTok) {
                     gridHtml +=
-                        '<div style="box-sizing:border-box;padding:18px 8px 14px;text-align:center;' +
+                        '<div style="box-sizing:border-box;padding:14px 6px 10px;text-align:center;' +
                         'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
                         'border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
                         '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;letter-spacing:0.3px;">' + dateHdr2 + '</div>' +
-                        '<div style="margin:8px 0;"><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
+                        '<div style="margin:6px 0;"><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
                         '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;justify-content:center;gap:3px;">' +
                         '<span style="color:#1d70b8;">' + minT + '°</span>' +
                         '<span style="color:#ccc;font-weight:300;font-size:' + (parseInt(pxTemp)-10) + 'px;">/</span>' +
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
-                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;justify-content:center;gap:3px;font-weight:800;color:' + gustCol + ';">' +
+                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;justify-content:center;gap:3px;font-weight:800;color:#1a2a3a;">' +
                         '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
                         '<span>' + windDispVal + '</span>' +
                         '<span style="font-size:11px;font-weight:500;">km/h</span></div>' +
+                        gBadge2 +
                         '</div>';
                 } else {
-                    var cPad2 = isTikTok ? '10px 5px' : '10px 5px 8px';
+                    var cPad2 = isTikTok ? '8px 4px' : '8px 4px 6px';
                     gridHtml +=
                         '<div style="box-sizing:border-box;padding:' + cPad2 + ';text-align:center;' +
                         'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
                         'border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
                         '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;letter-spacing:0.3px;">' + dateHdr2 + '</div>' +
-                        '<div style="margin:4px 0;"><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
+                        '<div style="margin:3px 0;"><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
                         '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;gap:2px;">' +
                         '<span style="color:#1d70b8;">' + minT + '°</span>' +
                         '<span style="color:#ccc;font-weight:300;">/</span>' +
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
-                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:2px;font-weight:800;color:' + gustCol + ';">' +
+                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:2px;font-weight:800;color:#1a2a3a;">' +
                         '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
-                        '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div>';
+                        '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div>' +
+                        gBadge2 + '</div>';
                 }
             }
             gridHtml += '</div>';
