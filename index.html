@@ -7808,7 +7808,7 @@ function parsePicto(s) {
                     }
                     minT = Math.round(minT); maxT = Math.round(maxT);
                     const gust5 = Math.round(maxG / 5) * 5;
-                    const avgW = Math.round(maxW / 5) * 5 || Math.round(maxW);
+                    const avgW = Math.round(maxW / 5) * 5;
                     const avgD = Math.round(maxWDir);
 
                     const dDate = new Date(data.hourly.time[dStart]);
@@ -7914,7 +7914,7 @@ function parsePicto(s) {
                 }
                 minT=Math.round(minT); maxT=Math.round(maxT);
                 var gustVal = Math.round(maxGust2/5)*5;
-                var avgW2 = Math.round(maxW2/5)*5 || Math.round(maxW2);
+                var avgW2 = Math.round(maxW2/5)*5;
                 var windDispVal = avgW2;
                 var gustCol = gustVal>=45 ? '#d32f2f' : (gustVal>=30 ? '#e65100' : '#1a2a3a');
                 var avgDir2 = Math.round(maxWDir2);
