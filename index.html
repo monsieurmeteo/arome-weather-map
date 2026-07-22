@@ -7806,8 +7806,9 @@ function parsePicto(s) {
                             }
                         }
                     }
-                    minT = Math.round(minT); maxT = Math.round(maxT); maxG = Math.round(maxG / 5) * 5;
-                    const avgW = Math.round(maxW);
+                    minT = Math.round(minT); maxT = Math.round(maxT);
+                    const gust5 = Math.round(maxG / 5) * 5;
+                    const avgW = Math.round(maxW / 5) * 5 || Math.round(maxW);
                     const avgD = Math.round(maxWDir);
 
                     const dDate = new Date(data.hourly.time[dStart]);
@@ -7818,17 +7819,19 @@ function parsePicto(s) {
                     const wCode = data.hourly.weathercode[dRep] !== null ? data.hourly.weathercode[dRep] : 0;
                     const picto = getPictoFile(wCode, dRep, data.hourly);
 
-                    const gBadge = maxG > 40 ? '<div style="background:#d4351c; color:#fff; font-size:10px; font-weight:900; padding:2px 6px; border-radius:4px; margin-top:4px;">' + maxG + ' km/h</div>' : '';
+                    const badgeBg = gust5 >= 45 ? '#d4351c' : (gust5 >= 30 ? '#e67e22' : '#edf2f7');
+                    const badgeTxt = gust5 >= 30 ? '#ffffff' : '#4a5568';
+                    const gBadge = '<div style="background:' + badgeBg + '; color:' + badgeTxt + '; font-size:10px; font-weight:900; padding:2px 6px; border-radius:4px; margin-top:3px; white-space:nowrap;">Raf. ' + gust5 + ' km/h</div>';
 
                     const colIdx = (d - 1) % 3;
                     const rowIdx = Math.floor((d - 1) / 3);
                     const borderR = colIdx === 2 ? 'none' : '1px solid #dce6f2';
                     const borderB = rowIdx === 4 ? 'none' : '1px solid #dce6f2';
 
-                    cardsHtml += '<div style="box-sizing:border-box; padding:12px 6px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:space-between; min-height:160px; border-right:' + borderR + '; border-bottom:' + borderB + '; background:#fff; font-family:Outfit,sans-serif;">' +
+                    cardsHtml += '<div style="box-sizing:border-box; padding:10px 5px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:space-between; min-height:165px; border-right:' + borderR + '; border-bottom:' + borderB + '; background:#fff; font-family:Outfit,sans-serif;">' +
                         '<div style="font-size:12px; font-weight:800; color:#0066cc; text-transform:uppercase; letter-spacing:0.4px;">' + dateHdr + '</div>' +
-                        '<div style="margin:6px 0; height:48px; display:flex; align-items:center; justify-content:center;"><img src="pictogramme/' + picto + '" style="max-height:48px; max-width:48px; object-fit:contain;"></div>' +
-                        '<div style="font-size:17px; font-weight:900; margin:2px 0;"><span style="color:#1d70b8;">' + minT + '°</span> <span style="color:#ccc; font-weight:300;">/</span> <span style="color:#d4351c;">' + maxT + '°</span></div>' +
+                        '<div style="margin:4px 0; height:44px; display:flex; align-items:center; justify-content:center;"><img src="pictogramme/' + picto + '" style="max-height:44px; max-width:44px; object-fit:contain;"></div>' +
+                        '<div style="font-size:16px; font-weight:900; margin:1px 0;"><span style="color:#1d70b8;">' + minT + '°</span> <span style="color:#ccc; font-weight:300;">/</span> <span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="font-size:11px; display:flex; align-items:center; justify-content:center; gap:3px; font-weight:800; color:#1a2a3a;"><span style="display:inline-block; transform:rotate(' + (avgD + 135) + 'deg);">➤</span><span>' + avgW + '</span><span style="font-size:9px; font-weight:400;">km/h</span></div>' +
                         gBadge +
                         '</div>';
@@ -7910,10 +7913,10 @@ function parsePicto(s) {
                     }
                 }
                 minT=Math.round(minT); maxT=Math.round(maxT);
-                var avgW2 = Math.round(maxW2);
                 var gustVal = Math.round(maxGust2/5)*5;
-                var windDispVal = gustVal > 35 ? gustVal : avgW2;
-                var gustCol = gustVal>50 ? '#d32f2f' : (gustVal>35 ? '#e65100' : '#1a2a3a');
+                var avgW2 = Math.round(maxW2/5)*5 || Math.round(maxW2);
+                var windDispVal = avgW2;
+                var gustCol = gustVal>=45 ? '#d32f2f' : (gustVal>=30 ? '#e65100' : '#1a2a3a');
                 var avgDir2 = Math.round(maxWDir2);
 
                 var dd2      = new Date(hourly2.time[dStart]);
