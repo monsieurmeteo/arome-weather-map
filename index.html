@@ -8121,7 +8121,33 @@ function parsePicto(s) {
         }
 
         function getPictoFile(code, idx = null, hourlyData = null) {
-            // Logique dynamique Soleil Voilé (P13)
+            // 1. Filtre de pertinence pluviométrique : Si la pluie est insignifiante (< 0.2 mm/h ou cumul quotidien < 0.5 mm), pas de picto pluie !
+            if (idx !== null && hourlyData) {
+                let precipVal = hourlyData.precipitation ? hourlyData.precipitation[idx] : null;
+                
+                // Si on est sur une carte quotidienne (idx = dRep), calculer le cumul de la journée entière (24h)
+                if (idx % 24 === 13 && hourlyData.precipitation) {
+                    const dStart = Math.floor(idx / 24) * 24;
+                    let daySum = 0;
+                    for (let h = 0; h < 24; h++) {
+                        if (dStart + h < hourlyData.precipitation.length && hourlyData.precipitation[dStart + h] !== null) {
+                            daySum += hourlyData.precipitation[dStart + h];
+                        }
+                    }
+                    precipVal = daySum;
+                }
+
+                const isRainCode = (code === 6 || code === 7 || code === 8 || code === 51 || code === 53 || code === 55 || code === 61 || code === 63 || code === 80 || code === 81);
+                
+                // Seuil : Pluie horaire < 0.2 mm OU cumul quotidien < 0.5 mm -> On remplace par Très Nuageux ou Nuageux
+                const threshold = (idx % 24 === 13) ? 0.5 : 0.2;
+                if (isRainCode && precipVal !== null && precipVal < threshold) {
+                    const cloud = (hourlyData.cloud_cover && hourlyData.cloud_cover[idx] !== null) ? hourlyData.cloud_cover[idx] : 80;
+                    return cloud > 85 ? 'P4 (très nuageux).png' : 'P8 (nuageux).png';
+                }
+            }
+
+            // 2. Logique dynamique Soleil Voilé (P13)
             if (idx !== null && hourlyData && hourlyData.cloud_cover_high) {
                 const rawCode = hourlyData.weathercode[idx];
                 const highCloud = hourlyData.cloud_cover_high[idx];
