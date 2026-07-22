@@ -7872,10 +7872,10 @@ function parsePicto(s) {
             var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 2 : 7);
             var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 7 : 2);
 
-            var pxDate  = is7days ? (isTikTok ? '20px' : '16px') : (isTikTok ? '15px' : '14px');
-            var pxPicto = is7days ? (isTikTok ? '82px' : '80px') : (isTikTok ? '60px' : '56px');
-            var pxTemp  = is7days ? (isTikTok ? '28px' : '25px') : (isTikTok ? '20px' : '18px');
-            var pxWind  = is7days ? (isTikTok ? '18px' : '15px') : (isTikTok ? '14px' : '13px');
+            var pxDate  = is7days ? (isTikTok ? '20px' : '16px') : (isTikTok ? '13px' : '14px');
+            var pxPicto = is7days ? (isTikTok ? '82px' : '80px') : (isTikTok ? '46px' : '56px');
+            var pxTemp  = is7days ? (isTikTok ? '28px' : '25px') : (isTikTok ? '17px' : '18px');
+            var pxWind  = is7days ? (isTikTok ? '18px' : '15px') : (isTikTok ? '12px' : '13px');
 
             var exportContainer = document.createElement('div');
             exportContainer.style.cssText =
@@ -7924,7 +7924,7 @@ function parsePicto(s) {
 
                 var badgeBg2 = gustVal >= 45 ? '#d4351c' : (gustVal >= 30 ? '#e67e22' : '#edf2f7');
                 var badgeTxt2 = gustVal >= 30 ? '#ffffff' : '#4a5568';
-                var pxBadge = is7days ? '12px' : '11px';
+                var pxBadge = is7days ? (isTikTok ? '12px' : '11px') : (isTikTok ? '9.5px' : '10.5px');
                 var gBadge2 = '<div style="background:' + badgeBg2 + '; color:' + badgeTxt2 + '; font-size:' + pxBadge + '; font-weight:900; padding:3px 7px; border-radius:5px; margin-top:3px; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Raf. ' + gustVal + ' km/h</div>';
 
                 var dd2      = new Date(hourly2.time[dStart]);
@@ -7975,7 +7975,7 @@ function parsePicto(s) {
                         gBadge2 +
                         '</div>';
                 } else {
-                    var cPad2 = isTikTok ? '8px 4px' : '8px 4px 6px';
+                    var cPad2 = isTikTok ? '4px 3px' : '8px 4px 6px';
                     gridHtml +=
                         '<div style="box-sizing:border-box;padding:' + cPad2 + ';text-align:center;' +
                         'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
