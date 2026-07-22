@@ -7445,8 +7445,8 @@ function parsePicto(s) {
                         if (e.T != null) merged.hourly.temperature_2m[idx] = parseFloat(e.T);
                         if (e.rain_1h != null) merged.hourly.precipitation[idx] = parseFloat(e.rain_1h);
                         if (e.weather_icon != null) merged.hourly.weathercode[idx] = parsePicto(e.weather_icon);
-                        if (e.wind_speed != null) merged.hourly.windspeed_10m[idx] = parseFloat(e.wind_speed);
-                        if (e.wind_speed_gust != null) merged.hourly.wind_gusts_10m[idx] = parseFloat(e.wind_speed_gust);
+                        if (e.wind_speed != null) merged.hourly.windspeed_10m[idx] = Math.round(parseFloat(e.wind_speed) * 3.6);
+                        if (e.wind_speed_gust != null) merged.hourly.wind_gusts_10m[idx] = Math.round(parseFloat(e.wind_speed_gust) * 3.6);
                         if (e.wind_direction != null) merged.hourly.winddirection_10m[idx] = parseFloat(e.wind_direction);
                         if (e.relative_humidity != null) merged.hourly.relativehumidity_2m[idx] = parseFloat(e.relative_humidity);
                         if (e.P_sea != null) merged.hourly.pressure_msl[idx] = parseFloat(e.P_sea);
