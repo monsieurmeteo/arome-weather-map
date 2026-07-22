@@ -7606,21 +7606,39 @@ function parsePicto(s) {
                 }
             }
 
-            // ── 3. Appeler l'API Météo-France et fusionner ──
+            // ── 3. Appeler l'API Météo-France en direct (CORS natif) et fusionner ──
             if (token && baseData) {
                 document.getElementById('loading-text').innerText = 'FUSION MÉTÉO-FRANCE...';
                 try {
                     const mfUrl  = `https://rwg.meteofrance.com/internet2018client/2.0/forecast?lat=${lat}&lon=${lon}&token=${token}&_=${Date.now()}`;
-                    const mfRes  = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(mfUrl));
+                    let mfRes  = await fetch(mfUrl);
+                    
+                    // Si le token est expiré (401), réessayons immédiatement avec le token GitHub
+                    if (mfRes.status === 401) {
+                        try {
+                            const ghRes = await fetch('https://raw.githubusercontent.com/monsieurmeteo/europe-1-v2/main/meteofrance_token.json?t=' + Date.now());
+                            if (ghRes.ok) {
+                                const data = await ghRes.json();
+                                if (data.token) {
+                                    token = data.token;
+                                    const mfUrl2 = `https://rwg.meteofrance.com/internet2018client/2.0/forecast?lat=${lat}&lon=${lon}&token=${token}&_=${Date.now()}`;
+                                    mfRes = await fetch(mfUrl2);
+                                }
+                            }
+                        } catch(e) {}
+                    }
+
                     if (mfRes.ok) {
                         const rawMF  = await mfRes.json();
                         const merged = mergeMFIntoBase(rawMF, baseData);
                         if (merged) {
-                            console.log('✅ Météo-France Token 0 injecté pour', city.nom);
+                            console.log('✅ Météo-France Token 0 injecté directement pour', city.nom);
                             renderCommuneForecast(merged, city);
                             document.getElementById('loading').style.display = 'none';
                             return;
                         }
+                    } else {
+                        console.warn('⚠️ Réponse Météo-France non-OK:', mfRes.status);
                     }
                 } catch (e) {
                     console.warn('⚠️ Échec injection Météo-France, affichage Open-Meteo seul :', e.message);
