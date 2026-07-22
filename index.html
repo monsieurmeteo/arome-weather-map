@@ -7576,38 +7576,34 @@ function parsePicto(s) {
                 console.warn("Échec chargement base Open-Meteo", err);
             }
 
-            // ── 2. Récupérer le token Météo-France (Local + GitHub fallback) ──
+            // ── 2. Récupérer le token Météo-France en direct (/api/token + fallbacks) ──
             let token = null;
             try {
-                const tokenRes = await fetch('meteofrance_token.json?t=' + Date.now());
-                if (tokenRes.ok) {
-                    const data = await tokenRes.json();
-                    token = data.token;
+                const apiRes = await fetch('/api/token');
+                if (apiRes.ok) {
+                    const data = await apiRes.json();
+                    if (data.token) token = data.token;
                 }
-            } catch(e) {
-                console.warn("Impossible de lire le token local, essai depuis GitHub...");
-            }
+            } catch(e) {}
 
-            function isTokenExpired(t) {
-                if (!t) return true;
+            if (!token) {
                 try {
-                    const payload = JSON.parse(atob(t.split('.')[1]));
-                    return (payload.exp * 1000) < Date.now();
-                } catch(e) {
-                    return true;
-                }
+                    const tokenRes = await fetch('meteofrance_token.json?t=' + Date.now());
+                    if (tokenRes.ok) {
+                        const data = await tokenRes.json();
+                        token = data.token;
+                    }
+                } catch(e) {}
             }
 
-            if (!token || isTokenExpired(token)) {
+            if (!token) {
                 try {
                     const ghRes = await fetch('https://raw.githubusercontent.com/monsieurmeteo/europe-1-v2/main/meteofrance_token.json?t=' + Date.now());
                     if (ghRes.ok) {
                         const data = await ghRes.json();
                         token = data.token;
                     }
-                } catch(e) {
-                    console.warn("Échec récupération token depuis GitHub");
-                }
+                } catch(e) {}
             }
 
             // ── 3. Appeler l'API Météo-France en direct (CORS natif) et fusionner ──
