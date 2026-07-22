@@ -383,11 +383,16 @@ const TemperatureMap = () => {
 
     const projection = useMemo(() => {
         if (!geoData) return null;
+        let proj;
         if (selectedRegionName !== "France" && regionsGeoData) {
             const regionFeature = regionsGeoData.features.find(f => f.properties.nom === selectedRegionName);
-            if (regionFeature) return geoConicConformal().fitExtent([[20, 20], [WIDTH - 20, HEIGHT - 180]], regionFeature);
+            if (regionFeature) proj = geoConicConformal().fitExtent([[20, 20], [WIDTH - 20, HEIGHT - 180]], regionFeature);
         }
-        return geoConicConformal().fitExtent([[20, 20], [WIDTH - 20, HEIGHT - 180]], geoData);
+        if (!proj) {
+            proj = geoConicConformal().fitExtent([[20, 20], [WIDTH - 20, HEIGHT - 180]], geoData);
+        }
+        const t = proj.translate();
+        return proj.translate([t[0] - 70, t[1]]);
     }, [geoData, regionsGeoData, selectedRegionName]);
 
     const pathGenerator = useMemo(() => projection ? geoPath().projection(projection) : null, [projection]);
@@ -641,6 +646,27 @@ const TemperatureMap = () => {
                             <p style={{ marginTop: '20px', fontWeight: '700', color: '#1e40af', fontSize: '1.1rem' }}>Saisie des mesures météo...</p>
                         </div>
                     )}
+
+                    {/* Légende flottante intégrée au téléchargement (haut-droite) */}
+                    <div style={{
+                        position: 'absolute', top: '15px', right: '15px',
+                        background: 'rgba(255, 255, 255, 0.92)', border: '1px solid #000',
+                        borderRadius: '8px', padding: '10px 14px', zIndex: 5,
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                        display: 'flex', flexDirection: 'column', gap: '4px'
+                    }}>
+                        <div style={{ fontSize: '11px', fontWeight: '900', color: '#1e293b', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.05em' }}>
+                            {tempMode === 'tn' ? 'TEMP. MINIMALE (°C)' : tempMode === 'tx' ? 'TEMP. MAXIMALE (°C)' : 'TEMPÉRATURE (°C)'}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 8px' }}>
+                            {activeTempScale.filter(r => r.min !== -Infinity).map(range => (
+                                <div key={range.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: range.color, border: '0.5px solid rgba(0,0,0,0.2)', flexShrink: 0 }} />
+                                    <span style={{ fontSize: '9.5px', fontWeight: '700', color: '#1e293b' }}>{range.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
                     {geoData && !error && (
                         <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} style={{ width: '100%', height: '100%' }}>

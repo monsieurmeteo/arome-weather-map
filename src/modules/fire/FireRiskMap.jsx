@@ -5,6 +5,7 @@ import { supabase } from "../../services/api";
 import { Flame, RefreshCw, Search, AlertTriangle, MapPin, Thermometer, Droplets, Wind, Info, ChevronDown, Download } from "lucide-react";
 import { format, subDays, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
+import html2canvas from "html2canvas";
 import stationNamesData from "../../data/stationNames.json";
 import stationsListData from "../../data/stations_list.json";
 
@@ -183,7 +184,9 @@ const FireRiskMap = () => {
             }
         }
         // Mode France entière (zoom standard)
-        return geoConicConformal().fitExtent([[40, 40], [WIDTH - 40, HEIGHT - 40]], geoData);
+        const proj = geoConicConformal().fitExtent([[40, 40], [WIDTH - 40, HEIGHT - 40]], geoData);
+        const currentTranslate = proj.translate();
+        return proj.translate([currentTranslate[0] - 70, currentTranslate[1]]);
     }, [geoData, regionsGeoData, selectedRegionName]);
 
     const pathGenerator = useMemo(() => projection ? geoPath().projection(projection) : null, [projection]);
@@ -200,6 +203,82 @@ const FireRiskMap = () => {
             .then(setRegionsGeoData)
             .catch(err => console.error("Erreur GeoJSON Régions:", err));
     }, []);
+
+    // Fallback : chargement temps réel depuis observations_6mn si get_france_live n'a pas l'humidité
+    const loadLiveFromObservations = useCallback(async () => {
+        console.log("[FireRiskMap] Chargement live depuis observations_6mn (fallback)...");
+        let from = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+        const allObs = [];
+        const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+
+        while (hasMore) {
+            const { data, error } = await supabase
+                .from('observations_6mn')
+                .select('station_id, t, u, ff, timestamp')
+                .gte('timestamp', since)
+                .not('t', 'is', null)
+                .not('u', 'is', null)
+                .range(from, from + batchSize - 1);
+
+            if (error) throw error;
+            if (data && data.length > 0) {
+                allObs.push(...data);
+                if (data.length < batchSize) hasMore = false;
+                else from += batchSize;
+            } else {
+                hasMore = false;
+            }
+        }
+
+        if (allObs.length > 0) {
+            const stationMap = new Map();
+            let maxTimestamp = null;
+            allObs.forEach(obs => {
+                let sid = String(obs.station_id);
+                if (sid.length === 7) sid = "0" + sid;
+                const existing = stationMap.get(sid);
+                const obsDate = new Date(obs.timestamp);
+                if (!maxTimestamp || obsDate > maxTimestamp) maxTimestamp = obsDate;
+                if (!existing || obsDate > new Date(existing.timestamp)) {
+                    stationMap.set(sid, { ...obs, station_id: sid });
+                }
+            });
+            if (maxTimestamp) setLastUpdate(maxTimestamp);
+
+            const processed = [];
+            stationMap.forEach((obs, sid) => {
+                const meta = stationLookup[sid];
+                const lat = meta?.lat;
+                const lon = meta?.lon;
+                const temp = obs.t;
+                const hum = obs.u;
+                const windSpd = obs.ff || 0;
+                const risk = computeRisk(temp, hum, windSpd);
+
+                let dept = sid.substring(0, 2);
+                if (dept === '20') {
+                    const num3 = parseInt(sid.substring(2, 5), 10);
+                    dept = num3 < 200 ? '2A' : '2B';
+                }
+
+                processed.push({
+                    station_id: sid,
+                    name: stationNamesData[sid] || meta?.name || sid,
+                    dept,
+                    lat,
+                    lon,
+                    tempMax: temp,
+                    humMin: hum,
+                    windMean: windSpd,
+                    risk
+                });
+            });
+            return processed;
+        }
+        return [];
+    }, [stationLookup]);
 
     // ─── Chargement des données (temps réel ou max journalier) ────────────────
     const loadData = useCallback(async () => {
@@ -231,56 +310,59 @@ const FireRiskMap = () => {
                     }
                 }
 
-                if (liveData.length === 0) {
-                    throw new Error("Aucune observation en direct disponible.");
+                if (liveData.length > 0) {
+                    let maxTimestamp = null;
+                    liveData.forEach(item => {
+                        if (item.obs_time) {
+                            const d = new Date(item.obs_time);
+                            if (!maxTimestamp || d > maxTimestamp) {
+                                maxTimestamp = d;
+                            }
+                        }
+                    });
+                    if (maxTimestamp) setLastUpdate(maxTimestamp);
+
+                    processedStations = liveData
+                        .filter(item => item.station_id < '96000000' && !item.station_id.startsWith('SIMULATION'))
+                        .map(s => {
+                            let sid = String(s.station_id);
+                            if (sid.length === 7) sid = "0" + sid;
+
+                            const meta = stationLookup[sid];
+                            const lat = meta?.lat;
+                            const lon = meta?.lon;
+
+                            const temp = s.t; 
+                            const hum = s.u !== null && s.u !== undefined ? s.u : s.humidity;  
+                            const windSpd = s.wind; 
+
+                            const risk = computeRisk(temp, hum, windSpd);
+
+                            let dept = sid.substring(0, 2);
+                            if (dept === '20') {
+                                const num3 = parseInt(sid.substring(2, 5), 10);
+                                dept = num3 < 200 ? '2A' : '2B';
+                            }
+
+                            return {
+                                station_id: sid,
+                                name: stationNamesData[sid] || meta?.name || sid,
+                                dept,
+                                lat,
+                                lon,
+                                tempMax: temp,
+                                humMin: hum,
+                                windMean: windSpd,
+                                risk
+                            };
+                        });
                 }
 
-                // Trouver l'horodatage le plus récent
-                let maxTimestamp = null;
-                liveData.forEach(item => {
-                    if (item.obs_time) {
-                        const d = new Date(item.obs_time);
-                        if (!maxTimestamp || d > maxTimestamp) {
-                            maxTimestamp = d;
-                        }
-                    }
-                });
-                if (maxTimestamp) setLastUpdate(maxTimestamp);
-
-                processedStations = liveData
-                    .filter(item => item.station_id < '96000000' && !item.station_id.startsWith('SIMULATION'))
-                    .map(s => {
-                        let sid = String(s.station_id);
-                        if (sid.length === 7) sid = "0" + sid;
-
-                        const meta = stationLookup[sid];
-                        const lat = meta?.lat;
-                        const lon = meta?.lon;
-
-                        const temp = s.t; 
-                        const hum = s.u;  
-                        const windSpd = s.wind; 
-
-                        const risk = computeRisk(temp, hum, windSpd);
-
-                        let dept = sid.substring(0, 2);
-                        if (dept === '20') {
-                            const num3 = parseInt(sid.substring(2, 5), 10);
-                            dept = num3 < 200 ? '2A' : '2B';
-                        }
-
-                        return {
-                            station_id: sid,
-                            name: stationNamesData[sid] || meta?.name || sid,
-                            dept,
-                            lat,
-                            lon,
-                            tempMax: temp,
-                            humMin: hum,
-                            windMean: windSpd,
-                            risk
-                        };
-                    });
+                // Fallback si pas de données d'humidité dans get_france_live
+                if (processedStations.filter(s => s.humMin != null).length === 0) {
+                    console.log("[FireRiskMap] Fallback sur observations_6mn...");
+                    processedStations = await loadLiveFromObservations();
+                }
             } else {
                 // Mode Maximums du Jour
                 console.log(`[FireRiskMap] Chargement des maximums du jour (${selectedDate})...`);
@@ -506,6 +588,17 @@ const FireRiskMap = () => {
 
     const selectedDeptData = selectedDept ? deptRisk[selectedDept] : null;
 
+    const handleExport = () => {
+        const el = document.getElementById("fire-risk-map-container");
+        if (!el) return;
+        html2canvas(el, { scale: 2, useCORS: true }).then(canvas => {
+            const link = document.createElement("a");
+            link.download = `carte-feux-foret-${selectedDate}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    };
+
     return (
         <div style={{ background: '#0f172a', minHeight: '100vh', color: '#e2e8f0', fontFamily: "'Inter', sans-serif", padding: '0' }}>
 
@@ -603,6 +696,10 @@ const FireRiskMap = () => {
                         <button onClick={loadData} disabled={loading} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '6px 12px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                             <RefreshCw size={14} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
                             {loading ? 'Chargement...' : 'Actualiser'}
+                        </button>
+                        <button onClick={handleExport} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '6px 12px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }} title="Télécharger la carte">
+                            <Download size={14} />
+                            Télécharger
                         </button>
                         <button onClick={() => setShowInfo(!showInfo)} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '6px 10px', color: '#fff', cursor: 'pointer' }}>
                             <Info size={16} />
@@ -842,8 +939,43 @@ const FireRiskMap = () => {
                 </div>
 
                 {/* ─── CARTE SVG ─── */}
-                <div style={{ background: '#0f172a', display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: '10px 16px', position: 'relative', overflow: 'hidden' }}>
+                <div id="fire-risk-map-container" style={{ background: '#0f172a', display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: '10px 16px', position: 'relative', overflow: 'hidden' }}>
                     
+                    {/* Encadré Légende intégrée sur l'image téléchargeable (haut-gauche) */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '20px',
+                        left: '20px',
+                        background: 'rgba(30, 41, 59, 0.88)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid #334155',
+                        borderRadius: '12px',
+                        padding: '10px 14px',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                        zIndex: 10,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px'
+                    }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                            INDICE FEUX DE FORÊT
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {[
+                                { lvl: RISK_LEVELS.CRITICAL, desc: '3 critères (T≥30, HR≤30, V≥30)' },
+                                { lvl: RISK_LEVELS.HIGH, desc: 'Élevé (2 critères)' },
+                                { lvl: RISK_LEVELS.WARNING, desc: 'Vigilance (1 critère/seuil)' },
+                                { lvl: RISK_LEVELS.SENSIBLE, desc: 'À surveiller' },
+                                { lvl: RISK_LEVELS.LOW, desc: 'Faible' },
+                            ].map(({ lvl }) => (
+                                <div key={lvl.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: lvl.color, flexShrink: 0 }} />
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#e2e8f0' }}>{lvl.emoji} {lvl.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Encadré Top des stations à risque et sous surveillance (en haut à droite) */}
                     {!loading && filteredStations.length > 0 && (() => {
                         const activeAlerts = filteredStations.filter(s => s.risk !== 'low' && s.risk !== 'sensible');

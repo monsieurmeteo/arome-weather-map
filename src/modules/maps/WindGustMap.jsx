@@ -331,18 +331,16 @@ const WindGustMap = () => {
 
     const projection = useMemo(() => {
         if (!geoData) return null;
-
-        // Si une région est sélectionnée, on zoome dessus
+        let proj;
         if (selectedRegionName !== "France" && regionsGeoData) {
             const regionFeature = regionsGeoData.features.find(f => f.properties.nom === selectedRegionName);
-            if (regionFeature) {
-                return geoConicConformal().fitSize([WIDTH, HEIGHT - 180], regionFeature);
-            }
+            if (regionFeature) proj = geoConicConformal().fitExtent([[20, 20], [WIDTH - 20, HEIGHT - 180]], regionFeature);
         }
-
-        // Sinon, vue par défaut sur la France
-        return geoConicConformal().fitSize([WIDTH, HEIGHT - 180], geoData);
-        return geoConicConformal().fitExtent([[20, 20], [WIDTH - 20, HEIGHT - 180]], geoData);
+        if (!proj) {
+            proj = geoConicConformal().fitExtent([[20, 20], [WIDTH - 20, HEIGHT - 180]], geoData);
+        }
+        const t = proj.translate();
+        return proj.translate([t[0] - 70, t[1]]);
     }, [geoData, regionsGeoData, selectedRegionName]);
 
     const pathGenerator = useMemo(() => projection ? geoPath().projection(projection) : null, [projection]);
@@ -617,6 +615,27 @@ const WindGustMap = () => {
                             <p style={{ marginTop: '20px', fontWeight: '700', color: '#1e40af', fontSize: '1.1rem' }}>Saisie des mesures météo...</p>
                         </div>
                     )}
+
+                    {/* Légende flottante intégrée au téléchargement (haut-droite) */}
+                    <div style={{
+                        position: 'absolute', top: '15px', right: '15px',
+                        background: 'rgba(255, 255, 255, 0.92)', border: '1px solid #000',
+                        borderRadius: '8px', padding: '10px 14px', zIndex: 5,
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                        display: 'flex', flexDirection: 'column', gap: '4px'
+                    }}>
+                        <div style={{ fontSize: '11px', fontWeight: '900', color: '#1e293b', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.05em' }}>
+                            {windMode === 'direct' ? 'RAFALES EN DIRECT (KM/H)' : 'RAFALES MAX. (KM/H)'}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 8px' }}>
+                            {activeWindScale.map(range => (
+                                <div key={range.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: range.color, border: '0.5px solid rgba(0,0,0,0.2)', flexShrink: 0 }} />
+                                    <span style={{ fontSize: '9.5px', fontWeight: '700', color: '#1e293b' }}>{range.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
                     {error && (
                         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 5, padding: '20px', textAlign: 'center' }}>
