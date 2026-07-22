@@ -7770,7 +7770,7 @@ function parsePicto(s) {
                     const dStart = d * 24, dRep = d * 24 + 13;
                     if (dStart >= data.hourly.time.length) break;
 
-                    let minT = Infinity, maxT = -Infinity, maxG = 0, totSpd = 0, totD = 0, cnt = 0;
+                    let minT = Infinity, maxT = -Infinity, maxG = 0, totSpd = 0, sumSin = 0, sumCos = 0, cnt = 0;
                     for (let h = 0; h < 24; h++) {
                         const idx = dStart + h;
                         if (idx < data.hourly.time.length) {
@@ -7781,12 +7781,18 @@ function parsePicto(s) {
                             if (t !== null && t < minT) minT = t;
                             if (t !== null && t > maxT) maxT = t;
                             if (g !== null && g > maxG) maxG = g;
-                            if (w !== null) { totSpd += w; totD += dir; cnt++; }
+                            if (w !== null) { totSpd += w; }
+                            if (dir !== null) {
+                                const rad = dir * Math.PI / 180;
+                                sumSin += Math.sin(rad);
+                                sumCos += Math.cos(rad);
+                                cnt++;
+                            }
                         }
                     }
                     minT = Math.round(minT); maxT = Math.round(maxT); maxG = Math.round(maxG / 5) * 5;
                     const avgW = cnt > 0 ? Math.round(totSpd / cnt) : 0;
-                    const avgD = cnt > 0 ? Math.round(totD / cnt) : 0;
+                    const avgD = cnt > 0 ? Math.round((Math.atan2(sumSin, sumCos) * 180 / Math.PI + 360) % 360) : 0;
 
                     const dDate = new Date(data.hourly.time[dStart]);
                     const dayName = dDate.toLocaleDateString('fr-FR', { weekday: 'long' }).toUpperCase();
@@ -7795,7 +7801,6 @@ function parsePicto(s) {
 
                     const wCode = data.hourly.weathercode[dRep] !== null ? data.hourly.weathercode[dRep] : 0;
                     const picto = getPictoFile(wCode, dRep, data.hourly);
-                    const label = getPictoLabel(wCode, dRep, data.hourly);
 
                     const gBadge = maxG > 40 ? '<div style="background:#d4351c; color:#fff; font-size:10px; font-weight:900; padding:2px 6px; border-radius:4px; margin-top:4px;">' + maxG + ' km/h</div>' : '';
 
@@ -7804,10 +7809,9 @@ function parsePicto(s) {
                     const borderR = colIdx === 2 ? 'none' : '1px solid #dce6f2';
                     const borderB = rowIdx === 4 ? 'none' : '1px solid #dce6f2';
 
-                    cardsHtml += '<div style="box-sizing:border-box; padding:12px 6px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:space-between; min-height:175px; border-right:' + borderR + '; border-bottom:' + borderB + '; background:#fff; font-family:Outfit,sans-serif;">' +
+                    cardsHtml += '<div style="box-sizing:border-box; padding:12px 6px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:space-between; min-height:160px; border-right:' + borderR + '; border-bottom:' + borderB + '; background:#fff; font-family:Outfit,sans-serif;">' +
                         '<div style="font-size:12px; font-weight:800; color:#0066cc; text-transform:uppercase; letter-spacing:0.4px;">' + dateHdr + '</div>' +
-                        '<div style="margin:4px 0; height:48px; display:flex; align-items:center; justify-content:center;"><img src="pictogramme/' + picto + '" style="max-height:46px; max-width:46px; object-fit:contain;"></div>' +
-                        '<div style="font-size:10px; font-weight:700; color:#555; text-transform:uppercase; min-height:14px; letter-spacing:0.2px;">' + label + '</div>' +
+                        '<div style="margin:6px 0; height:48px; display:flex; align-items:center; justify-content:center;"><img src="pictogramme/' + picto + '" style="max-height:48px; max-width:48px; object-fit:contain;"></div>' +
                         '<div style="font-size:17px; font-weight:900; margin:2px 0;"><span style="color:#1d70b8;">' + minT + '°</span> <span style="color:#ccc; font-weight:300;">/</span> <span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="font-size:11px; display:flex; align-items:center; justify-content:center; gap:3px; font-weight:800; color:#1a2a3a;"><span style="display:inline-block; transform:rotate(' + (avgD + 135) + 'deg);">➤</span><span>' + avgW + '</span><span style="font-size:9px; font-weight:400;">km/h</span></div>' +
                         gBadge +
@@ -7842,35 +7846,30 @@ function parsePicto(s) {
 
             var gridH;
             if      (isTikTok && is7days) gridH = 1000;
-            else if (isTikTok)            gridH = 920;
-            else if (is7days)             gridH = 300;
-            else                          gridH = 540;
+            else if (isTikTok && !is7days) gridH = 1000;
+            else if (!isTikTok && is7days) gridH = 490;
+            else                           gridH = 490;
 
-var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
-            if      (is7days && isTikTok)  { pxPicto='100px'; pxTemp='36px'; pxDate='20px'; pxLabel='13px'; pxWind='20px'; }
-            else if (is7days)              { pxPicto='90px';  pxTemp='26px'; pxDate='14px'; pxLabel='11px'; pxWind='16px'; }
-            else if (isTikTok)             { pxPicto='58px';  pxTemp='20px'; pxDate='12px'; pxLabel='9px';  pxWind='14px'; }
-            else                           { pxPicto='70px';  pxTemp='22px'; pxDate='13px'; pxLabel='10px'; pxWind='15px'; }
+            var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 2 : 7);
+            var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 7 : 2);
+
+            var pxDate  = is7days ? (isTikTok ? '18px' : '15px') : (isTikTok ? '13px' : '13px');
+            var pxPicto = is7days ? (isTikTok ? '72px' : '75px') : (isTikTok ? '52px' : '52px');
+            var pxTemp  = is7days ? (isTikTok ? '26px' : '23px') : (isTikTok ? '17px' : '17px');
+            var pxWind  = is7days ? (isTikTok ? '17px' : '14px') : (isTikTok ? '12px' : '12px');
 
             var exportContainer = document.createElement('div');
             exportContainer.style.cssText =
-                'position:fixed;left:0;top:0;z-index:99999;' +
-                'width:' + width + 'px;height:' + height + 'px;' +
-                'background:' + (isTikTok ? 'linear-gradient(160deg,#f0f6fc,#e8f0f9)' : '#ffffff') + ';' +
-                'padding:' + (isTikTok ? '28px 20px' : '20px 26px') + ';' +
-                'box-sizing:border-box;display:flex;flex-direction:column;' +
-                'justify-content:space-between;font-family:Outfit,sans-serif;overflow:hidden;';
+                'position:fixed;top:-9999px;left:-9999px;width:' + width + 'px;height:' + height + 'px;' +
+                'background:' + (isTikTok ? 'linear-gradient(180deg,#f0f6fc 0%,#e1eefb 100%)' : '#ffffff') + ';' +
+                'box-sizing:border-box;padding:' + (isTikTok ? '24px 28px' : '20px 30px') + ';' +
+                'display:flex;flex-direction:column;justify-content:space-between;' +
+                'font-family:Outfit,sans-serif;overflow:hidden;';
 
             var hourly2   = window.lastCommuneData.hourly;
             var sunrise2  = new Date(window.lastCommuneData.daily.sunrise[0]).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
             var sunset2   = new Date(window.lastCommuneData.daily.sunset[0]).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-            var durMin2   = (new Date(window.lastCommuneData.daily.sunset[0]) - new Date(window.lastCommuneData.daily.sunrise[0])) / 60000;
-            var dH2       = Math.floor(durMin2/60), dM2 = Math.round(durMin2%60);
-            var now2      = new Date();
-            var dateStr2  = now2.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-            var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 2 : 7);
-            var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 7 : 2);
+            var dateStr2  = 'Prévisions ' + days + ' Jours • ' + new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
             var gridHtml =
                 '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);' +
@@ -7880,21 +7879,29 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
 
             for (var d = 1; d <= days; d++) {
                 var dStart = d * 24, dRep = d * 24 + 13;
-                var minT=Infinity, maxT=-Infinity, maxGust2=0, totDir2=0, hCnt2=0;
+                var minT=Infinity, maxT=-Infinity, maxGust2=0, totSpd2=0, sumSin2=0, sumCos2=0, hCnt2=0;
                 for (var hh=0; hh<24; hh++) {
                     var idx2 = dStart + hh;
                     if (idx2 < hourly2.time.length) {
-                        var t2=hourly2.temperature_2m[idx2], g2=hourly2.wind_gusts_10m[idx2], dir2=hourly2.winddirection_10m[idx2];
+                        var t2=hourly2.temperature_2m[idx2], g2=hourly2.wind_gusts_10m[idx2], w2=hourly2.windspeed_10m[idx2], dir2=hourly2.winddirection_10m[idx2];
                         if (t2!==null && t2<minT) minT=t2;
                         if (t2!==null && t2>maxT) maxT=t2;
                         if (g2!==null && g2>maxGust2) maxGust2=g2;
-                        if (dir2!==null) { totDir2+=dir2; hCnt2++; }
+                        if (w2!==null) { totSpd2 += w2; }
+                        if (dir2!==null) {
+                            var rad2 = dir2 * Math.PI / 180;
+                            sumSin2 += Math.sin(rad2);
+                            sumCos2 += Math.cos(rad2);
+                            hCnt2++;
+                        }
                     }
                 }
                 minT=Math.round(minT); maxT=Math.round(maxT);
+                var avgW2 = hCnt2>0 ? Math.round(totSpd2/hCnt2) : 0;
                 var gustVal = Math.round(maxGust2/5)*5;
+                var windDispVal = gustVal > 35 ? gustVal : avgW2;
                 var gustCol = gustVal>50 ? '#d32f2f' : (gustVal>35 ? '#e65100' : '#1a2a3a');
-                var avgDir2  = hCnt2>0 ? Math.round(totDir2/hCnt2) : 0;
+                var avgDir2 = hCnt2>0 ? Math.round((Math.atan2(sumSin2, sumCos2)*180/Math.PI + 360)%360) : 0;
 
                 var dd2      = new Date(hourly2.time[dStart]);
                 var dayName2 = dd2.toLocaleDateString('fr-FR',{weekday:'long'}).toUpperCase();
@@ -7903,7 +7910,6 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
 
                 var wcode2 = hourly2.weathercode[dRep]!==null ? hourly2.weathercode[dRep] : 0;
                 var picto2 = getPictoFile(wcode2, dRep, hourly2);
-                var lbl2   = getPictoLabel(wcode2, dRep, hourly2);
 
                 var colIdx2 = (d-1)%cols, rowIdx2 = Math.floor((d-1)/cols);
                 var bR2 = colIdx2===cols-1 ? 'none' : '1px solid #b8d4e8';
@@ -7914,8 +7920,7 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
                         '<div style="box-sizing:border-box;padding:8px 22px;display:flex;align-items:center;' +
                         'justify-content:space-between;border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
                         '<div style="flex:1.1;display:flex;flex-direction:column;gap:4px;">' +
-                        '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;">' + dateHdr2 + '</div>' +
-                        '<div style="font-size:' + pxLabel + ';font-weight:700;color:#666;text-transform:uppercase;">' + lbl2 + '</div></div>' +
+                        '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;">' + dateHdr2 + '</div></div>' +
                         '<div style="width:115px;display:flex;align-items:center;justify-content:center;">' +
                         '<img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
                         '<div style="flex:1.3;display:flex;align-items:center;justify-content:flex-end;gap:16px;">' +
@@ -7924,22 +7929,21 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:3px;font-weight:800;color:' + gustCol + ';">' +
                         '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
-                        '<span>' + gustVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div></div>';
+                        '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div></div>';
                 } else if (is7days && !isTikTok) {
                     gridHtml +=
                         '<div style="box-sizing:border-box;padding:18px 8px 14px;text-align:center;' +
                         'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
                         'border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
                         '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;letter-spacing:0.3px;">' + dateHdr2 + '</div>' +
-                        '<div><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
-                        '<div style="font-size:' + pxLabel + ';font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.3px;">' + lbl2 + '</div>' +
+                        '<div style="margin:8px 0;"><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
                         '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;justify-content:center;gap:3px;">' +
                         '<span style="color:#1d70b8;">' + minT + '°</span>' +
                         '<span style="color:#ccc;font-weight:300;font-size:' + (parseInt(pxTemp)-10) + 'px;">/</span>' +
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="font-size:' + pxWind + ';display:flex;align-items:center;justify-content:center;gap:3px;font-weight:800;color:' + gustCol + ';">' +
                         '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
-                        '<span>' + gustVal + '</span>' +
+                        '<span>' + windDispVal + '</span>' +
                         '<span style="font-size:11px;font-weight:500;">km/h</span></div>' +
                         '</div>';
                 } else {
@@ -7949,15 +7953,14 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
                         'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
                         'border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
                         '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;letter-spacing:0.3px;">' + dateHdr2 + '</div>' +
-                        '<div><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
-                        '<div style="font-size:' + pxLabel + ';font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.2px;">' + lbl2 + '</div>' +
+                        '<div style="margin:4px 0;"><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
                         '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;gap:2px;">' +
                         '<span style="color:#1d70b8;">' + minT + '°</span>' +
                         '<span style="color:#ccc;font-weight:300;">/</span>' +
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:2px;font-weight:800;color:' + gustCol + ';">' +
                         '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
-                        '<span>' + gustVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div>';
+                        '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div>';
                 }
             }
             gridHtml += '</div>';
@@ -7973,24 +7976,24 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
                     '<div style="background:#fff;border:2px solid #3498db;padding:6px 14px;border-radius:8px;font-size:12px;color:#333;display:flex;gap:12px;font-weight:700;">' +
                     '<span>☀️ <b>' + sunrise2 + '</b></span>' +
                     '<span>🌙 <b>' + sunset2 + '</b></span>' +
-                    '<span>🕒 <b>' + dH2 + 'h' + dM2 + 'min</b></span></div>' +
-                    '<div style="font-size:12px;font-weight:900;color:#1a2a3a;text-transform:uppercase;margin-top:9px;letter-spacing:0.5px;">APERÇU DES PRÉVISIONS (J+1 À J+' + days + ')</div>' +
-                    '</div>';
+                    '</div></div>';
             } else {
                 headerHtml2 =
-                    '<div style="display:flex;justify-content:space-between;align-items:center;' +
-                    'border-bottom:2px solid #3498db;padding-bottom:12px;margin-bottom:10px;width:100%;">' +
+                    '<div style="display:flex;align-items:center;justify-content:space-between;' +
+                    'border-bottom:2px solid #3498db;padding-bottom:10px;margin-bottom:10px;width:100%;">' +
                     '<div style="display:flex;align-items:center;gap:14px;">' +
                     '<img src="logo meteo climat pro 3.png" style="height:55px;width:auto;">' +
-                    '<div>' +
-                    '<h1 style="font-weight:900;color:#1a2a3a;font-size:22px;margin:0;letter-spacing:0.3px;">MÉTÉO ' + cityName.toUpperCase() + '</h1>' +
-                    '<p style="margin:2px 0 0;color:#3498db;font-weight:700;text-transform:uppercase;font-size:12px;letter-spacing:0.4px;">' + dateStr2.toUpperCase() + '</p>' +
-                    '</div></div>' +
-                    '<div style="background:#f8fafc;border:1.5px solid #3498db;padding:8px 12px;border-radius:8px;font-size:11.5px;color:#2c3e50;font-weight:700;line-height:1.7;text-align:right;">' +
-                    '☀️ Lever : <b>' + sunrise2 + '</b><br>' +
-                    '🌙 Coucher : <b>' + sunset2 + '</b><br>' +
-                    '🕒 Durée : <b>' + dH2 + 'h ' + dM2 + 'min</b>' +
-                    '</div></div>' +
+                    '<div><h1 style="font-weight:900;color:#1a2a3a;font-size:24px;margin:0;letter-spacing:0.3px;">MÉTÉO ' + cityName.toUpperCase() + '</h1>' +
+                    '<p style="margin:2px 0 0;color:#3498db;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.5px;">' + dateStr2.toUpperCase() + '</p></div></div>' +
+                    '<div style="background:#fff;border:2px solid #3498db;padding:6px 14px;border-radius:8px;font-size:12px;color:#333;display:flex;gap:12px;font-weight:700;">' +
+                    '<span>☀️ <b>' + sunrise2 + '</b></span>' +
+                    '<span>🌙 <b>' + sunset2 + '</b></span>' +
+                    '</div></div>';
+            }
+
+            var subHeader2 = '';
+            if (isTikTok) {
+                subHeader2 =
                     '<div style="font-size:13px;font-weight:900;color:#1a2a3a;text-transform:uppercase;margin-bottom:8px;letter-spacing:0.5px;">' +
                     'APERÇU DES PRÉVISIONS (J+1 À J+' + days + ')</div>';
             }
@@ -7998,9 +8001,9 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
             var footerHtml2 =
                 '<div style="text-align:center;color:#7f8c8d;font-size:10.5px;border-top:1px solid #dce3ea;' +
                 'padding-top:9px;margin-top:6px;font-weight:600;letter-spacing:0.3px;">' +
-                'Données Open-Meteo • © MÉTÉO-CLIMAT PRO</div>';
+                'Prévisions Météo-France • © MÉTÉO-CLIMAT PRO</div>';
 
-            exportContainer.innerHTML = headerHtml2 + gridHtml + footerHtml2;
+            exportContainer.innerHTML = headerHtml2 + subHeader2 + gridHtml + footerHtml2;
             document.body.appendChild(exportContainer);
 
             // Attente maximale 200ms pour rendu DOM
@@ -8030,213 +8033,7 @@ var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
             }
         }
 
-
-        async function exportCommuneInfographic(format, days) {
-            days = days || 14;
-            if (!currentCityData || !window.lastCommuneData) {
-                alert("Veuillez d'abord rechercher une commune.");
-                return;
-            }
-            const cityName = currentCityData.nom;
-            document.getElementById('loading').style.display = 'flex';
-            document.getElementById('loading-text').innerText = 'GÉNÉRATION ' + format.toUpperCase() + ' ' + days + 'J...';
-
-            const isTikTok  = format === 'tiktok';
-            const is7days   = days === 7;
-            const width     = isTikTok ? 720  : 1280;
-            const height    = isTikTok ? 1280 : 720;
-
-            var gridH;
-            if      (isTikTok && is7days) gridH = 1000;
-            else if (isTikTok)            gridH = 920;
-            else if (is7days)             gridH = 300;
-            else                          gridH = 540;
-
-var pxPicto, pxTemp, pxDate, pxLabel, pxWind;
-            if      (is7days && isTikTok)  { pxPicto='100px'; pxTemp='36px'; pxDate='20px'; pxLabel='13px'; pxWind='20px'; }
-            else if (is7days)              { pxPicto='90px';  pxTemp='26px'; pxDate='14px'; pxLabel='11px'; pxWind='16px'; }
-            else if (isTikTok)             { pxPicto='58px';  pxTemp='20px'; pxDate='12px'; pxLabel='9px';  pxWind='14px'; }
-            else                           { pxPicto='70px';  pxTemp='22px'; pxDate='13px'; pxLabel='10px'; pxWind='15px'; }
-
-            var exportContainer = document.createElement('div');
-            exportContainer.style.cssText =
-                'position:fixed;left:0;top:0;z-index:99999;' +
-                'width:' + width + 'px;height:' + height + 'px;' +
-                'background:' + (isTikTok ? 'linear-gradient(160deg,#f0f6fc,#e8f0f9)' : '#ffffff') + ';' +
-                'padding:' + (isTikTok ? '28px 20px' : '20px 26px') + ';' +
-                'box-sizing:border-box;display:flex;flex-direction:column;' +
-                'justify-content:space-between;font-family:Outfit,sans-serif;overflow:hidden;';
-
-            var hourly2   = window.lastCommuneData.hourly;
-            var sunrise2  = new Date(window.lastCommuneData.daily.sunrise[0]).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-            var sunset2   = new Date(window.lastCommuneData.daily.sunset[0]).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-            var durMin2   = (new Date(window.lastCommuneData.daily.sunset[0]) - new Date(window.lastCommuneData.daily.sunrise[0])) / 60000;
-            var dH2       = Math.floor(durMin2/60), dM2 = Math.round(durMin2%60);
-            var now2      = new Date();
-            var dateStr2  = now2.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-            var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 2 : 7);
-            var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 7 : 2);
-
-            var gridHtml =
-                '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);' +
-                'grid-template-rows:repeat(' + rows + ',1fr);' +
-                'border:2px solid #1a2a3a;border-radius:12px;overflow:hidden;' +
-                'background:#fff;width:100%;height:' + gridH + 'px;box-sizing:border-box;">';
-
-            for (var d = 1; d <= days; d++) {
-                var dStart = d * 24, dRep = d * 24 + 13;
-                var minT=Infinity, maxT=-Infinity, maxGust2=0, totDir2=0, hCnt2=0;
-                for (var hh=0; hh<24; hh++) {
-                    var idx2 = dStart + hh;
-                    if (idx2 < hourly2.time.length) {
-                        var t2=hourly2.temperature_2m[idx2], g2=hourly2.wind_gusts_10m[idx2], dir2=hourly2.winddirection_10m[idx2];
-                        if (t2!==null && t2<minT) minT=t2;
-                        if (t2!==null && t2>maxT) maxT=t2;
-                        if (g2!==null && g2>maxGust2) maxGust2=g2;
-                        if (dir2!==null) { totDir2+=dir2; hCnt2++; }
-                    }
-                }
-                minT=Math.round(minT); maxT=Math.round(maxT);
-                var gustVal = Math.round(maxGust2/5)*5;
-                var gustCol = gustVal>50 ? '#d32f2f' : (gustVal>35 ? '#e65100' : '#1a2a3a');
-                var avgDir2  = hCnt2>0 ? Math.round(totDir2/hCnt2) : 0;
-
-                var dd2      = new Date(hourly2.time[dStart]);
-                var dayName2 = dd2.toLocaleDateString('fr-FR',{weekday:'long'}).toUpperCase();
-                var dayNum2  = String(dd2.getDate()).padStart(2,'0');
-                var dateHdr2 = dayName2 + ' ' + dayNum2;
-
-                var wcode2 = hourly2.weathercode[dRep]!==null ? hourly2.weathercode[dRep] : 0;
-                var picto2 = getPictoFile(wcode2, dRep, hourly2);
-                var lbl2   = getPictoLabel(wcode2, dRep, hourly2);
-
-                var colIdx2 = (d-1)%cols, rowIdx2 = Math.floor((d-1)/cols);
-                var bR2 = colIdx2===cols-1 ? 'none' : '1px solid #b8d4e8';
-                var bB2 = rowIdx2===rows-1 ? 'none' : '1px solid #b8d4e8';
-
-                if (is7days && isTikTok) {
-                    gridHtml +=
-                        '<div style="box-sizing:border-box;padding:8px 22px;display:flex;align-items:center;' +
-                        'justify-content:space-between;border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
-                        '<div style="flex:1.1;display:flex;flex-direction:column;gap:4px;">' +
-                        '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;">' + dateHdr2 + '</div>' +
-                        '<div style="font-size:' + pxLabel + ';font-weight:700;color:#666;text-transform:uppercase;">' + lbl2 + '</div></div>' +
-                        '<div style="width:115px;display:flex;align-items:center;justify-content:center;">' +
-                        '<img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
-                        '<div style="flex:1.3;display:flex;align-items:center;justify-content:flex-end;gap:16px;">' +
-                        '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;gap:4px;">' +
-                        '<span style="color:#1d70b8;">' + minT + '°</span><span style="color:#ccc;font-weight:300;">/</span>' +
-                        '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
-                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:3px;font-weight:800;color:' + gustCol + ';">' +
-                        '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
-                        '<span>' + gustVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div></div>';
-                } else if (is7days && !isTikTok) {
-                    gridHtml +=
-                        '<div style="box-sizing:border-box;padding:18px 8px 14px;text-align:center;' +
-                        'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
-                        'border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
-                        '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;letter-spacing:0.3px;">' + dateHdr2 + '</div>' +
-                        '<div><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
-                        '<div style="font-size:' + pxLabel + ';font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.3px;">' + lbl2 + '</div>' +
-                        '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;justify-content:center;gap:3px;">' +
-                        '<span style="color:#1d70b8;">' + minT + '°</span>' +
-                        '<span style="color:#ccc;font-weight:300;font-size:' + (parseInt(pxTemp)-10) + 'px;">/</span>' +
-                        '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
-                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;justify-content:center;gap:3px;font-weight:800;color:' + gustCol + ';">' +
-                        '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
-                        '<span>' + gustVal + '</span>' +
-                        '<span style="font-size:11px;font-weight:500;">km/h</span></div>' +
-                        '</div>';
-                } else {
-                    var cPad2 = isTikTok ? '10px 5px' : '10px 5px 8px';
-                    gridHtml +=
-                        '<div style="box-sizing:border-box;padding:' + cPad2 + ';text-align:center;' +
-                        'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
-                        'border-right:' + bR2 + ';border-bottom:' + bB2 + ';background:#fff;">' +
-                        '<div style="font-size:' + pxDate + ';font-weight:800;color:#0066cc;text-transform:uppercase;letter-spacing:0.3px;">' + dateHdr2 + '</div>' +
-                        '<div><img src="pictogramme/' + picto2 + '" style="width:' + pxPicto + ';height:' + pxPicto + ';object-fit:contain;"></div>' +
-                        '<div style="font-size:' + pxLabel + ';font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.2px;">' + lbl2 + '</div>' +
-                        '<div style="font-size:' + pxTemp + ';font-weight:900;display:flex;align-items:center;gap:2px;">' +
-                        '<span style="color:#1d70b8;">' + minT + '°</span>' +
-                        '<span style="color:#ccc;font-weight:300;">/</span>' +
-                        '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
-                        '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:2px;font-weight:800;color:' + gustCol + ';">' +
-                        '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
-                        '<span>' + gustVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div></div>';
-                }
-            }
-            gridHtml += '</div>';
-
-            var headerHtml2;
-            if (isTikTok) {
-                headerHtml2 =
-                    '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;' +
-                    'border-bottom:2px solid #3498db;padding-bottom:12px;margin-bottom:10px;width:100%;">' +
-                    '<img src="logo meteo climat pro 3.png" style="height:62px;width:auto;margin-bottom:10px;">' +
-                    '<h1 style="font-weight:900;color:#1a2a3a;font-size:27px;margin:0;letter-spacing:0.4px;">MÉTÉO ' + cityName.toUpperCase() + '</h1>' +
-                    '<p style="margin:4px 0 9px;color:#3498db;font-weight:700;text-transform:uppercase;font-size:12px;letter-spacing:0.5px;">' + dateStr2.toUpperCase() + '</p>' +
-                    '<div style="background:#fff;border:2px solid #3498db;padding:6px 14px;border-radius:8px;font-size:12px;color:#333;display:flex;gap:12px;font-weight:700;">' +
-                    '<span>☀️ <b>' + sunrise2 + '</b></span>' +
-                    '<span>🌙 <b>' + sunset2 + '</b></span>' +
-                    '<span>🕒 <b>' + dH2 + 'h' + dM2 + 'min</b></span></div>' +
-                    '<div style="font-size:12px;font-weight:900;color:#1a2a3a;text-transform:uppercase;margin-top:9px;letter-spacing:0.5px;">APERÇU DES PRÉVISIONS (J+1 À J+' + days + ')</div>' +
-                    '</div>';
-            } else {
-                headerHtml2 =
-                    '<div style="display:flex;justify-content:space-between;align-items:center;' +
-                    'border-bottom:2px solid #3498db;padding-bottom:12px;margin-bottom:10px;width:100%;">' +
-                    '<div style="display:flex;align-items:center;gap:14px;">' +
-                    '<img src="logo meteo climat pro 3.png" style="height:55px;width:auto;">' +
-                    '<div>' +
-                    '<h1 style="font-weight:900;color:#1a2a3a;font-size:22px;margin:0;letter-spacing:0.3px;">MÉTÉO ' + cityName.toUpperCase() + '</h1>' +
-                    '<p style="margin:2px 0 0;color:#3498db;font-weight:700;text-transform:uppercase;font-size:12px;letter-spacing:0.4px;">' + dateStr2.toUpperCase() + '</p>' +
-                    '</div></div>' +
-                    '<div style="background:#f8fafc;border:1.5px solid #3498db;padding:8px 12px;border-radius:8px;font-size:11.5px;color:#2c3e50;font-weight:700;line-height:1.7;text-align:right;">' +
-                    '☀️ Lever : <b>' + sunrise2 + '</b><br>' +
-                    '🌙 Coucher : <b>' + sunset2 + '</b><br>' +
-                    '🕒 Durée : <b>' + dH2 + 'h ' + dM2 + 'min</b>' +
-                    '</div></div>' +
-                    '<div style="font-size:13px;font-weight:900;color:#1a2a3a;text-transform:uppercase;margin-bottom:8px;letter-spacing:0.5px;">' +
-                    'APERÇU DES PRÉVISIONS (J+1 À J+' + days + ')</div>';
-            }
-
-            var footerHtml2 =
-                '<div style="text-align:center;color:#7f8c8d;font-size:10.5px;border-top:1px solid #dce3ea;' +
-                'padding-top:9px;margin-top:6px;font-weight:600;letter-spacing:0.3px;">' +
-                'Données Open-Meteo • © MÉTÉO-CLIMAT PRO</div>';
-
-            exportContainer.innerHTML = headerHtml2 + gridHtml + footerHtml2;
-            document.body.appendChild(exportContainer);
-
-            // Attente maximale 200ms pour rendu DOM
-            await new Promise(function(r) { setTimeout(r, 200); });
-
-            try {
-                var scale2 = isTikTok ? 2 : 1.5;
-                var canvas2 = await html2canvas(exportContainer, {
-                    scale: scale2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: isTikTok ? '#f0f6fc' : '#ffffff'
-                });
-                var link2 = document.createElement('a');
-                link2.download = 'Infographie_' + cityName + '_' + days + 'J_' + format.toUpperCase() + '.jpg';
-                link2.href = canvas2.toDataURL('image/jpeg', 0.95);
-                link2.click();
-            } catch(e) {
-                console.error(e);
-                alert('Erreur lors de l exportation ' + format.toUpperCase());
-            } finally {
-                if (document.body.contains(exportContainer)) {
-                    document.body.removeChild(exportContainer);
-                }
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('loading-text').innerText = 'CHARGEMENT DES DONNÉES...';
-            }
-        }
-
-async function exportCommuneJPG() {
+        async function exportCommuneJPG() {
             if (!currentCityData) return;
             const cityName = currentCityData.nom;
             const content = document.getElementById('forecast-content');
