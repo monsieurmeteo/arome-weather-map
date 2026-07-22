@@ -7789,7 +7789,7 @@ function parsePicto(s) {
                     const dStart = d * 24, dRep = d * 24 + 13;
                     if (dStart >= data.hourly.time.length) break;
 
-                    let minT = Infinity, maxT = -Infinity, maxG = 0, totSpd = 0, sumSin = 0, sumCos = 0, cnt = 0;
+                    let minT = Infinity, maxT = -Infinity, maxG = 0, maxW = 0, maxWDir = 0;
                     for (let h = 0; h < 24; h++) {
                         const idx = dStart + h;
                         if (idx < data.hourly.time.length) {
@@ -7800,18 +7800,15 @@ function parsePicto(s) {
                             if (t !== null && t < minT) minT = t;
                             if (t !== null && t > maxT) maxT = t;
                             if (g !== null && g > maxG) maxG = g;
-                            if (w !== null) { totSpd += w; }
-                            if (dir !== null) {
-                                const rad = dir * Math.PI / 180;
-                                sumSin += Math.sin(rad);
-                                sumCos += Math.cos(rad);
-                                cnt++;
+                            if (w !== null && w > maxW) {
+                                maxW = w;
+                                if (dir !== null) maxWDir = dir;
                             }
                         }
                     }
                     minT = Math.round(minT); maxT = Math.round(maxT); maxG = Math.round(maxG / 5) * 5;
-                    const avgW = cnt > 0 ? Math.round(totSpd / cnt) : 0;
-                    const avgD = cnt > 0 ? Math.round((Math.atan2(sumSin, sumCos) * 180 / Math.PI + 360) % 360) : 0;
+                    const avgW = Math.round(maxW);
+                    const avgD = Math.round(maxWDir);
 
                     const dDate = new Date(data.hourly.time[dStart]);
                     const dayName = dDate.toLocaleDateString('fr-FR', { weekday: 'long' }).toUpperCase();
@@ -7898,7 +7895,7 @@ function parsePicto(s) {
 
             for (var d = 1; d <= days; d++) {
                 var dStart = d * 24, dRep = d * 24 + 13;
-                var minT=Infinity, maxT=-Infinity, maxGust2=0, totSpd2=0, sumSin2=0, sumCos2=0, hCnt2=0;
+                var minT=Infinity, maxT=-Infinity, maxGust2=0, maxW2=0, maxWDir2=0;
                 for (var hh=0; hh<24; hh++) {
                     var idx2 = dStart + hh;
                     if (idx2 < hourly2.time.length) {
@@ -7906,21 +7903,18 @@ function parsePicto(s) {
                         if (t2!==null && t2<minT) minT=t2;
                         if (t2!==null && t2>maxT) maxT=t2;
                         if (g2!==null && g2>maxGust2) maxGust2=g2;
-                        if (w2!==null) { totSpd2 += w2; }
-                        if (dir2!==null) {
-                            var rad2 = dir2 * Math.PI / 180;
-                            sumSin2 += Math.sin(rad2);
-                            sumCos2 += Math.cos(rad2);
-                            hCnt2++;
+                        if (w2!==null && w2>maxW2) {
+                            maxW2 = w2;
+                            if (dir2!==null) maxWDir2 = dir2;
                         }
                     }
                 }
                 minT=Math.round(minT); maxT=Math.round(maxT);
-                var avgW2 = hCnt2>0 ? Math.round(totSpd2/hCnt2) : 0;
+                var avgW2 = Math.round(maxW2);
                 var gustVal = Math.round(maxGust2/5)*5;
                 var windDispVal = gustVal > 35 ? gustVal : avgW2;
                 var gustCol = gustVal>50 ? '#d32f2f' : (gustVal>35 ? '#e65100' : '#1a2a3a');
-                var avgDir2 = hCnt2>0 ? Math.round((Math.atan2(sumSin2, sumCos2)*180/Math.PI + 360)%360) : 0;
+                var avgDir2 = Math.round(maxWDir2);
 
                 var dd2      = new Date(hourly2.time[dStart]);
                 var dayName2 = dd2.toLocaleDateString('fr-FR',{weekday:'long'}).toUpperCase();
