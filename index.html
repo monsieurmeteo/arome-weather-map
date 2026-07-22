@@ -7812,9 +7812,10 @@ function parsePicto(s) {
                     const avgD = Math.round(maxWDir);
 
                     const dDate = new Date(data.hourly.time[dStart]);
-                    const dayName = d === 0 ? "AUJOURD'HUI" : dDate.toLocaleDateString('fr-FR', { weekday: 'long' }).toUpperCase();
+                    const dayName = d === 0 ? "AUJOURD'HUI" : dDate.toLocaleDateString('fr-FR', { weekday: 'short' }).toUpperCase().replace('.', '');
                     const dayNum = String(dDate.getDate()).padStart(2, '0');
-                    const dateHdr = dayName + ' ' + dayNum;
+                    const monthName = dDate.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase().replace('.', '');
+                    const dateHdr = (d === 0 ? "AUJOURD'HUI " : dayName + ' ') + dayNum + ' ' + monthName;
 
                     const wCode = data.hourly.weathercode[dRep] !== null ? data.hourly.weathercode[dRep] : 0;
                     const picto = getPictoFile(wCode, dRep, data.hourly);
@@ -7928,9 +7929,10 @@ function parsePicto(s) {
                 var gBadge2 = '<div style="background:' + badgeBg2 + '; color:' + badgeTxt2 + '; font-size:' + pxBadge + '; font-weight:900; padding:3px 7px; border-radius:5px; margin-top:3px; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Raf. ' + gustVal + ' km/h</div>';
 
                 var dd2      = new Date(hourly2.time[dStart]);
-                var dayName2 = d === 0 ? "AUJOURD'HUI" : dd2.toLocaleDateString('fr-FR',{weekday:'long'}).toUpperCase();
+                var dayName2 = d === 0 ? "AUJOURD'HUI" : dd2.toLocaleDateString('fr-FR',{weekday:'short'}).toUpperCase().replace('.','');
                 var dayNum2  = String(dd2.getDate()).padStart(2,'0');
-                var dateHdr2 = dayName2 + ' ' + dayNum2;
+                var month2   = dd2.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase().replace('.','');
+                var dateHdr2 = (d === 0 ? "AUJOURD'HUI " : dayName2 + ' ') + dayNum2 + ' ' + month2;
 
                 var wcode2 = hourly2.weathercode[dRep]!==null ? hourly2.weathercode[dRep] : 0;
                 var picto2 = getPictoFile(wcode2, dRep, hourly2);
