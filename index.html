@@ -7866,17 +7866,17 @@ function parsePicto(s) {
 
             var gridH;
             if      (isTikTok && is7days) gridH = 1000;
-            else if (isTikTok && !is7days) gridH = 1000;
+            else if (isTikTok && !is7days) gridH = 1040;
             else if (!isTikTok && is7days) gridH = 490;
             else                           gridH = 490;
 
             var cols = is7days ? (isTikTok ? 1 : 7) : (isTikTok ? 2 : 7);
             var rows = is7days ? (isTikTok ? 7 : 1) : (isTikTok ? 7 : 2);
 
-            var pxDate  = is7days ? (isTikTok ? '20px' : '16px') : (isTikTok ? '13px' : '14px');
-            var pxPicto = is7days ? (isTikTok ? '82px' : '80px') : (isTikTok ? '46px' : '56px');
-            var pxTemp  = is7days ? (isTikTok ? '28px' : '25px') : (isTikTok ? '17px' : '18px');
-            var pxWind  = is7days ? (isTikTok ? '18px' : '15px') : (isTikTok ? '12px' : '13px');
+            var pxDate  = is7days ? (isTikTok ? '20px' : '16px') : (isTikTok ? '12px' : '14px');
+            var pxPicto = is7days ? (isTikTok ? '82px' : '80px') : (isTikTok ? '38px' : '56px');
+            var pxTemp  = is7days ? (isTikTok ? '28px' : '25px') : (isTikTok ? '16px' : '18px');
+            var pxWind  = is7days ? (isTikTok ? '18px' : '15px') : (isTikTok ? '11px' : '13px');
 
             var exportContainer = document.createElement('div');
             exportContainer.style.cssText =
@@ -7977,7 +7977,7 @@ function parsePicto(s) {
                         gBadge2 +
                         '</div>';
                 } else {
-                    var cPad2 = isTikTok ? '4px 3px' : '8px 4px 6px';
+                    var cPad2 = (isTikTok && !is7days) ? '2px 2px' : (isTikTok ? '4px 3px' : '8px 4px 6px');
                     gridHtml +=
                         '<div style="box-sizing:border-box;padding:' + cPad2 + ';text-align:center;' +
                         'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
