@@ -1,3 +1,6 @@
+import sys
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 import os
 import re
 import json
@@ -341,13 +344,17 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None, days=8):
                 pass
                 
         if match_item:
-            hourly_temp.append(match_item.get('T', 15))
-            hourly_wc.append(map_mf_icon(match_item.get('weather_icon', 'p1j')))
-            hourly_ws.append(match_item.get('wind_speed', 0))
-            # ponytail: gust overridden by Open-Meteo below if available
-            hourly_wg.append(match_item.get('wind_speed_gust', 0))
-            hourly_precip.append(match_item.get('rain_1h', 0) or 0)
-            hourly_clouds.append(match_item.get('total_cloud_cover', 0) or 0)
+            t_val = match_item.get('T')
+            hourly_temp.append(t_val if t_val is not None else 15.0)
+            hourly_wc.append(map_mf_icon(match_item.get('weather_icon') or 'p1j'))
+            ws_val = match_item.get('wind_speed')
+            hourly_ws.append(ws_val if ws_val is not None else 0)
+            wg_val = match_item.get('wind_speed_gust')
+            hourly_wg.append(wg_val if wg_val is not None else 0)
+            pr_val = match_item.get('rain_1h')
+            hourly_precip.append(pr_val if pr_val is not None else 0)
+            cl_val = match_item.get('total_cloud_cover')
+            hourly_clouds.append(cl_val if cl_val is not None else 0)
         else:
             day_idx = h // 24
             hour_of_day = h % 24
@@ -357,9 +364,13 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None, days=8):
             if lookup_idx < len(daily_forecasts):
                 daily_item = daily_forecasts[lookup_idx]
                 
-            t_min = daily_item.get('T_min', 12) if daily_item else 12
-            t_max = daily_item.get('T_max', 22) if daily_item else 22
-            daily_icon = daily_item.get('daily_weather_icon', 'p1j') if daily_item else 'p1j'
+            t_min = daily_item.get('T_min') if daily_item else None
+            if t_min is None:
+                t_min = 12.0
+            t_max = daily_item.get('T_max') if daily_item else None
+            if t_max is None:
+                t_max = 22.0
+            daily_icon = (daily_item.get('daily_weather_icon') or 'p1j') if daily_item else 'p1j'
             
             if hour_of_day <= 6:
                 est_temp = t_min
@@ -370,7 +381,7 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None, days=8):
                 pct = (hour_of_day - 15) / 9
                 est_temp = t_max - (t_max - t_min) * pct
                 
-            hourly_temp.append(round(est_temp, 1))
+            hourly_temp.append(round(est_temp, 1) if est_temp is not None else 15.0)
             hourly_wc.append(map_mf_icon(daily_icon))
             hourly_ws.append(5)
             hourly_wg.append(0)  # will be replaced by Open-Meteo below
@@ -396,22 +407,34 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None, days=8):
                 break
                 
         if match_daily:
-            daily_min_temp.append(match_daily.get('T_min', 10))
-            daily_max_temp.append(match_daily.get('T_max', 20))
+            t_min_val = match_daily.get('T_min')
+            t_max_val = match_daily.get('T_max')
             
+            if t_min_val is not None:
+                daily_min_temp.append(t_min_val)
+            else:
+                day_slice = [t for t in hourly_temp[d*24 : (d+1)*24] if t is not None]
+                daily_min_temp.append(min(day_slice) if day_slice else 10)
+                
+            if t_max_val is not None:
+                daily_max_temp.append(t_max_val)
+            else:
+                day_slice = [t for t in hourly_temp[d*24 : (d+1)*24] if t is not None]
+                daily_max_temp.append(max(day_slice) if day_slice else 20)
+                
             sunrise_str = match_daily.get('sunrise_time')
-            if sunrise_str:
+            if sunrise_str and isinstance(sunrise_str, str):
                 daily_sunrise.append(utc_to_paris_local(sunrise_str.replace('Z', '')))
             else:
                 daily_sunrise.append(f"{date_str}T06:00:00")
                 
             sunset_str = match_daily.get('sunset_time')
-            if sunset_str:
+            if sunset_str and isinstance(sunset_str, str):
                 daily_sunset.append(utc_to_paris_local(sunset_str.replace('Z', '')))
             else:
                 daily_sunset.append(f"{date_str}T21:00:00")
         else:
-            day_slice = hourly_temp[d*24 : (d+1)*24]
+            day_slice = [t for t in hourly_temp[d*24 : (d+1)*24] if t is not None]
             daily_min_temp.append(min(day_slice) if day_slice else 10)
             daily_max_temp.append(max(day_slice) if day_slice else 20)
             daily_sunrise.append(f"{date_str}T06:00:00")
