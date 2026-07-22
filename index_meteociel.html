@@ -3,12 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <title>Météociel — Observations Climatologiques</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Roboto+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Outfit:wght@600;700;800;900&family=Roboto+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
+:root {
+  /* Arrière-plan & Voile Studio Monsieur Météo (Voile semi-transparent à 48% — Ciel coucher de soleil visible) */
+  --bg-dark-veil: rgba(8, 14, 30, 0.20);
+  --panel-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(30, 41, 59, 0.80) 100%);
+  --panel-border: 1px solid rgba(255, 255, 255, 0.14);
+  --panel-radius: 18px;
+  --panel-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+
+  /* Accents par phénomène météo (Équilibre Broadcast TV) */
+  --accent-hot: #f43f5e;
+  --accent-cold: #38bdf8;
+  --accent-rain: #38bdf8;
+  --accent-wind: #fbbf24;
+  --accent-trophy: #f59e0b;
+  --accent-gold: #ffcc00;
+
+  /* Typographie Infographie TV — Sans-Serif Condensée Bold Broadcast */
+  --font-family: 'Roboto Condensed', 'Oswald', 'Arial Narrow', sans-serif;
+}
+
 * { margin:0; padding:0; box-sizing:border-box; }
-body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#fff; overflow:hidden; background-color:#000; }
+body, html { width:100%; height:100%; font-family:var(--font-family); color:#fff; overflow:hidden; background-color:#000; }
 
 #capture-area {
   position:relative;
@@ -16,27 +36,23 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   background-color:#000;
 }
 
-/* Background image wrapper — +15% visibilité carte, contours nets */
+/* Background image wrapper — Ciel, nuages et couleurs coucher de soleil parfaitement visibles */
 .bg-wrapper {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
   z-index: 0;
   background-size: cover;
   background-position: center;
-  filter: contrast(1.48) brightness(1.25) saturate(1.20); /* +15% — nets mais discrets */
+  filter: blur(5px) brightness(1.0);
+  transform: scale(1.03);
 }
-/* Records: France encore plus visible pour remplir visuellement le fond */
-.theme-trophy .bg-wrapper {
-  filter: contrast(1.65) brightness(1.42) saturate(1.30);
-}
-/* Overlay to tone down the yellow glow on the right */
+/* Overlay bleu-nuit studio (RGB 8, 14, 30 à 48% d'opacité — Identité Monsieur Météo) */
 .bg-overlay {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
   z-index: 1;
   pointer-events: none;
-  background: radial-gradient(circle at right 300px center, rgba(8,22,48,0.06) 0%, rgba(8,22,48,0.22) 50%, rgba(8,22,48,0.3) 100%),
-              linear-gradient(90deg, rgba(8,22,48,0) 50%, rgba(8,22,48,0.26) 100%);
+  background: var(--bg-dark-veil);
 }
 
 .value-inline {
@@ -62,224 +78,281 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   height: 1920px;
 }
 
-/* ── HEADER ── */
+/* ── HEADER BROADCAST TV ── */
 .header-container {
   position:absolute;
   display:flex;
   flex-direction:column;
   align-items:flex-start;
+  z-index: 10;
 }
 .landscape .header-container {
-  top:95px; left:140px; gap:16px; width:600px;
+  top:60px; left:65px; gap:12px; width:680px;
 }
 .portrait .header-container {
-  top:70px; left:80px; gap:12px; width:calc(100% - 160px);
+  top:60px; left:50px; gap:12px; width:calc(100% - 100px);
 }
 
-/* Logo — drop-shadow discret pour l'intégrer au design sombre */
+/* Logo Météo-Climat Pro — Positionnement fixe & lisible */
 .logo-meteo {
   display:block;
   object-fit:contain;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(0,120,255,0.18));
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
 }
 .landscape .logo-meteo {
-  height:75px;
+  height:115px;
 }
 .portrait .logo-meteo {
-  height:75px;
+  height:105px;
 }
 
 .header-text-group {
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:6px;
   position: relative;
 }
+/* Titres principaux sur 2 lignes TV Broadcast (Interligne serré 0.98, pas de débordement) */
 .header-title {
-  font-size:80px; font-weight:900; letter-spacing:-1.5px; line-height:1.05; text-transform:uppercase;
-  text-shadow:0 3px 8px rgba(0,0,0,0.6);
+  font-size:76px; font-weight:900; letter-spacing:-0.5px; line-height:0.98; text-transform:uppercase;
+  text-shadow:0 4px 16px rgba(0,0,0,0.9);
+  color: #ffffff;
+  white-space: normal;
+  max-width: 660px;
 }
-.portrait .header-title { font-size:65px; }
+.portrait .header-title { font-size:66px; line-height: 0.98; max-width: 100%; }
 
 .header-subtitle {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   width: 100%;
 }
 .subtitle-region {
-  font-size:42px; font-weight:900; color:#ff5a24; letter-spacing:0.5px; text-transform:uppercase;
+  font-size:42px; font-weight:800; color:#ff5a24; letter-spacing:0.5px; text-transform:uppercase;
   text-shadow:0 2px 5px rgba(0,0,0,0.5);
-  line-height: 1.1;
+  line-height: 1.08;
+  white-space: normal;
+  max-width: 660px;
 }
 .subtitle-date {
-  font-size:26px; font-weight:700; color:rgba(255,255,255,0.80); letter-spacing:0.5px; text-transform:uppercase;
-  text-shadow:0 2px 4px rgba(0,0,0,0.5);
-  line-height: 1.1;
+  display: inline-block;
+  font-size: 38px;
+  font-weight: 900;
+  color: #ffcc00;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: rgba(10, 15, 30, 0.88);
+  border: 2px solid rgba(255, 204, 0, 0.75);
+  border-radius: 8px;
+  padding: 5px 18px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  margin-top: 4px;
+  width: fit-content;
+  max-width: 640px;
+  white-space: nowrap;
 }
-.portrait .subtitle-region { font-size:32px; }
-.portrait .subtitle-date { font-size:22px; }
+.portrait .subtitle-date {
+  display: none !important;
+}
+.portrait-date-badge {
+  display: none !important;
+}
+.portrait .portrait-date-badge {
+  display: block !important;
+  position: absolute;
+  top: 60px;
+  right: 45px;
+  font-size: 40px;
+  font-weight: 900;
+  color: #ffcc00;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: rgba(10, 15, 30, 0.92);
+  border: 3px solid #ffcc00;
+  border-radius: 10px;
+  padding: 8px 24px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), inset 0 0 12px rgba(255, 204, 0, 0.25);
+  z-index: 30;
+  white-space: nowrap;
+  max-width: 480px;
+}
 
 .header-desc {
-  font-family: 'Outfit', sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.76);
-  margin-top: 5px;
+  font-family: var(--font-family);
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   line-height: 1.25;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.85);
 }
 .portrait .header-desc {
-  font-size: 18px;
+  font-size: 22px;
   margin-top: 4px;
 }
 
-/* ── HEADER DIVIDER LINE — lueur orange renforcée ── */
+/* ── HEADER DIVIDER LINE ── */
 .header-divider {
   height: 4px;
-  background: linear-gradient(90deg, rgba(255,90,36,0) 0%, rgba(255,90,36,1) 15%, rgba(255,90,36,1) 50%, rgba(255,90,36,0) 100%);
-  box-shadow: 0 0 20px rgba(255,90,36,1), 0 0 6px rgba(255,90,36,0.6), 0 0 40px rgba(255,90,36,0.3);
+  background: linear-gradient(90deg, rgba(255,90,36,0) 0%, rgba(255,90,36,1) 15%, #ffcc00 50%, rgba(255,204,0,0) 100%);
+  box-shadow: 0 0 15px rgba(255,90,36,0.8);
   margin-top: 14px;
   border-radius: 2px;
   width: 100%;
 }
-.landscape .header-divider { width: 500px; }
+.landscape .header-divider { width: 560px; }
 
-/* ── ROWS CONTAINER WRAPPER — effet verre (backdrop-blur derrière les panneaux) ── */
+/* ── ROWS CONTAINER WRAPPER — Tableau décalé nettement vers la gauche (width: 1080px paysage / 1000px portrait) ── */
 .rows-container-wrapper {
   position:absolute;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 32px;
+  z-index: 10;
 }
 .landscape .rows-container-wrapper {
-  top:110px; right:140px; width:950px;
+  top:85px; left:760px; width:1080px;
 }
 .portrait .rows-container-wrapper {
-  top:460px;
-  left: calc(50% + 22px);
+  top:490px;
+  left: 50%;
   transform: translateX(-50%);
-  width: 920px;
+  width: 1000px;
 }
 
-/* ── TABLE CONTAINER — effet verre + reflet lumineux premium ── */
+/* ── TABLE CONTAINER — Panneaux gris-bleuté ── */
 .table-container {
   width: 100%;
-  border-collapse: collapse;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 35%), /* reflet shimmer haut */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='transparent'/%3E%3Crect width='1' height='1' fill='rgba(255,255,255,0.015)'/%3E%3C/svg%3E"),
-    linear-gradient(135deg, rgba(8,22,48,0.88) 0%, rgba(5,13,30,0.92) 100%); /* légèrement plus transparent = glass */
-  border: 1.5px solid rgba(0, 150, 255, 0.52);
-  border-radius: 30px;
-  box-shadow: 0 32px 64px rgba(0,0,0,0.78), 0 0 40px rgba(0, 150, 255, 0.24), 0 8px 20px rgba(0,0,0,0.55);
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--panel-bg);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   overflow: hidden;
 }
 
 /* Empty state message */
 .empty-message {
-  font-size:26px; font-weight:700; text-align:center; padding:120px 0; color:rgba(255,255,255,0.4);
+  font-size:24px; font-weight:600; text-align:center; padding:100px 0; color:rgba(255,255,255,0.4);
 }
 
-/* Table rows — séparateurs épaissis, lisibles sur smartphone */
+/* Table rows — Séparateurs très discrets entre les rangs */
 .table-row {
-  border-bottom: 2px solid rgba(0, 150, 255, 0.44); /* 2px lisible sur mobile */
-  font-family:'Outfit', sans-serif;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font-family: var(--font-family);
+  transition: background-color 0.2s;
 }
 .table-row:last-child {
   border-bottom:none;
 }
-.landscape .table-row { height:78px; }
-.portrait .table-row { height:95px; }
-/* Pluies : 2 lignes dans la cellule station → lignes plus hautes */
+.landscape .table-row { height:88px; }
+.portrait .table-row { height:88px; }
 .theme-precip.landscape .table-row,
-.theme-rain.landscape .table-row { height:90px; }
+.theme-rain.landscape .table-row { height:88px; }
 .theme-precip.portrait .table-row,
-.theme-rain.portrait .table-row { height:108px; }
+.theme-rain.portrait .table-row { height:88px; }
 
 .table-row td {
   vertical-align:middle;
   padding: 0;
 }
 
-/* Rank Circle Badges - Reduced diameter by 10% */
+/* Rank Circle Badges — Infographie TV Imposante */
 .rank-badge-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.landscape .rank-badge-wrapper { padding-left: 26px; }
-.portrait .rank-badge-wrapper { padding-left: 20px; }
+.landscape .rank-badge-wrapper { padding-left: 20px; }
+.portrait .rank-badge-wrapper { padding-left: 18px; }
 
 .rank-badge {
-  width: 46px; /* -11.5% size reduction */
-  height: 46px;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Outfit', sans-serif;
-  font-size: 24px;
-  font-weight: 800;
+  font-family: var(--font-family);
+  font-size: 34px;
+  font-weight: 900;
   color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
-.portrait .rank-badge { width: 44px; height: 44px; font-size: 22px; }
+.portrait .rank-badge { width: 54px; height: 54px; font-size: 30px; }
 
 /* Dynamic Theme Colors for Rank Circle Badges */
 .rank-badge.rank-hot, .rank-badge.rank-sun {
-  background: linear-gradient(135deg, #e52b2b 0%, #ff5533 100%);
-  box-shadow: 0 0 12px rgba(229, 43, 43, 0.5);
+  background: linear-gradient(135deg, #f43f5e 0%, #ff5533 100%);
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.35);
 }
 .rank-badge.rank-cold, .rank-badge.rank-rain, .rank-badge.rank-wind {
-  background: linear-gradient(135deg, #0076a8 0%, #00b0f0 100%);
-  box-shadow: 0 0 12px rgba(0, 176, 240, 0.5);
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
 }
 .rank-badge.rank-trophy {
-  background: linear-gradient(135deg, #cc9900 0%, #ffcc00 100%);
-  box-shadow: 0 0 12px rgba(255, 204, 0, 0.5);
+  background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.35);
 }
 
 .station-name-container {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-left: 20px;
+  gap: 10px;
+  padding-left: 14px;
   width: 100%;
 }
 .station-name-text {
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 34px;
+  line-height: 1.05;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1;
+  min-width: 0;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.portrait .station-name-text {
+  font-size: 30px;
+}
+.st-line1 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-grow: 1;
-  min-width: 0;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
-.portrait .station-name-text {
-  font-size: 32px;
+.st-line2 {
+  font-size: 0.82em;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
 }
 .station-dept-text {
-  font-weight: 600;
-  font-size: 26px;
-  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+  font-size: 28px;
+  color: #e2e8f0;
   flex-shrink: 0;
 }
 .portrait .station-dept-text {
-  font-size: 24px;
+  font-size: 25px;
 }
 
-/* Record pill cartouche — +12% taille pour meilleure lisibilité écran TV */
+/* Record pill cartouche (+20% agrandi avec padding intérieur généreux) */
 .record-pill {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 19px; /* +12% vs 17px */
+  padding: 7px 18px;
+  border-radius: 8px;
+  font-size: 22px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -298,17 +371,16 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   text-shadow: 0 1px 3px rgba(0,0,0,0.6);
 }
 .former-record-text {
-  font-size: 17px; /* +6% vs 16px */
+  font-size: 16px;
   font-weight: 600;
   color: rgba(255,255,255,0.80);
   text-transform: none;
   letter-spacing: 0;
   display: block;
-  margin-top: 5px;
+  margin-top: 4px;
   text-shadow: 0 1px 2px rgba(0,0,0,0.7);
 }
-.portrait .former-record-text { font-size: 15px; }
-/* Legacy record-text kept for capsule view */
+.portrait .former-record-text { font-size: 14px; }
 .record-text {
   font-size:22px; font-weight:800; color:#ff5a24; text-transform:uppercase; letter-spacing:1px;
   text-shadow:0 1px 3px rgba(0,0,0,0.5);
@@ -317,33 +389,59 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 .portrait .record-text { font-size:20px; }
 .record-abs { color:#ffcc00; }
 
-/* Main value size — base 60px, overrides par param */
+/* Main value size — Reculé de ~30px du bord droit pour une respiration parfaite */
 .station-value {
-  font-size:60px; font-weight:900;
-  text-shadow:0 2px 4px rgba(0,0,0,0.5);
-  text-align:right;
+  font-size: 74px;
+  font-weight: 900;
+  font-family: var(--font-family);
+  text-shadow: 0 3px 10px rgba(0,0,0,0.6);
+  text-align: right;
   box-sizing: border-box;
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
+  white-space: nowrap;
 }
 .landscape .station-value {
-  padding-right:36px;
-  padding-left:36px;
-  border-left: 1.5px solid rgba(0, 150, 255, 0.35);
+  padding-right: 40px;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  min-width: 190px;
 }
 .portrait .station-value {
-  padding-right:24px;
+  padding-right: 36px;
+  font-size: 86px;
+  min-width: 190px;
 }
-/* Chaleur record : températures rouges +8% */
 .theme-tmax .station-value,
-.theme-hot .station-value { font-size: 65px; }
-/* Pluies diluviennes */
+.theme-hot .station-value { color: var(--accent-hot); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.theme-tmin .station-value,
+.theme-cold .station-value { color: var(--accent-cold); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
 .theme-precip .station-value,
-.theme-rain .station-value { font-size: 63px; }
-/* Rafales : plus de marge à droite */
-.theme-gust.landscape .station-value,
-.theme-wind.landscape .station-value { padding-right: 50px; }
+.theme-rain .station-value { color: var(--accent-rain); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.theme-gust .station-value,
+.theme-wind .station-value { color: var(--accent-wind); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.theme-trophy .station-value { color: var(--accent-gold); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+
+/* Units styling — Espacées de 8px des chiffres & alignement baseline */
+.val-unit {
+  font-size: 0.32em;
+  font-weight: 800;
+  margin-left: 8px;
+  color: inherit;
+  align-self: baseline;
+  opacity: 0.90;
+  text-transform: none;
+}
+.theme-tmax .station-value,
+.theme-hot .station-value { color: var(--accent-hot); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.theme-tmin .station-value,
+.theme-cold .station-value { color: var(--accent-cold); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.theme-precip .station-value,
+.theme-rain .station-value { color: var(--accent-rain); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.theme-gust .station-value,
+.theme-wind .station-value { color: var(--accent-wind); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.theme-trophy .station-value { color: var(--accent-gold); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
 
 /* Units styling */
 .val-unit {
@@ -485,15 +583,15 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 .bilan-grid {
   display: flex;
   flex-direction: row;
-  gap: 20px;
-  width: 1720px;
+  gap: 24px;
+  width: 1760px;
   box-sizing: border-box;
 }
 .landscape .rows-container-wrapper:has(.bilan-grid) {
-  top: 580px !important;
-  left: 100px !important;
+  top: 550px !important;
+  left: 80px !important;
   right: auto !important;
-  width: 1720px !important;
+  width: 1760px !important;
   background: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -517,22 +615,20 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
   width: 920px;
 }
 .bilan-card {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 40%),
-    linear-gradient(135deg, rgba(8,22,48,0.85) 0%, rgba(5,13,30,0.90) 100%);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1.5px solid rgba(0, 150, 255, 0.52);
-  border-radius: 20px;
-  box-shadow: 0 16px 36px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 20px rgba(0,150,255,0.1);
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
   position: relative;
   overflow: visible; /* Permet au badge record de dépasser en haut */
   box-sizing: border-box;
 }
 .landscape .bilan-card {
-  width: 25%;
-  height: 250px;
-  padding: 24px 20px;
+  width: 27.5%;
+  height: 285px;
+  padding: 28px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -540,12 +636,11 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 }
 .portrait .bilan-card {
   width: 100%;
-  height: 216px;
-  padding: 0 40px;
+  height: 255px;
+  padding: 0;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
 }
 .bilan-card::before {
   content: "";
@@ -613,24 +708,26 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 }
 .bilan-card-station {
   font-family: 'Outfit', sans-serif;
-  font-size: 30px; /* Agrandissement significatif */
+  font-size: 30px;
   font-weight: 700;
   color: rgba(255,255,255,0.85);
   text-transform: uppercase;
   max-width: 100%;
   width: 100%;
   text-align: center;
-  white-space: nowrap; /* Force une ligne unique */
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.15;
+  overflow: visible;
   display: block;
 }
 .portrait .bilan-card-station {
-  font-size: 36px;
+  font-size: 30px;
   max-width: 100%;
   width: 100%;
-  text-align: center;
-  color: rgba(255,255,255,0.65);
+  text-align: left;
+  color: rgba(255,255,255,0.85);
+  white-space: normal;
+  line-height: 1.15;
 }
 /* Classes station-len supprimees au profit de l'auto-fit JS purement dynamique */
 .bilan-card-value {
@@ -673,25 +770,34 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
 .table-row:hover .obs-date-peak {
   color: rgba(0, 234, 255, 0.85);
 }
-.landscape .zone-badge-right {
-  position: absolute;
-  top: 150px; /* abaisse pour s'aligner verticalement */
-  right: 140px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 110px; /* taille maximale de base augmentee */
+.zone-badge-right {
+  display: none !important;
+}
+.zone-badge-box {
+  display: inline-block;
+  color: #ff2a2a;
+  background: rgba(12, 10, 24, 0.88);
+  border: 3.5px solid #ff2a2a;
+  border-radius: 10px;
+  padding: 6px 22px;
+  font-family: 'Arial Narrow', Arial, sans-serif;
   font-weight: 900;
-  color: #ff5a24; /* Orange CNews */
-  text-transform: uppercase;
+  font-size: 44px;
   letter-spacing: 1.5px;
-  text-align: right;
-  line-height: 1.0;
-  text-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  z-index: 10;
-  max-width: 1000px; /* augmentee pour s'adapter aux grands formats sans retour a la ligne */
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), inset 0 0 12px rgba(255, 42, 42, 0.3);
+  margin-top: 8px;
+  margin-bottom: 8px;
+  width: fit-content;
+  max-width: 640px;
   white-space: nowrap;
 }
-.portrait .zone-badge-right {
-  display: none;
+.portrait .zone-badge-box {
+  font-size: 36px;
+  padding: 5px 18px;
+  border-width: 3px;
+  max-width: 100%;
 }
 </style>
 </head>
@@ -710,6 +816,7 @@ body, html { width:100%; height:100%; font-family:'Outfit',sans-serif; color:#ff
     </div>
   </div>
   <div id="zone-badge-right" class="zone-badge-right"></div>
+  <div id="portrait-date-badge" class="portrait-date-badge"></div>
 
   <div class="rows-container-wrapper" id="rows-container">
     <!-- Content (floating capsules or a table) will be dynamically injected here -->
@@ -796,6 +903,58 @@ function formatValueHTML(val, param) {
   return `<div class="value-inline"><span class="val-num">${numStr}</span><span class="val-unit">${unitStr}</span></div>`;
 }
 
+function formatStationNameHTML(rawName) {
+  if (!rawName) return "";
+  let n = rawName.trim();
+
+  // Découpage propre sur 2 lignes pour stations longues (sub-stations, lieux-dits ou grands noms)
+  if (n.includes(' – ')) {
+    const pts = n.split(' – ');
+    return `<span class="st-line1">${pts[0]}</span><span class="st-line2">– ${pts.slice(1).join(' – ')}</span>`;
+  }
+  if (n.includes(' - ')) {
+    const pts = n.split(' - ');
+    return `<span class="st-line1">${pts[0]}</span><span class="st-line2">- ${pts.slice(1).join(' - ')}</span>`;
+  }
+  if (n.length > 22) {
+    const words = n.split(' ');
+    if (words.length > 1) {
+      const mid = Math.ceil(words.length / 2);
+      return `<span class="st-line1">${words.slice(0, mid).join(' ')}</span><span class="st-line2">${words.slice(mid).join(' ')}</span>`;
+    }
+  }
+  return `<span class="st-line1">${n}</span>`;
+}
+
+function formatTitleHTML(rawTitle) {
+  if (!rawTitle) return "";
+  let t = rawTitle.toUpperCase().trim();
+  // Remplacement explicite sur 2 lignes pour habillage TV Broadcast pro
+  if (t === "TEMPÉRATURE MAXIMALE") return "TEMPÉRATURE<br/>MAXIMALE";
+  if (t === "TEMPÉRATURE MINIMALE") return "TEMPÉRATURE<br/>MINIMALE";
+  if (t === "CUMUL DE PRÉCIPITATIONS") return "CUMUL DE<br/>PRÉCIPITATIONS";
+  if (t === "RAFALES MAXIMALES") return "RAFALES<br/>MAXIMALES";
+  if (t === "BILAN DU JOUR") return "BILAN DU<br/>JOUR";
+  if (t === "RECORDS DE CHALEUR") return "RECORDS DE<br/>CHALEUR";
+  if (t === "RECORDS DE FROID") return "RECORDS DE<br/>FROID";
+  if (t === "RECORDS DE PLUIE") return "RECORDS DE<br/>PLUIE";
+  if (t === "RECORDS DE VENT") return "RECORDS DE<br/>VENT";
+  if (t === "BILAN DES RECORDS") return "BILAN DES<br/>RECORDS";
+  if (t === "RECORDS HISTORIQUES") return "RECORDS<br/>HISTORIQUES";
+  if (t === "AMPLITUDE THERMIQUE") return "AMPLITUDE<br/>THERMIQUE";
+  if (t === "TEMPÉRATURE MOYENNE") return "TEMPÉRATURE<br/>MOYENNE";
+
+  // Règle automatique responsive 2 lignes pour tout futur titre composé
+  const words = t.split(' ');
+  if (words.length === 2) {
+    return words[0] + "<br/>" + words[1];
+  } else if (words.length > 2) {
+    const mid = Math.ceil(words.length / 2);
+    return words.slice(0, mid).join(' ') + "<br/>" + words.slice(mid).join(' ');
+  }
+  return t;
+}
+
 function applyStyles(cfg) {
   const p = cfg.param;
   const meta = PARAM_STYLES[p] || { title: cfg.param_label, subtitle: 'Bilan', theme: 'hot' };
@@ -832,18 +991,11 @@ function applyStyles(cfg) {
   let title = meta.title;
   // Logique pour les précipitations
   if (p === 'precip') {
-    const maxPrecip = cfg.stations.length > 0 ? cfg.stations[0].value : 0;
-    if (maxPrecip === 0) {
-      title = "AUCUNE PLUIE";
-    } else if (maxPrecip < 5) {
-      title = "PLUIES FAIBLES";
-    } else {
-      title = "CUMUL DE PRÉCIPITATIONS";
-    }
+    title = "CUMUL DE PRÉCIPITATIONS";
   }
 
-  // Mettre à jour l'élément HTML
-  document.getElementById('title-text').textContent = title;
+  // Mettre à jour l'élément HTML sur 2 lignes structurées
+  document.getElementById('title-text').innerHTML = formatTitleHTML(title);
   
   let datePart = `CE ${dayName.toUpperCase()} ${dateWithoutYear.toUpperCase()}`;
   if (cfg.date_mode === 'period') {
@@ -854,35 +1006,20 @@ function applyStyles(cfg) {
   }
 
   const zoneBadge = document.getElementById('zone-badge-right');
-  if (p === 'bilan_jour') {
-    zoneBadge.style.display = 'block';
-    let cleanZone = cfg.zone_label;
-    if (cfg.zone === 'france') {
-      cleanZone = 'FRANCE';
-    }
-    zoneBadge.textContent = cleanZone.toUpperCase();
-    
-    // Adaptation automatique de la taille de police pour eviter tout debordement (échelle augmentée)
-    let size = 110;
-    if (cleanZone.length > 22) {
-      size = 65;
-    } else if (cleanZone.length > 16) {
-      size = 85;
-    } else if (cleanZone.length > 10) {
-      size = 95;
-    }
-    zoneBadge.style.fontSize = size + 'px';
-  } else {
-    zoneBadge.style.display = 'none';
+  if (zoneBadge) zoneBadge.style.display = 'none';
+
+  let cleanZone = (cfg.zone_label ? cfg.zone_label : (cfg.zone || 'FRANCE')).toUpperCase();
+  if (cfg.zone === 'france' || !cfg.zone) {
+    cleanZone = 'FRANCE';
   }
 
-  let subtitleHTML = "";
-  if (cfg.zone && cfg.zone !== 'france' && p !== 'bilan_jour') {
-    subtitleHTML = `<div class="subtitle-region">${cfg.zone_label.toUpperCase()}</div><div class="subtitle-date">${datePart}</div>`;
-  } else {
-    subtitleHTML = `<div class="subtitle-date">${datePart}</div>`;
-  }
+  let subtitleHTML = `<div class="zone-badge-box">${cleanZone}</div><div class="subtitle-date">${datePart}</div>`;
   document.getElementById('subtitle-text').innerHTML = subtitleHTML;
+
+  const portraitDateEl = document.getElementById('portrait-date-badge');
+  if (portraitDateEl) {
+    portraitDateEl.textContent = datePart;
+  }
 
   // Render rows/capsules
   const container = document.getElementById('rows-container');
@@ -950,7 +1087,7 @@ function applyStyles(cfg) {
 
     /* Bannière de records supprimée */
   } else {
-    // Large table container
+    // Master Unified Table Container
     const table = document.createElement('table');
     table.className = 'table-container';
     
@@ -959,93 +1096,58 @@ function applyStyles(cfg) {
       row.className = 'table-row';
 
       const themeClass = `rank-${meta.theme}`;
-      const isPrecip = p.includes('precip') || p.includes('anomalie_precip');
 
-      if (isPrecip) {
-        // ── PRÉCIP : badge compact dans la cellule station, ancien record en grand ──
-        let recordSubHTML = '';
-        if (st.is_record_a || st.is_record_m) {
-          const pillClass = st.is_record_a ? "record-pill pill-absolu" : "record-pill pill-mensuel";
-          const typeStr   = st.is_record_a ? "RECORD ABSOLU" : "RECORD MENSUEL";
-          let formerStr = '';
-          if (st.rec_val !== null && st.rec_val !== undefined) {
-            const fv = formatValue(st.rec_val, p);
-            let rawDate = st.rec_date || '';
-            if (rawDate.includes('-')) {
-              const pts = rawDate.split('-');
-              if (pts.length === 3) rawDate = `${pts[2]}/${pts[1]}/${pts[0]}`;
-            }
-            formerStr = `<span class="former-record-precip">Anc. : ${fv} — ${rawDate}</span>`;
+      // ── LAYOUT MAÎTRE UNIQUE : 4 colonnes identiques sur tous les visuels ──
+      let recordTag = '&nbsp;';
+      if (st.is_record_a || st.is_record_m) {
+        const pillClass = st.is_record_a ? "record-pill pill-absolu" : "record-pill pill-mensuel";
+        const typeStr   = st.is_record_a ? "RECORD ABSOLU" : "RECORD MENSUEL";
+        let formerStr = "";
+        if (st.rec_val !== null && st.rec_val !== undefined) {
+          const formattedRecVal = formatValue(st.rec_val, p);
+          let rawDate = st.rec_date || "";
+          if (rawDate.includes("-")) {
+            const pts = rawDate.split("-");
+            if (pts.length === 3) rawDate = `${pts[2]}/${pts[1]}/${pts[0]}`;
           }
-          recordSubHTML = `<div class="record-sub-precip"><span class="${pillClass}">${typeStr}</span>${formerStr}</div>`;
+          formerStr = `<span class="former-record-text">Anc. : ${formattedRecVal} — ${rawDate}</span>`;
         }
-        row.innerHTML = `
-          <td width="10%">
-            <div class="rank-badge-wrapper">
-              <div class="rank-badge ${themeClass}">${idx + 1}</div>
-            </div>
-          </td>
-          <td width="73%">
-            <div class="station-name">${st.name} (${st.dept})</div>
-            ${recordSubHTML}
-          </td>
-          <td class="station-value-cell" width="17%">
-            <div class="station-value" style="color: ${getValueColor(st.value, meta.theme)}">${formatValueHTML(st.value, p)}</div>
-          </td>
-        `;
-      } else {
-        // ── LAYOUT STANDARD : 4 colonnes ──
-        let recordTag = '&nbsp;';
-        if (st.is_record_a || st.is_record_m) {
-          const pillClass = st.is_record_a ? "record-pill pill-absolu" : "record-pill pill-mensuel";
-          const typeStr   = st.is_record_a ? "RECORD ABSOLU" : "RECORD MENSUEL";
-          let formerStr = "";
-          if (st.rec_val !== null && st.rec_val !== undefined) {
-            const formattedRecVal = formatValue(st.rec_val, p);
-            let rawDate = st.rec_date || "";
-            if (rawDate.includes("-")) {
-              const pts = rawDate.split("-");
-              if (pts.length === 3) rawDate = `${pts[2]}/${pts[1]}/${pts[0]}`;
-            }
-            formerStr = `<span class="former-record-text">Anc. : ${formattedRecVal} — ${rawDate}</span>`;
-          }
-          recordTag = `<span class="${pillClass}">${typeStr}</span>${formerStr}`;
-        }
-
-        // Si mode période, afficher la colonne de la date du pic
-        const showPeakDateCol = cfg.date_mode === 'period';
-        const colWidths = showPeakDateCol 
-          ? { rank: "10%", name: "40%", peak: "15%", rec: "20%", val: "15%" }
-          : { rank: "10%", name: "53%", peak: "0%",  rec: "22%", val: "15%" };
-
-        let peakDateHTML = "";
-        if (showPeakDateCol) {
-          let dateStr = "";
-          if (st.obs_date) {
-            dateStr = st.obs_date.substring(6,8) + "/" + st.obs_date.substring(4,6);
-          }
-          peakDateHTML = `<td class="obs-date-peak" width="${colWidths.peak}" style="padding-right: 15px; padding-left: 10px;">${dateStr}</td>`;
-        }
-
-        row.innerHTML = `
-          <td width="${colWidths.rank}">
-            <div class="rank-badge-wrapper">
-              <div class="rank-badge ${themeClass}">${idx + 1}</div>
-            </div>
-          </td>
-          <td width="${colWidths.name}">
-            <div class="station-name-container">
-              <span class="station-name-text">${st.name}</span>
-              <span class="station-dept-text">(${st.dept})</span>
-            </div>
-          </td>
-          ${peakDateHTML}
-          <td width="${colWidths.rec}"><div style="text-align:center; padding: 0 8px;">${recordTag}</div></td>
-          <td class="station-value-cell" width="${colWidths.val}">
-            <div class="station-value" style="color: ${getValueColor(st.value, meta.theme)}">${formatValueHTML(st.value, p)}</div>
-          </td>
-        `;
+        recordTag = `<span class="${pillClass}">${typeStr}</span>${formerStr}`;
       }
+
+      // Si mode période, afficher la colonne de la date du pic
+      const showPeakDateCol = cfg.date_mode === 'period';
+      const colWidths = showPeakDateCol 
+        ? { rank: "9%", name: "33%", peak: "13%", rec: "22%", val: "23%" }
+        : { rank: "9%", name: "43%", peak: "0%",  rec: "25%", val: "23%" };
+
+      let peakDateHTML = "";
+      if (showPeakDateCol) {
+        let dateStr = "";
+        if (st.obs_date) {
+          dateStr = st.obs_date.substring(6,8) + "/" + st.obs_date.substring(4,6);
+        }
+        peakDateHTML = `<td class="obs-date-peak" width="${colWidths.peak}" style="padding-right: 15px; padding-left: 10px;">${dateStr}</td>`;
+      }
+
+      row.innerHTML = `
+        <td width="${colWidths.rank}">
+          <div class="rank-badge-wrapper">
+            <div class="rank-badge ${themeClass}">${idx + 1}</div>
+          </div>
+        </td>
+        <td width="${colWidths.name}">
+          <div class="station-name-container">
+            <div class="station-name-text">${formatStationNameHTML(st.name)}</div>
+            <span class="station-dept-text">(${st.dept})</span>
+          </div>
+        </td>
+        ${peakDateHTML}
+        <td width="${colWidths.rec}"><div style="text-align:center; padding: 0 8px;">${recordTag}</div></td>
+        <td class="station-value-cell" width="${colWidths.val}">
+          <div class="station-value" style="color: ${getValueColor(st.value, meta.theme)}">${formatValueHTML(st.value, p)}</div>
+        </td>
+      `;
       table.appendChild(row);
     });
     container.appendChild(table);
@@ -1107,18 +1209,26 @@ function renderBilanJour(cfg, container) {
     const svgIcon = SVG_ICONS[st.param] || '';
 
     if (isPortrait) {
-      // ── PORTRAIT LAYOUT ──
+      // ── PORTRAIT LAYOUT — Label encadré + Station intégrale + Valeur dominante ──
+      const [stName, stDept] = fullname.includes('(')
+        ? [fullname.split(' (')[0], fullname.split(' (')[1]?.replace(')', '') || '']
+        : [fullname, ''];
+      const THEME_COLORS = { tmax:'#ff1a1a', hot:'#ff1a1a', tmin:'#38bdf8', cold:'#38bdf8', precip:'#00ffd2', rain:'#00ffd2', gust:'#fbbf24', wind:'#fbbf24' };
+      const themeColor = THEME_COLORS[st.theme] || THEME_COLORS[st.param] || '#ffffff';
       card.innerHTML = `
-        <div class="bilan-card-header">
+        ${recBadgeHTML}
+        <div style="display:flex; align-items:center; height:100%; width:100%; gap:20px; padding:0 36px; box-sizing:border-box;">
           <div class="bilan-card-icon">${svgIcon}</div>
-          <div style="display:flex; flex-direction:column; gap:4px; margin-left: 20px; align-items: center; text-align: center; flex-grow: 1; min-width: 0;">
-            <div class="bilan-card-label">${st.label}</div>
-            <div class="bilan-card-station">${fullname}</div>
+          <div style="display:flex; flex-direction:column; justify-content:center; gap:8px; flex:1; min-width:0; overflow:hidden;">
+            <div style="display:inline-flex; align-items:center; border-left:4px solid ${themeColor}; background:${themeColor}18; padding:5px 12px; border-radius:0 8px 8px 0; max-width:fit-content;">
+              <span style="font-family:var(--font-family); font-size:18px; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:${themeColor};">${st.label}</span>
+            </div>
+            <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+              <div style="font-family:var(--font-family); font-size:28px; font-weight:800; text-transform:uppercase; color:#fff; line-height:1.1; white-space:normal; overflow:visible;">${formatStationNameHTML(stName)}</div>
+              <span style="font-family:var(--font-family); font-size:24px; font-weight:700; color:#e2e8f0; flex-shrink:0;">(${stDept})</span>
+            </div>
           </div>
-          ${recBadgeHTML}
-        </div>
-        <div class="bilan-card-content">
-          <div class="bilan-card-value" style="color: ${getValueColor(st.value, st.theme)}">${valDisp}</div>
+          <div class="bilan-card-value" style="color:${getValueColor(st.value, st.theme)}; font-size:76px; flex-shrink:0; text-align:right;">${valDisp}</div>
         </div>
       `;
     } else {
@@ -1138,28 +1248,89 @@ function renderBilanJour(cfg, container) {
 
   // Bannières de records du bas de page supprimées
 
-  // ── Auto-fit de la taille de police des villes (anti-débordement) ──
+  // ── Tracking adaptatif verrouillé (Garde la même taille de police et ajuste uniquement le tracking) ──
   setTimeout(() => {
     const isPort = document.getElementById('capture-area').classList.contains('portrait');
+    
+    // 1. Auto-fit des stations du Bilan du Jour (Tracking puis ajustement fluide si extrême)
     document.querySelectorAll('.bilan-card-station').forEach(el => {
-      let size = isPort ? 36 : 30;
+      el.style.letterSpacing = '0px';
+      let tracking = 0;
+      while (el.scrollWidth > el.clientWidth && tracking > -2.5) {
+        tracking -= 0.2;
+        el.style.letterSpacing = tracking + 'px';
+      }
+      if (el.scrollWidth > el.clientWidth && !isPort) {
+        let size = 32;
+        while (el.scrollWidth > el.clientWidth && size > 20) {
+          size--;
+          el.style.fontSize = size + 'px';
+        }
+      }
+    });
+
+    // 2. Auto-fit des noms de stations du tableau principal (Tracking puis ajustement fluide si nom ultra-long)
+    document.querySelectorAll('.station-name-text').forEach(el => {
+      let size = isPort ? 32 : 36;
       el.style.fontSize = size + 'px';
-      // Réduction progressive pixel par pixel si overflow horizontal détecté
-      while (el.scrollWidth > el.clientWidth && size > 14) {
+      el.style.letterSpacing = '0px';
+      let tracking = 0;
+      while (el.scrollWidth > el.clientWidth && tracking > -2.5) {
+        tracking -= 0.2;
+        el.style.letterSpacing = tracking + 'px';
+      }
+      while (el.scrollWidth > el.clientWidth && size > 22) {
         size--;
         el.style.fontSize = size + 'px';
       }
     });
+
+    // 3. Auto-fit des sous-titres de régions (ex: Provence-Alpes-Côte d'Azur, Bourgogne-Franche-Comté, Auvergne-Rhône-Alpes)
+    document.querySelectorAll('.subtitle-region').forEach(el => {
+      let size = isPort ? 30 : 36;
+      el.style.fontSize = size + 'px';
+      el.style.letterSpacing = '0px';
+      let tracking = 0;
+      while (el.scrollWidth > el.clientWidth && tracking > -2.5) {
+        tracking -= 0.2;
+        el.style.letterSpacing = tracking + 'px';
+      }
+      while (el.scrollWidth > el.clientWidth && size > 22) {
+        size--;
+        el.style.fontSize = size + 'px';
+      }
+    });
+
+    // 4. Auto-fit des valeurs numériques extrêmes (ex: -24.8 °C, 185 km/h, 248.5 mm)
+    document.querySelectorAll('.station-value').forEach(el => {
+      let size = isPort ? 86 : 92;
+      el.style.fontSize = size + 'px';
+      while (el.scrollWidth > el.clientWidth && size > 64) {
+        size--;
+        el.style.fontSize = size + 'px';
+      }
+    });
+
+    // 5. Auto-fit du titre principal (Jamais tronqué)
+    const titleEl = document.getElementById('title-text');
+    if (titleEl) {
+      let tSize = isPort ? 48 : 58;
+      titleEl.style.fontSize = tSize + 'px';
+      while (titleEl.scrollWidth > titleEl.clientWidth && tSize > 40) {
+        tSize--;
+        titleEl.style.fontSize = tSize + 'px';
+      }
+    }
   }, 50);
 }
 
 function getValueColor(val, theme) {
-  if (theme === 'cold') return '#00eaff'; /* cyan plus saturé — ressort davantage */
-  if (theme === 'rain') return '#00ffd2';
-  if (theme === 'wind') return '#00ffd2';
+  if (theme === 'cold') return '#38bdf8'; /* Cyan bleu désaturé ITN */
+  if (theme === 'rain') return '#38bdf8';
+  if (theme === 'wind') return '#fbbf24'; /* Doré ambré vent ITN */
   if (theme === 'trophy') return '#ffcc00';
   if (theme === 'sun') return '#ffcc00';
-  return '#ff1a1a';
+  return '#f43f5e'; /* Rouge corail chaud ITN */
 }
 
 function captureAndSend() {

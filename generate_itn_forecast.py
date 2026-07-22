@@ -890,11 +890,11 @@ def get_font(font_type, size):
         return ImageFont.load_default()
 
 def draw_logo_cnews(draw, x_start, y_start):
-    # Capsule logo CNews TV Studio style
-    draw.rounded_rectangle([x_start, y_start, x_start + 250, y_start + 80], radius=8, fill="#081d38")
-    font_logo_bold = get_font("bold", 24)
-    draw.text((x_start + 15, y_start + 12), "MÉTÉO-CLIMAT", fill="white", font=font_logo_bold)
-    draw.text((x_start + 15, y_start + 42), "PRO", fill="#fbbf24", font=font_logo_bold)
+    # Capsule logo Météo-Climat Pro (+20% agrandi, style chaîne TV haut de gamme)
+    draw.rounded_rectangle([x_start, y_start, x_start + 295, y_start + 95], radius=10, fill="#081d38", outline=(255, 255, 255, 60), width=1)
+    font_logo_bold = get_font("bold", 28)
+    draw.text((x_start + 18, y_start + 14), "MÉTÉO-CLIMAT", fill="white", font=font_logo_bold)
+    draw.text((x_start + 18, y_start + 50), "PRO", fill="#fbbf24", font=font_logo_bold)
 
 def get_french_date_range(d_start, d_end):
     MONTHS_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
@@ -911,50 +911,64 @@ def fmt_temp(v):
 def generate_broadcast_tv_chart(itn_data):
     from PIL import Image, ImageDraw
     
+    # Filtrer les données à partir du 22 juillet 2026
+    itn_sub = [d for d in itn_data if d["date"] >= "2026-07-22"]
+    if len(itn_sub) < 11:
+        itn_sub = itn_data[:11]
+    else:
+        itn_sub = itn_sub[:11]
+    
     width, height = 1920, 1080
-    bg_path = os.path.join(PROJECT_DIR, "bg_landscape_itn_v2.png")
+    bg_dir = os.path.join(DEST_DIR, "A_CONSERVER_ABSOLUMENT")
+    bg_path = os.path.join(bg_dir, "CARTE PAYSAGE METEOCIEL.png")
+    if not os.path.exists(bg_path):
+        bg_path = os.path.join(bg_dir, "ITN PAYSAGE.png")
+    if not os.path.exists(bg_path):
+        bg_path = os.path.join(PROJECT_DIR, "bg_landscape_itn_v2.png")
     
     if os.path.exists(bg_path):
         bg = Image.open(bg_path).convert("RGBA").resize((width, height), Image.Resampling.LANCZOS)
     else:
-        # Fallback background
         bg = Image.new("RGBA", (width, height), (15, 23, 42, 255))
         
+    # --- Voile bleu sombre renforcé (-15% visibilité fond) pour focaliser 100% l'attention sur les données ---
+    bg_overlay = Image.new("RGBA", (width, height), (8, 14, 30, 205))
+    bg = Image.alpha_composite(bg, bg_overlay)
     draw = ImageDraw.Draw(bg)
     
-    # 1. Logo
-    draw_logo_cnews(draw, 30, 30)
+    # 1. Logo agrandi de +20%
+    draw_logo_cnews(draw, 35, 35)
     
-    # 2. Dynamic Title & Subtitle (CNews style) - MUCH LARGER
-    font_title = get_font("narrow_bold", 62)
-    font_subtitle = get_font("narrow_bold", 38)
+    # 2. Dynamic Title & Subtitle (CNews style)
+    font_title = get_font("narrow_bold", 64)
+    font_subtitle = get_font("narrow_bold", 40)
     
-    dates = [datetime.strptime(d["date"], "%Y-%m-%d") for d in itn_data[:11]]
+    dates = [datetime.strptime(d["date"], "%Y-%m-%d") for d in itn_sub]
     date_range_str = get_french_date_range(dates[0], dates[-1])
     
-    # Draw titles with black outlines
-    draw.text((1890, 25), "INDICATEUR THERMIQUE NATIONAL", fill="#ffcc00", font=font_title, anchor="rt", stroke_width=3, stroke_fill="black")
-    draw.text((1890, 95), f"ÉVOLUTION POUR LA PÉRIODE {date_range_str.upper()}", fill="white", font=font_subtitle, anchor="rt", stroke_width=2, stroke_fill="black")
+    # Titre en Jaune vif (#ffcc00), Sous-titre en gris très clair (#cbd5e1) pour hiérarchie visuelle parfaite
+    draw.text((1880, 25), "INDICATEUR THERMIQUE NATIONAL", fill="#ffcc00", font=font_title, anchor="rt", stroke_width=4, stroke_fill="black")
+    draw.text((1880, 98), f"ÉVOLUTION POUR LA PÉRIODE {date_range_str.upper()}", fill="#cbd5e1", font=font_subtitle, anchor="rt", stroke_width=3, stroke_fill="black")
     
-    # 3. Chart coordinates (no container, drawing directly on background!)
-    left, right = 200, 1720
-    bottom, top = 840, 340
+    # 3. Coordonnées du graphique (remonté de 30px supplémentaires : bottom=780, top=280)
+    left, right = 230, 1720
+    bottom, top = 780, 280
     p_width = right - left
     p_height = bottom - top
     
-    tm_forecast = [d["tm"] for d in itn_data[:11]]
-    tm_normal = [d["norm_tm"] for d in itn_data[:11]]
+    tm_forecast = [d["tm"] for d in itn_sub]
+    tm_normal = [d["norm_tm"] for d in itn_sub]
     
     y_min_val = min(min(tm_forecast), min(tm_normal))
     y_max_val = max(max(tm_forecast), max(tm_normal))
     y_min = y_min_val - 1.5
-    y_max = y_max_val + 2.0
+    y_max = y_max_val + 2.2
     
     x_coords = [left + int(i * p_width / 10) for i in range(11)]
     y_fc = [int(bottom - (v - y_min) / (y_max - y_min) * p_height) for v in tm_forecast]
     y_norm = [int(bottom - (v - y_min) / (y_max - y_min) * p_height) for v in tm_normal]
     
-    # 4. Draw filled anomalies between curves (coral-red when above normal, cobalt-blue when below normal)
+    # 4. Remplissage des anomalies avec Dégradé Vertical 3D (soutenu vers la courbe, plus doux vers la normale)
     fill_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     f_draw = ImageDraw.Draw(fill_layer)
     
@@ -965,34 +979,40 @@ def generate_broadcast_tv_chart(itn_data):
                 y_f_x = y_fc[i] + t * (y_fc[i+1] - y_fc[i])
                 y_n_x = y_norm[i] + t * (y_norm[i+1] - y_norm[i])
                 
-                if y_f_x < y_n_x: # forecast is above normal
-                    f_draw.line([x, int(y_f_x), x, int(y_n_x)], fill=(244, 91, 105, 170)) # Translucent coral red
-                else: # forecast is below normal
-                    f_draw.line([x, int(y_n_x), x, int(y_f_x)], fill=(59, 130, 246, 170)) # Translucent cobalt blue
+                y_top_px = min(int(y_f_x), int(y_n_x))
+                y_bot_px = max(int(y_f_x), int(y_n_x))
+                h_line = max(1, y_bot_px - y_top_px)
+                
+                is_positive = y_f_x < y_n_x
+                
+                for py in range(y_top_px, y_bot_px + 1):
+                    rel_y = (py - y_top_px) / h_line
+                    if is_positive:
+                        alpha = int(250 - rel_y * 80)
+                        f_draw.point((x, py), fill=(244, 91, 105, alpha))
+                    else:
+                        alpha = int(170 + rel_y * 80)
+                        f_draw.point((x, py), fill=(59, 130, 246, alpha))
                 break
                 
     bg = Image.alpha_composite(bg, fill_layer)
     draw = ImageDraw.Draw(bg)
     
-    # 5. Draw lines
+    # 5. Ligne de normale (épaisseur 8px, blanc cassé #f1f5f9) et courbe prévue (épaisseur 11px, blanc)
     for i in range(10):
-        draw.line([x_coords[i], y_norm[i], x_coords[i+1], y_norm[i+1]], fill="#94a3b8", width=5)
+        draw.line([x_coords[i], y_norm[i], x_coords[i+1], y_norm[i+1]], fill="#f1f5f9", width=8)
     for i in range(10):
-        draw.line([x_coords[i], y_fc[i], x_coords[i+1], y_fc[i+1]], fill="white", width=9)
+        draw.line([x_coords[i], y_fc[i], x_coords[i+1], y_fc[i+1]], fill="white", width=11)
         
-    # 6. Markers
+    # 6. Points de la courbe (diamètre 34px, +10% agrandis)
     for i in range(11):
-        draw.ellipse([x_coords[i] - 11, y_fc[i] - 11, x_coords[i] + 11, y_fc[i] + 11], fill="white")
+        draw.ellipse([x_coords[i] - 17, y_fc[i] - 17, x_coords[i] + 17, y_fc[i] + 17], fill="white", outline="#0f172a", width=2)
         
-    # Fonts
-    font_bold_26 = get_font("bold", 26)
-    font_reg_24 = get_font("reg", 24)
-    font_reg_20 = get_font("reg", 20)
-    font_reg_22 = get_font("reg", 22)
+    # Polices et espacements des valeurs numériques
+    font_bold_34 = get_font("bold", 34)
+    font_bold_28 = get_font("bold", 28)
     
-    # Peak highlighting
     peak_idx = tm_forecast.index(max(tm_forecast))
-    # Minimum highlighting
     min_val = min(tm_forecast)
     min_idx = tm_forecast.index(min_val)
     
@@ -1001,49 +1021,53 @@ def generate_broadcast_tv_chart(itn_data):
         is_above = y_fc[i] <= y_norm[i]
         
         if i == peak_idx:
-            text_w, text_h = 70, 36
-            bx, by = x_coords[i], y_fc[i] - 45
-            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=6, fill="#f45b69", outline="white", width=1)
-            draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="mm")
+            text_w, text_h = 98, 50
+            bx, by = x_coords[i], y_fc[i] - 66
+            # Ombre portée discrète sous la pastille
+            draw.rounded_rectangle([bx - text_w//2 + 3, by - text_h//2 + 4, bx + text_w//2 + 3, by + text_h//2 + 4], radius=8, fill=(0, 0, 0, 140))
+            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=8, fill="#f45b69", outline="white", width=2)
+            draw.text((bx, by), v_str, fill="white", font=font_bold_34, anchor="mm")
         elif i == min_idx and not is_above:
-            text_w, text_h = 70, 36
-            bx, by = x_coords[i], y_fc[i] + 45
-            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=6, fill="#3b82f6", outline="white", width=1)
-            draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="mm")
+            text_w, text_h = 98, 50
+            bx, by = x_coords[i], y_fc[i] + 66
+            # Ombre portée discrète sous la pastille
+            draw.rounded_rectangle([bx - text_w//2 + 3, by - text_h//2 + 4, bx + text_w//2 + 3, by + text_h//2 + 4], radius=8, fill=(0, 0, 0, 140))
+            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=8, fill="#3b82f6", outline="white", width=2)
+            draw.text((bx, by), v_str, fill="white", font=font_bold_34, anchor="mm")
         elif i == 10:
             box_color = "#3b82f6" if tm_forecast[10] <= 24.0 else "#f45b69"
-            text_w, text_h = 70, 36
-            bx, by = x_coords[i], y_fc[i] - 45
-            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=6, fill=box_color, outline="white", width=1)
-            draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="mm")
+            text_w, text_h = 98, 50
+            bx, by = x_coords[i], y_fc[i] - 66
+            # Ombre portée discrète sous la pastille
+            draw.rounded_rectangle([bx - text_w//2 + 3, by - text_h//2 + 4, bx + text_w//2 + 3, by + text_h//2 + 4], radius=8, fill=(0, 0, 0, 140))
+            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=8, fill=box_color, outline="white", width=2)
+            draw.text((bx, by), v_str, fill="white", font=font_bold_34, anchor="mm")
         else:
             bx = x_coords[i]
             if is_above:
-                by = y_fc[i] - 35
-                draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="ms", stroke_width=2, stroke_fill="#0f172a")
+                by = y_fc[i] - 50
+                draw.text((bx, by), v_str, fill="white", font=font_bold_34, anchor="ms", stroke_width=3, stroke_fill="#090d16")
             else:
-                by = y_fc[i] + 35
-                draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="mt", stroke_width=2, stroke_fill="#0f172a")
+                by = y_fc[i] + 52
+                draw.text((bx, by), v_str, fill="white", font=font_bold_34, anchor="mt", stroke_width=3, stroke_fill="#090d16")
             
-    # Normals labels
-    draw.text((x_coords[0] - 15, y_norm[0]), "moyenne", fill="#94a3b8", font=font_reg_20, anchor="rm")
-    draw.text((x_coords[0], y_norm[0] + 35), fmt_temp(tm_normal[0]), fill="#cbd5e1", font=font_reg_24, anchor="ms", stroke_width=2, stroke_fill="#0f172a")
-    draw.text((x_coords[10], y_norm[10] + 35), fmt_temp(tm_normal[10]), fill="#cbd5e1", font=font_reg_24, anchor="ms", stroke_width=2, stroke_fill="#0f172a")
+    # Valeurs des normales aux extrémités
+    draw.text((x_coords[0], y_norm[0] + 38), fmt_temp(tm_normal[0]), fill="#ffffff", font=font_bold_28, anchor="ms", stroke_width=3, stroke_fill="#090d16")
+    draw.text((x_coords[10], y_norm[10] + 38), fmt_temp(tm_normal[10]), fill="#ffffff", font=font_bold_28, anchor="ms", stroke_width=3, stroke_fill="#090d16")
     
-    # X-axis
+    # Axe X des jours
     WEEKDAYS_MAP = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."]
     for i in range(11):
         dt = dates[i]
         label = f"{WEEKDAYS_MAP[dt.weekday()]} {dt.day}"
-        draw.text((x_coords[i], 920), label, fill="#cbd5e1", font=font_reg_22, anchor="ms")
+        draw.text((x_coords[i], 865), label, fill="#ffffff", font=font_bold_28, anchor="ms", stroke_width=3, stroke_fill="#090d16")
         
-    draw_vertical_text(bg, "Meteo Climat Pro", (1880, 780), font_reg_24, (203, 213, 225, 140))
+    draw_vertical_text(bg, "Meteo Climat Pro", (1880, 720), get_font("bold", 24), (255, 255, 255, 180))
     
     out_path = os.path.join(DEST_DIR, "indicateur_thermique_tv.png")
     bg.convert("RGB").save(out_path, "PNG")
     print(f"Broadcast TV Landscape chart saved successfully to {out_path}!")
     
-    # Save a dated copy directly on the user's Desktop
     try:
         desktop_dir = r"C:\Users\grego\Desktop"
         today_str = datetime.now().strftime("%Y_%m_%d")
@@ -1056,48 +1080,63 @@ def generate_broadcast_tv_chart(itn_data):
 def generate_broadcast_tiktok_chart(itn_data):
     from PIL import Image, ImageDraw
     
+    # Filtrer les données à partir du 22 juillet 2026
+    itn_sub = [d for d in itn_data if d["date"] >= "2026-07-22"]
+    if len(itn_sub) < 11:
+        itn_sub = itn_data[:11]
+    else:
+        itn_sub = itn_sub[:11]
+    
     width, height = 1080, 1920
-    bg_path = os.path.join(PROJECT_DIR, "bg_portrait_itn_v2.png")
+    bg_dir = os.path.join(DEST_DIR, "A_CONSERVER_ABSOLUMENT")
+    bg_path = os.path.join(bg_dir, "CARTE PORTRAIT METEOCIEL.png")
+    if not os.path.exists(bg_path):
+        bg_path = os.path.join(bg_dir, "ITN TIKTOK.png")
+    if not os.path.exists(bg_path):
+        bg_path = os.path.join(PROJECT_DIR, "bg_portrait_itn_v2.png")
     
     if os.path.exists(bg_path):
         bg = Image.open(bg_path).convert("RGBA").resize((width, height), Image.Resampling.LANCZOS)
     else:
         bg = Image.new("RGBA", (width, height), (15, 23, 42, 255))
         
+    # --- Voile bleu sombre renforcé TikTok ---
+    bg_overlay = Image.new("RGBA", (width, height), (8, 14, 30, 205))
+    bg = Image.alpha_composite(bg, bg_overlay)
     draw = ImageDraw.Draw(bg)
     
-    # 1. Logo
-    draw_logo_cnews(draw, 30, 40)
+    # 1. Logo agrandi
+    draw_logo_cnews(draw, 35, 45)
     
-    # 2. Dynamic Title & Subtitle (CNews style) - MUCH LARGER
-    font_title = get_font("narrow_bold", 48)
-    font_subtitle = get_font("narrow_bold", 30)
+    # 2. Dynamic Title & Subtitle (TikTok Style)
+    font_title = get_font("narrow_bold", 50)
+    font_subtitle = get_font("narrow_bold", 32)
     
-    dates = [datetime.strptime(d["date"], "%Y-%m-%d") for d in itn_data[:11]]
+    dates = [datetime.strptime(d["date"], "%Y-%m-%d") for d in itn_sub]
     date_range_str = get_french_date_range(dates[0], dates[-1])
     
-    draw.text((1050, 40), "INDICATEUR THERMIQUE NATIONAL", fill="#ffcc00", font=font_title, anchor="rt", stroke_width=2, stroke_fill="black")
-    draw.text((1050, 95), f"ÉVOLUTION POUR LA PÉRIODE {date_range_str.upper()}", fill="white", font=font_subtitle, anchor="rt", stroke_width=2, stroke_fill="black")
+    draw.text((1040, 40), "INDICATEUR THERMIQUE NATIONAL", fill="#ffcc00", font=font_title, anchor="rt", stroke_width=4, stroke_fill="black")
+    draw.text((1040, 95), f"ÉVOLUTION POUR LA PÉRIODE {date_range_str.upper()}", fill="#cbd5e1", font=font_subtitle, anchor="rt", stroke_width=3, stroke_fill="black")
     
-    # 3. Chart coordinates (no container, centered in 1080x1920 frame)
-    left, right = 100, 980
-    bottom, top = 1480, 500
+    # 3. Coordonnées du graphique (remonté de 30px : bottom=1420, top=440)
+    left, right = 110, 970
+    bottom, top = 1420, 440
     p_width = right - left
     p_height = bottom - top
     
-    tm_forecast = [d["tm"] for d in itn_data[:11]]
-    tm_normal = [d["norm_tm"] for d in itn_data[:11]]
+    tm_forecast = [d["tm"] for d in itn_sub]
+    tm_normal = [d["norm_tm"] for d in itn_sub]
     
     y_min_val = min(min(tm_forecast), min(tm_normal))
     y_max_val = max(max(tm_forecast), max(tm_normal))
     y_min = y_min_val - 1.5
-    y_max = y_max_val + 2.0
+    y_max = y_max_val + 2.2
     
     x_coords = [left + int(i * p_width / 10) for i in range(11)]
     y_fc = [int(bottom - (v - y_min) / (y_max - y_min) * p_height) for v in tm_forecast]
     y_norm = [int(bottom - (v - y_min) / (y_max - y_min) * p_height) for v in tm_normal]
     
-    # 4. Draw filled anomalies between curves
+    # 4. Remplissage des anomalies avec Dégradé Vertical 3D
     fill_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     f_draw = ImageDraw.Draw(fill_layer)
     
@@ -1108,30 +1147,38 @@ def generate_broadcast_tiktok_chart(itn_data):
                 y_f_x = y_fc[i] + t * (y_fc[i+1] - y_fc[i])
                 y_n_x = y_norm[i] + t * (y_norm[i+1] - y_norm[i])
                 
-                if y_f_x < y_n_x:
-                    f_draw.line([x, int(y_f_x), x, int(y_n_x)], fill=(244, 91, 105, 170))
-                else:
-                    f_draw.line([x, int(y_n_x), x, int(y_f_x)], fill=(59, 130, 246, 170))
+                y_top_px = min(int(y_f_x), int(y_n_x))
+                y_bot_px = max(int(y_f_x), int(y_n_x))
+                h_line = max(1, y_bot_px - y_top_px)
+                
+                is_positive = y_f_x < y_n_x
+                
+                for py in range(y_top_px, y_bot_px + 1):
+                    rel_y = (py - y_top_px) / h_line
+                    if is_positive:
+                        alpha = int(250 - rel_y * 80)
+                        f_draw.point((x, py), fill=(244, 91, 105, alpha))
+                    else:
+                        alpha = int(170 + rel_y * 80)
+                        f_draw.point((x, py), fill=(59, 130, 246, alpha))
                 break
                 
     bg = Image.alpha_composite(bg, fill_layer)
     draw = ImageDraw.Draw(bg)
     
-    # 5. Draw lines
+    # 5. Lines
     for i in range(10):
-        draw.line([x_coords[i], y_norm[i], x_coords[i+1], y_norm[i+1]], fill="#94a3b8", width=5)
+        draw.line([x_coords[i], y_norm[i], x_coords[i+1], y_norm[i+1]], fill="#f1f5f9", width=7)
     for i in range(10):
-        draw.line([x_coords[i], y_fc[i], x_coords[i+1], y_fc[i+1]], fill="white", width=9)
+        draw.line([x_coords[i], y_fc[i], x_coords[i+1], y_fc[i+1]], fill="white", width=10)
         
-    # 6. Markers
+    # 6. Markers (diamètre 30px)
     for i in range(11):
-        draw.ellipse([x_coords[i] - 11, y_fc[i] - 11, x_coords[i] + 11, y_fc[i] + 11], fill="white")
+        draw.ellipse([x_coords[i] - 15, y_fc[i] - 15, x_coords[i] + 15, y_fc[i] + 15], fill="white", outline="#0f172a", width=2)
         
     # Fonts
-    font_bold_26 = get_font("bold", 24)
-    font_reg_24 = get_font("reg", 22)
-    font_reg_20 = get_font("reg", 18)
-    font_reg_22 = get_font("reg", 20)
+    font_bold_30 = get_font("bold", 30)
+    font_bold_24 = get_font("bold", 24)
     
     peak_idx = tm_forecast.index(max(tm_forecast))
     min_val = min(tm_forecast)
@@ -1142,43 +1189,48 @@ def generate_broadcast_tiktok_chart(itn_data):
         is_above = y_fc[i] <= y_norm[i]
         
         if i == peak_idx:
-            text_w, text_h = 65, 34
-            bx, by = x_coords[i], y_fc[i] - 40
-            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=6, fill="#f45b69", outline="white", width=1)
-            draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="mm")
+            text_w, text_h = 90, 44
+            bx, by = x_coords[i], y_fc[i] - 60
+            # Ombre portée sous la pastille
+            draw.rounded_rectangle([bx - text_w//2 + 3, by - text_h//2 + 4, bx + text_w//2 + 3, by + text_h//2 + 4], radius=8, fill=(0, 0, 0, 140))
+            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=8, fill="#f45b69", outline="white", width=2)
+            draw.text((bx, by), v_str, fill="white", font=font_bold_30, anchor="mm")
         elif i == min_idx and not is_above:
-            text_w, text_h = 65, 34
-            bx, by = x_coords[i], y_fc[i] + 40
-            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=6, fill="#3b82f6", outline="white", width=1)
-            draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="mm")
+            text_w, text_h = 90, 44
+            bx, by = x_coords[i], y_fc[i] + 60
+            # Ombre portée sous la pastille
+            draw.rounded_rectangle([bx - text_w//2 + 3, by - text_h//2 + 4, bx + text_w//2 + 3, by + text_h//2 + 4], radius=8, fill=(0, 0, 0, 140))
+            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=8, fill="#3b82f6", outline="white", width=2)
+            draw.text((bx, by), v_str, fill="white", font=font_bold_30, anchor="mm")
         elif i == 10:
             box_color = "#3b82f6" if tm_forecast[10] <= 24.0 else "#f45b69"
-            text_w, text_h = 65, 34
-            bx, by = x_coords[i], y_fc[i] - 40
-            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=6, fill=box_color, outline="white", width=1)
-            draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="mm")
+            text_w, text_h = 90, 44
+            bx, by = x_coords[i], y_fc[i] - 60
+            # Ombre portée sous la pastille
+            draw.rounded_rectangle([bx - text_w//2 + 3, by - text_h//2 + 4, bx + text_w//2 + 3, by + text_h//2 + 4], radius=8, fill=(0, 0, 0, 140))
+            draw.rounded_rectangle([bx - text_w//2, by - text_h//2, bx + text_w//2, by + text_h//2], radius=8, fill=box_color, outline="white", width=2)
+            draw.text((bx, by), v_str, fill="white", font=font_bold_30, anchor="mm")
         else:
             bx = x_coords[i]
             if is_above:
-                by = y_fc[i] - 30
-                draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="ms", stroke_width=2, stroke_fill="#0f172a")
+                by = y_fc[i] - 46
+                draw.text((bx, by), v_str, fill="white", font=font_bold_30, anchor="ms", stroke_width=3, stroke_fill="#090d16")
             else:
-                by = y_fc[i] + 30
-                draw.text((bx, by), v_str, fill="white", font=font_bold_26, anchor="mt", stroke_width=2, stroke_fill="#0f172a")
+                by = y_fc[i] + 48
+                draw.text((bx, by), v_str, fill="white", font=font_bold_30, anchor="mt", stroke_width=3, stroke_fill="#090d16")
                 
-    # Normals labels
-    draw.text((x_coords[0] - 15, y_norm[0]), "moyenne", fill="#94a3b8", font=font_reg_20, anchor="rm")
-    draw.text((x_coords[0], y_norm[0] + 30), fmt_temp(tm_normal[0]), fill="#cbd5e1", font=font_reg_24, anchor="ms", stroke_width=2, stroke_fill="#0f172a")
-    draw.text((x_coords[10], y_norm[10] + 30), fmt_temp(tm_normal[10]), fill="#cbd5e1", font=font_reg_24, anchor="ms", stroke_width=2, stroke_fill="#0f172a")
+    # Valeurs des normales aux extrémités
+    draw.text((x_coords[0], y_norm[0] + 34), fmt_temp(tm_normal[0]), fill="#ffffff", font=font_bold_24, anchor="ms", stroke_width=3, stroke_fill="#090d16")
+    draw.text((x_coords[10], y_norm[10] + 34), fmt_temp(tm_normal[10]), fill="#ffffff", font=font_bold_24, anchor="ms", stroke_width=3, stroke_fill="#090d16")
     
-    # X-axis
+    # Axe X des jours
     WEEKDAYS_MAP = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."]
     for i in range(11):
         dt = dates[i]
         label = f"{WEEKDAYS_MAP[dt.weekday()]} {dt.day}"
-        draw.text((x_coords[i], 1660), label, fill="#cbd5e1", font=font_reg_22, anchor="ms")
+        draw.text((x_coords[i], 1495), label, fill="#ffffff", font=font_bold_24, anchor="ms", stroke_width=3, stroke_fill="#090d16")
         
-    draw_vertical_text(bg, "Meteo Climat Pro", (1040, 1400), font_reg_22, (203, 213, 225, 140))
+    draw_vertical_text(bg, "Meteo Climat Pro", (1040, 1340), get_font("bold", 22), (255, 255, 255, 180))
     
     out_path = os.path.join(DEST_DIR, "indicateur_thermique_tiktok.png")
     bg.convert("RGB").save(out_path, "PNG")
@@ -1228,6 +1280,145 @@ def generate_csv_export(tm_2026, tm_normal, itn_data):
         print(f"CSV exported successfully to {csv_path}!")
     except OSError as e:
         print(f"Warning: Could not write CSV file to {csv_path} (it might be open in Excel or another program): {e}")
+
+def generate_broadcast_itn_maps(itn_data, forecasts):
+    """Génère les cartes ITN TV (Paysage) et TikTok (Portrait) sur fond Météociel intact."""
+    import math
+    from PIL import Image, ImageDraw, ImageFont
+
+    if not itn_data or not forecasts:
+        print("Warning: Missing itn_data or forecasts for map generation.")
+        return
+
+    today_itn = itn_data[0]
+    display_date = today_itn["display_date"]
+    tm_nat = today_itn["tm"]
+    anom_nat = today_itn["anomaly_tm"]
+    anom_sign = f"+{anom_nat:.1f}".replace(".", ",") if anom_nat >= 0 else f"{anom_nat:.1f}".replace(".", ",")
+    tm_nat_str = f"{tm_nat:.1f}".replace(".", ",")
+
+    def mercator_y(lat):
+        rad = math.radians(lat)
+        return math.log(math.tan(math.pi / 4 + rad / 2))
+
+    def latlon_to_pixel(lat, lon, bounds, img_w, img_h):
+        lat_min, lat_max, lon_min, lon_max = bounds
+        y_min = mercator_y(lat_min)
+        y_max = mercator_y(lat_max)
+        y_merc = mercator_y(lat)
+        x_ratio = (lon - lon_min) / (lon_max - lon_min)
+        y_ratio = (y_max - y_merc) / (y_max - y_min)
+        return int(x_ratio * img_w), int(y_ratio * img_h)
+
+    def get_temp_color(tm):
+        if tm < 10.0:
+            return (30, 58, 138, 230), (255, 255, 255)
+        elif tm < 15.0:
+            return (2, 132, 199, 230), (255, 255, 255)
+        elif tm < 20.0:
+            return (16, 185, 129, 230), (255, 255, 255)
+        elif tm < 25.0:
+            return (245, 158, 11, 230), (0, 0, 0)
+        elif tm < 30.0:
+            return (239, 68, 68, 230), (255, 255, 255)
+        else:
+            return (153, 27, 27, 230), (255, 255, 255)
+
+    try:
+        font_title_p = ImageFont.truetype("arialbd.ttf", 32)
+        font_sub_p = ImageFont.truetype("arial.ttf", 20)
+        font_pill_p = ImageFont.truetype("arialbd.ttf", 16)
+        font_title_port = ImageFont.truetype("arialbd.ttf", 26)
+        font_sub_port = ImageFont.truetype("arial.ttf", 17)
+        font_pill_port = ImageFont.truetype("arialbd.ttf", 14)
+    except:
+        font_title_p = font_sub_p = font_pill_p = font_title_port = font_sub_port = font_pill_port = ImageFont.load_default()
+
+    bg_dir = os.path.join(DEST_DIR, "A_CONSERVER_ABSOLUMENT")
+    img_paysage_path = os.path.join(bg_dir, "CARTE PAYSAGE METEOCIEL.png")
+    img_portrait_path = os.path.join(bg_dir, "CARTE PORTRAIT METEOCIEL.png")
+
+    if not os.path.exists(img_paysage_path) or not os.path.exists(img_portrait_path):
+        print("Warning: Background images CARTE PAYSAGE/PORTRAIT METEOCIEL.png not found.")
+        return
+
+    # --- 1. CARTE PAYSAGE (1448 x 1086) ---
+    img_p = Image.open(img_paysage_path).convert("RGBA")
+    draw_p = ImageDraw.Draw(img_p)
+    bounds_p = (41.2, 51.3, -5.6, 9.8)
+
+    banner_w, banner_h = 1380, 110
+    banner_x, banner_y = (img_p.width - banner_w) // 2, 20
+    draw_p.rounded_rectangle([banner_x, banner_y, banner_x + banner_w, banner_y + banner_h], radius=16, fill=(15, 23, 42, 220), outline=(255, 204, 0), width=2)
+    draw_p.text((banner_x + 25, banner_y + 15), "INDICATEUR THERMIQUE NATIONAL (ITN)", fill="#ffcc00", font=font_title_p)
+    draw_p.text((banner_x + 25, banner_y + 60), f"Carte des 30 stations — {display_date}", fill="#ffffff", font=font_sub_p)
+
+    summary_text = f"Moyenne : {tm_nat_str}°C  |  Anomalie : {anom_sign}°C"
+    draw_p.text((banner_x + banner_w - 550, banner_y + 38), summary_text, fill="#38bdf8", font=font_title_p)
+
+    for loc_idx, loc in enumerate(STATIONS_ITN):
+        loc_forecast = forecasts[loc_idx]["daily"]
+        tmin = loc_forecast["temperature_2m_min"][0]
+        tmax = loc_forecast["temperature_2m_max"][0]
+        if tmin is None or tmax is None:
+            continue
+        tm_st = round((tmin + tmax) / 2.0, 1)
+        tm_st_str = f"{tm_st:.1f}".replace(".", ",")
+        city_name = loc["name"].split("-")[0]
+        label = f"{city_name} {tm_st_str}°"
+
+        px, py = latlon_to_pixel(loc["lat"], loc["lon"], bounds_p, img_p.width, img_p.height)
+        bg_col, text_col = get_temp_color(tm_st)
+
+        bbox = draw_p.textbbox((0, 0), label, font=font_pill_p)
+        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        pw, ph = tw + 14, th + 10
+        rx, ry = px - pw // 2, py - ph // 2
+
+        draw_p.rounded_rectangle([rx, ry, rx + pw, ry + ph], radius=10, fill=bg_col, outline=(255, 255, 255, 200), width=1)
+        draw_p.text((rx + 7, ry + 4), label, fill=text_col, font=font_pill_p)
+
+    out_tv = os.path.join(DEST_DIR, "indicateur_thermique_carte_tv.png")
+    img_p.save(out_tv)
+    print(f"Carte ITN TV (Paysage) sauvegardée : {out_tv}")
+
+    # --- 2. CARTE PORTRAIT (941 x 1672) ---
+    img_port = Image.open(img_portrait_path).convert("RGBA")
+    draw_port = ImageDraw.Draw(img_port)
+    bounds_port = (40.8, 51.6, -5.8, 10.2)
+
+    banner_w, banner_h = 880, 140
+    banner_x, banner_y = (img_port.width - banner_w) // 2, 30
+    draw_port.rounded_rectangle([banner_x, banner_y, banner_x + banner_w, banner_y + banner_h], radius=16, fill=(15, 23, 42, 220), outline=(255, 204, 0), width=2)
+    draw_port.text((banner_x + 20, banner_y + 15), "INDICATEUR THERMIQUE NATIONAL", fill="#ffcc00", font=font_title_port)
+    draw_port.text((banner_x + 20, banner_y + 52), f"Carte des 30 stations — {display_date}", fill="#ffffff", font=font_sub_port)
+    draw_port.text((banner_x + 20, banner_y + 90), f"ITN : {tm_nat_str}°C  |  Anomalie : {anom_sign}°C vs normales", fill="#38bdf8", font=font_sub_port)
+
+    for loc_idx, loc in enumerate(STATIONS_ITN):
+        loc_forecast = forecasts[loc_idx]["daily"]
+        tmin = loc_forecast["temperature_2m_min"][0]
+        tmax = loc_forecast["temperature_2m_max"][0]
+        if tmin is None or tmax is None:
+            continue
+        tm_st = round((tmin + tmax) / 2.0, 1)
+        tm_st_str = f"{tm_st:.1f}".replace(".", ",")
+        city_name = loc["name"].split("-")[0]
+        label = f"{city_name} {tm_st_str}°"
+
+        px, py = latlon_to_pixel(loc["lat"], loc["lon"], bounds_port, img_port.width, img_port.height)
+        bg_col, text_col = get_temp_color(tm_st)
+
+        bbox = draw_port.textbbox((0, 0), label, font=font_pill_port)
+        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        pw, ph = tw + 12, th + 8
+        rx, ry = px - pw // 2, py - ph // 2
+
+        draw_port.rounded_rectangle([rx, ry, rx + pw, ry + ph], radius=8, fill=bg_col, outline=(255, 255, 255, 200), width=1)
+        draw_port.text((rx + 6, ry + 3), label, fill=text_col, font=font_pill_port)
+
+    out_tiktok = os.path.join(DEST_DIR, "indicateur_thermique_carte_tiktok.png")
+    img_port.save(out_tiktok)
+    print(f"Carte ITN TikTok (Portrait) sauvegardée : {out_tiktok}")
 
 def generate_social_post(itn_data):
     try:
@@ -1425,6 +1616,9 @@ if __name__ == "__main__":
         
         # 5c. Générer le graphique style grand public TV Portrait (TikTok) (PNG)
         generate_broadcast_tiktok_chart(itn_data)
+
+        # 5d. Générer la carte de l'ITN des 30 stations sur fond Météociel (Paysage & Portrait)
+        generate_broadcast_itn_maps(itn_data, forecasts)
         
         # 6. Générer le graphique annuel complet (PNG)
         generate_matplotlib_annual_chart(tm_2026_full, tm_normal_full)

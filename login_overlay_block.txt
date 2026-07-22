@@ -1,0 +1,99 @@
+<!-- ===== ÉCRAN DE CONNEXION ===== -->
+    <div id="login-overlay" style="
+        position:fixed; inset:0; z-index:99999;
+        background:linear-gradient(135deg,#060d1a 0%,#0f1e3a 50%,#091228 100%);
+        display:flex; align-items:center; justify-content:center;
+        font-family:'Outfit',sans-serif;">
+        <div style="
+            background:rgba(255,255,255,0.04);
+            border:1px solid rgba(77,184,255,0.25);
+            border-radius:20px;
+            padding:48px 40px 40px;
+            width:360px; max-width:90vw;
+            backdrop-filter:blur(12px);
+            box-shadow:0 0 60px rgba(77,184,255,0.12), 0 20px 40px rgba(0,0,0,0.6);
+            text-align:center;">
+            <!-- Logo / titre -->
+            <div style="
+                font-size:13px; font-weight:900; letter-spacing:4px; color:#4db8ff;
+                text-transform:uppercase; margin-bottom:4px;">MÉTÉO-CLIMAT PRO</div>
+            <div style="font-size:28px; font-weight:900; color:#fff; margin-bottom:6px;">
+                Espace<span style="color:#4db8ff;"> CNews</span>
+            </div>
+            <div style="font-size:12px; color:#7a9cbb; margin-bottom:32px; letter-spacing:1px;">
+                Accès réservé — identifiez-vous
+            </div>
+
+            <div id="login-error" style="
+                display:none; margin-bottom:16px; padding:10px 14px;
+                background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.4);
+                border-radius:8px; color:#e74c3c; font-size:12px; font-weight:700;">
+                Identifiant ou mot de passe incorrect.
+            </div>
+
+            <!-- Champ identifiant -->
+            <input id="login-user" type="text" placeholder="Identifiant"
+                onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()" style="
+                    width:100%; box-sizing:border-box; margin-bottom:12px;
+                    padding:13px 16px; border-radius:10px;
+                    background:rgba(255,255,255,0.06); border:1px solid rgba(77,184,255,0.25);
+                    color:#fff; font-size:14px; font-family:'Outfit',sans-serif; outline:none;
+                    transition:border 0.2s;" onfocus="this.style.borderColor='#4db8ff'"
+                onblur="this.style.borderColor='rgba(77,184,255,0.25)'">
+
+            <!-- Champ mot de passe -->
+            <input id="login-pass" type="password" placeholder="Mot de passe"
+                onkeydown="if(event.key==='Enter')doLogin()" style="
+                    width:100%; box-sizing:border-box; margin-bottom:24px;
+                    padding:13px 16px; border-radius:10px;
+                    background:rgba(255,255,255,0.06); border:1px solid rgba(77,184,255,0.25);
+                    color:#fff; font-size:14px; font-family:'Outfit',sans-serif; outline:none;
+                    transition:border 0.2s;" onfocus="this.style.borderColor='#4db8ff'"
+                onblur="this.style.borderColor='rgba(77,184,255,0.25)'">
+
+            <!-- Bouton connexion -->
+            <button onclick="doLogin()" style="
+                width:100%; padding:14px; border:none; border-radius:10px;
+                background:linear-gradient(135deg,#1a6fcf,#0d3f7a);
+                color:#fff; font-size:15px; font-weight:900; letter-spacing:2px;
+                cursor:pointer; transition:opacity 0.2s;
+                box-shadow:0 4px 20px rgba(26,111,207,0.4);" onmouseover="this.style.opacity='0.85'"
+                onmouseout="this.style.opacity='1'">
+                SE CONNECTER
+            </button>
+
+            <div style="margin-top:22px; font-size:10px; color:#344a60; letter-spacing:1px;">
+                © MÉTÉO-CLIMAT PRO — USAGE PROFESSIONNEL
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Vérification au chargement : déjà connecté dans cette session ?
+        (function () {
+            if (sessionStorage.getItem('mcp_auth') === '1') {
+                document.getElementById('login-overlay').style.display = 'none';
+            }
+        })();
+
+        function doLogin() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            const COMPTES = [
+                { user: 'meteo', pass: 'mto59' }
+            ];
+            if (COMPTES.some(c => c.user === user && c.pass === pass)) {
+                sessionStorage.setItem('mcp_auth', '1');
+                const overlay = document.getElementById('login-overlay');
+                overlay.style.transition = 'opacity 0.4s';
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 400);
+            } else {
+                const err = document.getElementById('login-error');
+                err.style.display = 'block';
+                document.getElementById('login-pass').value = '';
+                document.getElementById('login-pass').focus();
+            }
+        }
+    </script>
+    <!-- ===== FIN ÉCRAN DE CONNEXION ===== -->

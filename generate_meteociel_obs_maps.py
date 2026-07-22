@@ -729,6 +729,25 @@ def main():
     min_val = float(args.min_value) if args.min_value else None
     max_val = float(args.max_value) if args.max_value else None
 
+    # ── Normaliser les alias de zones ──
+    ZONE_ALIASES = {
+        "bretagne": "bre",
+        "hauts-de-france": "hdf", "hauts_de_france": "hdf",
+        "nord-pas-de-calais": "npdc", "nord_pas_de_calais": "npdc",
+        "ile-de-france": "idf", "ile_de_france": "idf",
+        "grand-est": "ges", "grand_est": "ges",
+        "auvergne-rhone-alpes": "ara", "auvergne_rhone_alpes": "ara",
+        "nouvelle-aquitaine": "naq", "nouvelle_aquitaine": "naq",
+        "occitanie": "occ",
+        "bourgogne-franche-comte": "bfc", "bourgogne_franche_comte": "bfc",
+        "pays-de-la-loire": "pdl", "pays_de_la_loire": "pdl",
+        "centre-val-de-loire": "cvl", "centre_val_de_loire": "cvl",
+        "corse": "cor",
+    }
+    z_lower = args.zone.lower()
+    if z_lower in ZONE_ALIASES:
+        args.zone = ZONE_ALIASES[z_lower]
+
     # ── Résolution de la zone (région, département, ou nationale) ──
     is_dept = args.zone.upper() in DEPT_NAMES or args.zone.isdigit() or (len(args.zone) == 2 and args.zone[0].isdigit()) or args.zone.lower() in ("2a", "2b")
     if is_dept:
@@ -786,14 +805,17 @@ def main():
     else:
         zone_cfg = ZONE_MAP.get(args.zone, ZONE_MAP["france"])
 
-    # ── Copier les fonds ──
-    src_dir = os.path.join(PROJECT_DIR, "A_CONSERVER_ABSOLUMENT")
-    if not os.path.exists(src_dir):
-        src_dir = r"C:\Users\grego\Desktop\cartes_alertes\A_CONSERVER_ABSOLUMENT"
-    for src_name, dst_name in [("VIGILANCE PORTRAIT.png","bg_portrait.png"),("VIGILANCE PAYSAGE.png","bg_landscape.png")]:
-        src = os.path.join(src_dir, src_name)
-        if os.path.exists(src):
-            shutil.copyfile(src, os.path.join(PROJECT_DIR, dst_name))
+    # ── Copier les fonds (Arrière-plan ITN / MétéoCiel) ──
+    search_dirs = [
+        os.path.join(PROJECT_DIR, "A_CONSERVER_ABSOLUMENT"),
+        r"C:\Users\grego\Desktop\cartes_alertes\A_CONSERVER_ABSOLUMENT"
+    ]
+    for src_name, dst_name in [("CARTE PORTRAIT METEOCIEL.png","bg_portrait.png"),("CARTE PAYSAGE METEOCIEL.png","bg_landscape.png")]:
+        for sdir in search_dirs:
+            src = os.path.join(sdir, src_name)
+            if os.path.exists(src):
+                shutil.copyfile(src, os.path.join(PROJECT_DIR, dst_name))
+                break
 
     # ── Fonds Monsieur Météo ──
     MM_DIR = r"C:\Users\grego\Documents\METEO_CLIMAT\monsieur_meteo"
