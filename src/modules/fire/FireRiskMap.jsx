@@ -939,25 +939,24 @@ const FireRiskMap = () => {
                 </div>
 
                 {/* ─── CARTE SVG ─── */}
-                <div id="fire-risk-map-container" style={{ background: '#0f172a', display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: '10px 16px', position: 'relative', overflow: 'hidden' }}>
+                <div id="fire-risk-map-container" style={{ background: '#ffffff', display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: '10px 16px', position: 'relative', overflow: 'hidden', border: '1px solid #000' }}>
                     
                     {/* Encadré Légende intégrée sur l'image téléchargeable (haut-gauche) */}
                     <div style={{
                         position: 'absolute',
                         top: '20px',
                         left: '20px',
-                        background: 'rgba(30, 41, 59, 0.88)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid #334155',
-                        borderRadius: '12px',
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        border: '1px solid #000',
+                        borderRadius: '10px',
                         padding: '10px 14px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
                         zIndex: 10,
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '6px'
                     }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#1e293b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                             INDICE FEUX DE FORÊT
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -969,8 +968,8 @@ const FireRiskMap = () => {
                                 { lvl: RISK_LEVELS.LOW, desc: 'Faible' },
                             ].map(({ lvl }) => (
                                 <div key={lvl.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: lvl.color, flexShrink: 0 }} />
-                                    <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#e2e8f0' }}>{lvl.emoji} {lvl.label}</span>
+                                    <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: lvl.color, border: '0.5px solid rgba(0,0,0,0.3)', flexShrink: 0 }} />
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#1e293b' }}>{lvl.emoji} {lvl.label}</span>
                                 </div>
                             ))}
                         </div>
@@ -988,27 +987,26 @@ const FireRiskMap = () => {
                                 right: '20px',
                                 width: '310px',
                                 maxHeight: 'calc(100vh - 150px)',
-                                background: 'rgba(30, 41, 59, 0.88)',
-                                backdropFilter: 'blur(8px)',
-                                border: '1px solid #334155',
-                                borderRadius: '12px',
+                                background: 'rgba(255, 255, 255, 0.95)',
+                                border: '1px solid #000',
+                                borderRadius: '10px',
                                 padding: '12px',
-                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
                                 zIndex: 10,
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '8px'
                             }}>
                                 {/* Section 1 : Alertes Actives */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid #334155', paddingBottom: '6px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid #cbd5e1', paddingBottom: '6px' }}>
                                     <Flame size={16} style={{ color: '#ef4444' }} />
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#1e293b' }}>
                                         {selectedRegionName === "France" ? "Postes en alerte active" : `Postes en alerte (${selectedRegionName})`}
                                     </span>
                                 </div>
                                 <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', paddingRight: '4px' }}>
                                     {activeAlerts.length === 0 ? (
-                                        <div style={{ fontSize: '0.72rem', color: '#94a3b8', padding: '4px 8px' }}>Aucun poste en alerte active.</div>
+                                        <div style={{ fontSize: '0.72rem', color: '#64748b', padding: '4px 8px' }}>Aucun poste en alerte active.</div>
                                     ) : (
                                         activeAlerts
                                             .sort((a, b) => {
@@ -1031,23 +1029,26 @@ const FireRiskMap = () => {
                                                             });
                                                         }}
                                                         style={{ 
-                                                            background: 'rgba(15, 23, 42, 0.6)', 
+                                                            background: '#f8fafc', 
                                                             borderLeft: `3px solid ${lvl.color}`, 
                                                             borderRadius: '0 6px 6px 0', 
                                                             padding: '6px 8px',
                                                             cursor: 'pointer',
-                                                            transition: 'background 0.2s'
+                                                            transition: 'background 0.2s',
+                                                            borderTop: '1px solid #e2e8f0',
+                                                            borderRight: '1px solid #e2e8f0',
+                                                            borderBottom: '1px solid #e2e8f0'
                                                         }}
                                                     >
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
-                                                            <span style={{ fontSize: '0.74rem', fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '170px' }}>
-                                                                {s.name}
+                                                            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '185px' }}>
+                                                                {s.name} ({s.dept})
                                                             </span>
-                                                            <span style={{ fontSize: '0.65rem', background: lvl.bg, color: lvl.text, padding: '1px 4px', borderRadius: '4px', fontWeight: 700 }}>
+                                                            <span style={{ fontSize: '0.65rem', background: lvl.bg, color: lvl.text, padding: '1px 4px', borderRadius: '4px', fontWeight: 800 }}>
                                                                 {lvl.label}
                                                             </span>
                                                         </div>
-                                                        <div style={{ display: 'flex', gap: '8px', fontSize: '0.65rem', color: '#94a3b8', marginTop: '2px' }}>
+                                                        <div style={{ display: 'flex', gap: '8px', fontSize: '0.65rem', color: '#475569', marginTop: '2px' }}>
                                                             <span>🌡️ {s.tempMax?.toFixed(1)}°C</span>
                                                             <span>💧 {s.humMin}%</span>
                                                             <span>💨 {s.windMean}km/h</span>
@@ -1059,9 +1060,9 @@ const FireRiskMap = () => {
                                 </div>
 
                                 {/* Section 2 : Postes sous surveillance (1 critère actif) */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid #334155', borderTop: '1px solid #334155', padding: '6px 0', marginTop: '4px' }}>
-                                    <Info size={14} style={{ color: '#10b981' }} />
-                                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#e2e8f0' }}>Sous surveillance (1 seuil franchi)</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid #cbd5e1', borderTop: '1px solid #cbd5e1', padding: '6px 0', marginTop: '4px' }}>
+                                    <Info size={14} style={{ color: '#059669' }} />
+                                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1e293b' }}>Sous surveillance (1 seuil franchi)</span>
                                 </div>
                                 <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', paddingRight: '4px' }}>
                                     {underSurveillance.length === 0 ? (
@@ -1084,24 +1085,27 @@ const FireRiskMap = () => {
                                                             });
                                                         }}
                                                         style={{ 
-                                                            background: 'rgba(15, 23, 42, 0.4)', 
+                                                            background: '#f8fafc', 
                                                             borderLeft: `3px solid ${lvl.color}`, 
                                                             borderRadius: '0 6px 6px 0', 
                                                             padding: '6px 8px',
                                                             cursor: 'pointer',
-                                                            transition: 'background 0.2s'
+                                                            transition: 'background 0.2s',
+                                                            borderTop: '1px solid #e2e8f0',
+                                                            borderRight: '1px solid #e2e8f0',
+                                                            borderBottom: '1px solid #e2e8f0'
                                                         }}
                                                     >
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <span style={{ fontSize: '0.72rem', fontWeight: 500, color: '#cbd5e1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '185px' }}>
+                                                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '185px' }}>
                                                                 {s.name} ({s.dept})
                                                             </span>
-                                                            <span style={{ fontSize: '0.62rem', color: '#10b981', fontWeight: 600 }}>Surveillance</span>
+                                                            <span style={{ fontSize: '0.62rem', color: '#047857', fontWeight: 700 }}>Surveillance</span>
                                                         </div>
-                                                        <div style={{ display: 'flex', gap: '8px', fontSize: '0.65rem', color: '#64748b', marginTop: '2px' }}>
-                                                            <span style={{ color: s.tempMax >= 25 ? '#fbbf24' : '#64748b' }}>🌡️ {s.tempMax?.toFixed(1)}°C</span>
-                                                            <span style={{ color: s.humMin <= 45 ? '#fbbf24' : '#64748b' }}>💧 {s.humMin}%</span>
-                                                            <span style={{ color: s.windMean >= 15 ? '#fbbf24' : '#64748b' }}>💨 {s.windMean}km/h</span>
+                                                        <div style={{ display: 'flex', gap: '8px', fontSize: '0.65rem', color: '#475569', marginTop: '2px' }}>
+                                                            <span style={{ color: s.tempMax >= 25 ? '#d97706' : '#475569' }}>🌡️ {s.tempMax?.toFixed(1)}°C</span>
+                                                            <span style={{ color: s.humMin <= 45 ? '#d97706' : '#475569' }}>💧 {s.humMin}%</span>
+                                                            <span style={{ color: s.windMean >= 15 ? '#d97706' : '#475569' }}>💨 {s.windMean}km/h</span>
                                                         </div>
                                                     </div>
                                                 );
@@ -1111,10 +1115,25 @@ const FireRiskMap = () => {
                             </div>
                         );
                     })()}
+
+                    {/* Bloc Titre Image (bas gauche) */}
+                    <div style={{ position: 'absolute', bottom: '20px', left: '20px', padding: '10px 16px', background: 'rgba(255,255,255,0.95)', borderRadius: '8px', border: '1px solid #000', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10 }}>
+                        <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#000', textTransform: 'uppercase', lineHeight: '1.2' }}>RISQUE FEUX DE FORÊT</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#334155', marginTop: '2px' }}>
+                            {format(new Date(selectedDate), "EEEE d MMMM yyyy", { locale: fr })}
+                        </div>
+                    </div>
+
+                    {/* Logo (bas droite) */}
+                    <div style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', zIndex: 10 }}>
+                        <img src="/logo.jpg" alt="Logo" style={{ height: '48px', borderRadius: '6px', border: '1px solid #000', background: 'white' }} />
+                        <span style={{ fontSize: '0.7rem', color: '#000', fontWeight: '900', letterSpacing: '0.05em' }}>WWW.METEO-CLIMAT.PRO</span>
+                    </div>
+
                     {loading && (
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center', color: '#94a3b8' }}>
-                            <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite', marginBottom: 12 }} />
-                            <div>Chargement des données...</div>
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center', color: '#475569' }}>
+                            <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite', marginBottom: 12, color: '#ef4444' }} />
+                            <div style={{ fontWeight: 700 }}>Chargement des données...</div>
                         </div>
                     )}
                     {!loading && geoData && projection && (
@@ -1124,12 +1143,12 @@ const FireRiskMap = () => {
                         >
                             <defs>
                                 <filter id="shadow">
-                                    <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#000" floodOpacity="0.4"/>
+                                    <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#000" floodOpacity="0.25"/>
                                 </filter>
                             </defs>
 
-                            {/* Fond */}
-                            <rect width={WIDTH} height={HEIGHT} fill="#0f172a" />
+                            {/* Fond Blanc */}
+                            <rect width={WIDTH} height={HEIGHT} fill="#ffffff" />
 
                             {/* Tracés des départements (filtrés par région s'il y a un zoom) */}
                             {geoData.features
@@ -1158,7 +1177,7 @@ const FireRiskMap = () => {
                                             key={`dept-${code}`}
                                             d={pathGenerator(feature)}
                                             fill={fillColor}
-                                            stroke={isSelected ? '#fff' : isHovered ? '#cbd5e1' : '#1e293b'}
+                                            stroke={isSelected ? '#000000' : isHovered ? '#000000' : '#334155'}
                                             strokeWidth={isSelected ? 2.5 : isHovered ? 1.5 : 0.8}
                                             style={{
                                                 cursor: hasRisk ? 'pointer' : 'default',
@@ -1178,7 +1197,7 @@ const FireRiskMap = () => {
 
                             {/* Limites régionales noires au-dessus de la France entière */}
                             {selectedRegionName === "France" && regionsGeoData && (
-                                <g fill="none" stroke="#000" strokeWidth="1.5" strokeOpacity="0.4" style={{ pointerEvents: 'none' }}>
+                                <g fill="none" stroke="#000" strokeWidth="1.8" strokeOpacity="0.7" style={{ pointerEvents: 'none' }}>
                                     {regionsGeoData.features.map((f, idx) => (
                                         <path key={`region-border-${idx}`} d={pathGenerator(f)} />
                                     ))}
@@ -1222,9 +1241,9 @@ const FireRiskMap = () => {
                                                 textAnchor="middle"
                                                 dominantBaseline="middle"
                                                 fontSize={selectedRegionName === "France" ? "9" : "15"}
-                                                fill="#fff"
-                                                fontWeight="700"
-                                                style={{ userSelect: 'none', textShadow: '0 1px 3px #000' }}
+                                                fill="#000000"
+                                                fontWeight="800"
+                                                style={{ userSelect: 'none', textShadow: '0 0 4px #ffffff, 0 0 4px #ffffff' }}
                                             >
                                                 {deptData.stations.length}p
                                             </text>
@@ -1275,7 +1294,7 @@ const FireRiskMap = () => {
                                                 cy={coords[1]}
                                                 r={selectedRegionName === "France" ? "5.5" : "7.5"}
                                                 fill={lvl.color}
-                                                stroke="#fff"
+                                                stroke="#000000"
                                                 strokeWidth={selectedRegionName === "France" ? "1.5" : "2"}
                                                 style={{
                                                     animation: isCriticalStation ? 'pulse-station-critical 1.5s infinite ease-in-out' : 'none',
