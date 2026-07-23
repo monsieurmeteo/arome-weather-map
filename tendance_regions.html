@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tendances Météo Régionales & Nationales | Premium Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --glass-bg: rgba(17, 24, 39, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+            
+            --primary: #06b6d4; /* cyan */
+            --primary-glow: rgba(6, 182, 212, 0.3);
+            
+            --color-green: #10b981;
+            --color-yellow: #f59e0b;
+            --color-orange: #f97316;
+            --color-red: #ef4444;
+            --color-dark: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 80% 20%, #1e1b4b 0%, var(--bg-color) 60%);
+            color: var(--text-color);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            background: rgba(10, 15, 30, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-section i {
+            font-size: 28px;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .logo-section h1 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #fff, #a5f3fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .last-update {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        #main-container {
+            flex: 1;
+            display: flex;
+            height: calc(100vh - 70px);
+            position: relative;
+        }
+
+        /* PANNEAU DE CONTROLE (GAUCHE) */
+        #control-panel {
+            width: 450px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid var(--glass-border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #control-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        #control-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* SELECTION DU PHENOMENE */
+        .hazard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .hazard-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .hazard-btn i {
+            font-size: 18px;
+        }
+
+        .hazard-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .hazard-btn.active {
+            background: var(--primary-glow);
+            border-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        /* TIMELINE / SLIDER TEMPOREL */
+        .timeline-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .slider-wrapper {
+            position: relative;
+            padding: 10px 0;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--primary);
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .days-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .days-labels span {
+            width: 50px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .days-labels span.active {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* DETAILS SÉLECTION */
+        #detail-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .detail-title h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .detail-title span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 11px;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .bg-green { background: rgba(16, 185, 129, 0.15); color: var(--color-green); border: 1px solid var(--color-green); }
+        .bg-yellow { background: rgba(245, 158, 11, 0.15); color: var(--color-yellow); border: 1px solid var(--color-yellow); }
+        .bg-orange { background: rgba(249, 115, 22, 0.15); color: var(--color-orange); border: 1px solid var(--color-orange); }
+        .bg-red { background: rgba(239, 68, 68, 0.15); color: var(--color-red); border: 1px solid var(--color-red); }
+
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .param-box {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .param-box i {
+            font-size: 20px;
+            color: var(--primary);
+            opacity: 0.8;
+        }
+
+        .param-info div:first-child {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .param-info div:last-child {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* TENDANCES SUR 7 JOURS */
+        .weekly-trend-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .weekly-trend-row:last-child {
+            border: none;
+        }
+
+        .trend-date {
+            font-size: 12px;
+            width: 100px;
+        }
+
+        .trend-dot-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .trend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* CONTENEUR CARTE (DROITE) */
+        #map-container {
+            flex: 1;
+            position: relative;
+            background: #05070c;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .legend-card {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+
+        /* CUSTOM LEAFLET TOOLTIP */
+        .leaflet-tooltip-own {
+            background: rgba(10, 15, 30, 0.9) !important;
+            border: 1px solid var(--glass-border) !important;
+            color: #fff !important;
+            font-family: 'Poppins', sans-serif !important;
+            font-size: 12px !important;
+            border-radius: 6px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+            padding: 6px 10px !important;
+        }
+
+        .leaflet-container {
+            background: #070913 !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-section">
+            <i class="fa-solid fa-chart-line"></i>
+            <div>
+                <h1>MÉTÉO CLIMAT PRO</h1>
+                <div style="font-size: 10px; color: var(--primary);">GÉNÉRATEUR DE TENDANCES RÉGIONALES & NATIONALES</div>
+            </div>
+        </div>
+        <div class="last-update" id="generation-timestamp">Mise à jour : Chargement...</div>
+    </header>
+
+    <div id="main-container">
+        <!-- PANNEAU DE CONTROLE -->
+        <div id="control-panel">
+            <!-- PHENOMENES -->
+            <div>
+                <div class="section-title"><i class="fa-solid fa-triangle-exclamation"></i> Risque Recherché</div>
+                <div class="hazard-grid">
+                    <button class="hazard-btn active" data-hazard="global">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Menace Pire</span>
+                    </button>
+                    <button class="hazard-btn" data-hazard="vent">
+                        <i class="fa-solid fa-wind"></i>
+                        <span>Vent</span>
+                    </button>
+                    <button class="hazard-btn" data-hazard="pluie">
+                        <i class="fa-solid fa-cloud-showers-heavy"></i>
+                        <span>Pluie</span>
+                    </button>
+                    <button class="hazard-btn" data-hazard="orage">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Orages</span>
+                    </button>
+                    <button class="hazard-btn" data-hazard="neige">
+                        <i class="fa-solid fa-snowflake"></i>
+                        <span>Neige</span>
+                    </button>
+                    <button class="hazard-btn" data-hazard="canicule">
+                        <i class="fa-solid fa-temperature-arrow-up"></i>
+                        <span>Canicule</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TIMELINE -->
+            <div class="timeline-container">
+                <div class="section-title"><i class="fa-solid fa-calendar-days"></i> Échéance Prévisionnelle</div>
+                <div class="glass-card">
+                    <div class="slider-wrapper">
+                        <input type="range" id="day-slider" min="0" max="6" value="0">
+                    </div>
+                    <div class="days-labels" id="slider-labels">
+                        <!-- Généré par JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- FICHE DÉTAILLÉE -->
+            <div class="glass-card" id="detail-card">
+                <div class="detail-header">
+                    <div class="detail-title">
+                        <h2 id="selected-name">France Entière</h2>
+                        <span id="selected-type">Échelle Nationale</span>
+                    </div>
+                    <button class="back-btn" id="btn-back" style="display: none;">
+                        <i class="fa-solid fa-chevron-left"></i> Retour France
+                    </button>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+                    <span style="font-size: 13px; color: var(--text-muted);">Indice de risque :</span>
+                    <span class="risk-badge bg-green" id="risk-display-badge">Verte (0%)</span>
+                </div>
+
+                <!-- VALEURS PHYSIQUES (Département uniquement) -->
+                <div id="physical-parameters-section" style="display: none; margin-top: 10px;">
+                    <div class="section-title" style="font-size: 11px;"><i class="fa-solid fa-temperature-half"></i> Conditions Estimées</div>
+                    <div class="param-grid">
+                        <div class="param-box">
+                            <i class="fa-solid fa-temperature-three-quarters"></i>
+                            <div class="param-info">
+                                <div>Température Max</div>
+                                <span id="param-val-tmax">-- °C</span>
+                            </div>
+                        </div>
+                        <div class="param-box">
+                            <i class="fa-solid fa-temperature-quarter"></i>
+                            <div class="param-info">
+                                <div>Température Min</div>
+                                <span id="param-val-tmin">-- °C</span>
+                            </div>
+                        </div>
+                        <div class="param-box">
+                            <i class="fa-solid fa-cloud-rain"></i>
+                            <div class="param-info">
+                                <div>Cumul Pluie</div>
+                                <span id="param-val-rain">-- mm</span>
+                            </div>
+                        </div>
+                        <div class="param-box">
+                            <i class="fa-solid fa-wind"></i>
+                            <div class="param-info">
+                                <div>Rafales Max</div>
+                                <span id="param-val-wind">-- km/h</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seuils Canicule du département -->
+                    <div style="margin-top: 12px; font-size: 10px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                        <i class="fa-solid fa-circle-info"></i> Seuils Canicule réglementaires : <span id="canicule-threshold-display" style="font-weight: 500; color: #fff;">--</span>
+                    </div>
+                </div>
+
+                <!-- TENDANCE SUR 7 JOURS -->
+                <div style="margin-top: 10px;">
+                    <div class="section-title" style="font-size: 11px;"><i class="fa-solid fa-chart-simple"></i> Évolution sur 7 jours</div>
+                    <div id="weekly-trend-list" style="margin-top: 8px;">
+                        <!-- Rempli par JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENEUR CARTOGRAPHIE -->
+        <div id="map-container">
+            <div id="map"></div>
+            
+            <!-- Légende -->
+            <div class="legend-card">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--color-green);"></div>
+                    <span>Pas de menace (0% - 24%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--color-yellow);"></div>
+                    <span>Menace faible (25% - 49%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--color-orange);"></div>
+                    <span>Menace marquée (50% - 74%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--color-red);"></div>
+                    <span>Menace extrême (75% - 100%)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Mappage des identifiants internes aux codes de régions GeoJSON
+        const REGION_ID_TO_CODE = {
+            "ile-de-france": "11",
+            "cvl": "24",
+            "bfc": "27",
+            "normandie": "28",
+            "hdf": "32",
+            "grand-est": "44",
+            "pdl": "52",
+            "bretagne": "53",
+            "naq": "75",
+            "occitanie": "76",
+            "ara": "84",
+            "paca": "93",
+            "corse": "94"
+        };
+
+        const REGION_CODE_TO_ID = Object.fromEntries(
+            Object.entries(REGION_ID_TO_CODE).map(([k, v]) => [v, k])
+        );
+
+        // Mappage des départements aux régions
+        const DEP_TO_REGION = {
+            "01": "ara", "03": "ara", "07": "ara", "15": "ara", "26": "ara", "38": "ara", "42": "ara", "43": "ara", "63": "ara", "69": "ara", "73": "ara", "74": "ara",
+            "21": "bfc", "25": "bfc", "39": "bfc", "58": "bfc", "70": "bfc", "71": "bfc", "89": "bfc", "90": "bfc",
+            "22": "bretagne", "29": "bretagne", "35": "bretagne", "56": "bretagne",
+            "18": "cvl", "28": "cvl", "36": "cvl", "37": "cvl", "41": "cvl", "45": "cvl",
+            "2A": "corse", "2B": "corse",
+            "08": "grand-est", "10": "grand-est", "51": "grand-est", "52": "grand-est", "54": "grand-est", "55": "grand-est", "57": "grand-est", "67": "grand-est", "68": "grand-est", "88": "grand-est",
+            "02": "hdf", "59": "hdf", "60": "hdf", "62": "hdf", "80": "hdf",
+            "75": "ile-de-france", "77": "ile-de-france", "78": "ile-de-france", "91": "ile-de-france", "92": "ile-de-france", "93": "ile-de-france", "94": "ile-de-france", "95": "ile-de-france",
+            "14": "normandie", "27": "normandie", "50": "normandie", "61": "normandie", "76": "normandie",
+            "16": "naq", "17": "naq", "19": "naq", "23": "naq", "24": "naq", "33": "naq", "40": "naq", "47": "naq", "64": "naq", "79": "naq", "86": "naq", "87": "naq",
+            "09": "occitanie", "11": "occitanie", "12": "occitanie", "30": "occitanie", "31": "occitanie", "32": "occitanie", "34": "occitanie", "46": "occitanie", "48": "occitanie", "65": "occitanie", "66": "occitanie", "81": "occitanie", "82": "occitanie",
+            "44": "pdl", "49": "pdl", "53": "pdl", "72": "pdl", "85": "pdl",
+            "04": "paca", "05": "paca", "06": "paca", "13": "paca", "83": "paca", "84": "paca"
+        };
+
+        // Données chargées
+        let database = null;
+        let geojsonRegions = null;
+        let geojsonDepartements = null;
+
+        // Variables de statut
+        let currentHazard = "global";
+        let currentDayIndex = 0;
+        let mapMode = "national"; // "national" ou "regional"
+        let selectedRegionId = null;
+        let selectedDepCode = null;
+
+        // Carte Leaflet
+        let map = null;
+        let geojsonLayer = null;
+
+        // Éléments du DOM
+        const daySlider = document.getElementById("day-slider");
+        const sliderLabels = document.getElementById("slider-labels");
+        const selectedNameEl = document.getElementById("selected-name");
+        const selectedTypeEl = document.getElementById("selected-type");
+        const riskDisplayBadge = document.getElementById("risk-display-badge");
+        const backBtn = document.getElementById("btn-back");
+        const weeklyTrendList = document.getElementById("weekly-trend-list");
+        const genTimestampEl = document.getElementById("generation-timestamp");
+        
+        // Eléments physiques
+        const physSection = document.getElementById("physical-parameters-section");
+        const pTmax = document.getElementById("param-val-tmax");
+        const pTmin = document.getElementById("param-val-tmin");
+        const pRain = document.getElementById("param-val-rain");
+        const pWind = document.getElementById("param-val-wind");
+        const caniculeThreshEl = document.getElementById("canicule-threshold-display");
+
+        // Initialisation de la carte
+        function initMap() {
+            map = L.map('map', {
+                zoomSnap: 0.1,
+                zoomControl: false,
+                attributionControl: false
+            }).setView([46.4, 2.3], 6);
+
+            // Couche de tuiles noires pour rendu premium
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 10,
+                minZoom: 4
+            }).addTo(map);
+
+            L.control.zoom({
+                position: 'topright'
+            }).addTo(map);
+        }
+
+        // Couleurs de risque
+        function getRiskColor(val) {
+            if (val === 0) return "#10b981"; // Vert
+            if (val <= 25) return "#22c55e"; // Vert clair
+            if (val <= 50) return "#f59e0b"; // Jaune
+            if (val <= 75) return "#f97316"; // Orange
+            return "#ef4444"; // Rouge
+        }
+
+        function getRiskText(val) {
+            if (val === 0) return "Aucun risque (0%)";
+            if (val <= 25) return `Risque Très Faible (${val}%)`;
+            if (val <= 50) return `Risque Modéré (Jaune) (${val}%)`;
+            if (val <= 75) return `Risque Marqué (Orange) (${val}%)`;
+            return `Risque Extrême (Rouge) (${val}%)`;
+        }
+
+        function getRiskBadgeClass(val) {
+            if (val <= 25) return "bg-green";
+            if (val <= 50) return "bg-yellow";
+            if (val <= 75) return "bg-orange";
+            return "bg-red";
+        }
+
+        // Mettre à jour l'affichage de la carte
+        function updateMap() {
+            if (!geojsonRegions || !geojsonDepartements || !database) return;
+
+            if (geojsonLayer) {
+                map.removeLayer(geojsonLayer);
+            }
+
+            const currentDayDate = database.regions["hdf"].days[currentDayIndex].date;
+
+            if (mapMode === "national") {
+                // Version Carte nationale (13 régions)
+                geojsonLayer = L.geoJSON(geojsonRegions, {
+                    style: function(feature) {
+                        const code = feature.properties.code;
+                        const rId = REGION_CODE_TO_ID[code];
+                        let riskVal = 0;
+                        if (rId && database.regions[rId]) {
+                            const dayData = database.regions[rId].days[currentDayIndex];
+                            riskVal = dayData.risks[currentHazard];
+                        }
+
+                        return {
+                            fillColor: getRiskColor(riskVal),
+                            fillOpacity: 0.65,
+                            color: "rgba(255, 255, 255, 0.2)",
+                            weight: 1.5
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const code = feature.properties.code;
+                        const rId = REGION_CODE_TO_ID[code];
+                        const name = feature.properties.nom;
+
+                        layer.on({
+                            mouseover: function(e) {
+                                const l = e.target;
+                                l.setStyle({
+                                    fillOpacity: 0.8,
+                                    color: "#fff",
+                                    weight: 2
+                                });
+                                
+                                let rVal = 0;
+                                if (rId && database.regions[rId]) {
+                                    rVal = database.regions[rId].days[currentDayIndex].risks[currentHazard];
+                                }
+                                
+                                l.bindTooltip(`<strong>${name}</strong><br>Risque : ${rVal}%`, {
+                                    className: 'leaflet-tooltip-own',
+                                    sticky: true
+                                }).openTooltip();
+                            },
+                            mouseout: function(e) {
+                                geojsonLayer.resetStyle(e.target);
+                            },
+                            click: function() {
+                                zoomToRegion(rId, name);
+                            }
+                        });
+                    }
+                }).addTo(map);
+
+                // Réinitialiser la vue de la carte
+                map.setView([46.4, 2.3], 6);
+            } else {
+                // Version Carte régionale (zoomer sur les départements de la région)
+                geojsonLayer = L.geoJSON(geojsonDepartements, {
+                    filter: function(feature) {
+                        const depCode = feature.properties.code;
+                        return DEP_TO_REGION[depCode] === selectedRegionId;
+                    },
+                    style: function(feature) {
+                        const depCode = feature.properties.code;
+                        let riskVal = 0;
+                        if (database.departements[depCode]) {
+                            const dayData = database.departements[depCode].days[currentDayIndex];
+                            riskVal = dayData.risks[currentHazard];
+                        }
+
+                        return {
+                            fillColor: getRiskColor(riskVal),
+                            fillOpacity: 0.7,
+                            color: "rgba(255, 255, 255, 0.3)",
+                            weight: 1.5
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const depCode = feature.properties.code;
+                        const name = feature.properties.nom;
+
+                        layer.on({
+                            mouseover: function(e) {
+                                const l = e.target;
+                                l.setStyle({
+                                    fillOpacity: 0.9,
+                                    color: "#fff",
+                                    weight: 2
+                                });
+                                
+                                let rVal = 0;
+                                if (database.departements[depCode]) {
+                                    rVal = database.departements[depCode].days[currentDayIndex].risks[currentHazard];
+                                }
+                                
+                                l.bindTooltip(`<strong>${depCode} - ${name}</strong><br>Risque : ${rVal}%`, {
+                                    className: 'leaflet-tooltip-own',
+                                    sticky: true
+                                }).openTooltip();
+                            },
+                            mouseout: function(e) {
+                                geojsonLayer.resetStyle(e.target);
+                            },
+                            click: function() {
+                                selectDepartment(depCode, name);
+                            }
+                        });
+                    }
+                }).addTo(map);
+            }
+        }
+
+        // Action de zoom sur une région
+        function zoomToRegion(regionId, regionName) {
+            selectedRegionId = regionId;
+            selectedDepCode = null;
+            mapMode = "regional";
+            
+            backBtn.style.display = "flex";
+            
+            // Calculer l'emprise (bounds) des départements filtrés pour zoomer dessus
+            const filteredGeoJSON = {
+                type: "FeatureCollection",
+                features: geojsonDepartements.features.filter(f => DEP_TO_REGION[f.properties.code] === regionId)
+            };
+            
+            const tempLayer = L.geoJSON(filteredGeoJSON);
+            map.fitBounds(tempLayer.getBounds(), { padding: [20, 20] });
+            
+            updateDetailCard();
+            updateMap();
+        }
+
+        // Retour à la carte nationale
+        function resetToNational() {
+            mapMode = "national";
+            selectedRegionId = null;
+            selectedDepCode = null;
+            backBtn.style.display = "none";
+            
+            updateDetailCard();
+            updateMap();
+        }
+
+        // Action de sélection d'un département
+        function selectDepartment(depCode, depName) {
+            selectedDepCode = depCode;
+            updateDetailCard();
+        }
+
+        // Formater les dates pour l'interface
+        function formatDayLabel(dateStr) {
+            const date = new Date(dateStr);
+            const days = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+            const months = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+            return `${days[date.getDay()]} ${date.getDate()}`;
+        }
+
+        // Mettre à jour la fiche de détails de gauche
+        function updateDetailCard() {
+            if (!database) return;
+
+            let name = "France Entière";
+            let type = "Échelle Nationale";
+            let riskVal = 0;
+            let timelineData = [];
+
+            const keys = Object.keys(database.regions);
+            const sampleRegion = keys[0];
+            const dates = database.regions[sampleRegion].days.map(d => d.date);
+
+            if (selectedDepCode) {
+                // Mode Département sélectionné
+                const depInfo = database.departements[selectedDepCode];
+                name = `${selectedDepCode} - ${depInfo.name}`;
+                type = `Préfecture : ${depInfo.prefecture}`;
+                
+                const dayData = depInfo.days[currentDayIndex];
+                riskVal = dayData.risks[currentHazard];
+                
+                // Activer l'affichage des paramètres physiques
+                physSection.style.display = "block";
+                pTmax.innerText = dayData.values.tmax !== null ? `${dayData.values.tmax} °C` : "--";
+                pTmin.innerText = dayData.values.tmin !== null ? `${dayData.values.tmin} °C` : "--";
+                pRain.innerText = `${dayData.values.rain} mm`;
+                pWind.innerText = `${dayData.values.wind} km/h`;
+                caniculeThreshEl.innerText = `${depInfo.thresholds.canicule_jour} °C / ${depInfo.thresholds.canicule_nuit} °C`;
+
+                // Charger la série temporelle
+                timelineData = depInfo.days.map(d => ({
+                    date: d.date,
+                    risk: d.risks[currentHazard]
+                }));
+            } else if (selectedRegionId) {
+                // Mode Région sélectionnée
+                const regInfo = database.regions[selectedRegionId];
+                name = regInfo.name;
+                type = "Échelle Régionale (Pire menace)";
+                
+                const dayData = regInfo.days[currentDayIndex];
+                riskVal = dayData.risks[currentHazard];
+                
+                physSection.style.display = "none";
+
+                timelineData = regInfo.days.map(d => ({
+                    date: d.date,
+                    risk: d.risks[currentHazard]
+                }));
+            } else {
+                // Mode France Entière (Calculer la moyenne ou le maximum de toutes les régions)
+                name = "France Entière";
+                type = "Maximum National";
+                
+                // Prendre le maximum national de toutes les régions pour ce jour
+                let maxNational = 0;
+                for (const rId of Object.keys(database.regions)) {
+                    const rRisk = database.regions[rId].days[currentDayIndex].risks[currentHazard];
+                    if (rRisk > maxNational) maxNational = rRisk;
+                }
+                riskVal = maxNational;
+                
+                physSection.style.display = "none";
+
+                // Calculer la tendance 7 jours max de la France
+                timelineData = dates.map((dt, dIdx) => {
+                    let dMax = 0;
+                    for (const rId of Object.keys(database.regions)) {
+                        const rRisk = database.regions[rId].days[dIdx].risks[currentHazard];
+                        if (rRisk > dMax) dMax = rRisk;
+                    }
+                    return { date: dt, risk: dMax };
+                });
+            }
+
+            // Mettre à jour les labels
+            selectedNameEl.innerText = name;
+            selectedTypeEl.innerText = type;
+            
+            // Badge du risque
+            riskDisplayBadge.innerText = getRiskText(riskVal);
+            riskDisplayBadge.className = `risk-badge ${getRiskBadgeClass(riskVal)}`;
+
+            // Remplir l'évolution 7 jours
+            weeklyTrendList.innerHTML = "";
+            timelineData.forEach((t, index) => {
+                const isSelected = index === currentDayIndex;
+                const row = document.createElement("div");
+                row.className = "weekly-trend-row";
+                row.style.background = isSelected ? "rgba(255,255,255,0.06)" : "transparent";
+                row.style.borderLeft = isSelected ? "3px solid var(--primary)" : "none";
+                row.style.paddingLeft = isSelected ? "8px" : "0px";
+                row.style.cursor = "pointer";
+                row.addEventListener("click", () => {
+                    currentDayIndex = index;
+                    daySlider.value = index;
+                    updateActiveLabel(index);
+                    updateDetailCard();
+                    updateMap();
+                });
+
+                row.innerHTML = `
+                    <div class="trend-date" style="font-weight: ${isSelected ? '600' : '400'}">${formatDayLabel(t.date)}</div>
+                    <div class="trend-dot-container">
+                        <div class="trend-dot" style="background: ${getRiskColor(t.risk)}; box-shadow: 0 0 6px ${getRiskColor(t.risk)}"></div>
+                    </div>
+                    <div style="font-size: 11px; font-weight: 500; min-width: 36px; text-align: right;">${t.risk}%</div>
+                `;
+                weeklyTrendList.appendChild(row);
+            });
+        }
+
+        // Mettre à jour l'affichage dynamique du slider temporel
+        function setupTimelineLabels(dates) {
+            sliderLabels.innerHTML = "";
+            dates.forEach((dateStr, index) => {
+                const span = document.createElement("span");
+                span.innerText = formatDayLabel(dateStr);
+                if (index === currentDayIndex) span.className = "active";
+                span.addEventListener("click", () => {
+                    currentDayIndex = index;
+                    daySlider.value = index;
+                    updateActiveLabel(index);
+                    updateDetailCard();
+                    updateMap();
+                });
+                sliderLabels.appendChild(span);
+            });
+        }
+
+        function updateActiveLabel(index) {
+            const spans = sliderLabels.querySelectorAll("span");
+            spans.forEach((s, idx) => {
+                if (idx === index) s.className = "active";
+                else s.className = "";
+            });
+        }
+
+        // Chargement initial des données
+        async function loadData() {
+            try {
+                // 1. Charger les tendances
+                const resTrends = await fetch("exports_csv/regional_trends.json");
+                database = await resTrends.json();
+                
+                // Formater l'horodatage de génération
+                const genDate = new Date(database.generated_at);
+                genTimestampEl.innerText = `Mise à jour : ${genDate.toLocaleDateString('fr-FR')} à ${genDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}`;
+
+                // Configurer le slider temporel
+                const keys = Object.keys(database.regions);
+                const sampleRegion = keys[0];
+                const dates = database.regions[sampleRegion].days.map(d => d.date);
+                setupTimelineLabels(dates);
+
+                // 2. Charger les contours des Régions
+                const resRegions = await fetch("data/regions-version-simplifiee.geojson");
+                geojsonRegions = await resRegions.json();
+
+                // 3. Charger les contours des Départements
+                const resDepartements = await fetch("data/departements-version-simplifiee.geojson");
+                geojsonDepartements = await resDepartements.json();
+
+                // Démarrer l'affichage
+                updateDetailCard();
+                updateMap();
+
+            } catch (err) {
+                console.error("Erreur lors du chargement des données météo :", err);
+                selectedNameEl.innerText = "Erreur de chargement";
+                selectedTypeEl.innerText = "Veuillez vérifier que le serveur local est actif.";
+            }
+        }
+
+        // Ecouteurs d'événements
+        document.querySelectorAll(".hazard-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                document.querySelectorAll(".hazard-btn").forEach(b => b.classList.remove("active"));
+                const target = e.currentTarget;
+                target.classList.add("active");
+                currentHazard = target.getAttribute("data-hazard");
+                
+                updateDetailCard();
+                updateMap();
+            });
+        });
+
+        daySlider.addEventListener("input", (e) => {
+            currentDayIndex = parseInt(e.target.value);
+            updateActiveLabel(currentDayIndex);
+            updateDetailCard();
+            updateMap();
+        });
+
+        backBtn.addEventListener("click", resetToNational);
+
+        // Lancement
+        initMap();
+        loadData();
+    </script>
+</body>
+</html>
