@@ -47,6 +47,57 @@ function MapController({ center, zoom }) {
 }
 
 // Pane de recherche (Doit être au top niveau pour les enfants)
+const isPointInPolygon = (point, vs) => {
+    const x = point[0], y = point[1];
+    let inside = false;
+    for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        const xi = vs[i][0], yi = vs[i][1];
+        const xj = vs[j][0], yj = vs[j][1];
+        const intersect = ((yi > y) !== (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+};
+
+const isPointInFeature = (lat, lon, feature) => {
+    const point = [lon, lat];
+    if (feature.geometry.type === 'Polygon') {
+        return isPointInPolygon(point, feature.geometry.coordinates[0]);
+    } else if (feature.geometry.type === 'MultiPolygon') {
+        return feature.geometry.coordinates.some(poly => isPointInPolygon(point, poly[0]));
+    }
+    return false;
+};
+
+const isPointInGeoJSON = (lat, lon, geojson) => {
+    if (!geojson || !geojson.features || geojson.features.length === 0) return true;
+    return geojson.features.some(f => isPointInFeature(lat, lon, f));
+};
+
+function GeoJSONController({ data, isFrance }) {
+    const map = useMap();
+    const prevModeRef = useRef(isFrance);
+    const prevDataRef = useRef(data);
+
+    useEffect(() => {
+        const modeChanged = prevModeRef.current !== isFrance;
+        const dataChanged = prevDataRef.current !== data;
+
+        if (modeChanged || dataChanged) {
+            if (isFrance) {
+                map.setView([46.4, 2.2], 5.4); // Centre la France automatiquement en intégralité
+            } else if (data) {
+                const layer = L.geoJSON(data);
+                map.fitBounds(layer.getBounds(), { padding: [20, 20], animate: true });
+            }
+            prevModeRef.current = isFrance;
+            prevDataRef.current = data;
+        }
+    }, [data, isFrance, map]);
+    return null;
+}
+
 const SearchCirclesPane = () => {
     const map = useMap();
     useEffect(() => {
@@ -192,6 +243,7 @@ const FoudreFrance = () => {
     const [foudreDesign, setFoudreDesign] = useState("Classic");
 
     // Search states
+    const [searchMode, setSearchMode] = useState('commune'); // 'commune' ou 'adresse'
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState(null);
@@ -207,17 +259,25 @@ const FoudreFrance = () => {
     // Debug toggle
     const [showDebug, setShowDebug] = useState(false);
 
-    // Calcul de la minute de départ de l'orage pour l'animation
+    // Filtrage spatial intelligent par région/département
+    const filteredStrikes = React.useMemo(() => {
+        if (geoMode === 'france' || !filteredGeo) {
+            return strikes;
+        }
+        return strikes.filter(s => isPointInGeoJSON(s.lat, s.lon, filteredGeo));
+    }, [strikes, geoMode, filteredGeo]);
+
+    // Calcul de la minute de départ de l'orage pour l'animation (calé sur la région sélectionnée)
     const minMinute = React.useMemo(() => {
-        if (strikes.length === 0) return 0;
-        const minutes = strikes.map(s => {
+        if (filteredStrikes.length === 0) return 0;
+        const minutes = filteredStrikes.map(s => {
             const d = new Date(s.time);
             return d.getHours() * 60 + d.getMinutes();
         });
         const minVal = Math.min(...minutes);
         // Commencer 1h avant le premier impact (arrondi à l'heure inférieure)
         return Math.max(0, Math.floor(minVal / 60) * 60 - 60);
-    }, [strikes]);
+    }, [filteredStrikes]);
 
     const isLive = !isRange && startDate === new Date().toLocaleDateString('sv-SE');
 
@@ -411,30 +471,28 @@ const FoudreFrance = () => {
         setSearchQuery(q);
         if (q.length < 3) { setSuggestions([]); return; }
         try {
-            const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5&type=municipality`);
+            const url = searchMode === 'commune'
+                ? `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5&type=municipality`
+                : `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5`;
+            const res = await fetch(url);
             const d = await res.json();
             setSuggestions(d.features || []);
         } catch (e) { console.error(e); }
     };
 
-    // Supprimé le useEffect manuel de centrage par coordonnées statiques au profit du GeoJSONController ci-dessous
 
-    function GeoJSONController({ data, isFrance }) {
-        const map = useMap();
-        useEffect(() => {
-            if (isFrance) {
-                map.setView([46.4, 2.2], 5.4); // Centre la France automatiquement en intégralité
-            } else if (data) {
-                const layer = L.geoJSON(data);
-                map.fitBounds(layer.getBounds(), { padding: [20, 20], animate: true });
-            }
-        }, [data, isFrance, map]);
-        return null;
-    }
 
     const selectCity = (city) => {
         const [lon, lat] = city.geometry.coordinates;
-        setSelectedLocation({ lat, lon, name: city.properties.city, postcode: city.properties.postcode });
+        const isAddress = city.properties.type !== 'municipality';
+        setSelectedLocation({ 
+            lat, 
+            lon, 
+            name: isAddress ? city.properties.name : city.properties.city, 
+            postcode: city.properties.postcode,
+            isAddress,
+            label: city.properties.label
+        });
         setSearchQuery('');
         setSuggestions([]);
     };
@@ -447,7 +505,7 @@ const FoudreFrance = () => {
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
-    const visibleStrikes = strikes.filter(s => {
+    const visibleStrikes = filteredStrikes.filter(s => {
         const d = new Date(s.time);
         const strikeMinute = d.getHours() * 60 + d.getMinutes();
         
@@ -469,10 +527,10 @@ const FoudreFrance = () => {
         count: visibleStrikes.filter(s => calculateDistance(selectedLocation.lat, selectedLocation.lon, s.lat, s.lon) <= r).length
     })) : null;
 
-    // Distribution horaire pour audit (toujours sur le total pour référence)
+    // Distribution horaire pour audit (filtrée selon la région/département sélectionné)
     const hourlyDistribution = Array.from({ length: 24 }, (_, h) => ({
         hour: h,
-        count: strikes.filter(s => s.h === h).length
+        count: filteredStrikes.filter(s => s.h === h).length
     }));
 
     const exportImage = async () => {
@@ -632,7 +690,7 @@ const FoudreFrance = () => {
                                 {visibleStrikes.length.toLocaleString()}
                             </div>
                             <div style={{ fontSize: '0.55rem', fontWeight: 800, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                {visibleStrikes.length !== strikes.length ? `Affichés / ${strikes.length.toLocaleString()}` : 'Impacts'}
+                                {visibleStrikes.length !== filteredStrikes.length ? `Affichés / ${filteredStrikes.length.toLocaleString()}` : 'Impacts'}
                             </div>
                         </div>
                     </div>
@@ -646,7 +704,7 @@ const FoudreFrance = () => {
                                 await new Promise(r => setTimeout(r, 1000)); // Wait for map to settle
                                 exportImage();
                             }}
-                            disabled={loading || exporting || strikes.length === 0}
+                            disabled={loading || exporting}
                             className="hide-on-export"
                             style={{ 
                                 background: '#10b981', 
@@ -695,48 +753,202 @@ const FoudreFrance = () => {
                 borderBottom: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0', 
                 zIndex: 999 
             }} className="site-controls-expert">
-                <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
-                    <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
-                        <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                        <input 
-                            type="text" 
-                            placeholder="Rechercher une commune..." 
-                            value={searchQuery} 
-                            onChange={(e) => handleSearch(e.target.value)} 
-                            style={{ 
-                                width: '100%', 
-                                padding: '6px 12px 6px 36px', 
-                                borderRadius: '8px', 
-                                border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', 
+                <div style={{ display: 'flex', gap: '12px', flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {/* Filtres Géo (France / Région / Département) */}
+                    <div style={{ display: 'flex', gap: '3px', background: isDarkPalette ? 'rgba(255,255,255,0.06)' : '#f1f5f9', padding: '3px', borderRadius: '9px', border: isDarkPalette ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1' }} className="hide-on-export">
+                        {[
+                            ['france', 'France'],
+                            ['region', 'Région'],
+                            ['dept', 'Dépt']
+                        ].map(([m, l]) => (
+                            <button
+                                key={m}
+                                onClick={() => {
+                                    setGeoMode(m);
+                                    setSelectedLocation(null); // Reset commune selection when changing mode
+                                }}
+                                style={{
+                                    padding: '4px 10px',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontWeight: 800,
+                                    fontSize: '0.7rem',
+                                    background: geoMode === m ? (isDarkPalette ? '#3b82f6' : '#fff') : 'transparent',
+                                    color: geoMode === m ? (isDarkPalette ? '#fff' : '#ef4444') : (isDarkPalette ? '#94a3b8' : '#64748b'),
+                                    transition: 'all 0.15s',
+                                    boxShadow: geoMode === m && !isDarkPalette ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                                }}
+                            >
+                                {l}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Sélecteurs dynamiques selon geoMode */}
+                    {geoMode === 'region' && (
+                        <select
+                            value={selectedRegion}
+                            onChange={(e) => {
+                                setSelectedRegion(e.target.value);
+                                setSelectedLocation(null);
+                            }}
+                            className="hide-on-export"
+                            style={{
+                                padding: '6px 10px',
+                                borderRadius: '8px',
+                                border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
                                 background: isDarkPalette ? 'rgba(0,0,0,0.3)' : '#fff',
                                 color: isDarkPalette ? '#fff' : '#0f172a',
-                                fontSize: '0.8rem', 
-                                outline: 'none', 
-                                fontWeight: 600 
-                            }} 
-                        />
-                        {suggestions.length > 0 && (
-                            <div style={{ 
-                                position: 'absolute', 
-                                top: '100%', 
-                                left: 0, 
-                                right: 0, 
-                                background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : '#fff', 
-                                backdropFilter: 'blur(15px)',
-                                border: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0', 
-                                borderRadius: '8px', 
-                                boxShadow: isDarkPalette ? '0 10px 25px rgba(0,0,0,0.5)' : '0 10px 25px rgba(0,0,0,0.1)', 
-                                zIndex: 2000,
-                                marginTop: '4px'
-                            }}>
-                                {suggestions.map((s, i) => (
-                                    <div key={i} onClick={() => selectCity(s)} style={{ padding: '8px 15px', cursor: 'pointer', borderBottom: isDarkPalette ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontWeight: 700, color: isDarkPalette ? '#fff' : '#0f172a', fontSize: '0.75rem' }}>{s.properties.city}</span>
-                                        <span style={{ color: isDarkPalette ? '#38bdf8' : '#2563eb', fontSize: '0.65rem', fontWeight: 800 }}>{s.properties.postcode}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                                fontWeight: 800,
+                                fontSize: '0.75rem',
+                                outline: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {Object.keys(REGIONS).sort().map(r => (
+                                <option key={r} value={r} style={{ background: isDarkPalette ? '#1e293b' : '#fff', color: isDarkPalette ? '#fff' : '#0f172a' }}>{r}</option>
+                            ))}
+                        </select>
+                    )}
+
+                    {geoMode === 'dept' && (
+                        <select
+                            value={selectedDept}
+                            onChange={(e) => {
+                                setSelectedDept(e.target.value);
+                                setSelectedLocation(null);
+                            }}
+                            className="hide-on-export"
+                            style={{
+                                padding: '6px 10px',
+                                borderRadius: '8px',
+                                border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+                                background: isDarkPalette ? 'rgba(0,0,0,0.3)' : '#fff',
+                                color: isDarkPalette ? '#fff' : '#0f172a',
+                                fontWeight: 800,
+                                fontSize: '0.75rem',
+                                outline: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {DEPARTMENTS.map(d => (
+                                <option key={d.code} value={d.code} style={{ background: isDarkPalette ? '#1e293b' : '#fff', color: isDarkPalette ? '#fff' : '#0f172a' }}>{d.code} - {d.name}</option>
+                            ))}
+                        </select>
+                    )}
+
+                    <div className="hide-on-export" style={{ width: '1px', height: '20px', background: isDarkPalette ? 'rgba(255,255,255,0.1)' : '#cbd5e1' }} />
+
+                    {/* Recherche de Commune ou Adresse */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {/* Sélecteur de mode de recherche */}
+                        <div style={{ display: 'flex', gap: '2px', background: isDarkPalette ? 'rgba(255,255,255,0.06)' : '#f1f5f9', padding: '2px', borderRadius: '7px', border: isDarkPalette ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1' }} className="hide-on-export">
+                            <button 
+                                onClick={() => {
+                                    setSearchMode('commune');
+                                    setSearchQuery('');
+                                    setSuggestions([]);
+                                }}
+                                style={{
+                                    padding: '3px 8px',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.65rem',
+                                    fontWeight: 850,
+                                    background: searchMode === 'commune' ? (isDarkPalette ? '#0284c7' : 'white') : 'transparent',
+                                    color: searchMode === 'commune' ? (isDarkPalette ? '#fff' : '#0284c7') : (isDarkPalette ? '#94a3b8' : '#64748b'),
+                                    transition: 'all 0.15s'
+                                }}
+                            >
+                                Commune
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setSearchMode('adresse');
+                                    setSearchQuery('');
+                                    setSuggestions([]);
+                                }}
+                                style={{
+                                    padding: '3px 8px',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.65rem',
+                                    fontWeight: 850,
+                                    background: searchMode === 'adresse' ? (isDarkPalette ? '#0284c7' : 'white') : 'transparent',
+                                    color: searchMode === 'adresse' ? (isDarkPalette ? '#fff' : '#0284c7') : (isDarkPalette ? '#94a3b8' : '#64748b'),
+                                    transition: 'all 0.15s'
+                                }}
+                            >
+                                Adresse
+                            </button>
+                        </div>
+
+                        <div style={{ position: 'relative', width: '220px' }}>
+                            <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} className="hide-on-export" />
+                            <input 
+                                type="text" 
+                                placeholder={searchMode === 'commune' ? "Rechercher une commune..." : "Entrer une adresse..."} 
+                                value={searchQuery} 
+                                onChange={(e) => handleSearch(e.target.value)} 
+                                style={{ 
+                                    width: '100%', 
+                                    padding: '6px 12px 6px 32px', 
+                                    borderRadius: '8px', 
+                                    border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', 
+                                    background: isDarkPalette ? 'rgba(0,0,0,0.3)' : '#fff',
+                                    color: isDarkPalette ? '#fff' : '#0f172a',
+                                    fontSize: '0.8rem', 
+                                    outline: 'none', 
+                                    fontWeight: 600 
+                                }} 
+                            />
+                            {suggestions.length > 0 && (
+                                <div style={{ 
+                                    position: 'absolute', 
+                                    top: '100%', 
+                                    left: 0, 
+                                    right: 0, 
+                                    background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : '#fff', 
+                                    backdropFilter: 'blur(15px)',
+                                    border: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0', 
+                                    borderRadius: '8px', 
+                                    boxShadow: isDarkPalette ? '0 10px 25px rgba(0,0,0,0.5)' : '0 10px 25px rgba(0,0,0,0.1)', 
+                                    zIndex: 2000,
+                                    marginTop: '4px',
+                                    minWidth: '250px'
+                                }}>
+                                    {suggestions.map((s, i) => {
+                                        const isAddr = s.properties.type !== 'municipality';
+                                        return (
+                                            <div 
+                                                key={i} 
+                                                onClick={() => selectCity(s)} 
+                                                style={{ 
+                                                    padding: '8px 12px', 
+                                                    cursor: 'pointer', 
+                                                    borderBottom: isDarkPalette ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9', 
+                                                    display: 'flex', 
+                                                    flexDirection: 'column',
+                                                    gap: '1px'
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.background = isDarkPalette ? 'rgba(255,255,255,0.05)' : '#f8fafc'}
+                                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                                <span style={{ fontWeight: 800, color: isDarkPalette ? '#fff' : '#0f172a', fontSize: '0.75rem' }}>
+                                                    {isAddr ? s.properties.name : s.properties.city}
+                                                </span>
+                                                <span style={{ color: isDarkPalette ? '#94a3b8' : '#64748b', fontSize: '0.65rem', fontWeight: 700 }}>
+                                                    {isAddr ? s.properties.label : `${s.properties.postcode} — Dép. ${s.properties.context?.split(',')[0] || ''}`}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <button
                         onClick={() => { setMapCenter([46.4, 2.2]); setMapZoom(5.7); setSelectedLocation(null); }}
@@ -1069,7 +1281,7 @@ const FoudreFrance = () => {
                             designId={foudreDesign}
                         />
  
-                        {strikes.length === 0 && !loading && (
+                        {filteredStrikes.length === 0 && !loading && (
                             <Marker
                                 position={[mapCenter[0], mapCenter[1]]}
                                 icon={L.divIcon({
@@ -1198,7 +1410,7 @@ const FoudreFrance = () => {
                                     <div style={{ fontSize: '0.55rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#475569', marginBottom: '2px', textTransform: 'uppercase' }}>
                                         {isLive ? 'Dernières 24h' : `Période : ${startDate}`}
                                     </div>
-                                    <span style={{ fontSize: '0.85rem', fontWeight: 1000, color: '#ef4444' }}>TOTAL : {strikes.length.toLocaleString()}</span>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 1000, color: '#ef4444' }}>TOTAL : {filteredStrikes.length.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -1459,7 +1671,7 @@ const FoudreFrance = () => {
                         </div>
                         <div><b>Statut :</b> {debugInfo.status}</div>
                         <div><b>Erreur :</b> {debugInfo.error}</div>
-                        <div><b>Nombre Impacts Total :</b> {strikes.length}</div>
+                        <div><b>Nombre Impacts Total :</b> {filteredStrikes.length} (sur {strikes.length})</div>
                         <div><b>Nombre Impacts Visibles :</b> {visibleStrikes.length}</div>
                         <div><b>Minute Animation :</b> {animationMinute} ({Math.floor(animationMinute / 60)}h{animationMinute % 60}m)</div>
                     </div>

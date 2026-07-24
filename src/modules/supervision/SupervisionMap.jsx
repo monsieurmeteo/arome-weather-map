@@ -418,6 +418,19 @@ const SupervisionMap = () => {
         return () => clearTimeout(timerRef.current);
     }, [isPlaying, currentIndex, timestamps]);
 
+    const animatedStrikes = useMemo(() => {
+        if (timestamps.length === 0 || currentIndex >= timestamps.length) {
+            return strikes;
+        }
+        const activeFrame = timestamps[currentIndex];
+        const frameTimeMs = activeFrame.time * 1000;
+        
+        // Filtrer les impacts dans une fenêtre de 15 minutes se terminant au moment de l'image active
+        const windowSizeMs = 15 * 60 * 1000;
+        
+        return strikes.filter(s => s.time <= frameTimeMs && s.time >= (frameTimeMs - windowSizeMs));
+    }, [strikes, timestamps, currentIndex]);
+
     const handleSearch = async (q) => {
         setSearchQuery(q);
         const isNumeric = /^\d+$/.test(q);
@@ -700,7 +713,7 @@ const SupervisionMap = () => {
                             );
                         })}
 
-                        {layers.foudre && <FastLightningLayer strikes={strikes} colors={HOUR_COLORS} designId={foudreDesign} />}
+                        {layers.foudre && <FastLightningLayer strikes={animatedStrikes} colors={HOUR_COLORS} designId={foudreDesign} />}
 
                         {deptGeo && (
                             <GeoJSON
