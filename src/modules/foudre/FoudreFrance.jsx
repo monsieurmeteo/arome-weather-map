@@ -103,7 +103,7 @@ const SearchCirclesPane = () => {
     useEffect(() => {
         if (!map.getPane('search-circles-pane')) {
             const pane = map.createPane('search-circles-pane');
-            pane.style.zIndex = 5001;
+            pane.style.zIndex = 500;
             pane.style.pointerEvents = 'none';
         }
     }, [map]);
@@ -124,7 +124,7 @@ const FastLightningLayer = ({ strikes, colors, filteredGeo, geoMode, sourceGeo, 
             newCanvas.style.top = '0';
             newCanvas.style.left = '0';
             newCanvas.style.pointerEvents = 'none';
-            newCanvas.style.zIndex = '5000'; // Au-dessus de tout
+            newCanvas.style.zIndex = '600'; // Au-dessus des tracés de cercles et de départements
             newCanvas.className = 'lightning-canvas-overlay';
             container.appendChild(newCanvas);
             canvasRef.current = newCanvas;
@@ -1310,7 +1310,7 @@ const FoudreFrance = () => {
                             />
                         )}
  
-                        {selectedLocation && !exporting && radii.map(r => (
+                        {selectedLocation && radii.map(r => (
                             <React.Fragment key={r}>
                                 <Circle
                                     center={[selectedLocation.lat, selectedLocation.lon]}
@@ -1329,7 +1329,7 @@ const FoudreFrance = () => {
                                 />
                             </React.Fragment>
                         ))}
- 
+
                         {/* Villes Principales (Expert Mode) */}
                         {showCities && (
                             <>
@@ -1347,78 +1347,78 @@ const FoudreFrance = () => {
                                 ))}
                             </>
                         )}
- 
-                        {/* Légende flottante (Visible sur le site, masquée à l'export) */}
-                        <div className="site-only-legend leaflet-top leaflet-right" style={{ marginTop: '15px', marginRight: '15px' }}>
-                            <div style={{
-                                background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                                backdropFilter: 'blur(15px)',
-                                padding: '10px',
-                                borderRadius: '12px',
-                                border: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
-                                boxShadow: isDarkPalette ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 30px rgba(0,0,0,0.05)',
-                                width: '220px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '10px'
-                            }}>
-                                {/* Histogramme horaire 24h */}
-                                <div>
-                                    <div style={{ fontWeight: 1000, fontSize: '0.65rem', color: isDarkPalette ? '#fff' : '#0f172a', marginBottom: '6px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                        {isLive ? '⚡ Impacts sur 24h glissantes' : '⚡ Répartition horaire'}
-                                    </div>
-                                    {(() => {
-                                        const maxCount = Math.max(1, ...hourlyDistribution.map(h => h.count));
-                                        return (
-                                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '40px' }}>
-                                                {hourlyDistribution.map(({ hour, count }) => (
-                                                    <div
-                                                        key={hour}
-                                                        title={`${hour}h : ${count} impacts`}
-                                                        style={{
-                                                            flex: 1,
-                                                            height: count === 0 ? '2px' : `${Math.max(4, (count / maxCount) * 40)}px`,
-                                                            background: count === 0 ? (isDarkPalette ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)') : HOUR_COLORS[hour],
-                                                            borderRadius: '2px 2px 0 0',
-                                                            transition: 'height 0.3s ease',
-                                                            cursor: 'default',
-                                                            opacity: count === 0 ? 0.3 : 1
-                                                        }}
-                                                    />
-                                                ))}
-                                            </div>
-                                        );
-                                    })()}
-                                    {/* Axe des heures */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
-                                        {[0, 6, 12, 18, 23].map(h => (
-                                            <span key={h} style={{ fontSize: '0.42rem', fontWeight: 800, color: '#64748b' }}>{h}h</span>
-                                        ))}
-                                    </div>
+                    </MapContainer>
+
+                    {/* Légende flottante (Placée hors MapContainer pour éviter que le canvas de foudre dessine par-dessus) */}
+                    <div className="site-only-legend" style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 1000, pointerEvents: 'auto' }}>
+                        <div style={{
+                            background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(15px)',
+                            padding: '10px',
+                            borderRadius: '12px',
+                            border: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
+                            boxShadow: isDarkPalette ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 30px rgba(0,0,0,0.05)',
+                            width: '220px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px'
+                        }}>
+                            {/* Histogramme horaire 24h */}
+                            <div>
+                                <div style={{ fontWeight: 1000, fontSize: '0.65rem', color: isDarkPalette ? '#fff' : '#0f172a', marginBottom: '6px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                    {isLive ? '⚡ Impacts sur 24h glissantes' : '⚡ Répartition horaire'}
                                 </div>
- 
-                                {/* Légende couleurs par heure */}
-                                <div>
-                                    <div style={{ fontWeight: 1000, fontSize: '0.6rem', color: isDarkPalette ? '#94a3b8' : '#475569', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Chronologie</div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px' }}>
-                                        {[0, 4, 8, 12, 16, 20].map((h) => (
-                                            <div key={h} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                                                <div style={{ width: '100%', height: '6px', background: HOUR_COLORS[h], borderRadius: '1.5px', border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)' }} />
-                                                <span style={{ fontSize: '0.45rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#64748b' }}>{h}h</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
- 
-                                <div style={{ background: isDarkPalette ? 'rgba(0,0,0,0.3)' : '#f1f5f9', padding: '8px 10px', borderRadius: '8px', border: isDarkPalette ? '1px solid rgba(255,255,255,0.05)' : '1px solid #cbd5e1', textAlign: 'center' }}>
-                                    <div style={{ fontSize: '0.55rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#475569', marginBottom: '2px', textTransform: 'uppercase' }}>
-                                        {isLive ? 'Dernières 24h' : `Période : ${startDate}`}
-                                    </div>
-                                    <span style={{ fontSize: '0.85rem', fontWeight: 1000, color: '#ef4444' }}>TOTAL : {filteredStrikes.length.toLocaleString()}</span>
+                                {(() => {
+                                    const maxCount = Math.max(1, ...hourlyDistribution.map(h => h.count));
+                                    return (
+                                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '40px' }}>
+                                            {hourlyDistribution.map(({ hour, count }) => (
+                                                <div
+                                                    key={hour}
+                                                    title={`${hour}h : ${count} impacts`}
+                                                    style={{
+                                                        flex: 1,
+                                                        height: count === 0 ? '2px' : `${Math.max(4, (count / maxCount) * 40)}px`,
+                                                        background: count === 0 ? (isDarkPalette ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)') : HOUR_COLORS[hour],
+                                                        borderRadius: '2px 2px 0 0',
+                                                        transition: 'height 0.3s ease',
+                                                        cursor: 'default',
+                                                        opacity: count === 0 ? 0.3 : 1
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
+                                {/* Axe des heures */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
+                                    {[0, 6, 12, 18, 23].map(h => (
+                                        <span key={h} style={{ fontSize: '0.42rem', fontWeight: 800, color: '#64748b' }}>{h}h</span>
+                                    ))}
                                 </div>
                             </div>
+
+                            {/* Légende couleurs par heure */}
+                            <div>
+                                <div style={{ fontWeight: 1000, fontSize: '0.6rem', color: isDarkPalette ? '#94a3b8' : '#475569', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Chronologie</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px' }}>
+                                    {[0, 4, 8, 12, 16, 20].map((h) => (
+                                        <div key={h} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                                            <div style={{ width: '100%', height: '6px', background: HOUR_COLORS[h], borderRadius: '1.5px', border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)' }} />
+                                            <span style={{ fontSize: '0.45rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#64748b' }}>{h}h</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div style={{ background: isDarkPalette ? 'rgba(0,0,0,0.3)' : '#f1f5f9', padding: '8px 10px', borderRadius: '8px', border: isDarkPalette ? '1px solid rgba(255,255,255,0.05)' : '1px solid #cbd5e1', textAlign: 'center' }}>
+                                <div style={{ fontSize: '0.55rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#475569', marginBottom: '2px', textTransform: 'uppercase' }}>
+                                    {isLive ? 'Dernières 24h' : `Période : ${startDate}`}
+                                </div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 1000, color: '#ef4444' }}>TOTAL : {filteredStrikes.length.toLocaleString()}</span>
+                            </div>
                         </div>
-                    </MapContainer>
+                    </div>
  
                     {/* Lecteur d'animation temporel par pas de 5 minutes */}
                     <div className="hide-on-export" style={{
