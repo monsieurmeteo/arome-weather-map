@@ -165,6 +165,7 @@ const FoudreFrance = () => {
     const today = new Date().toLocaleDateString('sv-SE');
     const initialDate = today; // Toujours aujourd'hui
     const isAutomated = queryParams.get('automated') === 'true';
+    const isEmbed = queryParams.get('embed') === '1' || queryParams.get('embed') === 'true';
     const urlForcePoints = queryParams.get('forcePoints') === 'true'; // Keep param but it will be unused for logic except forcing rendering
 
     const [strikes, setStrikes] = useState([]);
