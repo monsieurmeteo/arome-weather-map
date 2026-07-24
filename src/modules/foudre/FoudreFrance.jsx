@@ -181,7 +181,7 @@ const FoudreFrance = () => {
     const [geoMode, setGeoMode] = useState("france"); // "region", "dept", "france"
     const [selectedRegion, setSelectedRegion] = useState("Hauts-de-France");
     const [selectedDept, setSelectedDept] = useState("59");
-    const [mapPalette, setMapPalette] = useState("dark"); // Par défaut en Sombre Pro
+    const [mapPalette, setMapPalette] = useState("default"); // Par défaut en Classique (Mode Clair)
     const [showCities, setShowCities] = useState(true);
     const [strikeSize, setStrikeSize] = useState(5.5);
     const [mapCenter, setMapCenter] = useState([46.4, 2.2]);
@@ -205,6 +205,18 @@ const FoudreFrance = () => {
 
     // Debug toggle
     const [showDebug, setShowDebug] = useState(false);
+
+    // Calcul de la minute de départ de l'orage pour l'animation
+    const minMinute = React.useMemo(() => {
+        if (strikes.length === 0) return 0;
+        const minutes = strikes.map(s => {
+            const d = new Date(s.time);
+            return d.getHours() * 60 + d.getMinutes();
+        });
+        const minVal = Math.min(...minutes);
+        // Commencer 1h avant le premier impact (arrondi à l'heure inférieure)
+        return Math.max(0, Math.floor(minVal / 60) * 60 - 60);
+    }, [strikes]);
 
     const isLive = !isRange && startDate === new Date().toLocaleDateString('sv-SE');
 
@@ -350,7 +362,7 @@ const FoudreFrance = () => {
         setIsPlaying(false);
         const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
         setAnimationMinute(maxMin);
-    }, [startDate, endDate, isRange]);
+    }, [startDate, endDate, isRange, minMinute]);
 
     useEffect(() => {
         let timer;
@@ -359,14 +371,14 @@ const FoudreFrance = () => {
                 setAnimationMinute(prev => {
                     const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
                     if (prev >= maxMin) {
-                        return 0; // Recommence au début
+                        return minMinute; // Recommence au début de la tempête (ou minMinute)
                     }
                     return Math.min(prev + 5, maxMin);
                 });
             }, playSpeed);
         }
         return () => clearInterval(timer);
-    }, [isPlaying, playSpeed, isLive]);
+    }, [isPlaying, playSpeed, isLive, minMinute]);
 
 
     useEffect(() => {
@@ -500,54 +512,54 @@ const FoudreFrance = () => {
             link.download = `bilan-foudre-${startDate}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-        } catch (e) {
-            console.error("Export error:", e);
         } finally {
             setExporting(false);
         }
     };
 
+    const isDarkPalette = mapPalette === 'dark';
+
     return (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#0b0f19', fontFamily: 'Inter, system-ui, sans-serif' }} id="foudre-module-container">
+        <div style={{ height: isEmbed ? '100vh' : 'calc(100vh - 4rem)', display: 'flex', flexDirection: 'column', background: isDarkPalette ? '#0b0f19' : '#f8fafc', fontFamily: 'Inter, system-ui, sans-serif' }} id="foudre-module-container">
             <header style={{ 
-                background: 'rgba(15, 23, 42, 0.95)', 
+                background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.9)', 
                 backdropFilter: 'blur(16px)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                borderBottom: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
                 padding: '10px 24px', 
-                color: 'white', 
+                color: isDarkPalette ? 'white' : '#0f172a', 
                 display: 'flex', 
                 justifyContent: 'space-between', 
                 alignItems: 'center', 
                 zIndex: 1000, 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.3)' 
+                boxShadow: isDarkPalette ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)' 
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ 
-                            background: 'rgba(239, 68, 68, 0.15)', 
+                            background: isDarkPalette ? 'rgba(239, 68, 68, 0.15)' : '#fee2e2', 
                             padding: '6px', 
                             borderRadius: '50%', 
                             display: 'flex',
-                            boxShadow: '0 0 12px rgba(239, 68, 68, 0.3)',
-                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                            boxShadow: isDarkPalette ? '0 0 12px rgba(239, 68, 68, 0.3)' : '0 0 12px rgba(239, 68, 68, 0.1)',
+                            border: isDarkPalette ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid #fecaca'
                         }}>
                             <Zap fill="#ef4444" size={16} color="#ef4444" style={{ animation: 'pulse 1.5s infinite' }} />
                         </div>
                         <span style={{ fontWeight: 950, fontSize: '1rem', letterSpacing: '-0.5px' }}>IMPACTS DE FOUDRE</span>
                     </div>
-
+ 
                     <div style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '10px', 
-                        background: 'rgba(255,255,255,0.06)', 
+                        background: isDarkPalette ? 'rgba(255,255,255,0.06)' : '#f1f5f9', 
                         padding: '6px 14px', 
                         borderRadius: '12px', 
-                        border: '1px solid rgba(255,255,255,0.08)', 
+                        border: isDarkPalette ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1', 
                         backdropFilter: 'blur(5px)' 
                     }}>
-                        <Calendar size={14} color="#38bdf8" />
-                        <span style={{ color: '#38bdf8', fontWeight: 800, fontSize: '0.75rem', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                        <Calendar size={14} color={isDarkPalette ? "#38bdf8" : "#2563eb"} />
+                        <span style={{ color: isDarkPalette ? '#38bdf8' : '#2563eb', fontWeight: 800, fontSize: '0.75rem', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
                             {isLive ? 'DIRECT 24H' : 'ARCHIVE'}
                         </span>
                         <input
@@ -555,15 +567,15 @@ const FoudreFrance = () => {
                             value={startDate}
                             max={new Date().toISOString().split('T')[0]}
                             onChange={(e) => {
-                                setStartDate(e.target.value);
-                                setIsRange(false);
+                                  setStartDate(e.target.value);
+                                  setIsRange(false);
                             }}
                             style={{
-                                background: 'rgba(0,0,0,0.4)',
-                                border: '1px solid rgba(255,255,255,0.15)',
+                                background: isDarkPalette ? 'rgba(0,0,0,0.4)' : '#fff',
+                                border: isDarkPalette ? '1px solid rgba(255,255,255,0.15)' : '1px solid #cbd5e1',
                                 borderRadius: '8px',
                                 padding: '4px 8px',
-                                color: '#fff',
+                                color: isDarkPalette ? '#fff' : '#0f172a',
                                 fontSize: '0.75rem',
                                 fontWeight: 700,
                                 cursor: 'pointer',
@@ -593,8 +605,8 @@ const FoudreFrance = () => {
                             <button
                                 onClick={() => setViewMode(viewMode === 'bilan' ? 'points' : 'bilan')}
                                 style={{
-                                    background: viewMode === 'bilan' ? '#10b981' : 'rgba(255,255,255,0.1)',
-                                    color: 'white',
+                                    background: viewMode === 'bilan' ? '#10b981' : (isDarkPalette ? 'rgba(255,255,255,0.1)' : '#e2e8f0'),
+                                    color: viewMode === 'bilan' ? 'white' : (isDarkPalette ? 'white' : '#0f172a'),
                                     border: 'none',
                                     padding: '4px 12px',
                                     borderRadius: '8px',
@@ -611,12 +623,12 @@ const FoudreFrance = () => {
                         )}
                     </div>
                 </div>
-
+ 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {loading && <Loader2 size={16} className="animate-spin" color="#ef4444" />}
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '1.6rem', fontWeight: 1000, color: '#ef4444', lineHeight: 1, textShadow: '0 0 8px rgba(239,68,68,0.2)' }}>
+                            <div style={{ fontSize: '1.6rem', fontWeight: 1000, color: '#ef4444', lineHeight: 1, textShadow: isDarkPalette ? '0 0 8px rgba(239,68,68,0.2)' : 'none' }}>
                                 {visibleStrikes.length.toLocaleString()}
                             </div>
                             <div style={{ fontSize: '0.55rem', fontWeight: 800, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -655,21 +667,32 @@ const FoudreFrance = () => {
                             {exporting ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
                             {exporting ? '...' : 'BILAN NATIONAL'}
                         </button>
-                        <button onClick={fetchStrikes} className="hide-on-export" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '32px', height: '32px', borderRadius: '8px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button onClick={fetchStrikes} className="hide-on-export" style={{ 
+                            background: isDarkPalette ? 'rgba(255,255,255,0.06)' : '#f1f5f9', 
+                            border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', 
+                            width: '32px', 
+                            height: '32px', 
+                            borderRadius: '8px', 
+                            color: isDarkPalette ? 'white' : '#64748b', 
+                            cursor: 'pointer', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center' 
+                        }}>
                             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
                         </button>
                     </div>
                 </div>
             </header>
-
+ 
             <div style={{ 
-                background: 'rgba(15, 23, 42, 0.85)', 
+                background: isDarkPalette ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.9)', 
                 backdropFilter: 'blur(12px)', 
                 padding: '8px 24px', 
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '15px', 
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)', 
+                borderBottom: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0', 
                 zIndex: 999 
             }} className="site-controls-expert">
                 <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
@@ -684,9 +707,9 @@ const FoudreFrance = () => {
                                 width: '100%', 
                                 padding: '6px 12px 6px 36px', 
                                 borderRadius: '8px', 
-                                border: '1px solid rgba(255,255,255,0.1)', 
-                                background: 'rgba(0,0,0,0.3)',
-                                color: '#fff',
+                                border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', 
+                                background: isDarkPalette ? 'rgba(0,0,0,0.3)' : '#fff',
+                                color: isDarkPalette ? '#fff' : '#0f172a',
                                 fontSize: '0.8rem', 
                                 outline: 'none', 
                                 fontWeight: 600 
@@ -698,18 +721,18 @@ const FoudreFrance = () => {
                                 top: '100%', 
                                 left: 0, 
                                 right: 0, 
-                                background: 'rgba(15, 23, 42, 0.95)', 
+                                background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : '#fff', 
                                 backdropFilter: 'blur(15px)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                border: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0', 
                                 borderRadius: '8px', 
-                                boxShadow: '0 10px 25px rgba(0,0,0,0.5)', 
+                                boxShadow: isDarkPalette ? '0 10px 25px rgba(0,0,0,0.5)' : '0 10px 25px rgba(0,0,0,0.1)', 
                                 zIndex: 2000,
                                 marginTop: '4px'
                             }}>
                                 {suggestions.map((s, i) => (
-                                    <div key={i} onClick={() => selectCity(s)} style={{ padding: '8px 15px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.75rem' }}>{s.properties.city}</span>
-                                        <span style={{ color: '#38bdf8', fontSize: '0.65rem', fontWeight: 800 }}>{s.properties.postcode}</span>
+                                    <div key={i} onClick={() => selectCity(s)} style={{ padding: '8px 15px', cursor: 'pointer', borderBottom: isDarkPalette ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ fontWeight: 700, color: isDarkPalette ? '#fff' : '#0f172a', fontSize: '0.75rem' }}>{s.properties.city}</span>
+                                        <span style={{ color: isDarkPalette ? '#38bdf8' : '#2563eb', fontSize: '0.65rem', fontWeight: 800 }}>{s.properties.postcode}</span>
                                     </div>
                                 ))}
                             </div>
@@ -720,8 +743,8 @@ const FoudreFrance = () => {
                         className="hide-on-export"
                         title="Recentrer sur la France"
                         style={{ 
-                            background: 'rgba(255,255,255,0.06)', 
-                            border: '1px solid rgba(255,255,255,0.1)', 
+                            background: isDarkPalette ? 'rgba(255,255,255,0.06)' : '#f1f5f9', 
+                            border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1', 
                             borderRadius: '8px', 
                             padding: '0 10px', 
                             cursor: 'pointer', 
@@ -731,16 +754,16 @@ const FoudreFrance = () => {
                         <Crosshair size={18} />
                     </button>
                 </div>
-
+ 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="hide-on-export">
                     <div style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '6px', 
-                        background: 'rgba(255,255,255,0.06)', 
+                        background: isDarkPalette ? 'rgba(255,255,255,0.06)' : '#f1f5f9', 
                         padding: '4px 10px', 
                         borderRadius: '8px', 
-                        border: '1px solid rgba(255,255,255,0.1)' 
+                        border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1' 
                     }}>
                         <LayoutGrid size={14} color="#94a3b8" />
                         <select 
@@ -752,24 +775,24 @@ const FoudreFrance = () => {
                                 fontWeight: 800, 
                                 fontSize: '0.75rem', 
                                 outline: 'none',
-                                color: '#fff',
+                                color: isDarkPalette ? '#fff' : '#0f172a',
                                 cursor: 'pointer'
                             }}
                         >
                             {Object.entries(LIGHTNING_DESIGNS).map(([k, v]) => (
-                                <option key={k} value={k} style={{ background: '#1e293b', color: '#fff' }}>{v.name}</option>
+                                <option key={k} value={k} style={{ background: isDarkPalette ? '#1e293b' : '#fff', color: isDarkPalette ? '#fff' : '#0f172a' }}>{v.name}</option>
                             ))}
                         </select>
                     </div>
-
+ 
                     <div style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '6px', 
-                        background: 'rgba(255,255,255,0.06)', 
+                        background: isDarkPalette ? 'rgba(255,255,255,0.06)' : '#f1f5f9', 
                         padding: '4px 10px', 
                         borderRadius: '8px', 
-                        border: '1px solid rgba(255,255,255,0.1)' 
+                        border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1' 
                     }}>
                         <Palette size={14} color="#94a3b8" />
                         <select 
@@ -781,16 +804,16 @@ const FoudreFrance = () => {
                                 fontWeight: 800, 
                                 fontSize: '0.75rem', 
                                 outline: 'none',
-                                color: '#fff',
+                                color: isDarkPalette ? '#fff' : '#0f172a',
                                 cursor: 'pointer'
                             }}
                         >
                             {Object.entries(MAP_PALETTES).map(([k, v]) => (
-                                <option key={k} value={k} style={{ background: '#1e293b', color: '#fff' }}>{v.name}</option>
+                                <option key={k} value={k} style={{ background: isDarkPalette ? '#1e293b' : '#fff', color: isDarkPalette ? '#fff' : '#0f172a' }}>{v.name}</option>
                             ))}
                         </select>
                     </div>
-
+ 
                     <a href="/foudre-expert" className="hide-on-export" style={{
                         textDecoration: 'none',
                         display: 'flex',
@@ -807,7 +830,7 @@ const FoudreFrance = () => {
                         GÉNÉRATEUR
                     </a>
                 </div>
-
+ 
                 {selectedLocation && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#eff6ff', padding: '8px 20px', borderRadius: '12px', border: '1px solid #bfdbfe', animation: 'fadeIn 0.3s' }}>
                         <span style={{ fontWeight: 800, color: '#1e40af', fontSize: '0.8rem' }}>{selectedLocation.name} ({selectedLocation.postcode})</span>
@@ -815,7 +838,7 @@ const FoudreFrance = () => {
                     </div>
                 )}
             </div>
-
+ 
             <div style={{ flex: 1, display: 'flex', position: 'relative', overflow: 'hidden' }}>
                 {/* Affichage du BILAN IMAGE si mode bilan actif */}
                 {viewMode === 'bilan' && bilanImage && (
@@ -881,7 +904,7 @@ const FoudreFrance = () => {
                         </button>
                     </div>
                 )}
-
+ 
                 {/* Floating Overlays - Match Supervision Style */}
                 <div style={{
                     position: 'absolute',
@@ -896,43 +919,43 @@ const FoudreFrance = () => {
                 }}>
                     {selectedLocation && !isAutomated && (
                         <div style={{
-                            background: 'rgba(15, 23, 42, 0.95)',
+                            background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                             backdropFilter: 'blur(10px)',
                             padding: '10px',
                             borderRadius: '10px',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                            border: isDarkPalette ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+                            boxShadow: isDarkPalette ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 30px rgba(0,0,0,0.1)',
                             pointerEvents: 'auto',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '8px'
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: isDarkPalette ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9', paddingBottom: '6px' }}>
                                 <div>
-                                    <div style={{ fontSize: '0.85rem', fontWeight: 900, color: '#fff' }}>{selectedLocation.name}</div>
-                                    <div style={{ fontSize: '0.65rem', color: '#3b82f6', fontWeight: 700 }}>{selectedLocation.postcode}</div>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: 900, color: isDarkPalette ? '#fff' : '#0f172a' }}>{selectedLocation.name}</div>
+                                    <div style={{ fontSize: '0.65rem', color: isDarkPalette ? '#3b82f6' : '#2563eb', fontWeight: 700 }}>{selectedLocation.postcode}</div>
                                 </div>
                                 <X size={16} color="#94a3b8" className="hide-on-export" style={{ cursor: 'pointer' }} onClick={() => setSelectedLocation(null)} />
                             </div>
-
+ 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 {stats.map(s => (
-                                    <div key={s.radius} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', borderRadius: '6px', background: s.count > 0 ? 'rgba(239, 68, 68, 0.1)' : 'transparent', border: s.count > 0 ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid transparent' }}>
-                                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#e2e8f0' }}>Rayon {s.radius} km</span>
+                                    <div key={s.radius} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', borderRadius: '6px', background: s.count > 0 ? 'rgba(239, 68, 68, 0.08)' : 'transparent', border: s.count > 0 ? '1px solid rgba(239, 68, 68, 0.15)' : '1px solid transparent' }}>
+                                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: isDarkPalette ? '#e2e8f0' : '#334155' }}>Rayon {s.radius} km</span>
                                         <span style={{ fontSize: '0.9rem', fontWeight: 900, color: s.count > 0 ? '#ef4444' : '#64748b' }}>{s.count}</span>
                                     </div>
                                 ))}
                             </div>
-
+ 
                             <button
                                 onClick={exportImage}
                                 className="hide-on-export"
                                 style={{
                                     marginTop: '8px',
                                     width: '100%',
-                                    background: '#1e293b',
-                                    color: 'white',
-                                    border: 'none',
+                                    background: isDarkPalette ? '#1e293b' : '#f1f5f9',
+                                    color: isDarkPalette ? 'white' : '#0f172a',
+                                    border: isDarkPalette ? 'none' : '1px solid #cbd5e1',
                                     padding: '8px',
                                     borderRadius: '8px',
                                     fontSize: '0.65rem',
@@ -950,7 +973,7 @@ const FoudreFrance = () => {
                         </div>
                     )}
                 </div>
-
+ 
                 <main style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', background: 'white' }}>
                     {/* Header invisible pour l'export (Titre style Keraunos) */}
                     <div className="export-only-header" style={{
@@ -978,7 +1001,7 @@ const FoudreFrance = () => {
                             </div>
                         </div>
                     </div>
-
+ 
                     {/* Mode Image d'Archive supprimé */}
                     <MapContainer
                         center={mapCenter}
@@ -991,24 +1014,25 @@ const FoudreFrance = () => {
                         <SearchCirclesPane />
                         {selectedLocation && <MapController center={[selectedLocation.lat, selectedLocation.lon]} zoom={10} />}
                         <GeoJSONController data={filteredGeo} isFrance={geoMode === 'france'} />
-
+ 
                         <TileLayer url={MAP_PALETTES[mapPalette].tiles} attribution='&copy; CARTODB' />
                         {/* Le masque de France via api.metetclimat.ovh est désactivé car le domaine ne répond pas */}
-
+ 
                         {/* Fond de départements (Contours) */}
                         {sourceGeo && (
                             <GeoJSON
                                 data={sourceGeo}
                                 style={{
                                     fillColor: 'transparent',
-                                    color: mapPalette === 'dark' ? 'rgba(255,255,255,0.15)' : '#000',
-                                    weight: mapPalette === 'dark' ? 0.8 : 1.2,
+                                    fill: false, // Empeche le remplissage blanc parasite ("truc blanc") sur fond clair
+                                    color: isDarkPalette ? 'rgba(255,255,255,0.15)' : 'rgba(15, 23, 42, 0.12)',
+                                    weight: isDarkPalette ? 0.8 : 1.0,
                                     opacity: 0.8
                                 }}
                                 interactive={false}
                             />
                         )}
-
+ 
                         {/* Impacts (Masqués par la région) */}
                         <FastLightningLayer
                             strikes={visibleStrikes}
@@ -1019,7 +1043,7 @@ const FoudreFrance = () => {
                             pointRadius={strikeSize}
                             designId={foudreDesign}
                         />
-
+ 
                         {strikes.length === 0 && !loading && (
                             <Marker
                                 position={[mapCenter[0], mapCenter[1]]}
@@ -1034,7 +1058,7 @@ const FoudreFrance = () => {
                                 })}
                             />
                         )}
-
+ 
                         {/* Surbrillance (Optionnelle) */}
                         {filteredGeo && (
                             <GeoJSON
@@ -1044,7 +1068,7 @@ const FoudreFrance = () => {
                                 interactive={false}
                             />
                         )}
-
+ 
                         {selectedLocation && radii.map(r => (
                             <React.Fragment key={r}>
                                 <Circle
@@ -1064,7 +1088,7 @@ const FoudreFrance = () => {
                                 />
                             </React.Fragment>
                         ))}
-
+ 
                         {/* Villes Principales (Expert Mode) */}
                         {showCities && (
                             <>
@@ -1082,16 +1106,16 @@ const FoudreFrance = () => {
                                 ))}
                             </>
                         )}
-
+ 
                         {/* Légende flottante (Visible sur le site, masquée à l'export) */}
                         <div className="site-only-legend leaflet-top leaflet-right" style={{ marginTop: '15px', marginRight: '15px' }}>
                             <div style={{
-                                background: 'rgba(15, 23, 42, 0.95)',
+                                background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(15px)',
                                 padding: '10px',
                                 borderRadius: '12px',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                                border: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
+                                boxShadow: isDarkPalette ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 30px rgba(0,0,0,0.05)',
                                 width: '220px',
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -1099,7 +1123,7 @@ const FoudreFrance = () => {
                             }}>
                                 {/* Histogramme horaire 24h */}
                                 <div>
-                                    <div style={{ fontWeight: 1000, fontSize: '0.65rem', color: '#fff', marginBottom: '6px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                    <div style={{ fontWeight: 1000, fontSize: '0.65rem', color: isDarkPalette ? '#fff' : '#0f172a', marginBottom: '6px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                         {isLive ? '⚡ Impacts sur 24h glissantes' : '⚡ Répartition horaire'}
                                     </div>
                                     {(() => {
@@ -1113,7 +1137,7 @@ const FoudreFrance = () => {
                                                         style={{
                                                             flex: 1,
                                                             height: count === 0 ? '2px' : `${Math.max(4, (count / maxCount) * 40)}px`,
-                                                            background: count === 0 ? 'rgba(255,255,255,0.08)' : HOUR_COLORS[hour],
+                                                            background: count === 0 ? (isDarkPalette ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)') : HOUR_COLORS[hour],
                                                             borderRadius: '2px 2px 0 0',
                                                             transition: 'height 0.3s ease',
                                                             cursor: 'default',
@@ -1131,22 +1155,22 @@ const FoudreFrance = () => {
                                         ))}
                                     </div>
                                 </div>
-
+ 
                                 {/* Légende couleurs par heure */}
                                 <div>
-                                    <div style={{ fontWeight: 1000, fontSize: '0.6rem', color: '#94a3b8', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Chronologie</div>
+                                    <div style={{ fontWeight: 1000, fontSize: '0.6rem', color: isDarkPalette ? '#94a3b8' : '#475569', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Chronologie</div>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px' }}>
                                         {[0, 4, 8, 12, 16, 20].map((h) => (
                                             <div key={h} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                                                <div style={{ width: '100%', height: '6px', background: HOUR_COLORS[h], borderRadius: '1.5px', border: '1px solid rgba(255,255,255,0.1)' }} />
-                                                <span style={{ fontSize: '0.45rem', fontWeight: 800, color: '#94a3b8' }}>{h}h</span>
+                                                <div style={{ width: '100%', height: '6px', background: HOUR_COLORS[h], borderRadius: '1.5px', border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)' }} />
+                                                <span style={{ fontSize: '0.45rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#64748b' }}>{h}h</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-
-                                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                                    <div style={{ fontSize: '0.55rem', fontWeight: 800, color: '#94a3b8', marginBottom: '2px', textTransform: 'uppercase' }}>
+ 
+                                <div style={{ background: isDarkPalette ? 'rgba(0,0,0,0.3)' : '#f1f5f9', padding: '8px 10px', borderRadius: '8px', border: isDarkPalette ? '1px solid rgba(255,255,255,0.05)' : '1px solid #cbd5e1', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.55rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#475569', marginBottom: '2px', textTransform: 'uppercase' }}>
                                         {isLive ? 'Dernières 24h' : `Période : ${startDate}`}
                                     </div>
                                     <span style={{ fontSize: '0.85rem', fontWeight: 1000, color: '#ef4444' }}>TOTAL : {strikes.length.toLocaleString()}</span>
@@ -1154,27 +1178,28 @@ const FoudreFrance = () => {
                             </div>
                         </div>
                     </MapContainer>
-
+ 
                     {/* Lecteur d'animation temporel par pas de 5 minutes */}
                     <div className="hide-on-export" style={{
-                        background: 'rgba(15, 23, 42, 0.95)',
+                        background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(20px)',
-                        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderTop: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #cbd5e1',
                         padding: '12px 24px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         gap: '20px',
-                        color: '#fff',
+                        color: isDarkPalette ? '#fff' : '#0f172a',
                         zIndex: 1000,
                         borderBottomLeftRadius: '12px',
-                        borderBottomRightRadius: '12px'
+                        borderBottomRightRadius: '12px',
+                        boxShadow: isDarkPalette ? 'none' : '0 -4px 20px rgba(0,0,0,0.05)'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <button
                                 onClick={() => setIsPlaying(!isPlaying)}
                                 style={{
-                                    background: isPlaying ? '#ef4444' : '#3b82f6',
+                                    background: isPlaying ? '#ef4444' : (isDarkPalette ? '#3b82f6' : '#2563eb'),
                                     color: 'white',
                                     border: 'none',
                                     width: '38px',
@@ -1192,19 +1217,21 @@ const FoudreFrance = () => {
                                 {isPlaying ? <Pause size={18} fill="#fff" /> : <Play size={18} fill="#fff" style={{ marginLeft: '2px' }} />}
                             </button>
                             <div style={{ minWidth: '60px', textAlign: 'center' }}>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'monospace', color: '#38bdf8' }}>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'monospace', color: isDarkPalette ? '#38bdf8' : '#2563eb' }}>
                                     {String(Math.floor(animationMinute / 60)).padStart(2, '0')}:{String(animationMinute % 60).padStart(2, '0')}
                                 </div>
-                                <div style={{ fontSize: '0.55rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Heure</div>
+                                <div style={{ fontSize: '0.55rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#64748b', textTransform: 'uppercase' }}>Heure</div>
                             </div>
                         </div>
-
+ 
                         {/* Slider bar */}
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b' }}>00:00</span>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b' }}>
+                                {String(Math.floor(minMinute / 60)).padStart(2, '0')}:{String(minMinute % 60).padStart(2, '0')}
+                            </span>
                             <input
                                 type="range"
-                                min="0"
+                                min={minMinute}
                                 max={isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : "1439"}
                                 step="5"
                                 value={animationMinute}
@@ -1218,46 +1245,46 @@ const FoudreFrance = () => {
                                     borderRadius: '3px',
                                     outline: 'none',
                                     cursor: 'pointer',
-                                    accentColor: '#3b82f6',
-                                    background: 'rgba(255,255,255,0.1)'
+                                    accentColor: isDarkPalette ? '#3b82f6' : '#2563eb',
+                                    background: isDarkPalette ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
                                 }}
                             />
                             <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b' }}>
                                 {isLive ? `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}` : '23:59'}
                             </span>
                         </div>
-
+ 
                         {/* Options de Trailing / Rémanence */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <span style={{ fontSize: '0.55rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Rémanence</span>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#64748b', textTransform: 'uppercase' }}>Rémanence</span>
                                 <select
                                     value={trailMode}
                                     onChange={(e) => setTrailMode(e.target.value)}
                                     style={{
-                                        background: 'rgba(255,255,255,0.06)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        background: isDarkPalette ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+                                        border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
                                         borderRadius: '6px',
                                         padding: '4px 8px',
-                                        color: '#fff',
+                                        color: isDarkPalette ? '#fff' : '#0f172a',
                                         fontSize: '0.7rem',
                                         fontWeight: 800,
                                         outline: 'none',
                                         cursor: 'pointer'
                                     }}
                                 >
-                                    <option value="cumulative" style={{ background: '#1e293b' }}>Cumulatif complet</option>
-                                    <option value="15" style={{ background: '#1e293b' }}>Fenêtre 15 min</option>
-                                    <option value="30" style={{ background: '#1e293b' }}>Fenêtre 30 min</option>
-                                    <option value="60" style={{ background: '#1e293b' }}>Fenêtre 1h</option>
-                                    <option value="120" style={{ background: '#1e293b' }}>Fenêtre 2h</option>
+                                    <option value="cumulative" style={{ background: isDarkPalette ? '#1e293b' : '#fff', color: isDarkPalette ? '#fff' : '#0f172a' }}>Cumulatif complet</option>
+                                    <option value="15" style={{ background: isDarkPalette ? '#1e293b' : '#fff', color: isDarkPalette ? '#fff' : '#0f172a' }}>Fenêtre 15 min</option>
+                                    <option value="30" style={{ background: isDarkPalette ? '#1e293b' : '#fff', color: isDarkPalette ? '#fff' : '#0f172a' }}>Fenêtre 30 min</option>
+                                    <option value="60" style={{ background: isDarkPalette ? '#1e293b' : '#fff', color: isDarkPalette ? '#fff' : '#0f172a' }}>Fenêtre 1h</option>
+                                    <option value="120" style={{ background: isDarkPalette ? '#1e293b' : '#fff', color: isDarkPalette ? '#fff' : '#0f172a' }}>Fenêtre 2h</option>
                                 </select>
                             </div>
-
+ 
                             {/* Vitesse d'animation */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <span style={{ fontSize: '0.55rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Vitesse</span>
-                                <div style={{ display: 'flex', gap: '2px', background: 'rgba(255,255,255,0.06)', padding: '2px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 800, color: isDarkPalette ? '#94a3b8' : '#64748b', textTransform: 'uppercase' }}>Vitesse</span>
+                                <div style={{ display: 'flex', gap: '2px', background: isDarkPalette ? 'rgba(255,255,255,0.06)' : '#f1f5f9', padding: '2px', borderRadius: '6px', border: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1' }}>
                                     {[
                                         { label: '1x', val: 250 },
                                         { label: '2x', val: 120 },
@@ -1267,8 +1294,8 @@ const FoudreFrance = () => {
                                             key={speed.label}
                                             onClick={() => setPlaySpeed(speed.val)}
                                             style={{
-                                                background: playSpeed === speed.val ? '#3b82f6' : 'transparent',
-                                                color: '#fff',
+                                                background: playSpeed === speed.val ? (isDarkPalette ? '#3b82f6' : '#2563eb') : 'transparent',
+                                                color: playSpeed === speed.val ? '#fff' : (isDarkPalette ? '#fff' : '#64748b'),
                                                 border: 'none',
                                                 borderRadius: '4px',
                                                 padding: '2px 8px',
@@ -1285,7 +1312,7 @@ const FoudreFrance = () => {
                             </div>
                         </div>
                     </div>
-
+ 
                     {/* Footer pour l'export (Légende Hors Carte) */}
                     <div className="export-footer" style={{
                         background: 'white',
@@ -1302,7 +1329,7 @@ const FoudreFrance = () => {
                                 <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700 }}>Source : Météo-NPDC</div>
                             </div>
                         </div>
-
+ 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <div style={{ display: 'flex', gap: '3px' }}>
                                 {HOUR_COLORS.filter((_, i) => i % 1 === 0).map((col, h) => (
@@ -1323,16 +1350,16 @@ const FoudreFrance = () => {
                         </div>
                     </div>
                 </main>
-
+ 
                 {/* Bouton de Debug discret */}
                 <div className="hide-on-export" style={{ position: 'absolute', bottom: '70px', left: '15px', zIndex: 3000 }}>
                     <button 
                         onClick={() => setShowDebug(!showDebug)}
                         style={{
-                            background: showDebug ? '#ef4444' : 'rgba(15, 23, 42, 0.85)',
+                            background: showDebug ? '#ef4444' : (isDarkPalette ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.95)'),
                             backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            color: '#fff',
+                            border: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #cbd5e1',
+                            color: showDebug ? '#fff' : (isDarkPalette ? '#fff' : '#0f172a'),
                             width: '32px',
                             height: '32px',
                             borderRadius: '8px',
@@ -1342,7 +1369,7 @@ const FoudreFrance = () => {
                             justifyContent: 'center',
                             fontSize: '0.8rem',
                             fontWeight: 'bold',
-                            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
                             transition: 'all 0.2s'
                         }}
                         title="Informations de débogage"
@@ -1350,28 +1377,28 @@ const FoudreFrance = () => {
                         {showDebug ? 'X' : '⚙️'}
                     </button>
                 </div>
-
+ 
                 {showDebug && (
                     <div className="hide-on-export" style={{
                         position: 'absolute',
                         bottom: '110px',
                         left: '15px',
                         zIndex: 3000,
-                        background: 'rgba(15, 23, 42, 0.95)',
+                        background: isDarkPalette ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.98)',
                         backdropFilter: 'blur(15px)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        border: isDarkPalette ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #cbd5e1',
                         padding: '12px',
                         borderRadius: '10px',
                         width: '300px',
-                        color: '#fff',
+                        color: isDarkPalette ? '#fff' : '#0f172a',
                         fontSize: '11px',
                         fontFamily: 'monospace',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '6px'
                     }}>
-                        <div style={{ fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ fontWeight: 'bold', borderBottom: isDarkPalette ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0', paddingBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
                             <span>CONSOLE DE DÉBOGAGE</span>
                             <span style={{ color: '#ef4444', cursor: 'pointer' }} onClick={() => setShowDebug(false)}>Fermer</span>
                         </div>
