@@ -186,7 +186,7 @@ const FoudreFrance = () => {
     const [showCities, setShowCities] = useState(true);
     const [strikeSize, setStrikeSize] = useState(5.5);
     const [mapCenter, setMapCenter] = useState([46.4, 2.2]);
-    const [mapZoom, setMapZoom] = useState(5.7);
+    const [mapZoom, setMapZoom] = useState(5.4); // Zoom à 5.4 pour afficher la France en intégralité d'office
     const [sourceGeo, setSourceGeo] = useState(null);
     const [filteredGeo, setFilteredGeo] = useState(null);
     const [foudreDesign, setFoudreDesign] = useState("Classic");
@@ -201,7 +201,7 @@ const FoudreFrance = () => {
     // Animation states
     const [isPlaying, setIsPlaying] = useState(false);
     const [animationMinute, setAnimationMinute] = useState(1440);
-    const [trailMode, setTrailMode] = useState("30m"); // "cumulative", "15m", "30m", "60m"
+    const [trailMode, setTrailMode] = useState("30"); // "cumulative", "15", "30", "60", "120"
     const [playSpeed, setPlaySpeed] = useState(150); // ms par pas de 5 min
 
     // Debug toggle
@@ -422,10 +422,9 @@ const FoudreFrance = () => {
     function GeoJSONController({ data, isFrance }) {
         const map = useMap();
         useEffect(() => {
-            if (!data) return;
             if (isFrance) {
-                map.setView([46.5, 2.2], 5.0);
-            } else {
+                map.setView([46.4, 2.2], 5.4); // Centre la France automatiquement en intégralité
+            } else if (data) {
                 const layer = L.geoJSON(data);
                 map.fitBounds(layer.getBounds(), { padding: [20, 20], animate: true });
             }
@@ -830,6 +829,31 @@ const FoudreFrance = () => {
                         <Maximize size={12} />
                         GÉNÉRATEUR
                     </a>
+
+                    <button
+                        onClick={exportImage}
+                        disabled={loading || exporting}
+                        className="hide-on-export"
+                        style={{
+                            background: '#2563eb',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            fontWeight: 900,
+                            fontSize: '0.7rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 4px 10px rgba(37,99,235,0.2)',
+                            transition: 'all 0.2s'
+                        }}
+                        title="Télécharger l'image de la carte"
+                    >
+                        <Download size={12} />
+                        TÉLÉCHARGER
+                    </button>
                 </div>
  
                 {selectedLocation && (
@@ -1070,7 +1094,7 @@ const FoudreFrance = () => {
                             />
                         )}
  
-                        {selectedLocation && radii.map(r => (
+                        {selectedLocation && !exporting && radii.map(r => (
                             <React.Fragment key={r}>
                                 <Circle
                                     center={[selectedLocation.lat, selectedLocation.lon]}
@@ -1330,6 +1354,36 @@ const FoudreFrance = () => {
                                 <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700 }}>Source : Météo-NPDC</div>
                             </div>
                         </div>
+
+                        {selectedLocation && stats && (
+                            <div style={{ 
+                                background: '#f8fafc', 
+                                border: '1px solid #cbd5e1', 
+                                borderRadius: '8px', 
+                                padding: '6px 14px', 
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                gap: '2px',
+                                minWidth: '220px'
+                            }}>
+                                <div style={{ fontSize: '0.65rem', fontWeight: 1000, color: '#0f172a' }}>
+                                    📍 COMMUNE : {selectedLocation.name.toUpperCase()} ({selectedLocation.postcode})
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', fontSize: '0.55rem', fontWeight: 800 }}>
+                                    {stats.map(s => (
+                                        <span key={s.radius} style={{ 
+                                            background: s.count > 0 ? '#fee2e2' : '#f1f5f9', 
+                                            color: s.count > 0 ? '#ef4444' : '#64748b', 
+                                            padding: '2px 6px', 
+                                            borderRadius: '4px',
+                                            border: s.count > 0 ? '1px solid #fecaca' : '1px solid #e2e8f0'
+                                        }}>
+                                            {s.radius}km : {s.count}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
  
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <div style={{ display: 'flex', gap: '3px' }}>
