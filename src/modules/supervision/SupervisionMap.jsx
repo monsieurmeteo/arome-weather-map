@@ -56,30 +56,6 @@ const MousePosition = () => {
     );
 };
 
-const CrosshairCursor = () => {
-    const [pos, setPos] = useState(null);
-    const map = useMap();
-
-    useEffect(() => {
-        const onMouseMove = (e) => setPos(e.latlng);
-        map.on('mousemove', onMouseMove);
-        return () => map.off('mousemove', onMouseMove);
-    }, [map]);
-
-    if (!pos) return null;
-
-    return (
-        <>
-            <Circle
-                center={pos}
-                radius={0}
-                pathOptions={{ color: 'rgba(255,255,255,0.4)', weight: 1, dashArray: '5, 5' }}
-                interactive={false}
-            />
-        </>
-    );
-};
-
 function MapController({ center, zoom }) {
     const map = useMap();
     useEffect(() => {

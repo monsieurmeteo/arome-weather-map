@@ -1473,7 +1473,7 @@ const FoudreFrance = () => {
                             <input
                                 type="range"
                                 min={minMinute}
-                                max={isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : "1439"}
+                                max={isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1439}
                                 step="5"
                                 value={animationMinute}
                                 onChange={(e) => {
