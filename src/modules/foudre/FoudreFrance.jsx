@@ -432,14 +432,18 @@ const FoudreFrance = () => {
                 setAnimationMinute(prev => {
                     const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
                     if (prev >= maxMin) {
-                        return minMinute; // Recommence au début de la tempête (ou minMinute)
+                        // Si une rémanence est définie (ex: 120 min), boucler sur cette fenêtre, sinon recommencer à minMinute
+                        const windowSize = parseInt(trailMode);
+                        return isNaN(windowSize) 
+                            ? minMinute 
+                            : Math.max(minMinute, maxMin - windowSize);
                     }
                     return Math.min(prev + 5, maxMin);
                 });
             }, playSpeed);
         }
         return () => clearInterval(timer);
-    }, [isPlaying, playSpeed, isLive, minMinute]);
+    }, [isPlaying, playSpeed, isLive, minMinute, trailMode]);
 
 
     useEffect(() => {
