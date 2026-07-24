@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, Popup, useMap, Circle, Marker, G
 import { createClient } from '@supabase/supabase-js';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Zap, RefreshCw, Calendar, Loader2, Search, X, Crosshair, HelpCircle, Download, Image as ImageIcon, Map as MapIcon, Palette, Maximize, Building2, Type, LayoutGrid } from 'lucide-react';
+import { Zap, RefreshCw, Calendar, Loader2, Search, X, Crosshair, HelpCircle, Download, Image as ImageIcon, Map as MapIcon, Palette, Maximize, Building2, Type, LayoutGrid, Play, Pause } from 'lucide-react';
 import { LIGHTNING_DESIGNS } from './LightningStyles';
 import html2canvas from 'html2canvas';
 import { REGIONS, DEPARTMENTS } from "../../data/departments";
@@ -21,6 +21,7 @@ const HOUR_COLORS = [
 const getHourColor = (h) => HOUR_COLORS[h] || "#ff0000";
 
 const MAP_PALETTES = {
+    dark: { name: "Sombre Pro", fill: "#1e293b", stroke: "#475569", bg: "#0f172a", tiles: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" },
     default: { name: "Classique", fill: "#f1f5f9", stroke: "#000", bg: "#ffffff", tiles: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png" },
     blue: { name: "Océan", fill: "#dbeafe", stroke: "#000", bg: "#f0f9ff", tiles: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png" }
 };
@@ -180,7 +181,7 @@ const FoudreFrance = () => {
     const [geoMode, setGeoMode] = useState("france"); // "region", "dept", "france"
     const [selectedRegion, setSelectedRegion] = useState("Hauts-de-France");
     const [selectedDept, setSelectedDept] = useState("59");
-    const [mapPalette, setMapPalette] = useState("default");
+    const [mapPalette, setMapPalette] = useState("dark"); // Par défaut en Sombre Pro
     const [showCities, setShowCities] = useState(true);
     const [strikeSize, setStrikeSize] = useState(5.5);
     const [mapCenter, setMapCenter] = useState([46.4, 2.2]);
@@ -195,6 +196,15 @@ const FoudreFrance = () => {
     const [selectedLocation, setSelectedLocation] = useState(null);
     const radii = [1, 3, 5, 10, 20];
     const [debugInfo, setDebugInfo] = useState({ status: 'Idle', error: 'Aucun' });
+
+    // Animation states
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [animationMinute, setAnimationMinute] = useState(1440);
+    const [trailMode, setTrailMode] = useState("30m"); // "cumulative", "15m", "30m", "60m"
+    const [playSpeed, setPlaySpeed] = useState(150); // ms par pas de 5 min
+
+    // Debug toggle
+    const [showDebug, setShowDebug] = useState(false);
 
     const isLive = !isRange && startDate === new Date().toLocaleDateString('sv-SE');
 
@@ -336,6 +346,28 @@ const FoudreFrance = () => {
         return () => clearInterval(interval);
     }, [startDate, endDate, isRange]);
 
+    useEffect(() => {
+        setIsPlaying(false);
+        const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
+        setAnimationMinute(maxMin);
+    }, [startDate, endDate, isRange]);
+
+    useEffect(() => {
+        let timer;
+        if (isPlaying) {
+            timer = setInterval(() => {
+                setAnimationMinute(prev => {
+                    const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
+                    if (prev >= maxMin) {
+                        return 0; // Recommence au début
+                    }
+                    return Math.min(prev + 5, maxMin);
+                });
+            }, playSpeed);
+        }
+        return () => clearInterval(timer);
+    }, [isPlaying, playSpeed, isLive]);
+
 
     useEffect(() => {
         const loadGeo = async () => {
@@ -403,12 +435,29 @@ const FoudreFrance = () => {
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
+    const visibleStrikes = strikes.filter(s => {
+        const d = new Date(s.time);
+        const strikeMinute = d.getHours() * 60 + d.getMinutes();
+        
+        const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
+        if (animationMinute >= maxMin && !isPlaying) {
+            return true;
+        }
+        
+        if (trailMode === "cumulative") {
+            return strikeMinute <= animationMinute;
+        } else {
+            const windowSize = parseInt(trailMode) || 30;
+            return strikeMinute <= animationMinute && strikeMinute >= (animationMinute - windowSize);
+        }
+    });
+
     const stats = selectedLocation ? radii.map(r => ({
         radius: r,
-        count: strikes.filter(s => calculateDistance(selectedLocation.lat, selectedLocation.lon, s.lat, s.lon) <= r).length
+        count: visibleStrikes.filter(s => calculateDistance(selectedLocation.lat, selectedLocation.lon, s.lat, s.lon) <= r).length
     })) : null;
 
-    // Distribution horaire pour audit
+    // Distribution horaire pour audit (toujours sur le total pour référence)
     const hourlyDistribution = Array.from({ length: 24 }, (_, h) => ({
         hour: h,
         count: strikes.filter(s => s.h === h).length
@@ -459,19 +508,46 @@ const FoudreFrance = () => {
     };
 
     return (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f8fafc', fontFamily: 'Inter, system-ui, sans-serif' }} id="foudre-module-container">
-            <header style={{ background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)', padding: '8px 20px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1000, boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#0b0f19', fontFamily: 'Inter, system-ui, sans-serif' }} id="foudre-module-container">
+            <header style={{ 
+                background: 'rgba(15, 23, 42, 0.95)', 
+                backdropFilter: 'blur(16px)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '10px 24px', 
+                color: 'white', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                zIndex: 1000, 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)' 
+            }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ background: '#fff', padding: '4px', borderRadius: '50%', display: 'flex' }}>
-                            <Zap fill="#dc2626" size={16} color="#dc2626" />
+                        <div style={{ 
+                            background: 'rgba(239, 68, 68, 0.15)', 
+                            padding: '6px', 
+                            borderRadius: '50%', 
+                            display: 'flex',
+                            boxShadow: '0 0 12px rgba(239, 68, 68, 0.3)',
+                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                        }}>
+                            <Zap fill="#ef4444" size={16} color="#ef4444" style={{ animation: 'pulse 1.5s infinite' }} />
                         </div>
                         <span style={{ fontWeight: 950, fontSize: '1rem', letterSpacing: '-0.5px' }}>IMPACTS DE FOUDRE</span>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.15)', padding: '5px 12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(5px)' }}>
-                        <Calendar size={14} color="#fff" />
-                        <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '10px', 
+                        background: 'rgba(255,255,255,0.06)', 
+                        padding: '6px 14px', 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(255,255,255,0.08)', 
+                        backdropFilter: 'blur(5px)' 
+                    }}>
+                        <Calendar size={14} color="#38bdf8" />
+                        <span style={{ color: '#38bdf8', fontWeight: 800, fontSize: '0.75rem', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
                             {isLive ? 'DIRECT 24H' : 'ARCHIVE'}
                         </span>
                         <input
@@ -483,9 +559,9 @@ const FoudreFrance = () => {
                                 setIsRange(false);
                             }}
                             style={{
-                                background: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                borderRadius: '6px',
+                                background: 'rgba(0,0,0,0.4)',
+                                border: '1px solid rgba(255,255,255,0.15)',
+                                borderRadius: '8px',
                                 padding: '4px 8px',
                                 color: '#fff',
                                 fontSize: '0.75rem',
@@ -501,26 +577,27 @@ const FoudreFrance = () => {
                                     background: '#ef4444',
                                     color: 'white',
                                     border: 'none',
-                                    padding: '4px 10px',
-                                    borderRadius: '6px',
+                                    padding: '4px 12px',
+                                    borderRadius: '8px',
                                     fontSize: '0.65rem',
                                     fontWeight: 900,
                                     cursor: 'pointer',
-                                    animation: 'pulse 2s infinite'
+                                    boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)',
+                                    transition: 'transform 0.2s',
                                 }}
                             >
-                                LIVE
+                                🔴 LIVE
                             </button>
                         )}
                         {bilanImage && (
                             <button
                                 onClick={() => setViewMode(viewMode === 'bilan' ? 'points' : 'bilan')}
                                 style={{
-                                    background: viewMode === 'bilan' ? '#10b981' : 'rgba(255,255,255,0.2)',
+                                    background: viewMode === 'bilan' ? '#10b981' : 'rgba(255,255,255,0.1)',
                                     color: 'white',
                                     border: 'none',
-                                    padding: '4px 10px',
-                                    borderRadius: '6px',
+                                    padding: '4px 12px',
+                                    borderRadius: '8px',
                                     fontSize: '0.65rem',
                                     fontWeight: 900,
                                     cursor: 'pointer',
@@ -537,12 +614,14 @@ const FoudreFrance = () => {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {loading && <Loader2 size={16} className="animate-spin" color="#fff" />}
+                        {loading && <Loader2 size={16} className="animate-spin" color="#ef4444" />}
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 1000, color: '#fff', lineHeight: 1 }}>
-                                {strikes.length.toLocaleString()}
+                            <div style={{ fontSize: '1.6rem', fontWeight: 1000, color: '#ef4444', lineHeight: 1, textShadow: '0 0 8px rgba(239,68,68,0.2)' }}>
+                                {visibleStrikes.length.toLocaleString()}
                             </div>
-                            <div style={{ fontSize: '0.55rem', fontWeight: 800, opacity: 0.8, textTransform: 'uppercase' }}>Impacts</div>
+                            <div style={{ fontSize: '0.55rem', fontWeight: 800, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                {visibleStrikes.length !== strikes.length ? `Affichés / ${strikes.length.toLocaleString()}` : 'Impacts'}
+                            </div>
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -557,32 +636,80 @@ const FoudreFrance = () => {
                             }}
                             disabled={loading || exporting || strikes.length === 0}
                             className="hide-on-export"
-                            style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}
+                            style={{ 
+                                background: '#10b981', 
+                                color: 'white', 
+                                border: 'none', 
+                                padding: '6px 14px', 
+                                borderRadius: '8px', 
+                                fontSize: '0.7rem', 
+                                fontWeight: 900, 
+                                cursor: 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '8px', 
+                                transition: 'all 0.2s',
+                                boxShadow: '0 4px 10px rgba(16,185,129,0.2)'
+                            }}
                         >
                             {exporting ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
                             {exporting ? '...' : 'BILAN NATIONAL'}
                         </button>
-                        <button onClick={fetchStrikes} className="hide-on-export" style={{ background: 'rgba(255,255,255,0.15)', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button onClick={fetchStrikes} className="hide-on-export" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', width: '32px', height: '32px', borderRadius: '8px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
                         </button>
                     </div>
                 </div>
-                <div style={{ position: 'absolute', bottom: '20px', left: '20px', zIndex: 3000, background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '10px', borderRadius: '8px', fontSize: '10px', pointerEvents: 'none' }}>
-                    <b>DEBUG INFO:</b> {debugInfo.status} | Agate: {debugInfo.agateCount} | Supa: {debugInfo.supabaseCount} | Error: {debugInfo.lastError || 'None'}
-                </div>
             </header>
 
-            <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', padding: '6px 20px', display: 'flex', alignItems: 'center', gap: '15px', borderBottom: '1px solid #e2e8f0', zIndex: 999 }} className="site-controls-expert">
+            <div style={{ 
+                background: 'rgba(15, 23, 42, 0.85)', 
+                backdropFilter: 'blur(12px)', 
+                padding: '8px 24px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '15px', 
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)', 
+                zIndex: 999 
+            }} className="site-controls-expert">
                 <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
                     <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
                         <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                        <input type="text" placeholder="Rechercher une commune..." value={searchQuery} onChange={(e) => handleSearch(e.target.value)} style={{ width: '100%', padding: '6px 12px 6px 36px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.8rem', outline: 'none', fontWeight: 600 }} />
+                        <input 
+                            type="text" 
+                            placeholder="Rechercher une commune..." 
+                            value={searchQuery} 
+                            onChange={(e) => handleSearch(e.target.value)} 
+                            style={{ 
+                                width: '100%', 
+                                padding: '6px 12px 6px 36px', 
+                                borderRadius: '8px', 
+                                border: '1px solid rgba(255,255,255,0.1)', 
+                                background: 'rgba(0,0,0,0.3)',
+                                color: '#fff',
+                                fontSize: '0.8rem', 
+                                outline: 'none', 
+                                fontWeight: 600 
+                            }} 
+                        />
                         {suggestions.length > 0 && (
-                            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '0 0 8px 8px', boxShadow: '0 10px 15px rgba(0,0,0,0.1)', zIndex: 2000 }}>
+                            <div style={{ 
+                                position: 'absolute', 
+                                top: '100%', 
+                                left: 0, 
+                                right: 0, 
+                                background: 'rgba(15, 23, 42, 0.95)', 
+                                backdropFilter: 'blur(15px)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                borderRadius: '8px', 
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.5)', 
+                                zIndex: 2000,
+                                marginTop: '4px'
+                            }}>
                                 {suggestions.map((s, i) => (
-                                    <div key={i} onClick={() => selectCity(s)} style={{ padding: '8px 15px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.75rem' }}>{s.properties.city}</span>
-                                        <span style={{ color: '#94a3b8', fontSize: '0.65rem', fontWeight: 800 }}>{s.properties.postcode}</span>
+                                    <div key={i} onClick={() => selectCity(s)} style={{ padding: '8px 15px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.75rem' }}>{s.properties.city}</span>
+                                        <span style={{ color: '#38bdf8', fontSize: '0.65rem', fontWeight: 800 }}>{s.properties.postcode}</span>
                                     </div>
                                 ))}
                             </div>
@@ -592,24 +719,75 @@ const FoudreFrance = () => {
                         onClick={() => { setMapCenter([46.4, 2.2]); setMapZoom(5.7); setSelectedLocation(null); }}
                         className="hide-on-export"
                         title="Recentrer sur la France"
-                        style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0 10px', cursor: 'pointer', color: '#64748b' }}
+                        style={{ 
+                            background: 'rgba(255,255,255,0.06)', 
+                            border: '1px solid rgba(255,255,255,0.1)', 
+                            borderRadius: '8px', 
+                            padding: '0 10px', 
+                            cursor: 'pointer', 
+                            color: '#94a3b8' 
+                        }}
                     >
                         <Crosshair size={18} />
                     </button>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="hide-on-export">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <LayoutGrid size={14} color="#64748b" />
-                        <select value={foudreDesign} onChange={e => setFoudreDesign(e.target.value)} style={{ background: 'transparent', border: 'none', fontWeight: 800, fontSize: '0.75rem', outline: 'none' }}>
-                            {Object.entries(LIGHTNING_DESIGNS).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '6px', 
+                        background: 'rgba(255,255,255,0.06)', 
+                        padding: '4px 10px', 
+                        borderRadius: '8px', 
+                        border: '1px solid rgba(255,255,255,0.1)' 
+                    }}>
+                        <LayoutGrid size={14} color="#94a3b8" />
+                        <select 
+                            value={foudreDesign} 
+                            onChange={e => setFoudreDesign(e.target.value)} 
+                            style={{ 
+                                background: 'transparent', 
+                                border: 'none', 
+                                fontWeight: 800, 
+                                fontSize: '0.75rem', 
+                                outline: 'none',
+                                color: '#fff',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {Object.entries(LIGHTNING_DESIGNS).map(([k, v]) => (
+                                <option key={k} value={k} style={{ background: '#1e293b', color: '#fff' }}>{v.name}</option>
+                            ))}
                         </select>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <Palette size={14} color="#64748b" />
-                        <select value={mapPalette} onChange={e => setMapPalette(e.target.value)} style={{ background: 'transparent', border: 'none', fontWeight: 800, fontSize: '0.75rem', outline: 'none' }}>
-                            {Object.entries(MAP_PALETTES).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '6px', 
+                        background: 'rgba(255,255,255,0.06)', 
+                        padding: '4px 10px', 
+                        borderRadius: '8px', 
+                        border: '1px solid rgba(255,255,255,0.1)' 
+                    }}>
+                        <Palette size={14} color="#94a3b8" />
+                        <select 
+                            value={mapPalette} 
+                            onChange={e => setMapPalette(e.target.value)} 
+                            style={{ 
+                                background: 'transparent', 
+                                border: 'none', 
+                                fontWeight: 800, 
+                                fontSize: '0.75rem', 
+                                outline: 'none',
+                                color: '#fff',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {Object.entries(MAP_PALETTES).map(([k, v]) => (
+                                <option key={k} value={k} style={{ background: '#1e293b', color: '#fff' }}>{v.name}</option>
+                            ))}
                         </select>
                     </div>
 
@@ -823,8 +1001,8 @@ const FoudreFrance = () => {
                                 data={sourceGeo}
                                 style={{
                                     fillColor: 'transparent',
-                                    color: '#000',
-                                    weight: 1.2,
+                                    color: mapPalette === 'dark' ? 'rgba(255,255,255,0.15)' : '#000',
+                                    weight: mapPalette === 'dark' ? 0.8 : 1.2,
                                     opacity: 0.8
                                 }}
                                 interactive={false}
@@ -833,7 +1011,7 @@ const FoudreFrance = () => {
 
                         {/* Impacts (Masqués par la région) */}
                         <FastLightningLayer
-                            strikes={strikes}
+                            strikes={visibleStrikes}
                             colors={HOUR_COLORS}
                             filteredGeo={filteredGeo}
                             geoMode={geoMode}
@@ -977,6 +1155,137 @@ const FoudreFrance = () => {
                         </div>
                     </MapContainer>
 
+                    {/* Lecteur d'animation temporel par pas de 5 minutes */}
+                    <div className="hide-on-export" style={{
+                        background: 'rgba(15, 23, 42, 0.95)',
+                        backdropFilter: 'blur(20px)',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                        padding: '12px 24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '20px',
+                        color: '#fff',
+                        zIndex: 1000,
+                        borderBottomLeftRadius: '12px',
+                        borderBottomRightRadius: '12px'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <button
+                                onClick={() => setIsPlaying(!isPlaying)}
+                                style={{
+                                    background: isPlaying ? '#ef4444' : '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    width: '38px',
+                                    height: '38px',
+                                    borderRadius: '50%',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s',
+                                    boxShadow: isPlaying ? '0 0 12px rgba(239, 68, 68, 0.4)' : '0 0 12px rgba(59, 130, 246, 0.3)'
+                                }}
+                                title={isPlaying ? "Pause" : "Play"}
+                            >
+                                {isPlaying ? <Pause size={18} fill="#fff" /> : <Play size={18} fill="#fff" style={{ marginLeft: '2px' }} />}
+                            </button>
+                            <div style={{ minWidth: '60px', textAlign: 'center' }}>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'monospace', color: '#38bdf8' }}>
+                                    {String(Math.floor(animationMinute / 60)).padStart(2, '0')}:{String(animationMinute % 60).padStart(2, '0')}
+                                </div>
+                                <div style={{ fontSize: '0.55rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Heure</div>
+                            </div>
+                        </div>
+
+                        {/* Slider bar */}
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b' }}>00:00</span>
+                            <input
+                                type="range"
+                                min="0"
+                                max={isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : "1439"}
+                                step="5"
+                                value={animationMinute}
+                                onChange={(e) => {
+                                    setIsPlaying(false);
+                                    setAnimationMinute(parseInt(e.target.value));
+                                }}
+                                style={{
+                                    flex: 1,
+                                    height: '6px',
+                                    borderRadius: '3px',
+                                    outline: 'none',
+                                    cursor: 'pointer',
+                                    accentColor: '#3b82f6',
+                                    background: 'rgba(255,255,255,0.1)'
+                                }}
+                            />
+                            <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b' }}>
+                                {isLive ? `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}` : '23:59'}
+                            </span>
+                        </div>
+
+                        {/* Options de Trailing / Rémanence */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Rémanence</span>
+                                <select
+                                    value={trailMode}
+                                    onChange={(e) => setTrailMode(e.target.value)}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.06)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '6px',
+                                        padding: '4px 8px',
+                                        color: '#fff',
+                                        fontSize: '0.7rem',
+                                        fontWeight: 800,
+                                        outline: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="cumulative" style={{ background: '#1e293b' }}>Cumulatif complet</option>
+                                    <option value="15" style={{ background: '#1e293b' }}>Fenêtre 15 min</option>
+                                    <option value="30" style={{ background: '#1e293b' }}>Fenêtre 30 min</option>
+                                    <option value="60" style={{ background: '#1e293b' }}>Fenêtre 1h</option>
+                                    <option value="120" style={{ background: '#1e293b' }}>Fenêtre 2h</option>
+                                </select>
+                            </div>
+
+                            {/* Vitesse d'animation */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Vitesse</span>
+                                <div style={{ display: 'flex', gap: '2px', background: 'rgba(255,255,255,0.06)', padding: '2px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                    {[
+                                        { label: '1x', val: 250 },
+                                        { label: '2x', val: 120 },
+                                        { label: '4x', val: 50 }
+                                    ].map(speed => (
+                                        <button
+                                            key={speed.label}
+                                            onClick={() => setPlaySpeed(speed.val)}
+                                            style={{
+                                                background: playSpeed === speed.val ? '#3b82f6' : 'transparent',
+                                                color: '#fff',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                padding: '2px 8px',
+                                                fontSize: '0.65rem',
+                                                fontWeight: 800,
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {speed.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Footer pour l'export (Légende Hors Carte) */}
                     <div className="export-footer" style={{
                         background: 'white',
@@ -990,7 +1299,7 @@ const FoudreFrance = () => {
                             <img src="/logo.jpg" style={{ height: '40px', borderRadius: '6px' }} />
                             <div>
                                 <div style={{ fontWeight: 900, fontSize: '0.75rem', color: '#0f172a' }}>MÉTÉO CLIMAT PRO</div>
-                                <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700 }}>Source : Réseau de détection Agate</div>
+                                <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700 }}>Source : Météo-NPDC</div>
                             </div>
                         </div>
 
@@ -1014,11 +1323,67 @@ const FoudreFrance = () => {
                         </div>
                     </div>
                 </main>
-                <div style={{ position: 'fixed', bottom: '10px', left: '10px', zIndex: 9999, background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '10px', fontFamily: 'monospace', pointerEvents: 'none' }}>
-                    DEBUG: {debugInfo.status} | Err: {debugInfo.error}
+
+                {/* Bouton de Debug discret */}
+                <div className="hide-on-export" style={{ position: 'absolute', bottom: '70px', left: '15px', zIndex: 3000 }}>
+                    <button 
+                        onClick={() => setShowDebug(!showDebug)}
+                        style={{
+                            background: showDebug ? '#ef4444' : 'rgba(15, 23, 42, 0.85)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: '#fff',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.8rem',
+                            fontWeight: 'bold',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                            transition: 'all 0.2s'
+                        }}
+                        title="Informations de débogage"
+                    >
+                        {showDebug ? 'X' : '⚙️'}
+                    </button>
                 </div>
+
+                {showDebug && (
+                    <div className="hide-on-export" style={{
+                        position: 'absolute',
+                        bottom: '110px',
+                        left: '15px',
+                        zIndex: 3000,
+                        background: 'rgba(15, 23, 42, 0.95)',
+                        backdropFilter: 'blur(15px)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        padding: '12px',
+                        borderRadius: '10px',
+                        width: '300px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        fontFamily: 'monospace',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px'
+                    }}>
+                        <div style={{ fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>CONSOLE DE DÉBOGAGE</span>
+                            <span style={{ color: '#ef4444', cursor: 'pointer' }} onClick={() => setShowDebug(false)}>Fermer</span>
+                        </div>
+                        <div><b>Statut :</b> {debugInfo.status}</div>
+                        <div><b>Erreur :</b> {debugInfo.error}</div>
+                        <div><b>Nombre Impacts Total :</b> {strikes.length}</div>
+                        <div><b>Nombre Impacts Visibles :</b> {visibleStrikes.length}</div>
+                        <div><b>Minute Animation :</b> {animationMinute} ({Math.floor(animationMinute / 60)}h{animationMinute % 60}m)</div>
+                    </div>
+                )}
             </div>
-        </div >
+        </div>
     );
 };
 
