@@ -58,6 +58,8 @@ async function syncLightning24h() {
         const inserted = await upsertChunked(rows);
         console.log(`✅ ${inserted} impacts archivés.`);
 
+
+
     } catch (e) {
         console.log(`❌ ${e.message}`);
     }

@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # Utiliser le token par défaut avec les droits d'écriture
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -28,3 +30,23 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CRON_MODE: "1"
         run: node scripts/sync_foudre_week.mjs
+
+      - name: Archive old data (> 7 days) from Supabase to Git JSON
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/git_archive_foudre.mjs
+
+      - name: Commit and push JSON archives to Git repository
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/archives_orage/
+          # Commit seulement s'il y a des modifications
+          if git diff --staged --quiet; then
+            echo "⚫ Aucun nouveau fichier d'archive à committer."
+          else
+            echo "📝 Nouveaux fichiers d'archive détectés. Commit et push..."
+            git commit -m "chore(foudre): archivage automatique des impacts [skip ci]"
+            git push origin master
+          fi
