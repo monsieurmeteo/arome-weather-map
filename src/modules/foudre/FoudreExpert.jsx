@@ -992,6 +992,29 @@ export default function FoudreExpert() {
                             {/* Canvas impacts — absolu au-dessus du SVG */}
                             <canvas ref={canvasComRef} width={COM_MAP} height={COM_H}
                                 style={{position:'absolute',top:0,left:0,pointerEvents:'none',zIndex:2}}/>
+                            {loading && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0, left: 0, right: 0, bottom: 0,
+                                    background: 'rgba(15, 23, 42, 0.75)',
+                                    backdropFilter: 'blur(3px)',
+                                    zIndex: 10,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'white',
+                                    gap: '12px'
+                                }} data-html2canvas-ignore="true">
+                                    <RefreshCw size={36} className="animate-spin" style={{ color: '#fbbf24' }}/>
+                                    <div style={{ fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.3px' }}>
+                                        Chargement des impacts...
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                        Veuillez patienter quelques instants
+                                    </div>
+                                </div>
+                            )}
                             <svg width={COM_MAP} height={COM_H} style={{position:'relative',zIndex:1}}>
                                 {/* Groupe zoomé contenant les cartes de fond uniquement */}
                                 <g transform={communeZoom?.svgTransform||''}>
@@ -1110,6 +1133,29 @@ export default function FoudreExpert() {
                         {/* Canvas impacts — absolu au-dessus du SVG */}
                         <canvas ref={canvasStdRef} width={STD_W} height={STD_H}
                             style={{position:'absolute',top:0,left:0,pointerEvents:'none',zIndex:2}}/>
+                        {loading && (
+                            <div style={{
+                                position: 'absolute',
+                                top: 0, left: 0, right: 0, bottom: 0,
+                                background: 'rgba(15, 23, 42, 0.75)',
+                                backdropFilter: 'blur(3px)',
+                                zIndex: 10,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                gap: '12px'
+                            }} data-html2canvas-ignore="true">
+                                <RefreshCw size={36} className="animate-spin" style={{ color: '#fbbf24' }}/>
+                                <div style={{ fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.3px' }}>
+                                    Chargement des impacts...
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                    Veuillez patienter quelques instants
+                                </div>
+                            </div>
+                        )}
                         <svg width={STD_W} height={STD_H} style={{position:'relative',zIndex:1}}>
                             <defs><clipPath id="map-clip">{memoizedPaths.map((d,i)=><path key={i} d={d}/>)}</clipPath></defs>
                             <g>{memoizedPaths.map((d,i)=><path key={i} d={d} fill={mp.fill} stroke="#000" strokeWidth={1.5}/>)}</g>
