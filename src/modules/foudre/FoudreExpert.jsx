@@ -274,6 +274,24 @@ export default function FoudreExpert() {
         return{cx,cy,scale,pxPerKm,tx,ty,svgTransform:`translate(${tx},${ty}) scale(${scale})`};
     },[selectedCommune,projection,geoMode,communeZoomRange]);
 
+    const projectedStrikes = useMemo(() => {
+        if (!projection) return [];
+        const isCommune = geoMode === 'commune' && communeZoom;
+        const cx = isCommune ? communeZoom.cx : 0;
+        const cy = isCommune ? communeZoom.cy : 0;
+        const scale = isCommune ? communeZoom.scale : 1;
+        
+        return strikes.map(s => {
+            const p = projection([s.lon, s.lat]);
+            if (!p) return { ...s, sx: -999, sy: -999 };
+            return {
+                ...s,
+                sx: isCommune ? COM_MAP/2 + (p[0] - cx) * scale : p[0],
+                sy: isCommune ? COM_H/2  + (p[1] - cy) * scale : p[1]
+            };
+        });
+    }, [strikes, projection, geoMode, communeZoom]);
+
     // ── Impacts par rayon ──────────────────────────────────
     const impactsByRadius = useMemo(()=>{
         if (!selectedCommune) return {};
@@ -288,10 +306,9 @@ export default function FoudreExpert() {
     },[strikes,selectedCommune]);
 
     const visibleStrikes = useMemo(()=>{
-        if (geoMode==='commune'&&selectedCommune) return strikes.filter(s=>haversineKm(selectedCommune.lat,selectedCommune.lon,s.lat,s.lon)<=communeZoomRange);
-        if (!projection) return [];
-        return strikes.filter(s=>{const c=projection([s.lon,s.lat]);return c&&c[0]>=0&&c[0]<=STD_W&&c[1]>=0&&c[1]<=STD_H;});
-    },[strikes,geoMode,selectedCommune,projection,communeZoomRange]);
+        if (geoMode==='commune'&&selectedCommune) return projectedStrikes.filter(s=>haversineKm(selectedCommune.lat,selectedCommune.lon,s.lat,s.lon)<=communeZoomRange);
+        return projectedStrikes.filter(s=>s.sx>=0&&s.sx<=STD_W&&s.sy>=0&&s.sy<=STD_H);
+    },[projectedStrikes,geoMode,selectedCommune,communeZoomRange]);
 
     const isLive = useMemo(() => startDate === todayLocal && !isRange, [startDate, todayLocal, isRange]);
 
@@ -337,7 +354,11 @@ export default function FoudreExpert() {
     }, [visibleStrikes, animationMinute, isPlaying, isLive, trailMode]);
 
     const exportMap = ()=>{
-        html2canvas(document.getElementById("export-foudre"),{scale:2}).then(canvas=>{
+        html2canvas(document.getElementById("export-foudre"),{
+            scale: 2,
+            useCORS: true,
+            allowTaint: true
+        }).then(canvas=>{
             const a=document.createElement("a");
             a.download=`foudre-${geoMode==='commune'&&selectedCommune?selectedCommune.name:geoMode}-${startDate}.png`;
             a.href=canvas.toDataURL();a.click();
@@ -386,13 +407,42 @@ export default function FoudreExpert() {
             ctx.clearRect(0, 0, STD_W, STD_H);
             ctx.globalAlpha = 1;
             
-            for (const s of animatedStrikes) {
-                const c = projection([s.lon, s.lat]);
-                if (!c || c[0]<0 || c[0]>STD_W || c[1]<0 || c[1]>STD_H) continue;
+            // Masque de détourage (clipping) aux frontières de la géo active (France, région ou dépt)
+            let hasClipped = false;
+            if (geoData && geoData.features) {
                 ctx.save();
-                design.render(ctx, c[0], c[1], strikeSize, HOUR_COLORS[s.h]||'#ff0000', s.isRecent);
+                ctx.beginPath();
+                geoData.features.forEach(feature => {
+                    const coords = feature.geometry.type === 'Polygon'
+                        ? [feature.geometry.coordinates]
+                        : feature.geometry.coordinates;
+
+                    coords.forEach(ring => {
+                        ring[0].forEach((coord, i) => {
+                            const p = projection([coord[0], coord[1]]);
+                            if (p) {
+                                if (i === 0) ctx.moveTo(p[0], p[1]);
+                                else ctx.lineTo(p[0], p[1]);
+                            }
+                        });
+                        ctx.closePath();
+                    });
+                });
+                ctx.clip();
+                hasClipped = true;
+            }
+            
+            for (const s of animatedStrikes) {
+                if (s.sx < 0 || s.sx > STD_W || s.sy < 0 || s.sy > STD_H) continue;
+                ctx.save();
+                design.render(ctx, s.sx, s.sy, strikeSize, HOUR_COLORS[s.h]||'#ff0000', s.isRecent);
                 ctx.restore();
             }
+            
+            if (hasClipped) {
+                ctx.restore();
+            }
+            
             animId = requestAnimationFrame(renderLoop);
         };
         
@@ -402,7 +452,7 @@ export default function FoudreExpert() {
             active = false;
             cancelAnimationFrame(animId);
         };
-    }, [animatedStrikes, projection, strikeSize, foudreDesign, geoMode]);
+    }, [animatedStrikes, projection, strikeSize, foudreDesign, geoMode, geoData]);
 
     // ── Canvas mode commune ────────────────────────────────────────────────────
     useEffect(() => {
@@ -422,10 +472,7 @@ export default function FoudreExpert() {
             
             for (const s of animatedStrikes) {
                 if (selectedCommune && haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon) > maxR) continue;
-                const pCoord = projection([s.lon, s.lat]);
-                if (!pCoord) continue;
-                const sx = COM_MAP/2 + (pCoord[0] - communeZoom.cx) * communeZoom.scale;
-                const sy = COM_H/2  + (pCoord[1] - communeZoom.cy) * communeZoom.scale;
+                if (s.sx < 0 || s.sx > COM_MAP || s.sy < 0 || s.sy > COM_H) continue;
                 let color = HOUR_COLORS[s.h] || '#ff0000';
                 if (selectedCommune) {
                     const d = haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon);
@@ -436,7 +483,7 @@ export default function FoudreExpert() {
                     }
                 }
                 ctx.save();
-                design.render(ctx, sx, sy, strikeSize, color, s.isRecent);
+                design.render(ctx, s.sx, s.sy, strikeSize, color, s.isRecent);
                 ctx.restore();
             }
             animId = requestAnimationFrame(renderLoop);
