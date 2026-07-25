@@ -15,7 +15,6 @@ import SatelliteFrance from './modules/satellite/SatelliteFrance';
 import FoudreFrance from './modules/foudre/FoudreFrance';
 import FoudreExpert from './modules/foudre/FoudreExpert';
 import OrageArchives from './modules/observations/OrageArchives';
-import FoudreGallery from './modules/foudre/FoudreGallery';
 import FoudreDesignGallery from './modules/foudre/FoudreDesignGallery';
 import CruesDashboard from './modules/crues/CruesDashboard';
 import BtpManager from './modules/btp/BtpManager';
@@ -61,6 +60,9 @@ function App() {
         </header>
       )}
 
+      {!isEmbed && sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
       {!isEmbed && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
 
       <main className={`main-content ${isEmbed ? 'embed-mode' : ''}`}>
@@ -77,6 +79,7 @@ function App() {
           <Route path="/radar" element={<RadarFrance />} />
           <Route path="/satellite" element={<SatelliteFrance />} />
           <Route path="/foudre" element={<FoudreExpert />} />
+          <Route path="/foudre-france" element={<FoudreFrance />} />
           <Route path="/foudre-expert" element={<FoudreExpert />} />
           <Route path="/foudre-archives" element={<OrageArchives />} />
           <Route path="/foudre-designs" element={<FoudreDesignGallery />} />
@@ -107,7 +110,6 @@ function App() {
 
       </main>
 
-      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
     </div>
   );
 }

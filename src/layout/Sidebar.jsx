@@ -81,7 +81,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <button className="close-btn mobile-only" onClick={onClose}>&times;</button>
       </div>
 
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav" onClick={(e) => { if (e.target.closest('a') && onClose) onClose(); }}>
         {/* QUICK SELECTOR - ESSENTIAL CORE */}
         <div className="quick-access-box">
           <div className="quick-title">

@@ -69,10 +69,13 @@ export default function FoudreExpert() {
     const [searchMode, setSearchMode]               = useState('commune'); // 'commune' ou 'adresse'
     const inputRef   = useRef(null);
     const suggestRef = useRef(null);
+    const canvasStdRef = useRef(null); // canvas mode standard
+    const canvasComRef = useRef(null); // canvas mode commune
 
     // ── Données ───────────────────────────────────────────
     const [strikes, setStrikes] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [liveMinutes, setLiveMinutes] = useState(360); // fenêtre live : 6h par défaut
     const todayLocal = new Date().toLocaleDateString('sv-SE');
     const [startDate, setStartDate] = useState(todayLocal);
     const [endDate, setEndDate]     = useState(todayLocal);
@@ -152,13 +155,19 @@ export default function FoudreExpert() {
             const todayStr=format(new Date(),"yyyy-MM-dd");
             let allAcc=[];
             if (startDate===todayStr&&!isRange) {
-                const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+                const res = await fetch(`https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=${liveMinutes}`, {
                     referrerPolicy: "no-referrer"
                 });
                 if (res.ok) {
                     const json = await res.json();
                     if (json.success && Array.isArray(json.data)) {
-                        allAcc = json.data.map((s, i) => {
+                        // ponytail: bbox France métro pour éliminer les impacts hors-France (Blitzortung = Europe entière)
+                        allAcc = json.data
+                            .filter(s => {
+                                const lat = parseFloat(s.latitude), lon = parseFloat(s.longitude);
+                                return lat >= 41 && lat <= 52 && lon >= -5.5 && lon <= 10;
+                            })
+                            .map((s, i) => {
                             const d = new Date(s.timestamp ? s.timestamp.replace(' ', 'T') : Date.now());
                             const timeMs = d.getTime();
                             const validTime = isNaN(timeMs) ? Date.now() : timeMs;
@@ -227,7 +236,7 @@ export default function FoudreExpert() {
         } catch(e){console.error(e);}
         finally{setLoading(false);}
     };
-    useEffect(()=>{fetchStrikes();},[startDate,endDate,isRange]);
+    useEffect(()=>{fetchStrikes();},[startDate,endDate,isRange,liveMinutes]);
 
     // ── Projection standard ───────────────────────────────
     const projection = useMemo(()=>{
@@ -282,40 +291,74 @@ export default function FoudreExpert() {
         });
     };
 
-    // ── Rendu d'un impact ──────────────────────────────────────────────────────
-    // scale : facteur de zoom SVG appliqué (pour corriger les épaisseurs de trait)
-    // colorOverride : couleur optionnelle passée par le parent (ex. en mode commune pour colorer par rayon)
-    const renderStrike = (s, proj, sz, scale, colorOverride) => {
-        const coords = proj([s.lon, s.lat]);
-        if (!coords) return null;
-        const sw = scale ? 1 / scale : 1; // strokeWidth en espace projection
-        const color = colorOverride || HOUR_COLORS[s.h] || '#ff0000';
-        if (foudreDesign==='Glow')    return <g key={s.id}><circle cx={coords[0]} cy={coords[1]} r={sz*3} fill={color} fillOpacity={0.25}/><circle cx={coords[0]} cy={coords[1]} r={sz} fill={color}/></g>;
-        if (foudreDesign==='Cross')   return <g key={s.id} stroke={color} strokeWidth={sw*1.5}><line x1={coords[0]-sz*1.5} y1={coords[1]} x2={coords[0]+sz*1.5} y2={coords[1]}/><line x1={coords[0]} y1={coords[1]-sz*1.5} x2={coords[0]} y2={coords[1]+sz*1.5}/></g>;
-        if (foudreDesign==='Ring')    return <g key={s.id}><circle cx={coords[0]} cy={coords[1]} r={sz*1.5} fill="none" stroke={color} strokeWidth={sw*2}/><circle cx={coords[0]} cy={coords[1]} r={sz*0.5} fill={color}/></g>;
-        if (foudreDesign==='Diamond') return <path key={s.id} d={`M${coords[0]} ${coords[1]-sz*1.5}L${coords[0]+sz*1.5} ${coords[1]}L${coords[0]} ${coords[1]+sz*1.5}L${coords[0]-sz*1.5} ${coords[1]}Z`} fill={color} strokeWidth={0}/>;
-        if (foudreDesign==='Bolt')    return <path key={s.id} d={`M${coords[0]} ${coords[1]-sz*2}L${coords[0]-sz} ${coords[1]+sz*.5}L${coords[0]} ${coords[1]+sz*.5}L${coords[0]-sz*.5} ${coords[1]+sz*2}L${coords[0]+sz} ${coords[1]-sz*.5}L${coords[0]} ${coords[1]-sz*.5}Z`} fill={color}/>;
-        // Classic (default)
-        return <circle key={s.id} cx={coords[0]} cy={coords[1]} r={s.isRecent?sz*1.3:sz} fill={color} stroke="rgba(0,0,0,0.25)" strokeWidth={sw*0.8}/>;
-    };
+    // ── Canvas helpers ─────────────────────────────────────────────────────────
+    // ponytail: draw one strike imperatively on ctx; zero DOM nodes.
+    const drawStrike = useCallback((ctx, sx, sy, sz, color, design, isRecent) => {
+        ctx.fillStyle = color;
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        if (design === 'Glow') {
+            ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(sx, sy, sz*3, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
+            ctx.beginPath(); ctx.arc(sx, sy, sz, 0, Math.PI*2); ctx.fill();
+        } else if (design === 'Cross') {
+            ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(sx-sz*1.5, sy); ctx.lineTo(sx+sz*1.5, sy); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(sx, sy-sz*1.5); ctx.lineTo(sx, sy+sz*1.5); ctx.stroke();
+        } else if (design === 'Ring') {
+            ctx.strokeStyle = color; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(sx, sy, sz*1.5, 0, Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(sx, sy, sz*0.5, 0, Math.PI*2); ctx.fill();
+        } else if (design === 'Diamond') {
+            ctx.beginPath(); ctx.moveTo(sx, sy-sz*1.5); ctx.lineTo(sx+sz*1.5, sy); ctx.lineTo(sx, sy+sz*1.5); ctx.lineTo(sx-sz*1.5, sy); ctx.closePath(); ctx.fill();
+        } else if (design === 'Bolt') {
+            ctx.beginPath(); ctx.moveTo(sx, sy-sz*2); ctx.lineTo(sx-sz, sy+sz*.5); ctx.lineTo(sx, sy+sz*.5); ctx.lineTo(sx-sz*.5, sy+sz*2); ctx.lineTo(sx+sz, sy-sz*.5); ctx.lineTo(sx, sy-sz*.5); ctx.closePath(); ctx.fill();
+        } else { // Classic
+            const r = isRecent ? sz*1.3 : sz;
+            ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2);
+            ctx.fill(); ctx.lineWidth = 0.8; ctx.stroke();
+        }
+    }, []);
 
-    // Rendu d'un impact directement en coordonnées écran (évite les bugs de précision SVG/Browser sous zoom fort)
-    const renderStrikeScreen = (s, colorOverride) => {
-        const pCoord = projection([s.lon, s.lat]);
-        if (!pCoord || !communeZoom) return null;
-        const sx = COM_MAP/2 + (pCoord[0] - communeZoom.cx) * communeZoom.scale;
-        const sy = COM_H/2 + (pCoord[1] - communeZoom.cy) * communeZoom.scale;
-        const sz = strikeSize;
-        const color = colorOverride || HOUR_COLORS[s.h] || '#ff0000';
-        
-        if (foudreDesign==='Glow')    return <g key={s.id}><circle cx={sx} cy={sy} r={sz*3} fill={color} fillOpacity={0.25}/><circle cx={sx} cy={sy} r={sz} fill={color}/></g>;
-        if (foudreDesign==='Cross')   return <g key={s.id} stroke={color} strokeWidth={1.5}><line x1={sx-sz*1.5} y1={sy} x2={sx+sz*1.5} y2={sy}/><line x1={sx} y1={sy-sz*1.5} x2={sx} y2={sy+sz*1.5}/></g>;
-        if (foudreDesign==='Ring')    return <g key={s.id}><circle cx={sx} cy={sy} r={sz*1.5} fill="none" stroke={color} strokeWidth={2}/><circle cx={sx} cy={sy} r={sz*0.5} fill={color}/></g>;
-        if (foudreDesign==='Diamond') return <path key={s.id} d={`M${sx} ${sy-sz*1.5}L${sx+sz*1.5} ${sy}L${sx} ${sy+sz*1.5}L${sx-sz*1.5} ${sy}Z`} fill={color} strokeWidth={0}/>;
-        if (foudreDesign==='Bolt')    return <path key={s.id} d={`M${sx} ${sy-sz*2}L${sx-sz} ${sy+sz*.5}L${sx} ${sy+sz*.5}L${sx-sz*.5} ${sy+sz*2}L${sx+sz} ${sy-sz*.5}L${sx} ${sy-sz*.5}Z`} fill={color}/>;
-        
-        return <circle key={s.id} cx={sx} cy={sy} r={s.isRecent?sz*1.3:sz} fill={color} stroke="rgba(0,0,0,0.25)" strokeWidth={0.8}/>;
-    };
+    // ── Canvas mode standard ───────────────────────────────────────────────────
+    useEffect(() => {
+        const canvas = canvasStdRef.current;
+        if (!canvas || !projection || geoMode === 'commune') return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, STD_W, STD_H);
+        ctx.globalAlpha = 1;
+        for (const s of strikes) {
+            const c = projection([s.lon, s.lat]);
+            if (!c || c[0]<0 || c[0]>STD_W || c[1]<0 || c[1]>STD_H) continue;
+            drawStrike(ctx, c[0], c[1], strikeSize, HOUR_COLORS[s.h]||'#ff0000', foudreDesign, s.isRecent);
+        }
+    }, [strikes, projection, strikeSize, foudreDesign, geoMode, drawStrike]);
+
+    // ── Canvas mode commune ────────────────────────────────────────────────────
+    useEffect(() => {
+        const canvas = canvasComRef.current;
+        if (!canvas || !projection || !communeZoom || geoMode !== 'commune') return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, COM_MAP, COM_H);
+        ctx.globalAlpha = 1;
+        const maxR = communeZoomRange + 0.2;
+        for (const s of strikes) {
+            if (selectedCommune && haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon) > maxR) continue;
+            const pCoord = projection([s.lon, s.lat]);
+            if (!pCoord) continue;
+            const sx = COM_MAP/2 + (pCoord[0] - communeZoom.cx) * communeZoom.scale;
+            const sy = COM_H/2  + (pCoord[1] - communeZoom.cy) * communeZoom.scale;
+            let color = HOUR_COLORS[s.h] || '#ff0000';
+            if (selectedCommune) {
+                const d = haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon);
+                if (communeZoomRange === 2) {
+                    color = d<=0.1?RADII_COLORS[0]:d<=0.5?RADII_COLORS[1]:d<=1.0?RADII_COLORS[2]:d<=1.5?RADII_COLORS[3]:RADII_COLORS[4];
+                } else {
+                    color = d<=1?RADII_COLORS[0]:d<=3?RADII_COLORS[1]:d<=5?RADII_COLORS[2]:d<=10?RADII_COLORS[3]:RADII_COLORS[4];
+                }
+            }
+            drawStrike(ctx, sx, sy, strikeSize, color, foudreDesign, s.isRecent);
+        }
+    }, [strikes, projection, communeZoom, communeZoomRange, strikeSize, foudreDesign, geoMode, selectedCommune, drawStrike]);
+
 
     const mp = MAP_PALETTES[mapPalette];
     const dateLabel = isValid(new Date(startDate))
@@ -411,6 +454,18 @@ export default function FoudreExpert() {
                     )}
 
                     <div style={{width:'1px',height:'28px',background:'#e2e8f0'}}/>
+
+                    {/* Fenêtre live — visible uniquement mode aujourd'hui */}
+                    {startDate===todayLocal&&!isRange&&(
+                        <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                            <Zap size={14} color="#fbbf24" fill="#fbbf24"/>
+                            <div style={{display:'flex',gap:'2px',background:'#f1f5f9',padding:'2px',borderRadius:'8px'}}>
+                                {[[60,'1h'],[180,'3h'],[360,'6h'],[720,'12h'],[1440,'24h']].map(([m,l])=>(
+                                    <button key={m} onClick={()=>setLiveMinutes(m)} style={{padding:'4px 8px',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'0.72rem',fontWeight:850,background:liveMinutes===m?'#fbbf24':'transparent',color:liveMinutes===m?'#78350f':'#64748b',transition:'all .15s'}}>{l}</button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Date */}
                     <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
@@ -598,7 +653,10 @@ export default function FoudreExpert() {
 
                         {/* ── CARTE SVG COMMUNE (carrée) ── */}
                         <div style={{flex:1,background:mp.bg,position:'relative',overflow:'hidden'}}>
-                            <svg width={COM_MAP} height={COM_H}>
+                            {/* Canvas impacts — absolu au-dessus du SVG */}
+                            <canvas ref={canvasComRef} width={COM_MAP} height={COM_H}
+                                style={{position:'absolute',top:0,left:0,pointerEvents:'none',zIndex:2}}/>
+                            <svg width={COM_MAP} height={COM_H} style={{position:'relative',zIndex:1}}>
                                 {/* Groupe zoomé contenant les cartes de fond uniquement */}
                                 <g transform={communeZoom?.svgTransform||''}>
                                     {/* Fond départements */}
@@ -641,30 +699,7 @@ export default function FoudreExpert() {
                                     )
                                 )}
 
-                                {/* Impacts de foudre dessinés en coordonnées écran */}
-                                {projection&&strikes
-                                    .filter(s=>selectedCommune?haversineKm(selectedCommune.lat,selectedCommune.lon,s.lat,s.lon)<=(communeZoomRange+0.2):true)
-                                    .map(s=>{
-                                        let color = '#ff0000';
-                                        if (selectedCommune) {
-                                            const d = haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon);
-                                            if (communeZoomRange === 2) {
-                                                if (d <= 0.1) color = RADII_COLORS[0];
-                                                else if (d <= 0.5) color = RADII_COLORS[1];
-                                                else if (d <= 1.0) color = RADII_COLORS[2];
-                                                else if (d <= 1.5) color = RADII_COLORS[3];
-                                                else color = RADII_COLORS[4];
-                                            } else {
-                                                if (d <= 1) color = RADII_COLORS[0];
-                                                else if (d <= 3) color = RADII_COLORS[1];
-                                                else if (d <= 5) color = RADII_COLORS[2];
-                                                else if (d <= 10) color = RADII_COLORS[3];
-                                                else color = RADII_COLORS[4];
-                                            }
-                                        }
-                                        return renderStrikeScreen(s, color);
-                                    })
-                                }
+                                {/* Impacts foudre — Canvas 2D (0 DOM React) */}
 
                                 {/* Marqueur commune / adresse dessiné au centre écran en taille pixel fixe */}
                                 {selectedCommune&&communeZoom&&(
@@ -736,10 +771,12 @@ export default function FoudreExpert() {
             {geoMode!=='commune'&&(
                 <main style={{display:'flex',justifyContent:'center'}}>
                     <div id="export-foudre" style={{width:STD_W,height:STD_H,background:mp.bg,borderRadius:'20px',boxShadow:'0 20px 40px rgba(0,0,0,0.1)',overflow:'hidden',position:'relative',border:`6px solid ${mp.stroke}18`}}>
-                        <svg width={STD_W} height={STD_H}>
+                        {/* Canvas impacts — absolu au-dessus du SVG */}
+                        <canvas ref={canvasStdRef} width={STD_W} height={STD_H}
+                            style={{position:'absolute',top:0,left:0,pointerEvents:'none',zIndex:2}}/>
+                        <svg width={STD_W} height={STD_H} style={{position:'relative',zIndex:1}}>
                             <defs><clipPath id="map-clip">{geoData?.features.map((f,i)=><path key={i} d={pathGenerator?.(f)}/>)}</clipPath></defs>
                             <g>{geoData?.features.map((f,i)=><path key={i} d={pathGenerator?.(f)} fill={mp.fill} stroke="#000" strokeWidth={1.5}/>)}</g>
-                            <g clipPath="url(#map-clip)">{projection&&strikes.map(s=>renderStrike(s,projection,strikeSize))}</g>
                             {showCities&&<g>{projection&&MAIN_CITIES.map((city,i)=>{
                                 const c=projection([city.lon,city.lat]);
                                 if(!c||c[0]<0||c[0]>STD_W||c[1]<0||c[1]>STD_H) return null;
