@@ -102,7 +102,7 @@ const FastLightningLayer = ({ strikes, colors, designId = 'Classic' }) => {
             for (let i = strikes.length - 1; i >= 0; i--) {
                 const s = strikes[i];
                 const px = map.latLngToContainerPoint([s.lat, s.lon]);
-                if (px.x < -20 || px.y < -20 || px.x > size.x + 20 || px.y > size.y + 20) return;
+                if (px.x < -20 || px.y < -20 || px.x > size.x + 20 || px.y > size.y + 20) continue;
                 const color = colors[s.h] || '#ff0000';
                 ctx.save();
                 design.render(ctx, px.x, px.y, 4, color, false);
