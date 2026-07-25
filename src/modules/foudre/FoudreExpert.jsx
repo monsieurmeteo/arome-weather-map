@@ -400,6 +400,7 @@ export default function FoudreExpert() {
         let active = true;
         let animId;
         const design = LIGHTNING_DESIGNS[foudreDesign] || LIGHTNING_DESIGNS.Classic;
+        // ponytail: Les strikes sont déjà filtrés par bbox via sx/sy — pas besoin de clip GeoJSON à 60fps
         
         const renderLoop = () => {
             if (!active) return;
@@ -407,39 +408,10 @@ export default function FoudreExpert() {
             ctx.clearRect(0, 0, STD_W, STD_H);
             ctx.globalAlpha = 1;
             
-            // Masque de détourage (clipping) aux frontières de la géo active (France, région ou dépt)
-            let hasClipped = false;
-            if (geoData && geoData.features) {
-                ctx.save();
-                ctx.beginPath();
-                geoData.features.forEach(feature => {
-                    const coords = feature.geometry.type === 'Polygon'
-                        ? [feature.geometry.coordinates]
-                        : feature.geometry.coordinates;
-
-                    coords.forEach(ring => {
-                        ring[0].forEach((coord, i) => {
-                            const p = projection([coord[0], coord[1]]);
-                            if (p) {
-                                if (i === 0) ctx.moveTo(p[0], p[1]);
-                                else ctx.lineTo(p[0], p[1]);
-                            }
-                        });
-                        ctx.closePath();
-                    });
-                });
-                ctx.clip();
-                hasClipped = true;
-            }
-            
             for (const s of animatedStrikes) {
                 if (s.sx < 0 || s.sx > STD_W || s.sy < 0 || s.sy > STD_H) continue;
                 ctx.save();
                 design.render(ctx, s.sx, s.sy, strikeSize, HOUR_COLORS[s.h]||'#ff0000', s.isRecent);
-                ctx.restore();
-            }
-            
-            if (hasClipped) {
                 ctx.restore();
             }
             
@@ -452,7 +424,7 @@ export default function FoudreExpert() {
             active = false;
             cancelAnimationFrame(animId);
         };
-    }, [animatedStrikes, projection, strikeSize, foudreDesign, geoMode, geoData]);
+    }, [animatedStrikes, projection, strikeSize, foudreDesign, geoMode]);
 
     // ── Canvas mode commune ────────────────────────────────────────────────────
     useEffect(() => {
