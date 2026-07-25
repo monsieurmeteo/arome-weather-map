@@ -10,6 +10,7 @@ import { fr } from "date-fns/locale";
 import './FoudreFrance.css';
 
 const GEO_CACHE = new Map();
+const STRIKES_CACHE = new Map();
 
 const HOUR_COLORS = [
     // 0h - 4h
@@ -200,32 +201,72 @@ export default function FoudreExpert() {
                 let all=[];
                 for(const dStr of days){
                     let dayStrikes = [];
-                    // ponytail: 100% statique GitHub sans base de données Supabase
-                    try {
-                        const formattedDateFile = dStr.replace(/-/g, '');
-                        const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
-                        if (res.ok) {
-                            const json = await res.json();
-                            if (Array.isArray(json)) {
-                                dayStrikes = json.map(s => {
-                                    const cleanDate = s.date.replace(/\//g, '-');
-                                    const dateObj = new Date(`${cleanDate}T${s.heure}:00`);
-                                    return {
-                                        lat: parseFloat(s.lat),
-                                        lon: parseFloat(s.lon),
-                                        strike_time: dateObj.toISOString()
-                                    };
-                                });
+                    // 1. Lire depuis le cache si déjà chargé
+                    if (STRIKES_CACHE.has(dStr)) {
+                        dayStrikes = STRIKES_CACHE.get(dStr);
+                    } else {
+                        // 2. Sinon, fetch réseau
+                        try {
+                            const formattedDateFile = dStr.replace(/-/g, '');
+                            const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
+                            if (res.ok) {
+                                const json = await res.json();
+                                if (Array.isArray(json)) {
+                                    dayStrikes = json.map(s => {
+                                        const cleanDate = s.date.replace(/\//g, '-');
+                                        const dateObj = new Date(`${cleanDate}T${s.heure}:00`);
+                                        return {
+                                            lat: parseFloat(s.lat),
+                                            lon: parseFloat(s.lon),
+                                            strike_time: dateObj.toISOString()
+                                        };
+                                    });
+                                    STRIKES_CACHE.set(dStr, dayStrikes);
+                                }
                             }
+                        } catch (err) {
+                            console.warn(`Aucune archive statique trouvée pour ${dStr}`);
                         }
-                    } catch (err) {
-                        console.warn(`Aucune archive statique trouvée pour ${dStr}`);
                     }
                     all = all.concat(dayStrikes);
                 }
                 allAcc=all.map((s,i)=>{const d=new Date(s.strike_time);return{lat:s.lat,lon:s.lon,time:d.getTime(),h:d.getHours(),minute:d.getHours()*60+d.getMinutes(),raw:d.toLocaleTimeString('fr-FR'),date:d.toLocaleDateString('fr-FR'),id:`arch-${i}`};}).sort((a,b)=>b.time-a.time);
             }
             setStrikes(allAcc);
+
+            // 3. Préchargement asynchrone en arrière-plan des 2 jours précédents (prefetch)
+            if (startDate!==todayStr && !isRange) {
+                setTimeout(() => {
+                    const dateCenter = new Date(startDate);
+                    for (let offset = 1; offset <= 2; offset++) {
+                        const prefetchDateObj = new Date(dateCenter);
+                        prefetchDateObj.setDate(prefetchDateObj.getDate() - offset);
+                        const prefetchDateStr = prefetchDateObj.toLocaleDateString('sv-SE');
+                        
+                        if (!STRIKES_CACHE.has(prefetchDateStr)) {
+                            const formattedPrefetchFile = prefetchDateStr.replace(/-/g, '');
+                            fetch(`/archives_orage/orage_${formattedPrefetchFile}.json`)
+                                .then(res => res.ok ? res.json() : null)
+                                .then(json => {
+                                    if (json && Array.isArray(json)) {
+                                        const parsed = json.map(s => {
+                                            const cleanDate = s.date.replace(/\//g, '-');
+                                            const dateObj = new Date(`${cleanDate}T${s.heure}:00`);
+                                            return {
+                                                lat: parseFloat(s.lat),
+                                                lon: parseFloat(s.lon),
+                                                strike_time: dateObj.toISOString()
+                                            };
+                                        });
+                                        STRIKES_CACHE.set(prefetchDateStr, parsed);
+                                        console.log(`🌐 Prefetch foudre réussi pour ${prefetchDateStr}`);
+                                    }
+                                })
+                                .catch(() => {});
+                        }
+                    }
+                }, 1200); // Se déclenche 1,2s après le chargement initial pour garder le CPU libre
+            }
         } catch(e){console.error(e);}
         finally{setLoading(false);}
     };
