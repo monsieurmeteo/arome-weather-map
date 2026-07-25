@@ -70,7 +70,7 @@ export default function FoudreExpert() {
     // ── Données ───────────────────────────────────────────
     const [strikes, setStrikes] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [liveMinutes, setLiveMinutes] = useState(360); // fenêtre live : 6h par défaut
+    const [liveMinutes, setLiveMinutes] = useState(180); // fenêtre live : 3h par défaut (priorité temps réel)
     const todayLocal = new Date().toLocaleDateString('sv-SE');
     const [startDate, setStartDate] = useState(todayLocal);
     const [endDate, setEndDate]     = useState(todayLocal);
