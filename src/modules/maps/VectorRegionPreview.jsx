@@ -285,6 +285,30 @@ const VectorRegionPreview = () => {
                                 from += 1000;
                             }
 
+                            // Fallback : Si Supabase est vide pour cette date historique, tenter de charger depuis les archives statiques JSON
+                            if (allArchived.length === 0) {
+                                try {
+                                    const formattedDateFile = selectedDate.replace(/-/g, '');
+                                    const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
+                                    if (res.ok) {
+                                        const json = await res.json();
+                                        if (Array.isArray(json)) {
+                                            allArchived = json.map(s => {
+                                                const cleanDate = s.date.replace(/\//g, '-');
+                                                const dateObj = new Date(`${cleanDate}T${s.heure}:00`);
+                                                return {
+                                                    lat: parseFloat(s.lat),
+                                                    lon: parseFloat(s.lon),
+                                                    strike_time: dateObj.toISOString()
+                                                };
+                                            });
+                                        }
+                                    }
+                                } catch (err) {
+                                    console.warn(`Aucune archive statique trouvée pour le générateur de cartes : ${selectedDate}`);
+                                }
+                            }
+
                             // Convert to display format
                             setStrikes(allArchived.map(s => {
                                 const d = new Date(s.strike_time);
