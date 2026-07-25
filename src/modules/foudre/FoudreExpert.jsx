@@ -248,48 +248,6 @@ export default function FoudreExpert() {
     };
     useEffect(()=>{fetchStrikes();},[startDate,endDate,isRange,liveMinutes]);
 
-    const isLive = useMemo(() => startDate === todayLocal && !isRange, [startDate, todayLocal, isRange]);
-
-    useEffect(() => {
-        setIsPlaying(false);
-        const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
-        setAnimationMinute(maxMin);
-    }, [startDate, endDate, isRange, minMinute, isLive]);
-
-    useEffect(() => {
-        let timer;
-        if (isPlaying) {
-            timer = setInterval(() => {
-                setAnimationMinute(prev => {
-                    const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
-                    if (prev >= maxMin) {
-                        const windowSize = parseInt(trailMode);
-                        return isNaN(windowSize) 
-                            ? minMinute 
-                            : Math.max(minMinute, maxMin - windowSize);
-                    }
-                    return Math.min(prev + 5, maxMin);
-                });
-            }, playSpeed);
-        }
-        return () => clearInterval(timer);
-    }, [isPlaying, playSpeed, isLive, minMinute, trailMode]);
-
-    const animatedStrikes = useMemo(() => {
-        const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
-        if (animationMinute >= maxMin && !isPlaying) {
-            return visibleStrikes;
-        }
-        return visibleStrikes.filter(s => {
-            const strikeMinute = s.h * 60;
-            const windowSize = parseInt(trailMode);
-            if (isNaN(windowSize) || windowSize === 1440) {
-                return strikeMinute <= animationMinute;
-            }
-            return strikeMinute <= animationMinute && strikeMinute >= (animationMinute - windowSize);
-        });
-    }, [visibleStrikes, animationMinute, isPlaying, isLive, trailMode]);
-
     // ── Projection standard ───────────────────────────────
     const projection = useMemo(()=>{
         if (!geoData) return null;
@@ -334,6 +292,48 @@ export default function FoudreExpert() {
         if (!projection) return [];
         return strikes.filter(s=>{const c=projection([s.lon,s.lat]);return c&&c[0]>=0&&c[0]<=STD_W&&c[1]>=0&&c[1]<=STD_H;});
     },[strikes,geoMode,selectedCommune,projection,communeZoomRange]);
+
+    const isLive = useMemo(() => startDate === todayLocal && !isRange, [startDate, todayLocal, isRange]);
+
+    useEffect(() => {
+        setIsPlaying(false);
+        const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
+        setAnimationMinute(maxMin);
+    }, [startDate, endDate, isRange, minMinute, isLive]);
+
+    useEffect(() => {
+        let timer;
+        if (isPlaying) {
+            timer = setInterval(() => {
+                setAnimationMinute(prev => {
+                    const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
+                    if (prev >= maxMin) {
+                        const windowSize = parseInt(trailMode);
+                        return isNaN(windowSize) 
+                            ? minMinute 
+                            : Math.max(minMinute, maxMin - windowSize);
+                    }
+                    return Math.min(prev + 5, maxMin);
+                });
+            }, playSpeed);
+        }
+        return () => clearInterval(timer);
+    }, [isPlaying, playSpeed, isLive, minMinute, trailMode]);
+
+    const animatedStrikes = useMemo(() => {
+        const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
+        if (animationMinute >= maxMin && !isPlaying) {
+            return visibleStrikes;
+        }
+        return visibleStrikes.filter(s => {
+            const strikeMinute = s.h * 60;
+            const windowSize = parseInt(trailMode);
+            if (isNaN(windowSize) || windowSize === 1440) {
+                return strikeMinute <= animationMinute;
+            }
+            return strikeMinute <= animationMinute && strikeMinute >= (animationMinute - windowSize);
+        });
+    }, [visibleStrikes, animationMinute, isPlaying, isLive, trailMode]);
 
     const exportMap = ()=>{
         html2canvas(document.getElementById("export-foudre"),{scale:2}).then(canvas=>{
