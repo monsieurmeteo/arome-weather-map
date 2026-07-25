@@ -324,38 +324,44 @@ export default function FoudreExpert() {
         });
     }, [strikes, projection, geoMode, communeZoom]);
 
+    // ponytail: Mutualisation du filtrage spatial (O(n) 1 seule fois au lieu de 3)
+    const communeBboxStrikes = useMemo(() => {
+        if (!selectedCommune || strikes.length === 0) return [];
+        const lat = selectedCommune.lat, lon = selectedCommune.lon;
+        return strikes.filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3);
+    }, [strikes, selectedCommune]);
+
+    const communeBboxProjectedStrikes = useMemo(() => {
+        if (!selectedCommune || projectedStrikes.length === 0) return [];
+        const lat = selectedCommune.lat, lon = selectedCommune.lon;
+        return projectedStrikes.filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3);
+    }, [projectedStrikes, selectedCommune]);
+
     // ── Impacts par rayon ──────────────────────────────────
     const impactsByRadius = useMemo(()=>{
-        if (!selectedCommune || strikes.length === 0) return {};
+        if (!selectedCommune) return {};
         const lat = selectedCommune.lat, lon = selectedCommune.lon;
-        // ponytail: bbox (±0.3° ≈ 33km) pour éliminer les calculs Haversine inutiles sur 15 000+ impacts
-        const bbox = strikes.filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3);
         return activeRadii.reduce((acc,r)=>{
-            acc[r] = bbox.filter(s => haversineKm(lat, lon, s.lat, s.lon) <= r).length;
+            acc[r] = communeBboxStrikes.filter(s => haversineKm(lat, lon, s.lat, s.lon) <= r).length;
             return acc;
         }, {});
-    },[strikes,selectedCommune,activeRadii]);
+    },[communeBboxStrikes,selectedCommune,activeRadii]);
 
     const closestStrike = useMemo(()=>{
-        if (!selectedCommune||strikes.length===0) return null;
+        if (!selectedCommune || communeBboxStrikes.length === 0) return null;
         const lat = selectedCommune.lat, lon = selectedCommune.lon;
-        // ponytail: bbox (±0.3°) pour éviter 15 000 calculs Haversine
-        const bbox = strikes.filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3);
         let minDist=Infinity,best=null;
-        for(const s of bbox){const d=haversineKm(lat,lon,s.lat,s.lon);if(d<minDist){minDist=d;best=s;}}
+        for(const s of communeBboxStrikes){const d=haversineKm(lat,lon,s.lat,s.lon);if(d<minDist){minDist=d;best=s;}}
         return best&&minDist<=20?{...best,distance:minDist}:null;
-    },[strikes,selectedCommune]);
+    },[communeBboxStrikes,selectedCommune]);
 
     const visibleStrikes = useMemo(()=>{
         if (geoMode==='commune'&&selectedCommune) {
             const lat = selectedCommune.lat, lon = selectedCommune.lon;
-            // ponytail: bbox large (±0.3° ≈ 33km) pour le rayon maximum de 20km
-            return projectedStrikes
-                .filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3)
-                .filter(s=>haversineKm(lat,lon,s.lat,s.lon)<=communeZoomRange);
+            return communeBboxProjectedStrikes.filter(s=>haversineKm(lat,lon,s.lat,s.lon)<=communeZoomRange);
         }
         return projectedStrikes.filter(s=>s.sx>=0&&s.sx<=STD_W&&s.sy>=0&&s.sy<=STD_H);
-    },[projectedStrikes,geoMode,selectedCommune,communeZoomRange]);
+    },[projectedStrikes,communeBboxProjectedStrikes,geoMode,selectedCommune,communeZoomRange]);
 
     const isLive = useMemo(() => startDate === todayLocal && !isRange, [startDate, todayLocal, isRange]);
 

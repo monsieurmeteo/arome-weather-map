@@ -173,6 +173,11 @@ const SupervisionMap = () => {
     const [radarHost, setRadarHost] = useState('https://tilecache.rainviewer.com');
     const [isSmoothed, setIsSmoothed] = useState(true);
     const timerRef = useRef(null);
+    const searchTimeoutRef = useRef(null);
+
+    useEffect(() => {
+        return () => { if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); };
+    }, []);
 
     useEffect(() => {
         fetchRadarTimestamps(radarSource);
@@ -476,15 +481,20 @@ const SupervisionMap = () => {
         return strikes.filter(s => s.time <= frameTimeMs && s.time >= (frameTimeMs - windowSizeMs));
     }, [strikes, timestamps, currentIndex]);
 
-    const handleSearch = async (q) => {
+    const handleSearch = (q) => {
         setSearchQuery(q);
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
         const isNumeric = /^\d+$/.test(q);
         if (q.length < (isNumeric ? 2 : 3)) { setSuggestions([]); return; }
-        try {
-            const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5&type=municipality`);
-            const d = await res.json();
-            setSuggestions(d.features || []);
-        } catch (e) { }
+
+        searchTimeoutRef.current = setTimeout(async () => {
+            try {
+                const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5&type=municipality`);
+                const d = await res.json();
+                setSuggestions(d.features || []);
+            } catch (e) { }
+        }, 300);
     };
 
     const selectCity = (city) => {
