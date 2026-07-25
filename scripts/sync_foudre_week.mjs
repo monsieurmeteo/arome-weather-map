@@ -4,52 +4,60 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ubdevaemtwbzxksjlhjg.s
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZGV2YWVtdHdienhrc2psaGpnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODc2NTA2OCwiZXhwIjoyMDg0MzQxMDY4fQ.RC_D6wljCTi1WEf0aG3QoEf1ZH_sJkP9TiVXXAovMzI';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const CHUNK = 500; // max safe pour Supabase upsert
+
+async function upsertChunked(rows) {
+    let inserted = 0;
+    for (let i = 0; i < rows.length; i += CHUNK) {
+        const chunk = rows.slice(i, i + CHUNK);
+        const { error } = await supabase
+            .from('lightning_strikes')
+            .upsert(chunk, { onConflict: 'strike_time,lat,lon', ignoreDuplicates: true });
+        if (error) {
+            console.log(`❌ Chunk ${i}-${i+CHUNK} : ${error.message}`);
+        } else {
+            inserted += chunk.length;
+            process.stdout.write(`\r  → ${inserted}/${rows.length} insérés...`);
+        }
+    }
+    console.log('');
+    return inserted;
+}
 
 async function syncLightning24h() {
     console.log(`\n⚡ SYNCHRONISATION FOUDRE - Dernières 24 heures (Météo-NPDC)\n`);
-
     try {
-        const response = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440');
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
+        const response = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+            referrerPolicy: 'no-referrer'
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const json = await response.json();
-        if (!json.success || !Array.isArray(json.data)) {
-            throw new Error('Format de réponse JSON inattendu');
-        }
+        if (!json.success || !Array.isArray(json.data)) throw new Error('Format JSON inattendu');
 
         const strikes = json.data;
-        if (strikes.length === 0) {
-            console.log(`⚫ 0 impacts détectés sur la France/Europe de l'Ouest lors des dernières 24h.`);
-            return;
-        }
+        if (strikes.length === 0) { console.log('⚫ 0 impacts.'); return; }
 
-        console.log(`📡 Reçu ${strikes.length} impacts en direct. Préparation de l'import Supabase...`);
+        console.log(`📡 ${strikes.length} impacts reçus. Filtrage bbox France...`);
 
-        // Traduire le format d'impacts pour Supabase
-        const strikesToInsert = strikes.map(s => {
-            const dateObj = new Date(s.unix_timestamp * 1000);
-            return {
-                strike_time: dateObj.toISOString(),
+        // ponytail: bbox France métro uniquement — Blitzortung couvre toute l'Europe
+        const rows = strikes
+            .filter(s => {
+                const lat = parseFloat(s.latitude), lon = parseFloat(s.longitude);
+                return lat >= 41 && lat <= 52 && lon >= -5.5 && lon <= 10;
+            })
+            .map(s => ({
+                strike_time: new Date(s.unix_timestamp * 1000).toISOString(),
                 lat: parseFloat(s.latitude),
                 lon: parseFloat(s.longitude)
-            };
-        });
+            }));
 
-        // Effectuer l'upsert pour insérer sans générer de doublons
-        const { error } = await supabase
-            .from('lightning_strikes')
-            .upsert(strikesToInsert, { onConflict: 'strike_time,lat,lon', ignoreDuplicates: true });
-
-        if (error) {
-            console.log(`❌ Erreur d'enregistrement Supabase : ${error.message}`);
-        } else {
-            console.log(`✅ ${strikesToInsert.length.toString()} impacts insérés/upsertés avec succès dans Supabase.`);
-        }
+        console.log(`🗺️  ${rows.length} impacts dans bbox France. Upsert Supabase par chunks de ${CHUNK}...`);
+        const inserted = await upsertChunked(rows);
+        console.log(`✅ ${inserted} impacts archivés.`);
 
     } catch (e) {
-        console.log(`❌ Échec de la synchronisation : ${e.message}`);
+        console.log(`❌ ${e.message}`);
     }
 }
 
