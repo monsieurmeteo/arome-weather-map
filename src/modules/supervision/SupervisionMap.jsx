@@ -98,7 +98,9 @@ const FastLightningLayer = ({ strikes, colors, designId = 'Classic' }) => {
             const ctx = c.getContext('2d');
             ctx.clearRect(0, 0, c.width, c.height);
             const strobe = Math.sin(Date.now() / 150) > 0;
-            strikes.forEach(s => {
+            // ponytail: Algorithme du peintre — on dessine du plus ancien au plus récent (boucle inversée)
+            for (let i = strikes.length - 1; i >= 0; i--) {
+                const s = strikes[i];
                 const px = map.latLngToContainerPoint([s.lat, s.lon]);
                 if (px.x < -20 || px.y < -20 || px.x > size.x + 20 || px.y > size.y + 20) return;
                 const color = colors[s.h] || '#ff0000';
@@ -115,7 +117,7 @@ const FastLightningLayer = ({ strikes, colors, designId = 'Classic' }) => {
                     ctx.globalAlpha = 1;
                     ctx.restore();
                 }
-            });
+            }
         };
 
         const animate = (ts) => {

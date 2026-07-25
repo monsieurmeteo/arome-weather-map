@@ -427,7 +427,9 @@ export default function FoudreExpert() {
         offscreenStdRef.current = off;
         const octx = off.getContext('2d');
         if (clipPath2D) { octx.save(); octx.clip(clipPath2D); }
-        for (const s of animatedStrikes) {
+        // ponytail: Algorithme du peintre — on dessine du plus ancien au plus récent (boucle inversée)
+        for (let i = animatedStrikes.length - 1; i >= 0; i--) {
+            const s = animatedStrikes[i];
             if (s.sx < 0 || s.sx > STD_W || s.sy < 0 || s.sy > STD_H) continue;
             octx.save();
             design.render(octx, s.sx, s.sy, strikeSize, HOUR_COLORS[s.h]||'#ff0000', false);
@@ -481,7 +483,9 @@ export default function FoudreExpert() {
         const maxR = communeZoomRange + 0.2;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, COM_MAP, COM_H);
-        for (const s of animatedStrikes) {
+        // ponytail: Algorithme du peintre — on dessine du plus ancien au plus récent (boucle inversée)
+        for (let i = animatedStrikes.length - 1; i >= 0; i--) {
+            const s = animatedStrikes[i];
             if (selectedCommune && haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon) > maxR) continue;
             if (s.sx < 0 || s.sx > COM_MAP || s.sy < 0 || s.sy > COM_H) continue;
             let color = HOUR_COLORS[s.h] || '#ff0000';
