@@ -179,7 +179,48 @@ export default function FoudreExpert() {
             } else {
                 const days=isRange?getDays(startDate,endDate):[startDate];
                 let all=[];
-                for(const dStr of days){let from=0;while(true){const{data,error}=await supabase.from('lightning_strikes').select('lat,lon,strike_time').gte('strike_time',`${dStr}T00:00:00Z`).lte('strike_time',`${dStr}T23:59:59Z`).range(from,from+999);if(error||!data||data.length===0)break;all.push(...data);if(data.length<1000)break;from+=1000;}}
+                for(const dStr of days){
+                    // Tenter de charger depuis Supabase d'abord
+                    let dayStrikes = [];
+                    let from = 0;
+                    while (true) {
+                        const {data, error} = await supabase
+                            .from('lightning_strikes')
+                            .select('lat,lon,strike_time')
+                            .gte('strike_time', `${dStr}T00:00:00Z`)
+                            .lte('strike_time', `${dStr}T23:59:59Z`)
+                            .range(from, from + 999);
+                        if (error || !data || data.length === 0) break;
+                        dayStrikes.push(...data);
+                        if (data.length < 1000) break;
+                        from += 1000;
+                    }
+
+                    // Fallback : Si Supabase est vide, tenter de charger le JSON d'archive statique
+                    if (dayStrikes.length === 0) {
+                        try {
+                            const formattedDateFile = dStr.replace(/-/g, '');
+                            const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
+                            if (res.ok) {
+                                const json = await res.json();
+                                if (Array.isArray(json)) {
+                                    dayStrikes = json.map(s => {
+                                        const cleanDate = s.date.replace(/\//g, '-');
+                                        const dateObj = new Date(`${cleanDate}T${s.heure}:00`);
+                                        return {
+                                            lat: parseFloat(s.lat),
+                                            lon: parseFloat(s.lon),
+                                            strike_time: dateObj.toISOString()
+                                        };
+                                    });
+                                }
+                            }
+                        } catch (err) {
+                            console.warn(`Aucune archive statique trouvée pour ${dStr}`);
+                        }
+                    }
+                    all.push(...dayStrikes);
+                }
                 allAcc=all.map((s,i)=>{const d=new Date(s.strike_time);return{lat:s.lat,lon:s.lon,time:d.getTime(),h:d.getHours(),raw:d.toLocaleTimeString('fr-FR'),date:d.toLocaleDateString('fr-FR'),id:`arch-${i}`};}).sort((a,b)=>b.time-a.time);
             }
             setStrikes(allAcc);

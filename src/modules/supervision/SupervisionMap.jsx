@@ -336,7 +336,7 @@ const SupervisionMap = () => {
                     .gte('strike_time', startDate)
                     .lte('strike_time', endDate);
 
-                if (data) {
+                if (data && data.length > 0) {
                     allData = data.map((s, i) => {
                         const d = new Date(s.strike_time);
                         return {
@@ -347,6 +347,30 @@ const SupervisionMap = () => {
                         };
                     });
                     console.log(`✅ Supervision: ${allData.length} impacts Supabase.`);
+                } else if (!isLive) {
+                    // Fallback archives Git si mode archive et Supabase vide
+                    try {
+                        const formattedDateFile = selectedDate.replace(/-/g, '');
+                        const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
+                        if (res.ok) {
+                            const json = await res.json();
+                            if (Array.isArray(json)) {
+                                allData = json.map((s, i) => {
+                                    const cleanDate = s.date.replace(/\//g, '-');
+                                    const d = new Date(`${cleanDate}T${s.heure}:00`);
+                                    return {
+                                        lat: parseFloat(s.lat), lon: parseFloat(s.lon),
+                                        time: d.getTime(), h: d.getHours(),
+                                        isRecent: false,
+                                        id: `strike-super-arch-${i}`
+                                    };
+                                });
+                                console.log(`✅ Supervision: ${allData.length} impacts chargés depuis l'archive statique.`);
+                            }
+                        }
+                    } catch (err) {
+                        console.warn(`Aucune archive statique trouvée pour la supervision : ${selectedDate}`);
+                    }
                 }
             }
 
