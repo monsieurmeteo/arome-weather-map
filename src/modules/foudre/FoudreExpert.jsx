@@ -3,7 +3,7 @@ import { geoConicConformal, geoPath } from "d3-geo";
 import { createClient } from '@supabase/supabase-js';
 import { REGIONS, DEPARTMENTS } from "../../data/departments";
 import { MAIN_CITIES } from "../../data/mainCities";
-import { Download, RefreshCw, Zap, Calendar, Search, Maximize, Palette, LayoutGrid, X, MapPin, Target } from "lucide-react";
+import { Download, RefreshCw, Zap, Calendar, Search, Maximize, Palette, LayoutGrid, X, MapPin, Target, Play, Pause } from "lucide-react";
 import { LIGHTNING_DESIGNS } from './LightningStyles';
 import html2canvas from "html2canvas";
 import { format, isValid } from "date-fns";
@@ -80,6 +80,16 @@ export default function FoudreExpert() {
     const [startDate, setStartDate] = useState(todayLocal);
     const [endDate, setEndDate]     = useState(todayLocal);
     const [isRange, setIsRange]     = useState(false);
+
+    // ── Animation ─────────────────────────────────────────
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [animationMinute, setAnimationMinute] = useState(1440);
+    const [trailMode, setTrailMode] = useState("cumulative");
+    const [playSpeed, setPlaySpeed] = useState(120);
+    const minMinute = useMemo(() => {
+        if (strikes.length === 0) return 0;
+        return Math.min(1439, ...strikes.map(s => s.h * 60));
+    }, [strikes]);
 
     // ── Style ─────────────────────────────────────────────
     const [mapPalette, setMapPalette]     = useState("default");
@@ -176,7 +186,7 @@ export default function FoudreExpert() {
                                 lat: parseFloat(s.latitude),
                                 lon: parseFloat(s.longitude),
                                 time: validTime,
-                                h: validD.getUTCHours(),
+                                h: validD.getHours(),
                                 raw: validD.toISOString().substring(11, 19),
                                 date: validD.toISOString().substring(0, 10),
                                 id: `live-${s.timestamp || i}-${i}`,
@@ -237,6 +247,48 @@ export default function FoudreExpert() {
         finally{setLoading(false);}
     };
     useEffect(()=>{fetchStrikes();},[startDate,endDate,isRange,liveMinutes]);
+
+    const isLive = useMemo(() => startDate === todayLocal && !isRange, [startDate, todayLocal, isRange]);
+
+    useEffect(() => {
+        setIsPlaying(false);
+        const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
+        setAnimationMinute(maxMin);
+    }, [startDate, endDate, isRange, minMinute, isLive]);
+
+    useEffect(() => {
+        let timer;
+        if (isPlaying) {
+            timer = setInterval(() => {
+                setAnimationMinute(prev => {
+                    const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
+                    if (prev >= maxMin) {
+                        const windowSize = parseInt(trailMode);
+                        return isNaN(windowSize) 
+                            ? minMinute 
+                            : Math.max(minMinute, maxMin - windowSize);
+                    }
+                    return Math.min(prev + 5, maxMin);
+                });
+            }, playSpeed);
+        }
+        return () => clearInterval(timer);
+    }, [isPlaying, playSpeed, isLive, minMinute, trailMode]);
+
+    const animatedStrikes = useMemo(() => {
+        const maxMin = isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1440;
+        if (animationMinute >= maxMin && !isPlaying) {
+            return visibleStrikes;
+        }
+        return visibleStrikes.filter(s => {
+            const strikeMinute = s.h * 60;
+            const windowSize = parseInt(trailMode);
+            if (isNaN(windowSize) || windowSize === 1440) {
+                return strikeMinute <= animationMinute;
+            }
+            return strikeMinute <= animationMinute && strikeMinute >= (animationMinute - windowSize);
+        });
+    }, [visibleStrikes, animationMinute, isPlaying, isLive, trailMode]);
 
     // ── Projection standard ───────────────────────────────
     const projection = useMemo(()=>{
@@ -322,42 +374,80 @@ export default function FoudreExpert() {
     useEffect(() => {
         const canvas = canvasStdRef.current;
         if (!canvas || !projection || geoMode === 'commune') return;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, STD_W, STD_H);
-        ctx.globalAlpha = 1;
-        for (const s of strikes) {
-            const c = projection([s.lon, s.lat]);
-            if (!c || c[0]<0 || c[0]>STD_W || c[1]<0 || c[1]>STD_H) continue;
-            drawStrike(ctx, c[0], c[1], strikeSize, HOUR_COLORS[s.h]||'#ff0000', foudreDesign, s.isRecent);
-        }
-    }, [strikes, projection, strikeSize, foudreDesign, geoMode, drawStrike]);
+        
+        let active = true;
+        let animId;
+        const design = LIGHTNING_DESIGNS[foudreDesign] || LIGHTNING_DESIGNS.Classic;
+        
+        const renderLoop = () => {
+            if (!active) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, STD_W, STD_H);
+            ctx.globalAlpha = 1;
+            
+            for (const s of strikes) {
+                const c = projection([s.lon, s.lat]);
+                if (!c || c[0]<0 || c[0]>STD_W || c[1]<0 || c[1]>STD_H) continue;
+                ctx.save();
+                design.render(ctx, c[0], c[1], strikeSize, HOUR_COLORS[s.h]||'#ff0000', s.isRecent);
+                ctx.restore();
+            }
+            animId = requestAnimationFrame(renderLoop);
+        };
+        
+        renderLoop();
+        
+        return () => {
+            active = false;
+            cancelAnimationFrame(animId);
+        };
+    }, [strikes, projection, strikeSize, foudreDesign, geoMode]);
 
     // ── Canvas mode commune ────────────────────────────────────────────────────
     useEffect(() => {
         const canvas = canvasComRef.current;
         if (!canvas || !projection || !communeZoom || geoMode !== 'commune') return;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, COM_MAP, COM_H);
-        ctx.globalAlpha = 1;
+        
+        let active = true;
+        let animId;
+        const design = LIGHTNING_DESIGNS[foudreDesign] || LIGHTNING_DESIGNS.Classic;
         const maxR = communeZoomRange + 0.2;
-        for (const s of strikes) {
-            if (selectedCommune && haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon) > maxR) continue;
-            const pCoord = projection([s.lon, s.lat]);
-            if (!pCoord) continue;
-            const sx = COM_MAP/2 + (pCoord[0] - communeZoom.cx) * communeZoom.scale;
-            const sy = COM_H/2  + (pCoord[1] - communeZoom.cy) * communeZoom.scale;
-            let color = HOUR_COLORS[s.h] || '#ff0000';
-            if (selectedCommune) {
-                const d = haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon);
-                if (communeZoomRange === 2) {
-                    color = d<=0.1?RADII_COLORS[0]:d<=0.5?RADII_COLORS[1]:d<=1.0?RADII_COLORS[2]:d<=1.5?RADII_COLORS[3]:RADII_COLORS[4];
-                } else {
-                    color = d<=1?RADII_COLORS[0]:d<=3?RADII_COLORS[1]:d<=5?RADII_COLORS[2]:d<=10?RADII_COLORS[3]:RADII_COLORS[4];
+        
+        const renderLoop = () => {
+            if (!active) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, COM_MAP, COM_H);
+            ctx.globalAlpha = 1;
+            
+            for (const s of strikes) {
+                if (selectedCommune && haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon) > maxR) continue;
+                const pCoord = projection([s.lon, s.lat]);
+                if (!pCoord) continue;
+                const sx = COM_MAP/2 + (pCoord[0] - communeZoom.cx) * communeZoom.scale;
+                const sy = COM_H/2  + (pCoord[1] - communeZoom.cy) * communeZoom.scale;
+                let color = HOUR_COLORS[s.h] || '#ff0000';
+                if (selectedCommune) {
+                    const d = haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon);
+                    if (communeZoomRange === 2) {
+                        color = d<=0.1?RADII_COLORS[0]:d<=0.5?RADII_COLORS[1]:d<=1.0?RADII_COLORS[2]:d<=1.5?RADII_COLORS[3]:RADII_COLORS[4];
+                    } else {
+                        color = d<=1?RADII_COLORS[0]:d<=3?RADII_COLORS[1]:d<=5?RADII_COLORS[2]:d<=10?RADII_COLORS[3]:RADII_COLORS[4];
+                    }
                 }
+                ctx.save();
+                design.render(ctx, sx, sy, strikeSize, color, s.isRecent);
+                ctx.restore();
             }
-            drawStrike(ctx, sx, sy, strikeSize, color, foudreDesign, s.isRecent);
-        }
-    }, [strikes, projection, communeZoom, communeZoomRange, strikeSize, foudreDesign, geoMode, selectedCommune, drawStrike]);
+            animId = requestAnimationFrame(renderLoop);
+        };
+        
+        renderLoop();
+        
+        return () => {
+            active = false;
+            cancelAnimationFrame(animId);
+        };
+    }, [strikes, projection, communeZoom, communeZoomRange, strikeSize, foudreDesign, geoMode, selectedCommune]);
 
 
     const mp = MAP_PALETTES[mapPalette];
@@ -496,6 +586,133 @@ export default function FoudreExpert() {
                         <div style={{width:'1px',height:'28px',background:'#e2e8f0'}}/>
                         <label style={{display:'flex',alignItems:'center',gap:'5px',fontSize:'0.78rem',fontWeight:700,color:'#475569',cursor:'pointer'}}><input type="checkbox" checked={showCities} onChange={e=>setShowCities(e.target.checked)}/> Villes</label>
                         <label style={{display:'flex',alignItems:'center',gap:'5px',fontSize:'0.78rem',fontWeight:700,color:'#475569',cursor:'pointer'}}><input type="checkbox" checked={showLogo} onChange={e=>setShowLogo(e.target.checked)}/> Logo</label>
+                    </div>
+                </div>
+
+                {/* Lecteur d'animation temporel */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '15px',
+                    background: 'white',
+                    padding: '10px 20px',
+                    borderRadius: '14px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+                    border: '1px solid #e2e8f0',
+                    width: '100%'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <button
+                            onClick={() => setIsPlaying(!isPlaying)}
+                            style={{
+                                border: 'none',
+                                width: '34px',
+                                height: '34px',
+                                borderRadius: '50%',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: isPlaying ? '#ef4444' : '#2563eb',
+                                color: 'white',
+                                boxShadow: isPlaying ? '0 0 10px rgba(239, 68, 68, 0.3)' : '0 0 10px rgba(37, 99, 235, 0.25)',
+                                transition: 'all 0.2s'
+                            }}
+                            title={isPlaying ? "Pause" : "Play"}
+                        >
+                            {isPlaying ? <Pause size={16} fill="#fff" /> : <Play size={16} fill="#fff" style={{ marginLeft: '1.5px' }} />}
+                        </button>
+                        <div style={{ minWidth: '55px', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1rem', fontWeight: 900, fontFamily: 'monospace', color: '#2563eb' }}>
+                                {String(Math.floor(animationMinute / 60)).padStart(2, '0')}:{String(animationMinute % 60).padStart(2, '0')}
+                            </div>
+                            <div style={{ fontSize: '0.52rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Heure</div>
+                        </div>
+                    </div>
+
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#64748b' }}>
+                            {String(Math.floor(minMinute / 60)).padStart(2, '0')}:{String(minMinute % 60).padStart(2, '0')}
+                        </span>
+                        <input
+                            type="range"
+                            min={minMinute}
+                            max={isLive ? (new Date().getHours() * 60 + new Date().getMinutes()) : 1439}
+                            step="5"
+                            value={animationMinute}
+                            onChange={(e) => {
+                                setIsPlaying(false);
+                                setAnimationMinute(parseInt(e.target.value));
+                            }}
+                            style={{
+                                flex: 1,
+                                height: '5px',
+                                borderRadius: '3px',
+                                outline: 'none',
+                                cursor: 'pointer',
+                                accentColor: '#2563eb',
+                                background: 'rgba(0,0,0,0.1)'
+                            }}
+                        />
+                        <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#64748b' }}>
+                            {isLive ? `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}` : '23:59'}
+                        </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                            <span style={{ fontSize: '0.52rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Rémanence</span>
+                            <select
+                                value={trailMode}
+                                onChange={(e) => setTrailMode(e.target.value)}
+                                style={{
+                                    background: '#f1f5f9',
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '6px',
+                                    padding: '3px 6px',
+                                    color: '#0f172a',
+                                    fontSize: '0.68rem',
+                                    fontWeight: 800,
+                                    outline: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value="cumulative">Cumul complet</option>
+                                <option value="15">Fenêtre 15 min</option>
+                                <option value="30">Fenêtre 30 min</option>
+                                <option value="60">Fenêtre 1h</option>
+                                <option value="120">Fenêtre 2h</option>
+                            </select>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                            <span style={{ fontSize: '0.52rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Vitesse</span>
+                            <div style={{ display: 'flex', gap: '2px', background: '#f1f5f9', padding: '2px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                                {[
+                                    { label: '1x', val: 200 },
+                                    { label: '2x', val: 100 },
+                                    { label: '4x', val: 40 }
+                                ].map(speed => (
+                                    <button
+                                        key={speed.label}
+                                        onClick={() => setPlaySpeed(speed.val)}
+                                        style={{
+                                            background: playSpeed === speed.val ? '#2563eb' : 'transparent',
+                                            color: playSpeed === speed.val ? '#fff' : '#64748b',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            padding: '2px 6px',
+                                            fontSize: '0.62rem',
+                                            fontWeight: 800,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        {speed.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
