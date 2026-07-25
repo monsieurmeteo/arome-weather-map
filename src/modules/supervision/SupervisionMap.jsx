@@ -71,6 +71,12 @@ const FastLightningLayer = ({ strikes, colors, designId = 'Classic' }) => {
     const requestRef = useRef();
     const lastDrawRef = useRef(0);
 
+    // ponytail: stocke les props dans des refs pour que la boucle RAF les lise à jour sans recréer le canvas ni relancer l'effet
+    const strikesRef = useRef(strikes);
+    const designIdRef = useRef(designId);
+    strikesRef.current = strikes;
+    designIdRef.current = designId;
+
     useEffect(() => {
         if (!canvasRef.current) {
             const container = map.getContainer();
@@ -85,9 +91,6 @@ const FastLightningLayer = ({ strikes, colors, designId = 'Classic' }) => {
             canvasRef.current = newCanvas;
         }
 
-        const design = LIGHTNING_DESIGNS[designId] || LIGHTNING_DESIGNS.Classic;
-        // ponytail: RAF throttlé à 20fps (50ms) — 3× moins de CPU qu'à 60fps
-        //   positions recalculées à chaque frame pour que pan/zoom Leaflet reste correct
         const FRAME_MS = 50;
 
         const draw = () => {
@@ -97,10 +100,14 @@ const FastLightningLayer = ({ strikes, colors, designId = 'Classic' }) => {
             if (c.width !== size.x || c.height !== size.y) { c.width = size.x; c.height = size.y; }
             const ctx = c.getContext('2d');
             ctx.clearRect(0, 0, c.width, c.height);
+
+            const design = LIGHTNING_DESIGNS[designIdRef.current] || LIGHTNING_DESIGNS.Classic;
             const strobe = Math.sin(Date.now() / 150) > 0;
+            const currentStrikes = strikesRef.current;
+
             // ponytail: Algorithme du peintre — on dessine du plus ancien au plus récent (boucle inversée)
-            for (let i = strikes.length - 1; i >= 0; i--) {
-                const s = strikes[i];
+            for (let i = currentStrikes.length - 1; i >= 0; i--) {
+                const s = currentStrikes[i];
                 const px = map.latLngToContainerPoint([s.lat, s.lon]);
                 if (px.x < -20 || px.y < -20 || px.x > size.x + 20 || px.y > size.y + 20) continue;
                 const color = '#ff0000';
@@ -137,7 +144,7 @@ const FastLightningLayer = ({ strikes, colors, designId = 'Classic' }) => {
                 canvasRef.current = null;
             }
         };
-    }, [strikes, map, colors, designId]);
+    }, [map]);
 
     return null;
 };
