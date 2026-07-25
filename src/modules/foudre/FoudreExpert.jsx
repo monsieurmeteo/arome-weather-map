@@ -255,6 +255,25 @@ export default function FoudreExpert() {
     },[geoData]);
     const pathGenerator = useMemo(()=>projection?geoPath().projection(projection):null,[projection]);
 
+    // ponytail: Path2D calculé une fois quand geoData/projection change — réutilisé à chaque frame RAF (O(1))
+    const clipPath2D = useMemo(() => {
+        if (!geoData || !projection) return null;
+        const p = new Path2D();
+        geoData.features.forEach(feature => {
+            const rings = feature.geometry.type === 'Polygon'
+                ? [feature.geometry.coordinates]
+                : feature.geometry.coordinates;
+            rings.forEach(ring => {
+                ring[0].forEach((coord, i) => {
+                    const pt = projection([coord[0], coord[1]]);
+                    if (pt) { i === 0 ? p.moveTo(pt[0], pt[1]) : p.lineTo(pt[0], pt[1]); }
+                });
+                p.closePath();
+            });
+        });
+        return p;
+    }, [geoData, projection]);
+
     // activeRadii : s'adapte selon le zoom sélectionné (20 km ou 2 km)
     const activeRadii = useMemo(() => {
         return communeZoomRange === 2 ? [0.1, 0.5, 1.0, 1.5, 2.0] : RADII_KM;
@@ -408,12 +427,19 @@ export default function FoudreExpert() {
             ctx.clearRect(0, 0, STD_W, STD_H);
             ctx.globalAlpha = 1;
             
+            if (clipPath2D) {
+                ctx.save();
+                ctx.clip(clipPath2D);
+            }
+
             for (const s of animatedStrikes) {
                 if (s.sx < 0 || s.sx > STD_W || s.sy < 0 || s.sy > STD_H) continue;
                 ctx.save();
                 design.render(ctx, s.sx, s.sy, strikeSize, HOUR_COLORS[s.h]||'#ff0000', s.isRecent);
                 ctx.restore();
             }
+            
+            if (clipPath2D) ctx.restore();
             
             animId = requestAnimationFrame(renderLoop);
         };
@@ -424,7 +450,7 @@ export default function FoudreExpert() {
             active = false;
             cancelAnimationFrame(animId);
         };
-    }, [animatedStrikes, projection, strikeSize, foudreDesign, geoMode]);
+    }, [animatedStrikes, projection, strikeSize, foudreDesign, geoMode, clipPath2D]);
 
     // ── Canvas mode commune ────────────────────────────────────────────────────
     useEffect(() => {
