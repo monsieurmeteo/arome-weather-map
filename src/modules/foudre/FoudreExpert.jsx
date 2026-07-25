@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { geoConicConformal, geoPath } from "d3-geo";
+import { geoConicConformal, geoPath, geoContains } from "d3-geo";
 import { createClient } from '@supabase/supabase-js';
 import { REGIONS, DEPARTMENTS } from "../../data/departments";
 import { MAIN_CITIES } from "../../data/mainCities";
@@ -254,6 +254,18 @@ export default function FoudreExpert() {
         return geoConicConformal().fitExtent([[50,80],[STD_W-50,STD_H-50]],geoData);
     },[geoData]);
     const pathGenerator = useMemo(()=>projection?geoPath().projection(projection):null,[projection]);
+
+    // ponytail: Tracés SVG mémoïsés pour éviter de recalculer les coordonnées complexes à chaque frame d'animation (O(1) au lieu de O(n) trigonométrique)
+    const memoizedPaths = useMemo(() => {
+        if (!geoData || !pathGenerator) return [];
+        return geoData.features.map(f => {
+            try {
+                return pathGenerator(f) || '';
+            } catch (e) {
+                return '';
+            }
+        });
+    }, [geoData, pathGenerator]);
 
     // ponytail: Path2D calculé une fois quand geoData/projection change — réutilisé à chaque frame RAF (O(1))
     const clipPath2D = useMemo(() => {
@@ -929,8 +941,8 @@ export default function FoudreExpert() {
                                 {/* Groupe zoomé contenant les cartes de fond uniquement */}
                                 <g transform={communeZoom?.svgTransform||''}>
                                     {/* Fond départements */}
-                                    {geoData?.features.map((f,i)=>(
-                                        <path key={i} d={pathGenerator?.(f)} fill={mp.fill} stroke="#999" strokeWidth={communeZoom?0.6/communeZoom.scale:0.6}/>
+                                    {memoizedPaths.map((d,i)=>(
+                                        <path key={i} d={d} fill={mp.fill} stroke="#999" strokeWidth={communeZoom?0.6/communeZoom.scale:0.6}/>
                                     ))}
                                 </g>
 
@@ -1044,9 +1056,14 @@ export default function FoudreExpert() {
                         <canvas ref={canvasStdRef} width={STD_W} height={STD_H}
                             style={{position:'absolute',top:0,left:0,pointerEvents:'none',zIndex:2}}/>
                         <svg width={STD_W} height={STD_H} style={{position:'relative',zIndex:1}}>
-                            <defs><clipPath id="map-clip">{geoData?.features.map((f,i)=><path key={i} d={pathGenerator?.(f)}/>)}</clipPath></defs>
-                            <g>{geoData?.features.map((f,i)=><path key={i} d={pathGenerator?.(f)} fill={mp.fill} stroke="#000" strokeWidth={1.5}/>)}</g>
-                            {showCities&&<g>{projection&&MAIN_CITIES.map((city,i)=>{
+                            <defs><clipPath id="map-clip">{memoizedPaths.map((d,i)=><path key={i} d={d}/>)}</clipPath></defs>
+                            <g>{memoizedPaths.map((d,i)=><path key={i} d={d} fill={mp.fill} stroke="#000" strokeWidth={1.5}/>)}</g>
+                            {showCities&&<g>{projection&&MAIN_CITIES.filter(city => {
+                                if (geoMode !== 'france' && geoData && geoData.features) {
+                                    return geoData.features.some(feature => geoContains(feature, [city.lon, city.lat]));
+                                }
+                                return true;
+                            }).map((city,i)=>{
                                 const c=projection([city.lon,city.lat]);
                                 if(!c||c[0]<0||c[0]>STD_W||c[1]<0||c[1]>STD_H) return null;
                                 return <g key={i} transform={`translate(${c[0]},${c[1]})`}><circle r="3.5" fill="#000"/><text y="-10" textAnchor="middle" style={{fontSize:'14px',fontWeight:'1000',fill:'#000',stroke:'#fff',strokeWidth:'3.5px',paintOrder:'stroke'}}>{city.name}</text></g>;
