@@ -336,12 +336,15 @@ const SupervisionMap = () => {
                             .map((s, i) => {
                             const d = new Date(s.timestamp ? s.timestamp.replace(' ', 'T') : Date.now());
                             const timeMs = d.getTime();
+                            const validTime = isNaN(timeMs) ? Date.now() : timeMs;
+                            const validD = new Date(validTime);
                             return {
                                 lat: parseFloat(s.latitude),
                                 lon: parseFloat(s.longitude),
-                                time: isNaN(timeMs) ? Date.now() : timeMs,
-                                h: isNaN(timeMs) ? new Date().getHours() : d.getHours(),
-                                isRecent: isNaN(timeMs) ? false : (Date.now() - timeMs) / 60000 < 15,
+                                time: validTime,
+                                h: validD.getHours(),
+                                minute: validD.getHours() * 60 + validD.getMinutes(),
+                                isRecent: (Date.now() - validTime) / 60000 < 15,
                                 id: `live-super-${s.timestamp || i}-${i}`
                             };
                         });
@@ -376,6 +379,7 @@ const SupervisionMap = () => {
                         return {
                             lat: parseFloat(s.lat), lon: parseFloat(s.lon),
                             time: d.getTime(), h: d.getHours(),
+                            minute: d.getHours() * 60 + d.getMinutes(),
                             isRecent: (Date.now() - d.getTime()) / 60000 < 15,
                             id: s.id || `strike-super-${i}`
                         };
@@ -395,6 +399,7 @@ const SupervisionMap = () => {
                                     return {
                                         lat: parseFloat(s.lat), lon: parseFloat(s.lon),
                                         time: d.getTime(), h: d.getHours(),
+                                        minute: d.getHours() * 60 + d.getMinutes(),
                                         isRecent: false,
                                         id: `strike-super-arch-${i}`
                                     };
@@ -428,9 +433,12 @@ const SupervisionMap = () => {
     useEffect(() => {
         const isLive = selectedDate === new Date().toLocaleDateString('sv-SE');
 
-        // Si mode archive, vérifier si un bilan image existe
+        let timer;
+        // Si mode archive, vérifier si un bilan image existe avec un debounce de 300ms
         if (!isLive) {
-            checkBilanImage(selectedDate);
+            timer = setTimeout(() => {
+                checkBilanImage(selectedDate);
+            }, 300);
         } else {
             setBilanImage(null);
             setViewMode('live');
@@ -439,7 +447,10 @@ const SupervisionMap = () => {
         fetchStrikes();
         // Only auto-refresh if viewing live data
         const interval = isLive ? setInterval(fetchStrikes, 60000) : null;
-        return () => { if (interval) clearInterval(interval); };
+        return () => {
+            if (timer) clearTimeout(timer);
+            if (interval) clearInterval(interval);
+        };
     }, [selectedDate]);
 
     useEffect(() => {

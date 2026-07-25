@@ -187,6 +187,7 @@ export default function FoudreExpert() {
                                 lon: parseFloat(s.longitude),
                                 time: validTime,
                                 h: validD.getHours(),
+                                minute: validD.getHours() * 60 + validD.getMinutes(),
                                 raw: validD.toISOString().substring(11, 19),
                                 date: validD.toISOString().substring(0, 10),
                                 id: `live-${s.timestamp || i}-${i}`,
@@ -240,7 +241,7 @@ export default function FoudreExpert() {
                     }
                     all.push(...dayStrikes);
                 }
-                allAcc=all.map((s,i)=>{const d=new Date(s.strike_time);return{lat:s.lat,lon:s.lon,time:d.getTime(),h:d.getHours(),raw:d.toLocaleTimeString('fr-FR'),date:d.toLocaleDateString('fr-FR'),id:`arch-${i}`};}).sort((a,b)=>b.time-a.time);
+                allAcc=all.map((s,i)=>{const d=new Date(s.strike_time);return{lat:s.lat,lon:s.lon,time:d.getTime(),h:d.getHours(),minute:d.getHours()*60+d.getMinutes(),raw:d.toLocaleTimeString('fr-FR'),date:d.toLocaleDateString('fr-FR'),id:`arch-${i}`};}).sort((a,b)=>b.time-a.time);
             }
             setStrikes(allAcc);
         } catch(e){console.error(e);}
@@ -325,19 +326,34 @@ export default function FoudreExpert() {
 
     // ── Impacts par rayon ──────────────────────────────────
     const impactsByRadius = useMemo(()=>{
-        if (!selectedCommune) return {};
-        return activeRadii.reduce((acc,r)=>{ acc[r]=strikes.filter(s=>haversineKm(selectedCommune.lat,selectedCommune.lon,s.lat,s.lon)<=r).length; return acc; },{});
+        if (!selectedCommune || strikes.length === 0) return {};
+        const lat = selectedCommune.lat, lon = selectedCommune.lon;
+        // ponytail: bbox (±0.3° ≈ 33km) pour éliminer les calculs Haversine inutiles sur 15 000+ impacts
+        const bbox = strikes.filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3);
+        return activeRadii.reduce((acc,r)=>{
+            acc[r] = bbox.filter(s => haversineKm(lat, lon, s.lat, s.lon) <= r).length;
+            return acc;
+        }, {});
     },[strikes,selectedCommune,activeRadii]);
 
     const closestStrike = useMemo(()=>{
         if (!selectedCommune||strikes.length===0) return null;
+        const lat = selectedCommune.lat, lon = selectedCommune.lon;
+        // ponytail: bbox (±0.3°) pour éviter 15 000 calculs Haversine
+        const bbox = strikes.filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3);
         let minDist=Infinity,best=null;
-        for(const s of strikes){const d=haversineKm(selectedCommune.lat,selectedCommune.lon,s.lat,s.lon);if(d<minDist){minDist=d;best=s;}}
+        for(const s of bbox){const d=haversineKm(lat,lon,s.lat,s.lon);if(d<minDist){minDist=d;best=s;}}
         return best&&minDist<=20?{...best,distance:minDist}:null;
     },[strikes,selectedCommune]);
 
     const visibleStrikes = useMemo(()=>{
-        if (geoMode==='commune'&&selectedCommune) return projectedStrikes.filter(s=>haversineKm(selectedCommune.lat,selectedCommune.lon,s.lat,s.lon)<=communeZoomRange);
+        if (geoMode==='commune'&&selectedCommune) {
+            const lat = selectedCommune.lat, lon = selectedCommune.lon;
+            // ponytail: bbox large (±0.3° ≈ 33km) pour le rayon maximum de 20km
+            return projectedStrikes
+                .filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3)
+                .filter(s=>haversineKm(lat,lon,s.lat,s.lon)<=communeZoomRange);
+        }
         return projectedStrikes.filter(s=>s.sx>=0&&s.sx<=STD_W&&s.sy>=0&&s.sy<=STD_H);
     },[projectedStrikes,geoMode,selectedCommune,communeZoomRange]);
 
@@ -374,8 +390,7 @@ export default function FoudreExpert() {
             return visibleStrikes;
         }
         return visibleStrikes.filter(s => {
-            const d = new Date(s.time);
-            const strikeMinute = d.getHours() * 60 + d.getMinutes();
+            const strikeMinute = s.minute;
             const windowSize = parseInt(trailMode);
             if (isNaN(windowSize) || windowSize === 1440) {
                 return strikeMinute <= animationMinute;
