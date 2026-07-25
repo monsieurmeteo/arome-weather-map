@@ -280,11 +280,14 @@ const SupervisionMap = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            await fetchRadarTimestamps(radarSource);
-            fetchStrikes();
-
-            const depts = await fetchDepartementsGeoJSON();
-            if (depts) setDeptGeo(depts);
+            // ponytail: Chargement parallèle complet pour afficher simultanément la foudre, le radar et les contours
+            await Promise.all([
+                fetchRadarTimestamps(radarSource),
+                fetchStrikes(),
+                fetchDepartementsGeoJSON().then(depts => {
+                    if (depts) setDeptGeo(depts);
+                })
+            ]);
         } catch (e) {
             console.error("Supervision fetch error:", e);
         } finally {
