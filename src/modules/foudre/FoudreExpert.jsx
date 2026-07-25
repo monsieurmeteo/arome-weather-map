@@ -411,88 +411,90 @@ export default function FoudreExpert() {
         }
     }, []);
 
-    // ── Canvas mode standard ───────────────────────────────────────────────────
+    // ── Canvas mode standard — OffscreenCanvas strategy ─────────────────────
+    // ponytail: dessine tous les impacts 1× sur offscreen quand les données changent
+    //   → RAF ne fait qu'un drawImage() (blit O(1)) + strobe sur les impacts récents seulement
+    const offscreenStdRef = useRef(null);
+
     useEffect(() => {
         const canvas = canvasStdRef.current;
         if (!canvas || !projection || geoMode === 'commune') return;
-        
+        const design = LIGHTNING_DESIGNS[foudreDesign] || LIGHTNING_DESIGNS.Classic;
+
+        // 1. Dessine tous les impacts une seule fois sur l'offscreen
+        const off = document.createElement('canvas');
+        off.width = STD_W; off.height = STD_H;
+        offscreenStdRef.current = off;
+        const octx = off.getContext('2d');
+        if (clipPath2D) { octx.save(); octx.clip(clipPath2D); }
+        for (const s of animatedStrikes) {
+            if (s.sx < 0 || s.sx > STD_W || s.sy < 0 || s.sy > STD_H) continue;
+            octx.save();
+            design.render(octx, s.sx, s.sy, strikeSize, HOUR_COLORS[s.h]||'#ff0000', false);
+            octx.restore();
+        }
+        if (clipPath2D) octx.restore();
+
+        // 2. Sépare les impacts récents (strobe)
+        const recentStrikes = animatedStrikes.filter(s => s.isRecent &&
+            s.sx >= 0 && s.sx <= STD_W && s.sy >= 0 && s.sy <= STD_H);
+        const hasStrobe = recentStrikes.length > 0;
+
+        const ctx = canvas.getContext('2d');
         let active = true;
         let animId;
-        const design = LIGHTNING_DESIGNS[foudreDesign] || LIGHTNING_DESIGNS.Classic;
-        // ponytail: Les strikes sont déjà filtrés par bbox via sx/sy — pas besoin de clip GeoJSON à 60fps
-        
+
         const renderLoop = () => {
             if (!active) return;
-            const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, STD_W, STD_H);
-            ctx.globalAlpha = 1;
-            
-            if (clipPath2D) {
-                ctx.save();
-                ctx.clip(clipPath2D);
+            // Blit offscreen (O(1) quelle que soit la quantité d'impacts)
+            ctx.drawImage(off, 0, 0);
+            // Strobe uniquement sur les impacts < 30min
+            if (hasStrobe) {
+                const strobe = Math.sin(Date.now() / 150) > 0;
+                if (strobe && clipPath2D) { ctx.save(); ctx.clip(clipPath2D); }
+                for (const s of recentStrikes) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(s.sx, s.sy, strikeSize * 2.5, 0, Math.PI * 2);
+                    ctx.fillStyle = HOUR_COLORS[s.h]||'#ff0000';
+                    ctx.globalAlpha = strobe ? 0.4 : 0;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    ctx.restore();
+                }
+                if (strobe && clipPath2D) ctx.restore();
+                animId = requestAnimationFrame(renderLoop);
             }
+            // Pas d'impacts récents → pas de RAF, dessin statique
+        };
 
-            for (const s of animatedStrikes) {
-                if (s.sx < 0 || s.sx > STD_W || s.sy < 0 || s.sy > STD_H) continue;
-                ctx.save();
-                design.render(ctx, s.sx, s.sy, strikeSize, HOUR_COLORS[s.h]||'#ff0000', s.isRecent);
-                ctx.restore();
-            }
-            
-            if (clipPath2D) ctx.restore();
-            
-            animId = requestAnimationFrame(renderLoop);
-        };
-        
         renderLoop();
-        
-        return () => {
-            active = false;
-            cancelAnimationFrame(animId);
-        };
+        return () => { active = false; cancelAnimationFrame(animId); };
     }, [animatedStrikes, projection, strikeSize, foudreDesign, geoMode, clipPath2D]);
 
-    // ── Canvas mode commune ────────────────────────────────────────────────────
+    // ── Canvas mode commune — dessin statique (pas de RAF) ────────────────────
     useEffect(() => {
         const canvas = canvasComRef.current;
         if (!canvas || !projection || !communeZoom || geoMode !== 'commune') return;
-        
-        let active = true;
-        let animId;
         const design = LIGHTNING_DESIGNS[foudreDesign] || LIGHTNING_DESIGNS.Classic;
         const maxR = communeZoomRange + 0.2;
-        
-        const renderLoop = () => {
-            if (!active) return;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, COM_MAP, COM_H);
-            ctx.globalAlpha = 1;
-            
-            for (const s of animatedStrikes) {
-                if (selectedCommune && haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon) > maxR) continue;
-                if (s.sx < 0 || s.sx > COM_MAP || s.sy < 0 || s.sy > COM_H) continue;
-                let color = HOUR_COLORS[s.h] || '#ff0000';
-                if (selectedCommune) {
-                    const d = haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon);
-                    if (communeZoomRange === 2) {
-                        color = d<=0.1?RADII_COLORS[0]:d<=0.5?RADII_COLORS[1]:d<=1.0?RADII_COLORS[2]:d<=1.5?RADII_COLORS[3]:RADII_COLORS[4];
-                    } else {
-                        color = d<=1?RADII_COLORS[0]:d<=3?RADII_COLORS[1]:d<=5?RADII_COLORS[2]:d<=10?RADII_COLORS[3]:RADII_COLORS[4];
-                    }
-                }
-                ctx.save();
-                design.render(ctx, s.sx, s.sy, strikeSize, color, s.isRecent);
-                ctx.restore();
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, COM_MAP, COM_H);
+        for (const s of animatedStrikes) {
+            if (selectedCommune && haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon) > maxR) continue;
+            if (s.sx < 0 || s.sx > COM_MAP || s.sy < 0 || s.sy > COM_H) continue;
+            let color = HOUR_COLORS[s.h] || '#ff0000';
+            if (selectedCommune) {
+                const d = haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon);
+                color = communeZoomRange === 2
+                    ? (d<=0.1?RADII_COLORS[0]:d<=0.5?RADII_COLORS[1]:d<=1.0?RADII_COLORS[2]:d<=1.5?RADII_COLORS[3]:RADII_COLORS[4])
+                    : (d<=1?RADII_COLORS[0]:d<=3?RADII_COLORS[1]:d<=5?RADII_COLORS[2]:d<=10?RADII_COLORS[3]:RADII_COLORS[4]);
             }
-            animId = requestAnimationFrame(renderLoop);
-        };
-        
-        renderLoop();
-        
-        return () => {
-            active = false;
-            cancelAnimationFrame(animId);
-        };
+            ctx.save();
+            design.render(ctx, s.sx, s.sy, strikeSize, color, false);
+            ctx.restore();
+        }
     }, [animatedStrikes, projection, communeZoom, communeZoomRange, strikeSize, foudreDesign, geoMode, selectedCommune]);
 
 
