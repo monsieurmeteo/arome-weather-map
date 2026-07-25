@@ -283,24 +283,6 @@ export default function FoudreExpert() {
         return{cx,cy,scale,pxPerKm,tx,ty,svgTransform:`translate(${tx},${ty}) scale(${scale})`};
     },[selectedCommune,projection,geoMode,communeZoomRange]);
 
-    const projectedStrikes = useMemo(() => {
-        if (!projection) return [];
-        const isCommune = geoMode === 'commune' && communeZoom;
-        const cx = isCommune ? communeZoom.cx : 0;
-        const cy = isCommune ? communeZoom.cy : 0;
-        const scale = isCommune ? communeZoom.scale : 1;
-        
-        return strikes.map(s => {
-            const p = projection([s.lon, s.lat]);
-            if (!p) return { ...s, sx: -999, sy: -999 };
-            return {
-                ...s,
-                sx: isCommune ? COM_MAP/2 + (p[0] - cx) * scale : p[0],
-                sy: isCommune ? COM_H/2  + (p[1] - cy) * scale : p[1]
-            };
-        });
-    }, [strikes, projection, geoMode, communeZoom]);
-
     // ponytail: Mutualisation du filtrage spatial (O(n) 1 seule fois au lieu de 3)
     const communeBboxStrikes = useMemo(() => {
         if (!selectedCommune || strikes.length === 0) return [];
@@ -308,11 +290,38 @@ export default function FoudreExpert() {
         return strikes.filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3);
     }, [strikes, selectedCommune]);
 
+    const projectedStrikes = useMemo(() => {
+        if (!projection) return [];
+        const isCommune = geoMode === 'commune' && communeZoom;
+        
+        // ponytail: En mode commune, on ne projette QUE les impacts à proximité (communeBboxStrikes)
+        // pour éviter de projeter 120 000 points hors écran.
+        const sourceStrikes = isCommune ? communeBboxStrikes : strikes;
+        
+        const cx = isCommune ? communeZoom.cx : 0;
+        const cy = isCommune ? communeZoom.cy : 0;
+        const scale = isCommune ? communeZoom.scale : 1;
+        const clat = isCommune && selectedCommune ? selectedCommune.lat : 0;
+        const clon = isCommune && selectedCommune ? selectedCommune.lon : 0;
+        
+        return sourceStrikes.map(s => {
+            const p = projection([s.lon, s.lat]);
+            if (!p) return { ...s, sx: -999, sy: -999, distKm: 999 };
+            return {
+                ...s,
+                sx: isCommune ? COM_MAP/2 + (p[0] - cx) * scale : p[0],
+                sy: isCommune ? COM_H/2  + (p[1] - cy) * scale : p[1],
+                distKm: isCommune ? haversineKm(clat, clon, s.lat, s.lon) : 0
+            };
+        });
+    }, [strikes, communeBboxStrikes, projection, geoMode, communeZoom, selectedCommune]);
+
     const communeBboxProjectedStrikes = useMemo(() => {
+        if (geoMode === 'commune') return projectedStrikes;
         if (!selectedCommune || projectedStrikes.length === 0) return [];
         const lat = selectedCommune.lat, lon = selectedCommune.lon;
         return projectedStrikes.filter(s => Math.abs(s.lat - lat) < 0.3 && Math.abs(s.lon - lon) < 0.3);
-    }, [projectedStrikes, selectedCommune]);
+    }, [projectedStrikes, geoMode, selectedCommune]);
 
     // ── Impacts par rayon ──────────────────────────────────
     const impactsByRadius = useMemo(()=>{
@@ -334,8 +343,7 @@ export default function FoudreExpert() {
 
     const visibleStrikes = useMemo(()=>{
         if (geoMode==='commune'&&selectedCommune) {
-            const lat = selectedCommune.lat, lon = selectedCommune.lon;
-            return communeBboxProjectedStrikes.filter(s=>haversineKm(lat,lon,s.lat,s.lon)<=communeZoomRange);
+            return communeBboxProjectedStrikes.filter(s => s.distKm <= communeZoomRange);
         }
         return projectedStrikes.filter(s=>s.sx>=0&&s.sx<=STD_W&&s.sy>=0&&s.sy<=STD_H);
     },[projectedStrikes,communeBboxProjectedStrikes,geoMode,selectedCommune,communeZoomRange]);
@@ -431,11 +439,16 @@ export default function FoudreExpert() {
         if (!canvas || !projection || geoMode === 'commune') return;
         const design = LIGHTNING_DESIGNS[foudreDesign] || LIGHTNING_DESIGNS.Classic;
 
-        // 1. Dessine tous les impacts une seule fois sur l'offscreen
-        const off = document.createElement('canvas');
-        off.width = STD_W; off.height = STD_H;
-        offscreenStdRef.current = off;
+        // 1. Dessine tous les impacts une seule fois sur l'offscreen (réutilisé)
+        let off = offscreenStdRef.current;
+        if (!off) {
+            off = document.createElement('canvas');
+            off.width = STD_W;
+            off.height = STD_H;
+            offscreenStdRef.current = off;
+        }
         const octx = off.getContext('2d');
+        octx.clearRect(0, 0, STD_W, STD_H);
         if (clipPath2D) { octx.save(); octx.clip(clipPath2D); }
         // ponytail: Algorithme du peintre — on dessine du plus ancien au plus récent (boucle inversée)
         for (let i = animatedStrikes.length - 1; i >= 0; i--) {
@@ -490,17 +503,15 @@ export default function FoudreExpert() {
         const canvas = canvasComRef.current;
         if (!canvas || !projection || !communeZoom || geoMode !== 'commune') return;
         const design = LIGHTNING_DESIGNS[foudreDesign] || LIGHTNING_DESIGNS.Classic;
-        const maxR = communeZoomRange + 0.2;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, COM_MAP, COM_H);
         // ponytail: Algorithme du peintre — on dessine du plus ancien au plus récent (boucle inversée)
         for (let i = animatedStrikes.length - 1; i >= 0; i--) {
             const s = animatedStrikes[i];
-            if (selectedCommune && haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon) > maxR) continue;
             if (s.sx < 0 || s.sx > COM_MAP || s.sy < 0 || s.sy > COM_H) continue;
             let color = HOUR_COLORS[s.h] || '#ff0000';
             if (selectedCommune) {
-                const d = haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon);
+                const d = s.distKm;
                 color = communeZoomRange === 2
                     ? (d<=0.1?RADII_COLORS[0]:d<=0.5?RADII_COLORS[1]:d<=1.0?RADII_COLORS[2]:d<=1.5?RADII_COLORS[3]:RADII_COLORS[4])
                     : (d<=1?RADII_COLORS[0]:d<=3?RADII_COLORS[1]:d<=5?RADII_COLORS[2]:d<=10?RADII_COLORS[3]:RADII_COLORS[4]);
