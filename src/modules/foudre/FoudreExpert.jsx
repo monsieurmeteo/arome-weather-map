@@ -82,7 +82,12 @@ export default function FoudreExpert() {
     const [playSpeed, setPlaySpeed] = useState(120);
     const minMinute = useMemo(() => {
         if (strikes.length === 0) return 0;
-        return Math.min(1439, ...strikes.map(s => s.h * 60));
+        let minVal = 1439;
+        for (let i = 0; i < strikes.length; i++) {
+            const h = strikes[i].h * 60;
+            if (h < minVal) minVal = h;
+        }
+        return minVal;
     }, [strikes]);
 
     // ── Style ─────────────────────────────────────────────
@@ -216,7 +221,7 @@ export default function FoudreExpert() {
                     } catch (err) {
                         console.warn(`Aucune archive statique trouvée pour ${dStr}`);
                     }
-                    all.push(...dayStrikes);
+                    all = all.concat(dayStrikes);
                 }
                 allAcc=all.map((s,i)=>{const d=new Date(s.strike_time);return{lat:s.lat,lon:s.lon,time:d.getTime(),h:d.getHours(),minute:d.getHours()*60+d.getMinutes(),raw:d.toLocaleTimeString('fr-FR'),date:d.toLocaleDateString('fr-FR'),id:`arch-${i}`};}).sort((a,b)=>b.time-a.time);
             }
