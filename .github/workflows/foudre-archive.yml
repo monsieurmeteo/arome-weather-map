@@ -24,18 +24,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline || npm install
 
-      - name: Sync Lightning Data to Supabase
+      - name: Sync Lightning Data directly to Git JSON files
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CRON_MODE: "1"
-        run: node scripts/sync_foudre_week.mjs
-
-      - name: Archive old data (> 7 days) from Supabase to Git JSON
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/git_archive_foudre.mjs
+        run: node scripts/sync_foudre_static.mjs
 
       - name: Commit and push JSON archives to Git repository
         run: |
@@ -47,6 +39,6 @@ jobs:
             echo "⚫ Aucun nouveau fichier d'archive à committer."
           else
             echo "📝 Nouveaux fichiers d'archive détectés. Commit et push..."
-            git commit -m "chore(foudre): archivage automatique des impacts [skip ci]"
+            git commit -m "chore(foudre): archivage automatique statique foudre [skip ci]"
             git push origin master
           fi

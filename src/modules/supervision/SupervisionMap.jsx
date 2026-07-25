@@ -5,17 +5,11 @@ import {
     Square, Search, Layers, Maximize, RefreshCw, X, Crosshair, Settings2, Calendar
 } from 'lucide-react';
 import L from 'leaflet';
-import { createClient } from '@supabase/supabase-js';
 import 'leaflet/dist/leaflet.css';
 import { fetchDepartementsGeoJSON } from '../../services/vigicruuesService';
 import { MAIN_CITIES } from "../../data/mainCities";
 import { LIGHTNING_DESIGNS } from '../foudre/LightningStyles';
 import './SupervisionMap.css';
-
-const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 const HOUR_COLORS = [
     "#0000FF", "#0022FF", "#0044FF", "#0066FF", "#0088FF", "#00AAFF", // 0h-5h
@@ -359,62 +353,29 @@ const SupervisionMap = () => {
                     console.warn(`⚠️ Supervision: Fetch lightning warning:`, err.message);
                 }
             } else {
-                // ARCHIVE MODE - Utilise Supabase (inchangé)
-                allData = [];
-            }
-
-            // Fallback Supabase si Agate n'a rien retourné
-            if (allData.length === 0) {
-                const startDate = isLive
-                    ? new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString()
-                    : `${selectedDate}T00:00:00Z`;
-                const endDate = isLive
-                    ? now.toISOString()
-                    : `${selectedDate}T23:59:59Z`;
-
-                const { data, error } = await supabase
-                    .from('lightning_strikes')
-                    .select('*')
-                    .gte('strike_time', startDate)
-                    .lte('strike_time', endDate);
-
-                if (data && data.length > 0) {
-                    allData = data.map((s, i) => {
-                        const d = new Date(s.strike_time);
-                        return {
-                            lat: parseFloat(s.lat), lon: parseFloat(s.lon),
-                            time: d.getTime(), h: d.getHours(),
-                            minute: d.getHours() * 60 + d.getMinutes(),
-                            isRecent: (Date.now() - d.getTime()) / 60000 < 15,
-                            id: s.id || `strike-super-${i}`
-                        };
-                    });
-                    console.log(`✅ Supervision: ${allData.length} impacts Supabase.`);
-                } else if (!isLive) {
-                    // Fallback archives Git si mode archive et Supabase vide
-                    try {
-                        const formattedDateFile = selectedDate.replace(/-/g, '');
-                        const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
-                        if (res.ok) {
-                            const json = await res.json();
-                            if (Array.isArray(json)) {
-                                allData = json.map((s, i) => {
-                                    const cleanDate = s.date.replace(/\//g, '-');
-                                    const d = new Date(`${cleanDate}T${s.heure}:00`);
-                                    return {
-                                        lat: parseFloat(s.lat), lon: parseFloat(s.lon),
-                                        time: d.getTime(), h: d.getHours(),
-                                        minute: d.getHours() * 60 + d.getMinutes(),
-                                        isRecent: false,
-                                        id: `strike-super-arch-${i}`
-                                    };
-                                });
-                                console.log(`✅ Supervision: ${allData.length} impacts chargés depuis l'archive statique.`);
-                            }
+                // ponytail: Mode archive 100% statique GitHub sans Supabase
+                try {
+                    const formattedDateFile = selectedDate.replace(/-/g, '');
+                    const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (Array.isArray(json)) {
+                            allData = json.map((s, i) => {
+                                const cleanDate = s.date.replace(/\//g, '-');
+                                const d = new Date(`${cleanDate}T${s.heure}:00`);
+                                return {
+                                    lat: parseFloat(s.lat), lon: parseFloat(s.lon),
+                                    time: d.getTime(), h: d.getHours(),
+                                    minute: d.getHours() * 60 + d.getMinutes(),
+                                    isRecent: false,
+                                    id: `strike-super-arch-${i}`
+                                };
+                            });
+                            console.log(`✅ Supervision: ${allData.length} impacts chargés depuis l'archive statique.`);
                         }
-                    } catch (err) {
-                        console.warn(`Aucune archive statique trouvée pour la supervision : ${selectedDate}`);
                     }
+                } catch (err) {
+                    console.warn(`Aucune archive statique trouvée pour la supervision : ${selectedDate}`);
                 }
             }
 

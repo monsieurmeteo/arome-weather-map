@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { geoConicConformal, geoPath, geoContains } from "d3-geo";
-import { createClient } from '@supabase/supabase-js';
 import { REGIONS, DEPARTMENTS } from "../../data/departments";
 import { MAIN_CITIES } from "../../data/mainCities";
 import { Download, RefreshCw, Zap, Calendar, Search, Maximize, Palette, LayoutGrid, X, MapPin, Target, Play, Pause } from "lucide-react";
@@ -9,11 +8,6 @@ import html2canvas from "html2canvas";
 import { format, isValid } from "date-fns";
 import { fr } from "date-fns/locale";
 import './FoudreFrance.css';
-
-const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 const GEO_CACHE = new Map();
 
@@ -200,44 +194,27 @@ export default function FoudreExpert() {
                 const days=isRange?getDays(startDate,endDate):[startDate];
                 let all=[];
                 for(const dStr of days){
-                    // Tenter de charger depuis Supabase d'abord
                     let dayStrikes = [];
-                    let from = 0;
-                    while (true) {
-                        const {data, error} = await supabase
-                            .from('lightning_strikes')
-                            .select('lat,lon,strike_time')
-                            .gte('strike_time', `${dStr}T00:00:00Z`)
-                            .lte('strike_time', `${dStr}T23:59:59Z`)
-                            .range(from, from + 999);
-                        if (error || !data || data.length === 0) break;
-                        dayStrikes.push(...data);
-                        if (data.length < 1000) break;
-                        from += 1000;
-                    }
-
-                    // Fallback : Si Supabase est vide, tenter de charger le JSON d'archive statique
-                    if (dayStrikes.length === 0) {
-                        try {
-                            const formattedDateFile = dStr.replace(/-/g, '');
-                            const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
-                            if (res.ok) {
-                                const json = await res.json();
-                                if (Array.isArray(json)) {
-                                    dayStrikes = json.map(s => {
-                                        const cleanDate = s.date.replace(/\//g, '-');
-                                        const dateObj = new Date(`${cleanDate}T${s.heure}:00`);
-                                        return {
-                                            lat: parseFloat(s.lat),
-                                            lon: parseFloat(s.lon),
-                                            strike_time: dateObj.toISOString()
-                                        };
-                                    });
-                                }
+                    // ponytail: 100% statique GitHub sans base de données Supabase
+                    try {
+                        const formattedDateFile = dStr.replace(/-/g, '');
+                        const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
+                        if (res.ok) {
+                            const json = await res.json();
+                            if (Array.isArray(json)) {
+                                dayStrikes = json.map(s => {
+                                    const cleanDate = s.date.replace(/\//g, '-');
+                                    const dateObj = new Date(`${cleanDate}T${s.heure}:00`);
+                                    return {
+                                        lat: parseFloat(s.lat),
+                                        lon: parseFloat(s.lon),
+                                        strike_time: dateObj.toISOString()
+                                    };
+                                });
                             }
-                        } catch (err) {
-                            console.warn(`Aucune archive statique trouvée pour ${dStr}`);
                         }
+                    } catch (err) {
+                        console.warn(`Aucune archive statique trouvée pour ${dStr}`);
                     }
                     all.push(...dayStrikes);
                 }
