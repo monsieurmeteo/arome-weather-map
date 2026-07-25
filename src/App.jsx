@@ -76,7 +76,7 @@ function App() {
           <Route path="/vigilance" element={<VigilanceFrance />} />
           <Route path="/radar" element={<RadarFrance />} />
           <Route path="/satellite" element={<SatelliteFrance />} />
-          <Route path="/foudre" element={<FoudreFrance />} />
+          <Route path="/foudre" element={<FoudreExpert />} />
           <Route path="/foudre-expert" element={<FoudreExpert />} />
           <Route path="/foudre-archives" element={<OrageArchives />} />
           <Route path="/foudre-designs" element={<FoudreDesignGallery />} />
