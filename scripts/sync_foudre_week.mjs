@@ -25,9 +25,11 @@ async function upsertChunked(rows) {
 }
 
 async function syncLightning24h() {
-    console.log(`\n⚡ SYNCHRONISATION FOUDRE - Dernières 24 heures (Météo-NPDC)\n`);
+    // ponytail: 90min en cron horaire (overlap 30min), 1440min en manuel pour backfill
+    const MINUTES = process.env.CRON_MODE === '1' ? 90 : 1440;
+    console.log(`\n⚡ SYNCHRONISATION FOUDRE - Fenêtre ${MINUTES} min (Météo-NPDC)\n`);
     try {
-        const response = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+        const response = await fetch(`https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=${MINUTES}`, {
             referrerPolicy: 'no-referrer'
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
