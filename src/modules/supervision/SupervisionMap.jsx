@@ -84,32 +84,53 @@ const FastLightningLayer = ({ strikes, colors, designId = 'Classic' }) => {
             canvasRef.current = newCanvas;
         }
 
+        const c = canvasRef.current;
+        if (!c) return;
+        const size = map.getSize();
+        c.width = size.x;
+        c.height = size.y;
+
+        const design = LIGHTNING_DESIGNS[designId] || LIGHTNING_DESIGNS.Classic;
+
+        // ponytail: OffscreenCanvas — dessine TOUS les strikes 1×, puis blit O(1) dans RAF
+        const off = document.createElement('canvas');
+        off.width = size.x; off.height = size.y;
+        const octx = off.getContext('2d');
+        const recentStrikes = [];
+
+        strikes.forEach(s => {
+            const px = map.latLngToContainerPoint([s.lat, s.lon]);
+            if (px.x < -20 || px.y < -20 || px.x > size.x + 20 || px.y > size.y + 20) return;
+            const color = colors[s.h] || '#ff0000';
+            octx.save();
+            design.render(octx, px.x, px.y, 4, color, false);
+            octx.restore();
+            if (s.isRecent) recentStrikes.push({ px, color });
+        });
+
+        const ctx = c.getContext('2d');
+        const hasStrobe = recentStrikes.length > 0;
+
         const animate = () => {
-            const c = canvasRef.current;
-            if (!c) return;
-
-            const size = map.getSize();
-            if (c.width !== size.x || c.height !== size.y) {
-                c.width = size.x;
-                c.height = size.y;
-            }
-
-            const ctx = c.getContext('2d');
             ctx.clearRect(0, 0, c.width, c.height);
-
-            const design = LIGHTNING_DESIGNS[designId] || LIGHTNING_DESIGNS.Classic;
-
-            strikes.forEach(s => {
-                const px = map.latLngToContainerPoint([s.lat, s.lon]);
-                if (px.x < -20 || px.y < -20 || px.x > size.x + 20 || px.y > size.y + 20) return;
-
-                const color = colors[s.h] || '#ff0000';
-                ctx.save();
-                design.render(ctx, px.x, px.y, 4, color, s.isRecent);
-                ctx.restore();
-            });
-
-            requestRef.current = requestAnimationFrame(animate);
+            ctx.drawImage(off, 0, 0);
+            if (hasStrobe) {
+                const strobe = Math.sin(Date.now() / 150) > 0;
+                if (strobe) {
+                    for (const { px, color } of recentStrikes) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(px.x, px.y, 10, 0, Math.PI * 2);
+                        ctx.fillStyle = color;
+                        ctx.globalAlpha = 0.4;
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                        ctx.restore();
+                    }
+                }
+                requestRef.current = requestAnimationFrame(animate);
+            }
+            // Pas d'impacts récents → dessin statique, pas de RAF
         };
 
         animate();
@@ -292,14 +313,21 @@ const SupervisionMap = () => {
 
             if (isLive) {
                 try {
-                    const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=1440', {
+                    // ponytail: 90min pour le live supervision (vs 1440 avant — cause principale des latences)
+                    const res = await fetch('https://meteo-npdc.fr/api/v2/lightning/get_latest?minutes=90', {
                         referrerPolicy: "no-referrer"
                     });
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
                     const json = await res.json();
                     if (json.success && Array.isArray(json.data)) {
-                        allData = json.data.map((s, i) => {
+                        // Filtre bbox France métropolitaine (NPDC couvre toute l'Europe)
+                        allData = json.data
+                            .filter(s => {
+                                const lat = parseFloat(s.latitude), lon = parseFloat(s.longitude);
+                                return lat >= 41 && lat <= 52 && lon >= -5.5 && lon <= 10;
+                            })
+                            .map((s, i) => {
                             const d = new Date(s.timestamp ? s.timestamp.replace(' ', 'T') : Date.now());
                             const timeMs = d.getTime();
                             return {
@@ -311,7 +339,7 @@ const SupervisionMap = () => {
                                 id: `live-super-${s.timestamp || i}-${i}`
                             };
                         });
-                        console.log(`✅ Supervision: ${allData.length} impacts récupérés via meteo-npdc.fr.`);
+                        console.log(`✅ Supervision: ${allData.length} impacts récupérés via meteo-npdc.fr (90min, bbox France).`);
                     }
                 } catch (err) {
                     console.warn(`⚠️ Supervision: Fetch lightning warning:`, err.message);
