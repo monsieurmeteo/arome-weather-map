@@ -326,7 +326,8 @@ export default function FoudreExpert() {
             return visibleStrikes;
         }
         return visibleStrikes.filter(s => {
-            const strikeMinute = s.h * 60;
+            const d = new Date(s.time);
+            const strikeMinute = d.getHours() * 60 + d.getMinutes();
             const windowSize = parseInt(trailMode);
             if (isNaN(windowSize) || windowSize === 1440) {
                 return strikeMinute <= animationMinute;
@@ -385,7 +386,7 @@ export default function FoudreExpert() {
             ctx.clearRect(0, 0, STD_W, STD_H);
             ctx.globalAlpha = 1;
             
-            for (const s of strikes) {
+            for (const s of animatedStrikes) {
                 const c = projection([s.lon, s.lat]);
                 if (!c || c[0]<0 || c[0]>STD_W || c[1]<0 || c[1]>STD_H) continue;
                 ctx.save();
@@ -401,7 +402,7 @@ export default function FoudreExpert() {
             active = false;
             cancelAnimationFrame(animId);
         };
-    }, [strikes, projection, strikeSize, foudreDesign, geoMode]);
+    }, [animatedStrikes, projection, strikeSize, foudreDesign, geoMode]);
 
     // ── Canvas mode commune ────────────────────────────────────────────────────
     useEffect(() => {
@@ -419,7 +420,7 @@ export default function FoudreExpert() {
             ctx.clearRect(0, 0, COM_MAP, COM_H);
             ctx.globalAlpha = 1;
             
-            for (const s of strikes) {
+            for (const s of animatedStrikes) {
                 if (selectedCommune && haversineKm(selectedCommune.lat, selectedCommune.lon, s.lat, s.lon) > maxR) continue;
                 const pCoord = projection([s.lon, s.lat]);
                 if (!pCoord) continue;
@@ -447,7 +448,7 @@ export default function FoudreExpert() {
             active = false;
             cancelAnimationFrame(animId);
         };
-    }, [strikes, projection, communeZoom, communeZoomRange, strikeSize, foudreDesign, geoMode, selectedCommune]);
+    }, [animatedStrikes, projection, communeZoom, communeZoomRange, strikeSize, foudreDesign, geoMode, selectedCommune]);
 
 
     const mp = MAP_PALETTES[mapPalette];
@@ -550,7 +551,7 @@ export default function FoudreExpert() {
                         <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
                             <Zap size={14} color="#fbbf24" fill="#fbbf24"/>
                             <div style={{display:'flex',gap:'2px',background:'#f1f5f9',padding:'2px',borderRadius:'8px'}}>
-                                {[[60,'1h'],[180,'3h'],[360,'6h'],[720,'12h'],[1440,'24h']].map(([m,l])=>(
+                                {[[60,'1h'],[120,'2h'],[180,'3h'],[240,'4h'],[360,'6h'],[720,'12h'],[1440,'24h']].map(([m,l])=>(
                                     <button key={m} onClick={()=>setLiveMinutes(m)} style={{padding:'4px 8px',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'0.72rem',fontWeight:850,background:liveMinutes===m?'#fbbf24':'transparent',color:liveMinutes===m?'#78350f':'#64748b',transition:'all .15s'}}>{l}</button>
                                 ))}
                             </div>
