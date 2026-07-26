@@ -189,8 +189,8 @@ const SupervisionMap = () => {
 
     // --- GLOBAL ---
     const [loading, setLoading] = useState(true);
-    const [mapCenter, setMapCenter] = useState([46.4, 2.2]);
-    const [mapZoom, setMapZoom] = useState(5.7);
+    const [mapCenter, setMapCenter] = useState([46.0, 2.3]);
+    const [mapZoom, setMapZoom] = useState(5.3); // Vue France entière + Corse
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
 
