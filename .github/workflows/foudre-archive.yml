@@ -39,6 +39,6 @@ jobs:
             echo "⚫ Aucun nouveau fichier d'archive à committer."
           else
             echo "📝 Nouveaux fichiers d'archive détectés. Commit et push..."
-            git commit -m "chore(foudre): archivage automatique statique foudre [skip ci]"
+            git commit -m "chore(foudre): archivage automatique statique foudre [skip ci] [skip vercel]"
             git push origin master
           fi
