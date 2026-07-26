@@ -50,11 +50,14 @@ const MousePosition = () => {
     );
 };
 
-function MapController({ center, zoom }) {
+const FRANCE_BOUNDS = [[41.3, -5.2], [51.1, 9.6]]; // France métro + Corse
+
+function MapController({ center, zoom, bounds }) {
     const map = useMap();
     useEffect(() => {
-        if (center) map.setView(center, zoom, { animate: true });
-    }, [center, zoom, map]);
+        if (bounds) map.fitBounds(bounds, { animate: true, padding: [20, 20] });
+        else if (center) map.setView(center, zoom, { animate: true });
+    }, [center, zoom, bounds, map]);
     return null;
 }
 
@@ -189,8 +192,9 @@ const SupervisionMap = () => {
 
     // --- GLOBAL ---
     const [loading, setLoading] = useState(true);
-    const [mapCenter, setMapCenter] = useState([46.0, 2.3]);
-    const [mapZoom, setMapZoom] = useState(5.3); // Vue France entière + Corse
+    const [mapCenter, setMapCenter] = useState(null); // null = fitBounds auto
+    const [mapZoom, setMapZoom] = useState(null);
+    const [mapBounds, setMapBounds] = useState(FRANCE_BOUNDS); // France + Corse auto
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
 
@@ -461,6 +465,7 @@ const SupervisionMap = () => {
     const selectCity = (city) => {
         const [lon, lat] = city.geometry.coordinates;
         setSelectedLocation({ lat, lon, name: city.properties.city, postcode: city.properties.postcode });
+        setMapBounds(null); // Désactive fitBounds pour utiliser setView
         setMapCenter([lat, lon]);
         setMapZoom(10);
         setSearchQuery('');
@@ -671,13 +676,13 @@ const SupervisionMap = () => {
                         </div>
                     )}
                     <MapContainer
-                        center={mapCenter} zoom={mapZoom}
+                        center={mapCenter || [46.5, 2.5]} zoom={mapZoom || 5}
                         zoomControl={false}
                         zoomSnap={0.1}
                         zoomDelta={0.1}
                         className="super-map-container"
                     >
-                        <MapController center={mapCenter} zoom={mapZoom} />
+                        <MapController center={mapCenter} zoom={mapZoom} bounds={mapBounds} />
                         <TileLayer url={MAP_STYLES[mapStyle].url} />
                         <ScaleControl position="bottomleft" imperial={false} />
                         <MousePosition />
