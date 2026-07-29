@@ -205,6 +205,23 @@ const CitySearch = () => {
     const bestMin = getBestSource('temp_min');
     const bestMax = getBestSource('temp_max');
 
+    const getDeptNumber = () => {
+        if (!selectedCity || !selectedCity.properties) return '';
+        const { context, postcode } = selectedCity.properties;
+        if (context) {
+            const parts = context.split(',');
+            if (parts.length > 0) {
+                const dept = parts[0].trim();
+                if (dept && (!isNaN(dept) || dept === '2A' || dept === '2B')) return dept;
+            }
+        }
+        if (postcode && postcode.length >= 2) {
+            return postcode.substring(0, 2);
+        }
+        return '';
+    };
+    const dept = getDeptNumber();
+
     const formatTime = (iso) => {
         if (!iso) return '';
         const d = new Date(iso);
@@ -268,10 +285,15 @@ const CitySearch = () => {
             {/* Résultats */}
             {selectedCity && nearestData && (
                 <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-
-                    <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: '500' }}>
-                        <Navigation size={18} />
-                        Résultats pour <strong>{selectedCity.properties.city || selectedCity.properties.label}</strong>
+                    <div style={{ marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                        <h2 style={{ fontSize: '2.2rem', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>
+                            {selectedCity.properties.city || selectedCity.properties.label}
+                        </h2>
+                        {dept && (
+                            <span style={{ fontSize: '1.4rem', fontWeight: '700', color: '#475569', background: '#f1f5f9', padding: '4px 12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                                {dept}
+                            </span>
+                        )}
                     </div>
 
                     <div style={{ background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '12px', padding: '16px', marginBottom: '30px', fontSize: '0.95rem', color: '#1e40af', lineHeight: '1.6' }}>
