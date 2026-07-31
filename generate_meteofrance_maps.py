@@ -158,7 +158,7 @@ def get_session_token():
     
     mfsession = None
     try:
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             headers = response.getheaders()
             for header, value in headers:
                 if header.lower() == 'set-cookie' and 'mfsession=' in value:
@@ -168,13 +168,24 @@ def get_session_token():
                         break
     except Exception as e:
         print("Error fetching main page:", e)
-        return None
         
-    if not mfsession:
-        print("Could not find mfsession cookie.")
-        return None
-        
-    return rot13(urllib.parse.unquote(mfsession))
+    if mfsession:
+        return rot13(urllib.parse.unquote(mfsession))
+
+    # Fallback to meteofrance_token.json if available
+    token_file = os.path.join(PROJECT_DIR, "meteofrance_token.json")
+    if os.path.exists(token_file):
+        try:
+            with open(token_file, "r", encoding="utf-8") as f:
+                tdata = json.load(f)
+                if tdata.get("token"):
+                    print("Using fallback token from meteofrance_token.json")
+                    return tdata.get("token")
+        except Exception:
+            pass
+
+    print("Could not find mfsession cookie.")
+    return None
 
 def map_mf_icon(icon):
     if not icon:
