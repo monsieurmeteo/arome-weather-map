@@ -8207,7 +8207,7 @@ function parsePicto(s) {
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">' +
                         '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:3px;font-weight:800;color:#1a2a3a;">' +
-                        '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
+                        '<span style="display:inline-block;transform:rotate(' + (avgDir2-45) + 'deg);">➤</span>' +
                         '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div>' +
                         gBadge2 + '</div></div></div>';
                 } else if (is7days && !isTikTok) {
@@ -8222,7 +8222,7 @@ function parsePicto(s) {
                         '<span style="color:#ccc;font-weight:300;font-size:' + (parseInt(pxTemp)-10) + 'px;">/</span>' +
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="font-size:' + pxWind + ';display:flex;align-items:center;justify-content:center;gap:3px;font-weight:800;color:#1a2a3a;">' +
-                        '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
+                        '<span style="display:inline-block;transform:rotate(' + (avgDir2-45) + 'deg);">➤</span>' +
                         '<span>' + windDispVal + '</span>' +
                         '<span style="font-size:11px;font-weight:500;">km/h</span></div>' +
                         gBadge2 +
@@ -8240,7 +8240,7 @@ function parsePicto(s) {
                         '<span style="color:#ccc;font-weight:300;">/</span>' +
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:2px;font-weight:800;color:#1a2a3a;">' +
-                        '<span style="display:inline-block;transform:rotate(' + (avgDir2+135) + 'deg);">➤</span>' +
+                        '<span style="display:inline-block;transform:rotate(' + (avgDir2-45) + 'deg);">➤</span>' +
                         '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div>' +
                         gBadge2 + '</div>';
                 }
