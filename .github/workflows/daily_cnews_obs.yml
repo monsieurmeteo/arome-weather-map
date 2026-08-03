@@ -29,12 +29,12 @@ jobs:
       - name: Étape 1 - Générer les données de prévisions Météo-France (JSON & CSV)
         run: |
           # Générer les données de prévisions nationales (16 jours par défaut en json-only)
-          python "generate_meteofrance_maps.py" --zone france_pictos --json-only
+          python "generate_site_json.py" --zone france_pictos --json-only
 
           # Liste des zones régionales
           $zones = @("hdf", "normandie", "idf", "grandest", "ara", "naq", "occitanie", "paca", "bfc", "bretagne", "pdl", "cvl", "corse")
           foreach ($zone in $zones) {
-              python "generate_meteofrance_maps.py" --zone $zone --json-only
+              python "generate_site_json.py" --zone $zone --json-only
           }
 
       - name: Étape 2 - Enregistrer et pousser les prévisions, CSV et token sur GitHub
