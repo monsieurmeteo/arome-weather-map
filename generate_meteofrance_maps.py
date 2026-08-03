@@ -279,39 +279,51 @@ def fetch_all_openmeteo_gusts(cities_list, start_tomorrow=False, days=8):
     url = (
         f"https://api.open-meteo.com/v1/forecast"
         f"?latitude={lats}&longitude={lons}"
-        f"&hourly=wind_gusts_10m"
+        f"&hourly=windspeed_10m,wind_gusts_10m,winddirection_10m"
         f"&wind_speed_unit=kmh"
         f"&timezone=Europe%2FParis"
         f"&forecast_days={days}"
     )
-    print("DEBUG URL (Batch):", url)
+    print("DEBUG URL (Batch Wind):", url)
     
     gusts_map = {}
-    print(f"  [open-meteo gusts] Batch fetching gusts for {len(cities_list)} locations...")
+    print(f"  [open-meteo wind] Batch fetching wind data (speed, gusts, direction) for {len(cities_list)} locations...")
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=20) as resp:
             data = json.loads(resp.read().decode('utf-8'))
         
         results = data if isinstance(data, list) else [data]
+        target_len = days * 24
         for idx, r in enumerate(results):
             city = cities_list[idx]
-            gusts = r.get('hourly', {}).get('wind_gusts_10m', [])
+            hourly_res = r.get('hourly', {})
+            gusts = hourly_res.get('wind_gusts_10m', [])
+            speeds = hourly_res.get('windspeed_10m', [])
+            dirs = hourly_res.get('winddirection_10m', [])
             
-            target_len = days * 24
-            if len(gusts) >= target_len:
-                final_gusts = [float(v or 0) for v in gusts[:target_len]]
-            else:
-                final_gusts = [float(v or 0) for v in gusts] + [0.0] * (target_len - len(gusts))
+            def pad_list(arr, def_val=0.0):
+                if len(arr) >= target_len:
+                    return [float(v if v is not None else def_val) for v in arr[:target_len]]
+                return [float(v if v is not None else def_val) for v in arr] + [def_val] * (target_len - len(arr))
+
+            final_gusts = pad_list(gusts, 0.0)
+            final_speeds = pad_list(speeds, 0.0)
+            final_dirs = pad_list(dirs, 180.0)
             
             key = f"{round(float(city['lat']), 2)}_{round(float(city['lon']), 2)}"
-            gusts_map[key] = final_gusts
-        print(f"  [open-meteo gusts] Batch fetch successful for {len(results)} locations.")
+            gusts_map[key] = {
+                'gusts': final_gusts,
+                'speeds': final_speeds,
+                'dirs': final_dirs
+            }
+        print(f"  [open-meteo wind] Batch fetch successful for {len(results)} locations.")
             
     except Exception as e:
-        print(f"  [open-meteo gusts] Batch fetch failed: {e}")
+        print(f"  [open-meteo wind] Batch fetch failed: {e}")
         
     return gusts_map
+
 
 
 def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None, days=8):
@@ -452,6 +464,10 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None, days=8):
             daily_sunset.append(f"{date_str}T21:00:00")
             
     coords = mf_data.get("geometry", {}).get("coordinates", [2.35, 48.85])
+    om_speeds = om_gusts.get('speeds') if isinstance(om_gusts, dict) else None
+    om_dirs = om_gusts.get('dirs') if isinstance(om_gusts, dict) else None
+    om_gusts_list = om_gusts.get('gusts') if isinstance(om_gusts, dict) else (om_gusts if isinstance(om_gusts, list) else None)
+
     mock_obj = {
         "latitude": coords[1],
         "longitude": coords[0],
@@ -460,12 +476,12 @@ def build_openmeteo_mock(mf_data, start_tomorrow=False, om_gusts=None, days=8):
             "time": hourly_times,
             "temperature_2m": hourly_temp,
             "weathercode": hourly_wc,
-            "windspeed_10m": hourly_ws,
-            "wind_gusts_10m": om_gusts if om_gusts else hourly_wg,
+            "windspeed_10m": om_speeds if om_speeds else hourly_ws,
+            "wind_gusts_10m": om_gusts_list if om_gusts_list else hourly_wg,
             "precipitation": hourly_precip,
             "relativehumidity_2m": [50] * (days * 24),
             "pressure_msl": [1013] * (days * 24),
-            "winddirection_10m": [180] * (days * 24),
+            "winddirection_10m": om_dirs if om_dirs else [180] * (days * 24),
             "cloud_cover": hourly_clouds,
             "cloud_cover_low": [0] * (days * 24),
             "cloud_cover_mid": [0] * (days * 24),
