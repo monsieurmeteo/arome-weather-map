@@ -3108,7 +3108,7 @@
             { code: 6, label: "AVERSES", icon: "fa-cloud-sun-rain", color: "#FF1493", emoji: "🌦️", img: "P9 (averses).png" },
             { code: 7, label: "PLUIES FAIBLES", icon: "fa-cloud-rain", color: "#FF00FF", emoji: "🌧️", img: "P10 (pluies faibles).png" },
             { code: 8, label: "FORTES PLUIES", icon: "fa-cloud-showers-heavy", color: "#00FFFF", emoji: "🌧️", img: "P11 (fortes pluies).png" },
-            { code: 9, label: "NEIGE", icon: "fa-snowflake", color: "#FF6A00", emoji: "🌨️", img: "P12 (neige).png" },
+            { code: 9, label: "GRÊLE", icon: "fa-cloud-meatball", color: "#FF6A00", emoji: "🌨️", img: "Orages accompagnés de grêle.png" },
             { code: 10, label: "ORAGES", icon: "fa-bolt", color: "#0000FF", emoji: "⚡", img: "orages.png" },
             { code: 11, label: "ORAGES + GRÊLE", icon: "fa-cloud-meatball", color: "#7F00FF", emoji: "⛈️", img: "Orages accompagnés de grêle.png" },
             { code: 12, label: "BROUILLARD", icon: "fa-smog", color: "#ccc", emoji: "🌫️", img: "brouillards.png" }
@@ -4184,6 +4184,8 @@
             }
             if (savedValue && parseInt(savedValue) < maxDays) {
                 select.value = savedValue;
+            } else {
+                select.value = '0'; // Démarrer sur J0 (Aujourd'hui) par défaut
             }
         }
 
@@ -4844,7 +4846,7 @@
             else if (cNum === 6) { icon = 'fa-cloud-sun-rain'; col = rainCol; }
             else if (cNum === 7) { icon = 'fa-cloud-rain'; col = rainCol; }
             else if (cNum === 8) { icon = 'fa-cloud-showers-heavy'; col = rainCol; }
-            else if (cNum === 9) { icon = 'fa-snowflake'; col = snowCol; }
+            else if (cNum === 9) { icon = 'fa-cloud-meatball'; col = snowCol; }
             else if (cNum === 10) { icon = 'fa-bolt'; col = sunCol; }
             else if (cNum === 11) { icon = 'fa-poo-storm'; col = sunCol; }
             else if (cNum === 12) { icon = 'fa-smog'; col = "#ccc"; }
@@ -7112,7 +7114,7 @@
                         <div class="wind-gust-simple" style="display:${isSimple ? 'block' : 'none'}; font-size:${fontSize}; font-weight:900; color:${color}; text-shadow:2px 2px 0 #000; margin-bottom: -5px;">
                             ${val}
                         </div>
-                        <div class="wind-arrow" style="transform: rotate(${windData.dir + 135}deg); color:${color}; font-size:${isSmall ? '26px' : '38px'}; filter:drop-shadow(2px 2px 0 #000);">
+                        <div class="wind-arrow" style="transform: rotate(${windData.dir - 45}deg); color:${color}; font-size:${isSmall ? '26px' : '38px'}; filter:drop-shadow(2px 2px 0 #000);">
                             <i class="fas fa-location-arrow"></i>
                         </div>
                     </div>
@@ -7990,7 +7992,7 @@ function parsePicto(s) {
                         <td style="font-weight: 900; font-size: 1.2em; color: #333 !important;">${hour}</td>
                         <td><span class="cell-temp" style="padding: 6px 10px; display: inline-block; min-width: 45px; background: #FFD700; border-radius: 4px; font-weight: bold; color: #000;">${temp}°C</span></td>
                         <td class="cell-wind" style="white-space: nowrap;">
-                            <span style="display: inline-block; transform: rotate(${windDir + 135}deg); font-size: 1.2em; color: #2ecc71; line-height: 1;">➤</span>
+                            <span style="display: inline-block; transform: rotate(${windDir - 45}deg); font-size: 1.2em; color: #2ecc71; line-height: 1;">➤</span>
                             <span style="font-weight: 900; margin-left: 5px; color: #2c3e50;">${windSpeed}</span>
                             <span style="color: #e67e22; font-weight: 700; margin-left: 3px;">| ${windGust}</span>
                         </td>
@@ -8066,7 +8068,7 @@ function parsePicto(s) {
                         '<div style="font-size:12px; font-weight:800; color:#0066cc; text-transform:uppercase; letter-spacing:0.4px;">' + dateHdr + '</div>' +
                         '<div style="margin:4px 0; height:44px; display:flex; align-items:center; justify-content:center;"><img src="pictogramme/' + picto + '" style="max-height:44px; max-width:44px; object-fit:contain;"></div>' +
                         '<div style="font-size:16px; font-weight:900; margin:1px 0;"><span style="color:#1d70b8;">' + minT + '°</span> <span style="color:#ccc; font-weight:300;">/</span> <span style="color:#d4351c;">' + maxT + '°</span></div>' +
-                        '<div style="font-size:11px; display:flex; align-items:center; justify-content:center; gap:3px; font-weight:800; color:#1a2a3a;"><span style="display:inline-block; transform:rotate(' + (avgD + 135) + 'deg);">➤</span><span>' + avgW + '</span><span style="font-size:9px; font-weight:400;">km/h</span></div>' +
+                        '<div style="font-size:11px; display:flex; align-items:center; justify-content:center; gap:3px; font-weight:800; color:#1a2a3a;"><span style="display:inline-block; transform:rotate(' + (avgD - 45) + 'deg);">➤</span><span>' + avgW + '</span><span style="font-size:9px; font-weight:400;">km/h</span></div>' +
                         gBadge +
                         '</div>';
                 }
@@ -8443,7 +8445,7 @@ function parsePicto(s) {
             const idMap = {
                 0: 'P1 (soleil).png', 1: 'P2 (peu nuageux).png', 2: 'P8 (nuageux).png', 3: 'P4 (très nuageux).png',
                 4: 'P5 (couvert).png', 5: 'P6 (soleil voilé).png', 6: 'P9 (averses).png', 7: 'P10 (pluies faibles).png',
-                8: 'P11 (fortes pluies).png', 9: 'P12 (neige).png', 10: 'orages.png', 11: 'Orages accompagnés de grêle.png',
+                8: 'P11 (fortes pluies).png', 9: 'Orages accompagnés de grêle.png', 10: 'orages.png', 11: 'Orages accompagnés de grêle.png',
                 12: 'brouillards.png'
             };
             return idMap[code] || map[code] || 'P1 (soleil).png';
