@@ -4182,11 +4182,25 @@
                 opt.text = dayLabel;
                 select.appendChild(opt);
             }
-            if (savedValue && parseInt(savedValue) < maxDays) {
+            // Restaurer la valeur sauvegardée OU chercher J0 (aujourd'hui) OU première dispo
+            const isFirstLoad = !savedValue || savedValue === '';
+            if (!isFirstLoad && parseInt(savedValue) < maxDays) {
                 select.value = savedValue;
             } else {
-                select.value = '0'; // Démarrer sur J0 (Aujourd'hui) par défaut
+                // Trouver l'option correspondant à aujourd'hui (diffDays === 0)
+                let todayOptionValue = null;
+                for (let i = 0; i < select.options.length; i++) {
+                    const d2 = new Date(baseDate);
+                    d2.setDate(baseDate.getDate() + i);
+                    d2.setHours(0, 0, 0, 0);
+                    if (Math.round((d2 - today) / 86400000) === 0) {
+                        todayOptionValue = String(i);
+                        break;
+                    }
+                }
+                select.value = todayOptionValue !== null ? todayOptionValue : '0';
             }
+
         }
 
         function clearManualOverrides() {
