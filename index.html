@@ -7128,7 +7128,7 @@
                         <div class="wind-gust-simple" style="display:${isSimple ? 'block' : 'none'}; font-size:${fontSize}; font-weight:900; color:${color}; text-shadow:2px 2px 0 #000; margin-bottom: -5px;">
                             ${val}
                         </div>
-                        <div class="wind-arrow" style="transform: rotate(${windData.dir - 45}deg); color:${color}; font-size:${isSmall ? '26px' : '38px'}; filter:drop-shadow(2px 2px 0 #000);">
+                        <div class="wind-arrow" style="transform: rotate(${windData.dir + 135}deg); color:${color}; font-size:${isSmall ? '26px' : '38px'}; filter:drop-shadow(2px 2px 0 #000);">
                             <i class="fas fa-location-arrow"></i>
                         </div>
                     </div>
@@ -8006,7 +8006,7 @@ function parsePicto(s) {
                         <td style="font-weight: 900; font-size: 1.2em; color: #333 !important;">${hour}</td>
                         <td><span class="cell-temp" style="padding: 6px 10px; display: inline-block; min-width: 45px; background: #FFD700; border-radius: 4px; font-weight: bold; color: #000;">${temp}°C</span></td>
                         <td class="cell-wind" style="white-space: nowrap;">
-                            <span style="display: inline-block; transform: rotate(${windDir - 45}deg); font-size: 1.2em; color: #2ecc71; line-height: 1;">➤</span>
+                            <span style="display: inline-block; transform: rotate(${windDir + 90}deg); font-size: 1.2em; color: #2ecc71; line-height: 1;">➤</span>
                             <span style="font-weight: 900; margin-left: 5px; color: #2c3e50;">${windSpeed}</span>
                             <span style="color: #e67e22; font-weight: 700; margin-left: 3px;">| ${windGust}</span>
                         </td>
@@ -8082,7 +8082,7 @@ function parsePicto(s) {
                         '<div style="font-size:12px; font-weight:800; color:#0066cc; text-transform:uppercase; letter-spacing:0.4px;">' + dateHdr + '</div>' +
                         '<div style="margin:4px 0; height:44px; display:flex; align-items:center; justify-content:center;"><img src="pictogramme/' + picto + '" style="max-height:44px; max-width:44px; object-fit:contain;"></div>' +
                         '<div style="font-size:16px; font-weight:900; margin:1px 0;"><span style="color:#1d70b8;">' + minT + '°</span> <span style="color:#ccc; font-weight:300;">/</span> <span style="color:#d4351c;">' + maxT + '°</span></div>' +
-                        '<div style="font-size:11px; display:flex; align-items:center; justify-content:center; gap:3px; font-weight:800; color:#1a2a3a;"><span style="display:inline-block; transform:rotate(' + (avgD - 45) + 'deg);">➤</span><span>' + avgW + '</span><span style="font-size:9px; font-weight:400;">km/h</span></div>' +
+                        '<div style="font-size:11px; display:flex; align-items:center; justify-content:center; gap:3px; font-weight:800; color:#1a2a3a;"><span style="display:inline-block; transform:rotate(' + (avgD + 90) + 'deg);">➤</span><span>' + avgW + '</span><span style="font-size:9px; font-weight:400;">km/h</span></div>' +
                         gBadge +
                         '</div>';
                 }
@@ -8207,7 +8207,7 @@ function parsePicto(s) {
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">' +
                         '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:3px;font-weight:800;color:#1a2a3a;">' +
-                        '<span style="display:inline-block;transform:rotate(' + (avgDir2-45) + 'deg);">➤</span>' +
+                        '<span style="display:inline-block;transform:rotate(' + (avgDir2 + 90) + 'deg);">➤</span>' +
                         '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div>' +
                         gBadge2 + '</div></div></div>';
                 } else if (is7days && !isTikTok) {
@@ -8222,7 +8222,7 @@ function parsePicto(s) {
                         '<span style="color:#ccc;font-weight:300;font-size:' + (parseInt(pxTemp)-10) + 'px;">/</span>' +
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="font-size:' + pxWind + ';display:flex;align-items:center;justify-content:center;gap:3px;font-weight:800;color:#1a2a3a;">' +
-                        '<span style="display:inline-block;transform:rotate(' + (avgDir2-45) + 'deg);">➤</span>' +
+                        '<span style="display:inline-block;transform:rotate(' + (avgDir2 + 90) + 'deg);">➤</span>' +
                         '<span>' + windDispVal + '</span>' +
                         '<span style="font-size:11px;font-weight:500;">km/h</span></div>' +
                         gBadge2 +
@@ -8240,7 +8240,7 @@ function parsePicto(s) {
                         '<span style="color:#ccc;font-weight:300;">/</span>' +
                         '<span style="color:#d4351c;">' + maxT + '°</span></div>' +
                         '<div style="font-size:' + pxWind + ';display:flex;align-items:center;gap:2px;font-weight:800;color:#1a2a3a;">' +
-                        '<span style="display:inline-block;transform:rotate(' + (avgDir2-45) + 'deg);">➤</span>' +
+                        '<span style="display:inline-block;transform:rotate(' + (avgDir2 + 90) + 'deg);">➤</span>' +
                         '<span>' + windDispVal + '</span><span style="font-size:10px;font-weight:500;">km/h</span></div>' +
                         gBadge2 + '</div>';
                 }
