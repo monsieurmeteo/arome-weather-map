@@ -33,7 +33,8 @@ const OrageArchives = () => {
         setStormData([]);
 
         const dateStr = formatDate(date);
-        const jsonPath = `/archives_orage/orage_${dateStr}.json`;
+        const ARCHIVE_BASE = 'https://raw.githubusercontent.com/monsieurmeteo/europe-1-v2/master/public/archives_orage';
+        const jsonPath = `${ARCHIVE_BASE}/orage_${dateStr}.json`;
 
         try {
             const response = await fetch(jsonPath);

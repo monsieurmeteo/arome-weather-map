@@ -40,5 +40,6 @@ jobs:
           else
             echo "📝 Nouveaux fichiers d'archive détectés. Commit et push..."
             git commit -m "chore(foudre): archivage automatique statique foudre [skip ci] [skip vercel]"
+            git pull --rebase origin master
             git push origin master
           fi

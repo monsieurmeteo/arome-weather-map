@@ -289,7 +289,8 @@ const VectorRegionPreview = () => {
                             if (allArchived.length === 0) {
                                 try {
                                     const formattedDateFile = selectedDate.replace(/-/g, '');
-                                    const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
+                                    const ARCHIVE_BASE = 'https://raw.githubusercontent.com/monsieurmeteo/europe-1-v2/master/public/archives_orage';
+                                    const res = await fetch(`${ARCHIVE_BASE}/orage_${formattedDateFile}.json`);
                                     if (res.ok) {
                                         const json = await res.json();
                                         if (Array.isArray(json)) {
