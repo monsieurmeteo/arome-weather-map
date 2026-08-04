@@ -208,7 +208,8 @@ export default function FoudreExpert() {
                         // 2. Sinon, fetch réseau
                         try {
                             const formattedDateFile = dStr.replace(/-/g, '');
-                            const res = await fetch(`/archives_orage/orage_${formattedDateFile}.json`);
+                            const ARCHIVE_BASE = 'https://raw.githubusercontent.com/monsieurmeteo/europe-1-v2/master/public/archives_orage';
+                            const res = await fetch(`${ARCHIVE_BASE}/orage_${formattedDateFile}.json`);
                             if (res.ok) {
                                 const json = await res.json();
                                 if (Array.isArray(json)) {
@@ -245,7 +246,8 @@ export default function FoudreExpert() {
                         
                         if (!STRIKES_CACHE.has(prefetchDateStr)) {
                             const formattedPrefetchFile = prefetchDateStr.replace(/-/g, '');
-                            fetch(`/archives_orage/orage_${formattedPrefetchFile}.json`)
+                            const ARCHIVE_BASE = 'https://raw.githubusercontent.com/monsieurmeteo/europe-1-v2/master/public/archives_orage';
+                            fetch(`${ARCHIVE_BASE}/orage_${formattedPrefetchFile}.json`)
                                 .then(res => res.ok ? res.json() : null)
                                 .then(json => {
                                     if (json && Array.isArray(json)) {
