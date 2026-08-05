@@ -980,8 +980,9 @@ export default function FoudreExpert() {
                             {/* Bouton de téléchargement & Logo côte à côte */}
                             <div style={{padding:'8px 12px 12px',borderTop:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'8px',marginTop:'auto',width:'100%'}}>
                                 {showLogo && (
-                                    <div style={{background:'white',padding:'3px 6px',borderRadius:'6px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 4px rgba(0,0,0,0.15)',height:'30px'}}>
-                                        <img src="/logo.jpg" style={{height:'20px',display:'block'}}/>
+                                    <div style={{background:'white',padding:'4px 8px',borderRadius:'6px',display:'flex',alignItems:'center',gap:'4px',boxShadow:'0 2px 4px rgba(0,0,0,0.15)'}}>
+                                        <Zap size={14} color="#eab308" fill="#eab308"/>
+                                        <span style={{fontSize:'0.65rem',fontWeight:900,color:'#0f172a'}}>Météo Climat Pro</span>
                                     </div>
                                 )}
                                 <button data-html2canvas-ignore="true" onClick={exportMap} style={{flex:1,padding:'8px 10px',border:'none',borderRadius:'8px',background:'#00b4d8',color:'#07131e',cursor:'pointer',fontWeight:900,fontSize:'0.7rem',display:'flex',alignItems:'center',justifyContent:'center',gap:'5px',letterSpacing:'0.2px',boxShadow:'0 2px 8px rgba(0,180,216,0.35)',transition:'all .15s'}}
@@ -1112,11 +1113,24 @@ export default function FoudreExpert() {
                                     </text>
                                 )}
 
-                                {/* Message si pas de commune */}
+                                {/* Message et bouton si pas de commune */}
                                 {!selectedCommune&&(
-                                    <text x={COM_MAP/2} y={COM_H/2} textAnchor="middle" style={{fontSize:'16px',fontWeight:700,fill:'#94a3b8'}}>
-                                        Recherchez une commune ci-dessus
-                                    </text>
+                                    <foreignObject x={0} y={0} width={COM_MAP} height={COM_H}>
+                                        <div style={{width:'100%',height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'12px',background:'rgba(248,250,252,0.95)',padding:'20px',textAlign:'center'}}>
+                                            <div style={{background:'#eff6ff',padding:'12px',borderRadius:'50%',color:'#2563eb'}}>
+                                                <Target size={32}/>
+                                            </div>
+                                            <div style={{fontWeight:900,fontSize:'1.1rem',color:'#0f172a'}}>
+                                                Aucune commune sélectionnée
+                                            </div>
+                                            <div style={{fontSize:'0.82rem',color:'#64748b',maxWidth:'300px'}}>
+                                                Recherchez une ville ci-dessus ou basculez sur la vue nationale pour voir les <strong>{strikes.length.toLocaleString()} impacts</strong>.
+                                            </div>
+                                            <button onClick={()=>setGeoMode('france')} style={{marginTop:'8px',padding:'10px 18px',background:'#2563eb',color:'white',border:'none',borderRadius:'10px',fontWeight:800,fontSize:'0.82rem',cursor:'pointer',boxShadow:'0 4px 12px rgba(37,99,235,0.3)'}}>
+                                                🗺️ Voir la carte France entière
+                                            </button>
+                                        </div>
+                                    </foreignObject>
                                 )}
 
                                 {/* Watermark date en bas de carte */}
