@@ -34,10 +34,10 @@ const OrageArchives = () => {
 
         const dateStr = formatDate(date);
         const ARCHIVE_BASE = 'https://raw.githubusercontent.com/monsieurmeteo/europe-1-v2/master/public/archives_orage';
-        const jsonPath = `${ARCHIVE_BASE}/orage_${dateStr}.json`;
+        const jsonPath = `${ARCHIVE_BASE}/orage_${dateStr}.json?t=${Date.now()}`;
 
         try {
-            const response = await fetch(jsonPath);
+            const response = await fetch(jsonPath, { cache: 'no-store' });
             if (!response.ok) {
                 if (response.status === 404) {
                     throw new Error("Aucune donnée archivée pour cette date (ou fichier pas encore téléchargé).");
