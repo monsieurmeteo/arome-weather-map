@@ -270,7 +270,10 @@ export default function FoudreExpert() {
                 }, 1200); // Se déclenche 1,2s après le chargement initial pour garder le CPU libre
             }
         } catch(e){console.error(e);}
-        finally{setLoading(false);}
+        finally{
+            // Petit délai pour laisser React et le Canvas restituer tous les impacts à l'écran
+            setTimeout(() => setLoading(false), 250);
+        }
     };
     useEffect(()=>{fetchStrikes();},[startDate,endDate,isRange,liveMinutes]);
 
@@ -998,22 +1001,25 @@ export default function FoudreExpert() {
                                 <div style={{
                                     position: 'absolute',
                                     top: 0, left: 0, right: 0, bottom: 0,
-                                    background: 'rgba(15, 23, 42, 0.75)',
-                                    backdropFilter: 'blur(3px)',
-                                    zIndex: 10,
+                                    background: 'rgba(15, 23, 42, 0.85)',
+                                    backdropFilter: 'blur(5px)',
+                                    zIndex: 20,
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     color: 'white',
-                                    gap: '12px'
+                                    gap: '14px'
                                 }} data-html2canvas-ignore="true">
-                                    <RefreshCw size={36} className="animate-spin" style={{ color: '#fbbf24' }}/>
-                                    <div style={{ fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.3px' }}>
-                                        Chargement des impacts...
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <RefreshCw size={44} className="animate-spin" style={{ color: '#fbbf24' }}/>
+                                        <Zap size={20} style={{ position: 'absolute', color: '#fbbf24' }}/>
                                     </div>
-                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                                        Veuillez patienter quelques instants
+                                    <div style={{ fontWeight: 900, fontSize: '1.1rem', letterSpacing: '-0.3px', color: '#f8fafc' }}>
+                                        Chargement des archives foudre...
+                                    </div>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', background: 'rgba(255,255,255,0.1)', padding: '6px 16px', borderRadius: '20px' }}>
+                                        ⏳ Veuillez patienter pendant le dessin de la carte
                                     </div>
                                 </div>
                             )}
@@ -1139,22 +1145,25 @@ export default function FoudreExpert() {
                             <div style={{
                                 position: 'absolute',
                                 top: 0, left: 0, right: 0, bottom: 0,
-                                background: 'rgba(15, 23, 42, 0.75)',
-                                backdropFilter: 'blur(3px)',
-                                zIndex: 10,
+                                background: 'rgba(15, 23, 42, 0.85)',
+                                backdropFilter: 'blur(5px)',
+                                zIndex: 20,
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'white',
-                                gap: '12px'
+                                gap: '14px'
                             }} data-html2canvas-ignore="true">
-                                <RefreshCw size={36} className="animate-spin" style={{ color: '#fbbf24' }}/>
-                                <div style={{ fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.3px' }}>
-                                    Chargement des impacts...
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <RefreshCw size={44} className="animate-spin" style={{ color: '#fbbf24' }}/>
+                                    <Zap size={20} style={{ position: 'absolute', color: '#fbbf24' }}/>
                                 </div>
-                                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                                    Veuillez patienter quelques instants
+                                <div style={{ fontWeight: 900, fontSize: '1.1rem', letterSpacing: '-0.3px', color: '#f8fafc' }}>
+                                    Chargement des archives foudre...
+                                </div>
+                                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', background: 'rgba(255,255,255,0.1)', padding: '6px 16px', borderRadius: '20px' }}>
+                                    ⏳ Veuillez patienter pendant le dessin de la carte
                                 </div>
                             </div>
                         )}
