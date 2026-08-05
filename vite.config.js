@@ -45,6 +45,7 @@ export default defineConfig({
     }
   ],
   build: {
+    copyPublicDir: false,
     rollupOptions: {
       output: {
         manualChunks: {
