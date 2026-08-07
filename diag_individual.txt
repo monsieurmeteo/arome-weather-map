@@ -1,0 +1,91 @@
+Date: 2026-03-03T10:18:00Z
+
+=== DOUAI (SAPC) (59178001) via DPObs individuel ===
+  t = 286.95
+  td = null
+  u = null
+  ff = null
+  dd = null
+  fxi10 = null
+  rr_per = 0
+  pres = null
+  vv = null
+  dxi10 = null
+  t_10 = null
+  sss = null
+  insolh = null
+  ray_glo01 = null
+  pmer = null
+  etat_sol = null
+
+=== BOURBON_SAPC (03036002) via DPObs individuel ===
+  t = 285.95
+  td = null
+  u = null
+  ff = null
+  dd = null
+  fxi10 = null
+  rr_per = 0
+  pres = null
+  vv = null
+  dxi10 = null
+  t_10 = null
+  sss = null
+  insolh = null
+  ray_glo01 = null
+  pmer = null
+  etat_sol = null
+
+=== AILLEVILLE_SAPC (10002001) via DPObs individuel ===
+  t = 287.45
+  td = null
+  u = null
+  ff = null
+  dd = null
+  fxi10 = null
+  rr_per = 0
+  pres = null
+  vv = null
+  dxi10 = null
+  t_10 = null
+  sss = null
+  insolh = null
+  ray_glo01 = null
+  pmer = null
+  etat_sol = null
+
+=== RENNES (synoptique) (35281001) via DPObs individuel ===
+  t = 283.05
+  td = 281.35
+  u = 89
+  ff = 1
+  dd = 300
+  fxi10 = 1.5
+  rr_per = 0
+  pres = 101990
+  vv = 14600
+  dxi10 = 320
+  t_10 = 282.55
+  sss = 0
+  insolh = 0
+  ray_glo01 = 95700
+  pmer = 102440
+  etat_sol = 0
+
+=== ARBENT (intermediaire) (01014002) via DPObs individuel ===
+  t = 285.25
+  td = 278.45
+  u = 63
+  ff = 1.6
+  dd = 320
+  fxi10 = 3.1
+  rr_per = 0
+  pres = null
+  vv = null
+  dxi10 = 320
+  t_10 = null
+  sss = 0
+  insolh = null
+  ray_glo01 = null
+  pmer = null
+  etat_sol = null

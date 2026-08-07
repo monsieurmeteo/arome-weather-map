@@ -1,0 +1,32 @@
+
+# Netlify Configuration - Mode Déploiement Manuel
+# On supprime toute commande de build ici pour éviter les erreurs "package.json not found" sur Netlify.
+
+[[redirects]]
+  from = "/api-meteo/*"
+  to = "https://public-api.meteofrance.fr/public/DPObs/v1/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api-meteo-paquet/*"
+  to = "https://public-api.meteofrance.fr/public/DPPaquetObs/v1/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api-meteo-poste/*"
+  to = "https://public-api.meteofrance.fr/public/DPAI01/v1/:splat"
+  status = 200
+  force = true
+  
+[[redirects]]
+  from = "/api-agate/*"
+  to = "https://www.mwattest.fr/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

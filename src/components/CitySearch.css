@@ -1,0 +1,115 @@
+.city-search-wrapper {
+    position: relative;
+    max-width: 400px;
+    width: 100%;
+}
+
+.search-bar-input {
+    display: flex;
+    align-items: center;
+    background: #f1f3f5;
+    border-radius: 8px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.search-bar-input:focus-within {
+    background: white;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.search-bar-input input {
+    border: none;
+    background: transparent;
+    margin-left: 10px;
+    width: 100%;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.search-bar-input input:focus {
+    outline: none;
+}
+
+.search-icon,
+.clear-icon {
+    color: #888;
+}
+
+.clear-icon {
+    cursor: pointer;
+}
+
+.clear-icon:hover {
+    color: #333;
+}
+
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+}
+
+.search-result-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background 0.1s;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: #f8f9fa;
+}
+
+.city-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.city-context {
+    font-size: 0.8rem;
+    color: #777;
+}
+
+.current-loc-badge {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #e7f5ff;
+    color: var(--color-primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+    /* Let clicks pass to input if underneath */
+}
+
+/* Hide badge when typing */
+.search-bar-input input:not(:placeholder-shown)+.current-loc-badge {
+    display: none;
+}

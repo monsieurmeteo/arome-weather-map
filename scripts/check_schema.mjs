@@ -1,0 +1,18 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+import { createClient } from '@supabase/supabase-js';
+
+const url = process.env.VITE_SUPABASE_URL;
+const key = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(url, key);
+
+async function checkColumns() {
+    const { data, error } = await supabase.from('daily_summaries').select('*').limit(1);
+    if (error) {
+        console.error(error);
+        return;
+    }
+    console.log('Columns in daily_summaries:', Object.keys(data[0] || {}));
+}
+
+checkColumns();

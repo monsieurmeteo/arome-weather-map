@@ -1,0 +1,12 @@
+# Ignore local weather data and scripts in Vercel deployments
+/data/
+scripts/meteo/
+scratch/
+node_modules/
+.git/
+dist/
+.vercel/
+public/archives_orage/
+tmp/
+temp/
+temp_captures/

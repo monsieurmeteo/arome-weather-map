@@ -1,0 +1,219 @@
+/* MeteocielArchives.css */
+
+.archives-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 30px 20px;
+    color: white;
+}
+
+.archives-hero {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.archives-hero h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #fbbf24, #f97316);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+}
+
+.archives-hero p {
+    color: #94a3b8;
+    font-size: 1.1rem;
+    margin-top: 5px;
+}
+
+/* CONTROLS */
+.archives-controls {
+    max-width: 1200px;
+    margin: 0 auto 30px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 250px;
+}
+
+.control-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.date-input-wrapper {
+    display: flex;
+    gap: 4px;
+}
+
+.archive-date-input, 
+.archive-mode-select,
+.station-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.archive-date-input:focus, 
+.archive-mode-select:focus,
+.station-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.date-nav-btn {
+    padding: 0 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.date-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.control-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.fetch-btn, .export-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-size: 0.95rem;
+}
+
+.fetch-btn {
+    background: #3b82f6;
+    color: white;
+}
+
+.fetch-btn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}
+
+.export-btn {
+    background: #10b981;
+    color: white;
+}
+
+.export-btn:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+.export-btn:disabled {
+    background: #1e293b;
+    color: #64748b;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.archive-error {
+    max-width: 1200px;
+    margin: 0 auto 20px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid #ef4444;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #fca5a5;
+    text-align: center;
+}
+
+.archive-results-section {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.results-count {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 10px;
+    border-radius: 10px;
+}
+
+.dept-col {
+    width: 80px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.loading-row {
+    padding: 60px !important;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Specific to Station Records */
+.station-archives-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 15px 25px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.station-info h2 {
+    margin: 0;
+    color: #60a5fa;
+}
+
+.station-info p {
+    margin: 5px 0 0 0;
+    color: #94a3b8;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    .archives-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .control-group {
+        width: 100%;
+    }
+}

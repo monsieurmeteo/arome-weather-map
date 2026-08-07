@@ -1,0 +1,512 @@
+/* DESIGN STYLE METEO-NPDC */
+
+.foudre-container {
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+}
+
+.foudre-footer-npdc {
+    display: none;
+    /* On cache le footer pour libérer de l'espace comme sur le générateur */
+}
+
+/* HEADER NPDC */
+.foudre-header-npdc {
+    background: #1e293b;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.foudre-header-npdc .live-indicator span {
+    color: #fbbf24;
+}
+
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background: #fdfdfd;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+.custom-blinking-marker {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Configuration spécifique pour l'Export Image Bilan */
+.export-only-header {
+    display: none !important;
+}
+
+.export-footer {
+    display: none !important;
+}
+
+/* Styles quand on génère l'image */
+#map-export-container {
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+/* On masque les éléments interactifs lors de la capture */
+.leaflet-control-zoom {
+    display: block;
+}
+
+.site-only-legend {
+    display: block;
+}
+
+/* Ces classes seront manipulées par JS lors de l'export si possible, 
+   ou on utilise des media queries bidon ou juste l'état React */
+
+.blinking-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+}
+
+.blinking-dot-small {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ef4444;
+    animation: blink 1s infinite;
+}
+
+@keyframes simple-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(2);
+        opacity: 0.4;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.last-refresh {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.foudre-modes {
+    display: flex;
+    padding: 0.5rem 1.5rem;
+    gap: 1.2rem;
+    align-items: center;
+    background: #f8fafc;
+    flex-wrap: wrap;
+}
+
+.search-foudre-wrapper {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding-left: 0.75rem;
+    width: 280px;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.search-foudre-input {
+    border: none;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    width: 100%;
+    outline: none;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.radius-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.radius-select {
+    border: none;
+    background: transparent;
+    font-weight: 800;
+    color: #2563eb;
+    outline: none;
+    cursor: pointer;
+}
+
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    z-index: 2000;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.suggestion-item {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+}
+
+.suggestion-item:hover {
+    background: #eff6ff;
+}
+
+.foudre-search-results {
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.result-main {
+    font-weight: 700;
+    color: #991b1b;
+    font-size: 0.85rem;
+}
+
+.result-location {
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.btn-clear-search {
+    background: none;
+    border: none;
+    color: #991b1b;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.icon-zone {
+    color: #3b82f6;
+}
+
+.zone-select-npdc {
+    border: none;
+    background: transparent;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1e293b;
+    cursor: pointer;
+    outline: none;
+}
+
+.utility-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.util-btn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.util-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.util-btn.active {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.impact-counter-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #2563eb;
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.count-value {
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.count-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    opacity: 0.9;
+}
+
+.refresh-btn-npdc {
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #64748b !important;
+}
+
+/* CARTE */
+.foudre-map-wrapper {
+    flex: 1;
+    background: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.foudre-stats-panel {
+    width: 380px;
+    background: white;
+    border-right: 1px solid #e2e8f0;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* LEGENDE */
+.lightning-legend-box {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    margin: 20px !important;
+    width: 130px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.legend-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1e293b;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.color-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* FOOTER NPDC */
+.foudre-footer-npdc {
+    background: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: #64748b;
+    line-height: 1.4;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+}
+
+@media (max-width: 768px) {
+    .foudre-container {
+        height: auto !important;
+        min-height: 100vh !important;
+        overflow: auto !important;
+        padding: 8px !important;
+        gap: 8px !important;
+    }
+
+    .foudre-header-npdc {
+        padding: 10px !important;
+        gap: 8px !important;
+    }
+
+    .status-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 10px !important;
+    }
+
+    .last-refresh {
+        align-self: center !important;
+    }
+
+    .foudre-modes {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 10px !important;
+    }
+
+    .search-foudre-wrapper {
+        width: 100% !important;
+    }
+
+    .radius-select-wrapper {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    .zone-select-npdc {
+        width: 100% !important;
+        text-align: center !important;
+    }
+
+    .utility-buttons {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    .util-btn {
+        flex: 1 !important;
+        height: 38px !important;
+    }
+
+    .impact-counter-main {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 8px !important;
+    }
+
+    .foudre-map-wrapper {
+        height: 50vh !important;
+        min-height: 350px !important;
+        flex: none !important;
+        width: 100% !important;
+    }
+
+    .foudre-stats-panel {
+        width: 100% !important;
+        border-right: none !important;
+        border-top: 1px solid #e2e8f0 !important;
+        padding: 12px !important;
+    }
+
+    .lightning-legend-box {
+        margin: 8px !important;
+        padding: 8px !important;
+        width: 110px !important;
+    }
+}

@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Observations - Météo Nord-Pas-de-Calais</title>
+    <meta name="description" content="Observations météo en temps réel dans le Nord-Pas-de-Calais" />
+
+    <link rel="stylesheet" href="/assets/css/maplibre-gl.css">
+    <script src="/assets/js/maplibre-gl.js"></script>
+    <script src="/assets/js/maplibre-copy-control.js?1784326633"></script>
+    <style>
+        #map .obs-map-hover-popup-layer .maplibregl-popup {
+            z-index: 1;
+        }
+        #map .maplibregl-popup-content {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            box-shadow: none;
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #map .maplibregl-popup-tip {
+            display: none;
+        }
+        #map .maplibregl-popup,
+        #map .map-popup {
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+    <script>
+(function () {
+  var pref = 'light';
+  try {
+    pref = localStorage.getItem('mnpdcTheme') || 'light';
+  } catch (e) {}
+  if (pref !== 'light' && pref !== 'dark' && pref !== 'auto') {
+    pref = 'light';
+  }
+  var sysDark = false;
+  try {
+    sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch (e) {}
+  var resolved = pref === 'auto' ? (sysDark ? 'dark' : 'light') : pref;
+  var root = document.documentElement;
+  root.setAttribute('data-theme-pref', pref);
+  root.setAttribute('data-theme', resolved);
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#3a5795" id="mnpdcThemeColor">
+<meta name="apple-itunes-app" content="app-id=6737863188" />
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/assets/img/favicon.png" sizes="32x32" />
+
+<meta http-equiv="refresh" content="900">
+
+<meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="SvpwnQF93Bgu86oyJmrfAPUi6sOvpOuTGwcjd0R7rYCt9UeZmQZ5BlHs6Bp39qZa/Gd6vKPPlNoLTaRL4SPe4A==" />
+
+<link rel="stylesheet" media="all" href="/assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/assets/fontawesome/css/all.min.css" />
+<link rel="stylesheet" href="/assets/css/v2.css?1784326633" />
+<link rel="stylesheet" href="/assets/css/header.css?1784326633" />
+
+<script src="/assets/js/navigation.js" defer></script>    <script src="/assets/js/bootstrap.min.js" defer></script>
+    
+</head>
+
+<body class="observations-page">
+<header class="header" id="headerAnchor">
+    <div class="header__top">
+    <div class="wrapper">
+        <h1 class="header__logo-top">
+            <a href="/"><strong style="font-size: 20px;">Météo Nord-Pas-de-Calais</strong></a><span style="font-size: 16px;">&nbsp;&nbsp;&nbsp;La météo au plus près de chez vous</span>
+        </h1>
+        <div class="header__content header__content--right header__content--social-icons">
+            <p class="header_visitors">4057 visiteurs - </p>
+            <div class="nav-socials">
+                <a target="_blank" href="https://facebook.com/MeteoNordPasDeCalais" class="nav-socials-item" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+                <a target="_blank" href="https://twitter.com/meteonpdc" class="nav-socials-item" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="header__bottom">
+    <div class="wrapper">
+        <div class="header__content">
+            <div class="navigation-open">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"></path></svg>
+            </div>
+            <nav class="navigation">
+                <div class="container-fluid menuContainerWidth hideMainMenuContainerOnLargeScreen" id="mainNavMenu" style="display: none;">
+                    <div class="col-xs-4">
+                        <div class="navigation-close" style="float: left;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path d="M242.72 256L342.8 155.93c12.28-12.28 12.28-32.2 0-44.48L320.55 89.2c-12.28-12.28-32.2-12.28-44.48 0L176 189.28 75.93 89.2c-12.28-12.28-32.2-12.28-44.48 0L9.2 111.45c-12.28 12.28-12.28 32.2 0 44.48L109.28 256 9.2 356.07c-12.28 12.28-12.28 32.2 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72 276.07 422.8c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.2 0-44.48L242.72 256z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <a class href="/">Accueil</a>
+
+                <div class="mobile-section" data-section="previsions">
+                    <div class="mobile-section-header">
+                        <span>Prévisions</span>
+                        <span class="mobile-section-toggle">⌄</span>
+                    </div>
+                    <div class="mobile-section-content">
+                        <a href="/previsions-regionales" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-sun-cloud"></i></div>
+                            Régionales expertisées
+                        </a>
+                        <a href="/recherche" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-map-pin"></i></div>
+                            Prévisions par ville
+                        </a>
+                        <a href="/rain-predict/" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-raindrops"></i></div>
+                            Pluie dans l'heure
+                        </a>
+                        <a href="/qualite-air" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-wind"></i></div>
+                            Prévisions qualité de l'air
+                        </a>
+                        <a href="/legende-des-pictogrammes" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-question"></i></div>
+                            Légende des pictogrammes
+                        </a>
+                    </div>
+                </div>
+
+                <div class="dropdown section-previsions">
+                    <a class href="#">
+                        Prévisions
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M207.03 381.476L12.686 187.132c-9.373-9.373-9.373-24.57 0-33.94l22.667-22.667c9.357-9.357 24.522-9.375 33.9-.04L224 284.505l154.745-154.02c9.38-9.335 24.544-9.317 33.9.04l22.667 22.667c9.373 9.373 9.373 24.57 0 33.94L240.97 381.476c-9.373 9.372-24.57 9.372-33.942 0z"></path></svg>
+                    </a>
+                    <div class="dropdown__content">
+                        <div class="dropdown__inner dropdown__inner__mobile">
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Prévisions Météo</div>
+                                <a class href="/previsions-regionales">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-sun-cloud"></i></div>
+                                    Régionales expertisées
+                                </a>
+                                <a class href="/recherche">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-map-pin"></i></div>
+                                    Prévisions par ville
+                                </a>
+                                <a class href="/rain-predict/">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-raindrops"></i></div>
+                                    Pluie dans l'heure
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Qualité de l'air</div>
+                                <a class href="/qualite-air">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-wind"></i></div>
+                                    Prévisions qualité de l'air
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Références</div>
+                                <a class href="/legende-des-pictogrammes">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-question"></i></div>
+                                    Légende des pictogrammes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mobile-section" data-section="vigilance">
+                    <div class="mobile-section-header">
+                        <span>Vigilance</span>
+                        <span class="mobile-section-toggle">⌄</span>
+                    </div>
+                    <div class="mobile-section-content">
+                        <a href="/vigilance" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            Vigilance en cours
+                        </a>
+                        <a href="/vigilance-jours-suivants" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                            Jours suivants
+                        </a>
+                        <a href="/vigilance-feu-de-foret" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-fire"></i></div>
+                            Feu de forêt
+                        </a>
+                        <a href="/secheresse" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-droplet-slash"></i></div>
+                            Sécheresse
+                        </a>
+                    </div>
+                </div>
+
+                <div class="dropdown section-vigilance">
+                    <a class href="#">
+                        Vigilance
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M207.03 381.476L12.686 187.132c-9.373-9.373-9.373-24.57 0-33.94l22.667-22.667c9.357-9.357 24.522-9.375 33.9-.04L224 284.505l154.745-154.02c9.38-9.335 24.544-9.317 33.9.04l22.667 22.667c9.373 9.373 9.373 24.57 0 33.94L240.97 381.476c-9.373 9.372-24.57 9.372-33.942 0z"></path></svg>
+                    </a>
+                    <div class="dropdown__content">
+                        <div class="dropdown__inner dropdown__inner__mobile">
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Vigilance Météo</div>
+                                <a class href="/vigilance">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                    Vigilance en cours
+                                </a>
+                                <a class href="/vigilance-jours-suivants">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                                    Jours suivants
+                                </a>
+                                <a class href="/vigilance-feu-de-foret">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-fire"></i></div>
+                                    Feu de forêt
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Sécheresse</div>
+                                <a class href="/secheresse">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-droplet-slash"></i></div>
+                                    Restrictions en cours
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dropdown section-radar">
+                    <a class href="#">
+                        Imagerie
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M207.03 381.476L12.686 187.132c-9.373-9.373-9.373-24.57 0-33.94l22.667-22.667c9.357-9.357 24.522-9.375 33.9-.04L224 284.505l154.745-154.02c9.38-9.335 24.544-9.317 33.9.04l22.667 22.667c9.373 9.373 9.373 24.57 0 33.94L240.97 381.476c-9.373 9.372-24.57 9.372-33.942 0z"></path></svg>
+                    </a>
+                    <div class="dropdown__content">
+                        <div class="dropdown__inner dropdown__inner__mobile">
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Radar</div>
+                                <a class href="/radar">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+                                    Images radar
+                                </a>
+                                <a class href="/radar-expert">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-layer-group"></i></div>
+                                    Radar Expert
+                                </a>
+                                <a class href="/radar-pluie-neige-verglas">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-snowflake-droplets"></i></div>
+                                    Radar Pluie/Neige/Verglas
+                                </a>
+                                <a class href="/lame-deau">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-clock"></i></div>
+                                    Lame d'eau
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Satellite</div>
+                                <a class href="/satellite">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-satellite"></i></div>
+                                    Images satellite
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Superposition</div>
+                                <a class href="/superposition-imagerie">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-layer-group"></i></div>
+                                    Superposition imagerie
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mobile-section" data-section="radar">
+                    <div class="mobile-section-header">
+                        <span>Imagerie</span>
+                        <span class="mobile-section-toggle">⌄</span>
+                    </div>
+                    <div class="mobile-section-content">
+                        <a href="/radar" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+                            Images radar
+                        </a>
+                        <a href="/radar-expert" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-layer-group"></i></div>
+                            Radar Expert
+                        </a>
+                        <a href="/radar-pluie-neige-verglas" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-snowflake-droplets"></i></div>
+                            Radar Pluie/Neige/Verglas
+                        </a>
+                        <a href="/lame-deau" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-clock"></i></div>
+                            Lame d'eau
+                        </a>
+                        <a href="/satellite" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-satellite"></i></div>
+                            Images satellite
+                        </a>
+                        <a href="/superposition-imagerie" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-layer-group"></i></div>
+                            Superposition imagerie
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mobile-section" data-section="modeles">
+                    <div class="mobile-section-header">
+                        <span>Modèles</span>
+                        <span class="mobile-section-toggle">⌄</span>
+                    </div>
+                    <div class="mobile-section-content">
+                        <a href="/modeles/AROME" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇫🇷</div>
+                            AROME 1.3 km
+                        </a>
+                        <a href="/modeles/AROME_IFS_WCS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇫🇷</div>
+                            AROME IFS 1.3 km
+                        </a>
+                        <a href="/modeles/AROME_PI" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇫🇷</div>
+                            AROME PI 1.3 km
+                        </a>
+                        <a href="/modeles/PEAROME" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇫🇷</div>
+                            PEAROME 1.3 km
+                        </a>
+                        <a href="/modeles/ICOND2" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇪</div>
+                            ICON D2 2.5 km
+                        </a>
+                        <a href="/modeles/ICOND2_RUC" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇪</div>
+                            ICON D2 RUC 2.5 km
+                        </a>
+                        <a href="/modeles/ICOND2_EPS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇪</div>
+                            ICON D2 EPS 2.5 km
+                        </a>
+                        <a href="/modeles/ICOND2_RUC_EPS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇪</div>
+                            ICON D2 RUC EPS 2.5 km
+                        </a>
+                        <a href="/modeles/MFWAM_WCS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇫🇷</div>
+                            MFWAM 3 km
+                        </a>
+                        <a href="/modeles/HARMONIE" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇳🇱</div>
+                            HARMONIE 2 km
+                        </a>
+                        <a href="/modeles/HARMONIE_DMI" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇰</div>
+                            HARMONIE DMI 2 km
+                        </a>
+                        <a href="/modeles/UKV" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇬🇧</div>
+                            UKV Nowcast 2 km
+                        </a>
+                        <a href="/modeles/UKV_MED" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇬🇧</div>
+                            UKV Short/Med 2 km
+                        </a>
+                        <a href="/modeles/ICON_2I" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇮🇹</div>
+                            ICON 2I 2 km
+                        </a>
+                        <a href="/modeles/ICON_CH1" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇨🇭</div>
+                            ICON CH1 1.1 km
+                        </a>
+                        <a href="/modeles/ICON_CH2" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇨🇭</div>
+                            ICON CH2 2.2 km
+                        </a>
+                        <a href="/modeles/ICON_CH1_EPS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇨🇭</div>
+                            ICON CH1 EPS 1.1 km
+                        </a>
+                        <a href="/modeles/ICON_CH2_EPS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇨🇭</div>
+                            ICON CH2 EPS 2.2 km
+                        </a>
+                        <a href="/modeles/ICONEU" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇪</div>
+                            ICON EU 7 km
+                        </a>
+                        <a href="/modeles/ICON_GLOBAL" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇪</div>
+                            ICON GLOBAL 13 km
+                        </a>
+                        <a href="/modeles/AICON" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇪</div>
+                            AICON 13 km
+                        </a>
+                        <a href="/modeles/HARMONIE_EUROPE" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇳🇱</div>
+                            HARMONIE 5 km
+                        </a>
+                        <a href="/modeles/ARPEGE" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇫🇷</div>
+                            ARPEGE 10 km
+                        </a>
+                        <a href="/modeles/ECMWF_IFS_HRES" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇪🇺</div>
+                            ECMWF IFS HRES 9 km
+                        </a>
+                        <a href="/modeles/PEARP_EUROPE" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇫🇷</div>
+                            PEARP Europe 10 km
+                        </a>
+                        <a href="/modeles/ICONEU_EPS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇪</div>
+                            ICON EU EPS 7 km
+                        </a>
+                        <a href="/modeles/ICON_EPS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇩🇪</div>
+                            ICON EPS 13 km
+                        </a>
+                        <a href="/modeles/UKMO_GLOBAL" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇬🇧</div>
+                            UKMO 10km
+                        </a>
+                        <a href="/modeles/CAMS_EU" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇪🇺</div>
+                            CAMS Europe 10 km
+                        </a>
+                        <a href="/modeles/GFS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇺🇸</div>
+                            GFS 25 km
+                        </a>
+                        <a href="/modeles/AIGFS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇺🇸</div>
+                            AIGFS 25 km
+                        </a>
+                        <a href="/modeles/GEM_GDPS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇨🇦</div>
+                            GEM GDPS 25 km
+                        </a>
+                        <a href="/modeles/CEP" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇪🇺</div>
+                            ECMWF IFS 28 km
+                        </a>
+                        <a href="/modeles/AIFS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇪🇺</div>
+                            ECMWF AIFS 28 km
+                        </a>
+                        <a href="/modeles/CMA" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇨🇳</div>
+                            CMA 15 km
+                        </a>
+                        <a href="/modeles/JMA" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇯🇵</div>
+                            JMA 1.25°
+                        </a>
+                        <a href="/modeles/NAVGEM" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇺🇸</div>
+                            NAVGEM 37 km
+                        </a>
+                        <a href="/modeles/GEFS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇺🇸</div>
+                            GEFS 25 km
+                        </a>
+                        <a href="/modeles/HGEFS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇺🇸</div>
+                            HGEFS 25 km
+                        </a>
+                        <a href="/modeles/AIGEFS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇺🇸</div>
+                            AIGEFS 25 km
+                        </a>
+                        <a href="/modeles/GEPS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇨🇦</div>
+                            GEPS 25 km
+                        </a>
+                        <a href="/modeles/PEARP_GLOBE" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇫🇷</div>
+                            PEARP 25 km
+                        </a>
+                        <a href="/modeles/MOGREPS_G" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇬🇧</div>
+                            MOGREPS-G 20 km
+                        </a>
+                        <a href="/modeles/CEP_ENS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇪🇺</div>
+                            CEP Ensemble 28 km
+                        </a>
+                        <a href="/modeles/AIFS_ENS" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇪🇺</div>
+                            AIFS Ensemble 28 km
+                        </a>
+                        <a href="/diagramme" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-chart-line"></i></div>
+                            Diagramme ens.
+                        </a>
+                        <a href="/radiosondage" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-regular fa-balloon"></i></div>
+                            Radiosondage
+                        </a>
+                        <a href="/coupes" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-regular fa-bars-progress"></i></div>
+                            Coupes
+                        </a>
+                        <a href="/modeles-runs" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-server"></i></div>
+                            État des runs
+                        </a>
+                        <a href="/modeles/ECMWF_EC46" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇪🇺</div>
+                            ECMWF Weekly
+                        </a>
+                        <a href="/modeles/C3S_MONTHLY" class="mobile-nav-link">
+                            <div class="mobile-nav-icon">🇪🇺</div>
+                            C3S Monthly
+                        </a>
+                    </div>
+                </div>
+
+                <div class="dropdown section-modeles">
+                    <a class href="#">
+                        Modèles
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M207.03 381.476L12.686 187.132c-9.373-9.373-9.373-24.57 0-33.94l22.667-22.667c9.357-9.357 24.522-9.375 33.9-.04L224 284.505l154.745-154.02c9.38-9.335 24.544-9.317 33.9.04l22.667 22.667c9.373 9.373 9.373 24.57 0 33.94L240.97 381.476c-9.373 9.372-24.57 9.372-33.942 0z"></path></svg>
+                    </a>
+                    <div class="dropdown__content">
+                        <div class="dropdown__inner dropdown__inner__mobile dropdown-mega">
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Haute Résolution</div>
+                                <a class href="/modeles/AROME">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    AROME 1.3 km
+                                </a>
+                                <a class href="/modeles/AROME_IFS_WCS">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    AROME IFS 1.3 km
+                                </a>
+                                <a class href="/modeles/AROME_PI">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    AROME PI 1.3 km
+                                </a>
+                                <a class href="/modeles/ICOND2">
+                                    <div class="dropdown-icon">🇩🇪</div>
+                                    ICON D2 2.5 km
+                                </a>
+                                <a class href="/modeles/ICOND2_RUC">
+                                    <div class="dropdown-icon">🇩🇪</div>
+                                    ICON D2 RUC 2.5 km
+                                </a>
+                                <a class href="/modeles/HARMONIE">
+                                    <div class="dropdown-icon">🇳🇱</div>
+                                    HARMONIE 2 km
+                                </a>
+                                <a class href="/modeles/HARMONIE_DMI">
+                                    <div class="dropdown-icon">🇩🇰</div>
+                                    HARMONIE DMI 2 km
+                                </a>
+                                <a class href="/modeles/UKV">
+                                    <div class="dropdown-icon">🇬🇧</div>
+                                    UKV Nowcast 2 km
+                                </a>
+                                <a class href="/modeles/UKV_MED">
+                                    <div class="dropdown-icon">🇬🇧</div>
+                                    UKV Short/Med 2 km
+                                </a>
+                                <a class href="/modeles/ICON_2I">
+                                    <div class="dropdown-icon">🇮🇹</div>
+                                    ICON 2I 2 km
+                                </a>
+                                <a class href="/modeles/ICON_CH1">
+                                    <div class="dropdown-icon">🇨🇭</div>
+                                    ICON CH1 1.1 km
+                                </a>
+                                <a class href="/modeles/ICON_CH2">
+                                    <div class="dropdown-icon">🇨🇭</div>
+                                    ICON CH2 2.2 km
+                                </a>
+                                <div class="dropdown-section-header" style="margin-top: 10px;">Ensemblistes</div>
+                                <a class href="/modeles/PEAROME">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    PEAROME 1.3 km
+                                </a>
+                                <a class href="/modeles/ICOND2_EPS">
+                                    <div class="dropdown-icon">🇩🇪</div>
+                                    ICON D2 EPS 2.5 km
+                                </a>
+                                <a class href="/modeles/ICOND2_RUC_EPS">
+                                    <div class="dropdown-icon">🇩🇪</div>
+                                    ICON D2 RUC EPS 2.5 km
+                                </a>
+                                <a class href="/modeles/ICON_CH1_EPS">
+                                    <div class="dropdown-icon">🇨🇭</div>
+                                    ICON CH1 EPS 1.1 km
+                                </a>
+                                <a class href="/modeles/ICON_CH2_EPS">
+                                    <div class="dropdown-icon">🇨🇭</div>
+                                    ICON CH2 EPS 2.2 km
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Régionaux</div>
+                                <a class href="/modeles/ARPEGE">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    ARPEGE 10 km
+                                </a>
+                                <a class href="/modeles/ICONEU">
+                                    <div class="dropdown-icon">🇩🇪</div>
+                                    ICON EU 7 km
+                                </a>
+                                <a class href="/modeles/ICON_GLOBAL">
+                                    <div class="dropdown-icon">🇩🇪</div>
+                                    ICON GLOBAL 13 km
+                                </a>
+                                <a class href="/modeles/AICON">
+                                    <div class="dropdown-icon">🇩🇪</div>
+                                    AICON 13 km
+                                </a>
+                                <a class href="/modeles/ECMWF_IFS_HRES">
+                                    <div class="dropdown-icon">🇪🇺</div>
+                                    ECMWF IFS HRES 9 km
+                                </a>
+                                <a class href="/modeles/HARMONIE_EUROPE">
+                                    <div class="dropdown-icon">🇳🇱</div>
+                                    HARMONIE 5 km
+                                </a>
+                                <a class href="/modeles/UKMO_GLOBAL">
+                                    <div class="dropdown-icon">🇬🇧</div>
+                                    UKMO 10 km
+                                </a>
+                                <a class href="/modeles/CAMS_EU">
+                                    <div class="dropdown-icon">🇪🇺</div>
+                                    CAMS Europe 10 km
+                                </a>
+                                <div class="dropdown-section-header" style="margin-top: 10px;">Ensemblistes</div>
+                                <a class href="/modeles/PEARP_EUROPE">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    PEARP Europe 10 km
+                                </a>
+                                <a class href="/modeles/ICONEU_EPS">
+                                    <div class="dropdown-icon">🇩🇪</div>
+                                    ICON EU EPS 7 km
+                                </a>
+                                <a class href="/modeles/ICON_EPS">
+                                    <div class="dropdown-icon">🇩🇪</div>
+                                    ICON EPS 13 km
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Globaux</div>
+                                <a class href="/modeles/GFS">
+                                    <div class="dropdown-icon">🇺🇸</div>
+                                    GFS 25 km
+                                </a>
+                                <a class href="/modeles/CEP">
+                                    <div class="dropdown-icon">🇪🇺</div>
+                                    ECMWF IFS 28 km
+                                </a>
+                                <a class href="/modeles/GEM_GDPS">
+                                    <div class="dropdown-icon">🇨🇦</div>
+                                    GEM GDPS 25 km
+                                </a>
+                                <a class href="/modeles/NAVGEM">
+                                    <div class="dropdown-icon">🇺🇸</div>
+                                    NAVGEM 37 km
+                                </a>
+                                <a class href="/modeles/AIFS">
+                                    <div class="dropdown-icon">🇪🇺</div>
+                                    ECMWF AIFS 28 km
+                                </a>
+                                <a class href="/modeles/AIGFS">
+                                    <div class="dropdown-icon">🇺🇸</div>
+                                    AIGFS 25 km
+                                </a>
+                                <a class href="/modeles/CMA">
+                                    <div class="dropdown-icon">🇨🇳</div>
+                                    CMA 15 km
+                                </a>
+                                <a class href="/modeles/JMA">
+                                    <div class="dropdown-icon">🇯🇵</div>
+                                    JMA 1.25°
+                                </a>
+                                <div class="dropdown-section-header" style="margin-top: 10px;">Ensemblistes</div>
+                                <a class href="/modeles/PEARP_GLOBE">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    PEARP 25 km
+                                </a>
+                                <a class href="/modeles/MOGREPS_G">
+                                    <div class="dropdown-icon">🇬🇧</div>
+                                    MOGREPS-G 20 km
+                                </a>
+                                <a class href="/modeles/GEFS">
+                                    <div class="dropdown-icon">🇺🇸</div>
+                                    GEFS 25 km
+                                </a>
+                                <a class href="/modeles/HGEFS">
+                                    <div class="dropdown-icon">🇺🇸</div>
+                                    HGEFS 25 km
+                                </a>
+                                <a class href="/modeles/AIGEFS">
+                                    <div class="dropdown-icon">🇺🇸</div>
+                                    AIGEFS 25 km
+                                </a>
+                                <a class href="/modeles/GEPS">
+                                    <div class="dropdown-icon">🇨🇦</div>
+                                    GEPS 25 km
+                                </a>
+                                <a class href="/modeles/CEP_ENS">
+                                    <div class="dropdown-icon">🇪🇺</div>
+                                    CEP Ensemble 28 km
+                                </a>
+                                <a class href="/modeles/AIFS_ENS">
+                                    <div class="dropdown-icon">🇪🇺</div>
+                                    AIFS Ensemble 28 km
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Outils</div>
+                                <a class href="/diagramme">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-chart-line"></i></div>
+                                    Diagramme ens.
+                                </a>
+                                <a class href="/radiosondage">
+                                    <div class="dropdown-icon"><i class="fa-regular fa-balloon"></i></div>
+                                    Radiosondage
+                                </a>
+                                <a class href="/coupes">
+                                    <div class="dropdown-icon"><i class="fa-regular fa-bars-progress"></i></div>
+                                    Coupes
+                                </a>
+                                <a class href="/modeles-runs">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-server"></i></div>
+                                    État des runs
+                                </a>
+                                <a class href="/panel">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-table-cells"></i></div>
+                                    Panel
+                                </a>
+                                <div class="dropdown-section-header" style="margin-top: 10px;">Saisonnier</div>
+                                <a class href="/modeles/ECMWF_EC46">
+                                    <div class="dropdown-icon">🇪🇺</div>
+                                    ECMWF Weekly
+                                </a>
+                                <a class href="/modeles/C3S_MONTHLY">
+                                    <div class="dropdown-icon">🇪🇺</div>
+                                    C3S Monthly
+                                </a>
+                                <div class="dropdown-section-header" style="margin-top: 10px;">Côtiers</div>
+                                <a class href="/modeles/MFWAM_WCS">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    MFWAM 3 km
+                                </a>
+                                <a class href="/modeles/HYCOM2D-WARP">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    HYCOM2D-WARP
+                                </a>
+                                <a class href="/modeles/HYCOM2D-WARO">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    HYCOM2D-WARO
+                                </a>
+                                <a class href="/modeles/HYCOM2D-MARP">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    HYCOM2D-MARP
+                                </a>
+                                <a class href="/modeles/HYCOM2D-MARO">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    HYCOM2D-MARO
+                                </a>
+                                <a class href="/modeles/WW3-WARP">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    WW3-WARP
+                                </a>
+                                <a class href="/modeles/WW3-MARP">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    WW3-MARP
+                                </a>
+                                <a class href="/modeles/WW3-MARO">
+                                    <div class="dropdown-icon">🇫🇷</div>
+                                    WW3-MARO
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mobile-section" data-section="observations">
+                    <div class="mobile-section-header">
+                        <span>Observations</span>
+                        <span class="mobile-section-toggle">⌄</span>
+                    </div>
+                    <div class="mobile-section-content">
+                        <a href="/observations" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-map"></i></div>
+                            Carte temps réel
+                        </a>
+                        <a href="/obs-radiosondage" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-balloon"></i></div>
+                            Radiosondages observés
+                        </a>
+                        <a href="/liste-stations" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-map-pin"></i></div>
+                            Relevés par station
+                        </a>
+                        <a href="/classement-obs" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-ranking-star"></i></div>
+                            Classements
+                        </a>
+                        <a href="/foudre" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+                            Foudre
+                        </a>
+                        <a href="/carte-crues" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-house-water"></i></div>
+                            Crues
+                        </a>
+                        <a href="/sst" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-water"></i></div>
+                            Température de la mer
+                        </a>
+                    </div>
+                </div>
+
+                <div class="dropdown section-observations">
+                    <a class href="#">
+                        Observations
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M207.03 381.476L12.686 187.132c-9.373-9.373-9.373-24.57 0-33.94l22.667-22.667c9.357-9.357 24.522-9.375 33.9-.04L224 284.505l154.745-154.02c9.38-9.335 24.544-9.317 33.9.04l22.667 22.667c9.373 9.373 9.373 24.57 0 33.94L240.97 381.476c-9.373 9.372-24.57 9.372-33.942 0z"></path></svg>
+                    </a>
+                    <div class="dropdown__content">
+                        <div class="dropdown__inner dropdown__inner__mobile">
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Temps Réel</div>
+                                <a class href="/observations">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-map"></i></div>
+                                    Carte temps réel
+                                </a>
+                                <a class href="/liste-stations">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-map-pin"></i></div>
+                                    Relevés par station
+                                </a>
+                                <a class href="/classement-obs">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-ranking-star"></i></div>
+                                    Classements
+                                </a>
+                                <a class href="/obs-radiosondage">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-balloon"></i></div>
+                                    Radiosondages observés
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Phénomènes</div>
+                                <a class href="/foudre">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+                                    Foudre
+                                </a>
+                                <a class href="/carte-crues">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-house-water"></i></div>
+                                    Crues
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Mer</div>
+                                <a class href="/sst">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-water"></i></div>
+                                    Température de la mer
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mobile-section" data-section="climat">
+                    <div class="mobile-section-header">
+                        <span>Climatologie</span>
+                        <span class="mobile-section-toggle">⌄</span>
+                    </div>
+                    <div class="mobile-section-content">
+                        <a href="/climatologie" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-table-layout"></i></div>
+                            Climatologie France
+                        </a>
+                        <a href="/climatologie-carte" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                            Carte climato
+                        </a>
+                        <a href="/carte-normales-records" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                            Normales et Records
+                        </a>
+                        <a href="/records-du-jour" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-table-list"></i></div>
+                            Records du jour
+                        </a>
+                        <a href="/nappes-phreatiques" class="mobile-nav-link">
+                            <div class="mobile-nav-icon"><i class="fa-solid fa-droplet"></i></div>
+                            Nappes phréatiques
+                        </a>
+                    </div>
+                </div>
+
+                <div class="dropdown section-climat">
+                    <a class href="#">
+                        Climatologie
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M207.03 381.476L12.686 187.132c-9.373-9.373-9.373-24.57 0-33.94l22.667-22.667c9.357-9.357 24.522-9.375 33.9-.04L224 284.505l154.745-154.02c9.38-9.335 24.544-9.317 33.9.04l22.667 22.667c9.373 9.373 9.373 24.57 0 33.94L240.97 381.476c-9.373 9.372-24.57 9.372-33.942 0z"></path></svg>
+                    </a>
+                    <div class="dropdown__content">
+                        <div class="dropdown__inner dropdown__inner__mobile">
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Données Climatiques</div>
+                                <a class href="/climatologie">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-table-layout"></i></div>
+                                    Climatologie France
+                                </a>
+                                <a class href="/climatologie-carte">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                                    Carte climato
+                                </a>
+                                <a class href="/carte-normales-records">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                                    Normales et Records
+                                </a>
+                                <a class href="/records-du-jour">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-table-list"></i></div>
+                                    Records du jour
+                                </a>
+                            </div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-section-header">Ressources</div>
+                                <a class href="/nappes-phreatiques">
+                                    <div class="dropdown-icon"><i class="fa-solid fa-droplet"></i></div>
+                                    Nappes phréatiques
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </nav>
+        </div>
+        <div class="header__logo">
+            <a class="logo__image" href="/"><img alt="Météo Nord-Pas-de-Calais Logo" src="/assets/img/logo.webp" /></a>
+        </div>
+        <div class="header__content header__content--search">
+            <div class="header__content-navigation">
+                <nav class="navigation" style="max-width: 300px; width: 200px;">
+                </nav>
+            </div>
+
+            <form style="padding-left: 15px;" class="player-form" autocomplete="off" action="/recherche" accept-charset="UTF-8" method="get">
+                <input type="text" name="ville" id="ville" value="" placeholder="Entrer le nom d'une ville" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="citySuggestList" aria-activedescendant="" />
+                <div class="city-suggest" id="citySuggestList" role="listbox" aria-label="Suggestions de villes"></div>
+                <div class="player-platforms">
+                    <button name="button" type="submit" class="player-submit player-submit--desktop">Voir les prévisions</button>
+                </div>
+                <button name="button" type="submit" class="player-submit player-submit--mobile">Voir les prévisions</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleMobileSection(headerElement) {
+        const content = headerElement.nextElementSibling;
+        const isCollapsed = content.classList.contains('collapsed');
+        if (isCollapsed) {
+            content.classList.remove('collapsed');
+            headerElement.classList.remove('collapsed');
+        } else {
+            content.classList.add('collapsed');
+            headerElement.classList.add('collapsed');
+        }
+        const sectionEl = headerElement.closest('.mobile-section');
+        const key = sectionEl && sectionEl.dataset.section ? sectionEl.dataset.section : null;
+        const expandedNow = !content.classList.contains('collapsed');
+        headerElement.setAttribute('aria-expanded', expandedNow ? 'true' : 'false');
+        if (key) {
+            let store = {};
+            try { store = JSON.parse(localStorage.getItem('mobileMenuState')) || {}; } catch (e) { store = {}; }
+            store[key] = expandedNow;
+            localStorage.setItem('mobileMenuState', JSON.stringify(store));
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const sections = document.querySelectorAll('.mobile-section');
+        let store = {};
+        try { store = JSON.parse(localStorage.getItem('mobileMenuState')) || {}; } catch (e) { store = {}; }
+        sections.forEach(section => {
+            const header = section.querySelector('.mobile-section-header');
+            const content = section.querySelector('.mobile-section-content');
+            const key = section.dataset.section || '';
+            const expanded = key in store ? !!store[key] : !['modeles', 'observations', 'climat'].includes(key);
+            if (!expanded) {
+                content.classList.add('collapsed');
+                header.classList.add('collapsed');
+            } else {
+                content.classList.remove('collapsed');
+                header.classList.remove('collapsed');
+            }
+            header.setAttribute('tabindex', '0');
+            header.setAttribute('role', 'button');
+            header.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            header.addEventListener('click', function() {
+                toggleMobileSection(this);
+            });
+            header.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleMobileSection(this);
+                }
+            });
+        });
+
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.98)';
+            });
+            link.addEventListener('touchend', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        const cityInput = document.getElementById('ville');
+        const citySuggest = document.getElementById('citySuggestList');
+        const cityForm = cityInput && cityInput.closest('form');
+        if (cityInput && citySuggest && cityForm && window.matchMedia('(min-width: 990px)').matches) {
+            let debounceTimer = null;
+            let activeIndex = -1;
+            let currentItems = [];
+            let fetchController = null;
+            let fetchSeq = 0;
+            let suppressNextFocus = false;
+
+            function getCookieValue(name) {
+                const prefix = name + '=';
+                const parts = decodeURIComponent(document.cookie).split(';');
+                for (let i = 0; i < parts.length; i++) {
+                    let part = parts[i];
+                    while (part.charAt(0) === ' ') {
+                        part = part.substring(1);
+                    }
+                    if (part.indexOf(prefix) === 0) {
+                        return part.substring(prefix.length);
+                    }
+                }
+                return '';
+            }
+
+            function getRecentCities() {
+                const raw = getCookieValue('mnpdc_previ_city');
+                if (!raw) {
+                    return [];
+                }
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (!Array.isArray(parsed)) {
+                        return [];
+                    }
+                    return parsed
+                        .filter(function(item) { return item && item.city; })
+                        .sort(function(a, b) { return (b.lastVisit || 0) - (a.lastVisit || 0); })
+                        .slice(0, 5);
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function escapeHtml(text) {
+                return String(text)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            function formatCityLabel(label, zip) {
+                if (zip) {
+                    return label + ' (' + zip + ')';
+                }
+                return label;
+            }
+
+            function highlightMatch(label, query) {
+                const trimmed = (query || '').trim();
+                if (!trimmed) {
+                    return escapeHtml(label);
+                }
+                const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const pattern = new RegExp('(' + escaped + ')', 'i');
+                const match = label.match(pattern);
+                if (!match || match.index === undefined) {
+                    return escapeHtml(label);
+                }
+                return escapeHtml(label.slice(0, match.index))
+                    + '<mark>' + escapeHtml(match[1]) + '</mark>'
+                    + escapeHtml(label.slice(match.index + match[1].length));
+            }
+
+            function setOpen(isOpen) {
+                citySuggest.classList.toggle('is-open', isOpen);
+                cityInput.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                if (!isOpen) {
+                    activeIndex = -1;
+                    currentItems = [];
+                    cityInput.setAttribute('aria-activedescendant', '');
+                }
+            }
+
+            function updateActiveItem() {
+                const buttons = citySuggest.querySelectorAll('.city-suggest__item');
+                buttons.forEach(function(btn, idx) {
+                    const isActive = idx === activeIndex;
+                    btn.classList.toggle('is-active', isActive);
+                    if (isActive) {
+                        cityInput.setAttribute('aria-activedescendant', btn.id);
+                        btn.scrollIntoView({ block: 'nearest' });
+                    }
+                });
+                if (activeIndex === -1) {
+                    cityInput.setAttribute('aria-activedescendant', '');
+                }
+            }
+
+            function renderItems(items, options) {
+                const query = options && options.query ? options.query : '';
+                const header = options && options.header ? options.header : '';
+                currentItems = items.slice(0, 8);
+                activeIndex = -1;
+                if (!currentItems.length) {
+                    setOpen(false);
+                    citySuggest.innerHTML = '';
+                    return;
+                }
+                let html = header ? '<div class="city-suggest__header">' + escapeHtml(header) + '</div>' : '';
+                currentItems.forEach(function(item, idx) {
+                    const displayLabel = formatCityLabel(item.label, item.zip);
+                    html += '<button type="button" class="city-suggest__item" role="option" id="citySuggestOption' + idx + '" data-index="' + idx + '">'
+                        + '<span class="city-suggest__icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>'
+                        + '<span class="city-suggest__label">' + highlightMatch(displayLabel, query) + '</span>'
+                        + '</button>';
+                });
+                citySuggest.innerHTML = html;
+                citySuggest.querySelectorAll('.city-suggest__item').forEach(function(btn) {
+                    btn.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                    });
+                    btn.addEventListener('click', function() {
+                        selectItem(parseInt(btn.getAttribute('data-index'), 10));
+                    });
+                });
+                setOpen(true);
+            }
+
+            function selectItem(index) {
+                const item = currentItems[index];
+                if (!item) {
+                    return;
+                }
+                cityInput.value = item.label;
+                setOpen(false);
+                suppressNextFocus = true;
+                cityForm.submit();
+            }
+
+            function showRecent() {
+                const recent = getRecentCities().map(function(entry) {
+                    return {
+                        label: entry.city,
+                        zip: entry.postalCode || ''
+                    };
+                });
+                if (!recent.length) {
+                    setOpen(false);
+                    citySuggest.innerHTML = '';
+                    return;
+                }
+                renderItems(recent, { header: 'Villes récemment recherchées' });
+            }
+
+            function fetchSuggestions(query) {
+                const seq = ++fetchSeq;
+                if (fetchController) {
+                    fetchController.abort();
+                }
+                fetchController = new AbortController();
+                fetch('/api/v2/city/search.php?search=' + encodeURIComponent(query), {
+                    signal: fetchController.signal
+                })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (seq !== fetchSeq) {
+                            return;
+                        }
+                        if (!data || !data.success || !Array.isArray(data.results)) {
+                            setOpen(false);
+                            citySuggest.innerHTML = '';
+                            return;
+                        }
+                        const items = data.results.map(function(result) {
+                            return {
+                                label: result.label || '',
+                                zip: result.zip_code || ''
+                            };
+                        }).filter(function(item) { return item.label; });
+                        renderItems(items, { query: query });
+                    })
+                    .catch(function(err) {
+                        if (err && err.name === 'AbortError') {
+                            return;
+                        }
+                        setOpen(false);
+                        citySuggest.innerHTML = '';
+                    });
+            }
+
+            function scheduleFetch() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function() {
+                    const query = cityInput.value.trim();
+                    if (query.length < 2) {
+                        if (query.length === 0) {
+                            showRecent();
+                        } else {
+                            setOpen(false);
+                            citySuggest.innerHTML = '';
+                        }
+                        return;
+                    }
+                    fetchSuggestions(query);
+                }, 200);
+            }
+
+            cityInput.addEventListener('input', scheduleFetch);
+
+            cityInput.addEventListener('focus', function() {
+                if (suppressNextFocus) {
+                    suppressNextFocus = false;
+                    return;
+                }
+                if (cityInput.value.trim().length === 0) {
+                    showRecent();
+                } else if (cityInput.value.trim().length >= 2) {
+                    fetchSuggestions(cityInput.value.trim());
+                }
+            });
+
+            cityInput.addEventListener('keydown', function(e) {
+                if (!citySuggest.classList.contains('is-open') || !currentItems.length) {
+                    return;
+                }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeIndex = (activeIndex + 1) % currentItems.length;
+                    updateActiveItem();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeIndex = activeIndex <= 0 ? currentItems.length - 1 : activeIndex - 1;
+                    updateActiveItem();
+                } else if (e.key === 'Enter' && activeIndex >= 0) {
+                    e.preventDefault();
+                    selectItem(activeIndex);
+                } else if (e.key === 'Escape') {
+                    setOpen(false);
+                    citySuggest.innerHTML = '';
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!cityForm.contains(e.target)) {
+                    setOpen(false);
+                }
+            });
+        }
+    });
+</script>
+</header>
+
+<main class="wrapper--large top-offset">
+    <div class="container-fluid">
+        <div class="row" style="margin: auto">
+            <div class="col-12 col-xxl-9 col-xl-9 col-lg-9 col-md-12 col-sm-12 gx-5">
+                <div class="main-div more-div-padding obs-modern-container">
+                    <div class="obs-header-section">
+                        <h1 class="obs-title-modern">
+                            <span class="obs-title-accent"></span>
+                            <span>Observations météo en temps réel <span id="obsType"></span></span>
+                        </h1>
+                        <p class="obs-subtitle">Cliquez sur une station pour afficher ses données en détail</p>
+                    </div>
+                    
+                    <div class="obs-select-wrapper d-md-none mb-3"><div class="obs-select-field"><i class="fa-regular fa-sliders obs-select-icon" aria-hidden="true"></i><select id="obsParamSelect" class="obs-select-modern" aria-label="Paramètre observé"><optgroup label="Température / Ressenti"><option value="temperature" data-extremums="max,min" data-unit="°C" data-field="t">Température actuelle</option><option value="t_change_1h" data-extremums="max,min" data-unit="°C" data-field="t_change_1h">Evol. T° sur 1h</option><option value="t_change_24h" data-extremums="max,min" data-unit="°C" data-field="t_change_24h">Evol. T° sur 24h</option><option value="temperature_min_glissante" data-extremums="max,min" data-unit="°C" data-field="tn_24h">Température minimale (24h glissantes)</option><option value="temperature_max_glissante" data-extremums="max,min" data-unit="°C" data-field="tx_24h">Température maximale (24h glissantes)</option><option value="temperature_min_climato" data-extremums="max,min" data-unit="°C" data-field="tn_climato">Température minimale (climatologique - 18h -> 18h UTC)</option><option value="temperature_max_climato" data-extremums="max,min" data-unit="°C" data-field="tx_climato">Température maximale (climatologique - 06h -> 06h UTC)</option><option value="point_de_rosee" data-extremums="max,min" data-unit="°C" data-field="td">Point de rosée</option><option value="windchill" data-extremums="max,min" data-unit="°C" data-field="windchill">Windchill</option><option value="humidex" data-extremums="max,min" data-unit="" data-field="humidex">Humidex</option></optgroup><optgroup label="Normales"><option value="ecart_normales_tx" data-extremums="max,min" data-unit="°C" data-field="ecart_normales_tx">Écart à la T° max. moyenne (climato)</option><option value="ecart_normales_tn" data-extremums="max,min" data-unit="°C" data-field="ecart_normales_tn">Écart à la T° min. moyenne (climato)</option><option value="ecart_normales_tx_24h" data-extremums="max,min" data-unit="°C" data-field="ecart_normales_tx_24h">Écart à la T° max. moyenne (24h glissantes)</option><option value="ecart_normales_tn_24h" data-extremums="max,min" data-unit="°C" data-field="ecart_normales_tn_24h">Écart à la T° min. moyenne (24h glissantes)</option><option value="ecart_records_mensuels_tx" data-extremums="max,min" data-unit="°C" data-field="ecart_records_mensuels_tx">Écart aux records mensuels T° max (climato)</option><option value="ecart_records_mensuels_tn" data-extremums="max,min" data-unit="°C" data-field="ecart_records_mensuels_tn">Écart aux records mensuels T° min (climato)</option><option value="ecart_records_absolus_tx" data-extremums="max,min" data-unit="°C" data-field="ecart_records_absolus_tx">Écart aux records absolus T° max (climato)</option><option value="ecart_records_absolus_tn" data-extremums="max,min" data-unit="°C" data-field="ecart_records_absolus_tn">Écart aux records absolus T° min (climato)</option></optgroup><optgroup label="Vent"><option value="vent_moyen" data-extremums="max" data-unit="km/h" data-field="ff">Vent moyen</option><option value="vent_rafales" data-extremums="max" data-unit="km/h" data-field="fxi10">Vent rafales</option><option value="vent_rafales_24h" data-extremums="max" data-unit="km/h" data-field="fxi24">Vent rafales max. sur 24h</option><option value="direction_vent" data-extremums="" data-unit="Direction" data-field="dd">Direction du vent</option></optgroup><optgroup label="Précipitations"><option value="pluie_derniere_heure" data-extremums="max" data-unit="mm" data-field="rr_sum_1h">Pluie sur la dernière heure</option><option value="pluie_derniere_24_heures" data-extremums="max" data-unit="mm" data-field="rr_sum_24h">Pluie sur les dernières 24 heures</option></optgroup><optgroup label="Conditions atmosphériques"><option value="pression_niveau_mer" data-extremums="min,max" data-unit="hPa" data-field="pmer">Pression au niveau de la mer</option><option value="humidite_relative" data-extremums="max,min" data-unit="%" data-field="u">Humidité relative</option><option value="visibilite" data-extremums="min,max" data-unit="m" data-field="vv">Visibilité</option><option value="couche_neige" data-extremums="max" data-unit="cm" data-field="sss">Hauteur de neige</option><option value="ensoleillement_24h" data-extremums="min,max" data-unit="h" data-field="insolh_24h">Ensoleillement sur les dernières 24 heures</option><option value="nebulosite" data-extremums="min,max" data-unit="octas" data-field="n">Nébulosité</option><option value="rayonnement_global" data-extremums="max" data-unit="W/m²" data-field="ray_glo01">Rayonnement global</option></optgroup><optgroup label="Sol"><option value="temperature_sol_10" data-extremums="max,min" data-unit="°C" data-field="t_10">Température à 10 cm</option><option value="temperature_sol_20" data-extremums="max,min" data-unit="°C" data-field="t_20">Température à 20 cm</option><option value="temperature_sol_50" data-extremums="max,min" data-unit="°C" data-field="t_50">Température à 50 cm</option><option value="temperature_sol_100" data-extremums="max,min" data-unit="°C" data-field="t_100">Température à 100 cm</option><option value="etat_du_sol" data-extremums="" data-unit="" data-field="etat_sol">État du sol</option></optgroup></select></div><div class="parameter-selector-toggle obs-select-toggle"><label class="toggle-switch"><input type="checkbox" id="alwaysShowLabelsMobile"><span class="slider round"></span></label><label for="alwaysShowLabelsMobile" class="parameter-selector-toggle-label">Toujours afficher les valeurs</label></div><div class="parameter-selector-toggle obs-select-toggle"><label class="toggle-switch"><input type="checkbox" id="includeAmateurStationsMobile"><span class="slider round"></span></label><label for="includeAmateurStationsMobile" class="parameter-selector-toggle-label">Inclure stations amateurs</label></div><div class="obs-measure-class-controls" id="obsMeasureClassControlsMobile" hidden><div class="obs-measure-class-dropdown" id="obsMeasureClassDropdownMobile"><button type="button" class="obs-measure-class-dropdown-toggle" id="obsMeasureClassDropdownToggleMobile" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ruler-combined" aria-hidden="true"></i><span>Qualité du site</span><span class="obs-measure-class-count" id="obsMeasureClassCountMobile">5/5</span></button><div class="obs-measure-class-menu" id="obsMeasureClassMenuMobile" role="menu" hidden><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="1" checked data-class="1"><span class="obs-measure-class-pill meta-sq-pill meta-sq-1">1</span><span>Classe 1</span></label><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="2" checked data-class="2"><span class="obs-measure-class-pill meta-sq-pill meta-sq-2">2</span><span>Classe 2</span></label><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="3" checked data-class="3"><span class="obs-measure-class-pill meta-sq-pill meta-sq-3">3</span><span>Classe 3</span></label><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="4" checked data-class="4"><span class="obs-measure-class-pill meta-sq-pill meta-sq-4">4</span><span>Classe 4</span></label><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="5" checked data-class="5"><span class="obs-measure-class-pill meta-sq-pill meta-sq-5">5</span><span>Classe 5</span></label></div></div><div class="parameter-selector-toggle obs-measure-class-outline-toggle"><label class="toggle-switch"><input type="checkbox" id="showMeasureClassOutlineMobile"><span class="slider round"></span></label><label for="showMeasureClassOutlineMobile" class="parameter-selector-toggle-label">Afficher classe de mesure</label></div></div></div><div class="parameter-selector d-none d-md-block"><div class="parameter-selector-topbar"><div class="nav nav-tabs nav-tabs-modern" id="nav-tab" role="tablist"><button class="nav-link" id="nav-temperature_top-tab" data-bs-toggle="tab" data-bs-target="#nav-temperature_top" type="button" role="tab" aria-controls="nav-temperature_top" aria-selected="false"><div class="flex-center"><i class="fa-solid fa-temperature-three-quarters"></i><span>Température / Ressenti</span></div></button><button class="nav-link" id="nav-normales_top-tab" data-bs-toggle="tab" data-bs-target="#nav-normales_top" type="button" role="tab" aria-controls="nav-normales_top" aria-selected="false"><div class="flex-center"><i class="fa-solid fa-chart-line"></i><span>Normales</span></div></button><button class="nav-link" id="nav-vent-tab" data-bs-toggle="tab" data-bs-target="#nav-vent" type="button" role="tab" aria-controls="nav-vent" aria-selected="false"><div class="flex-center"><i class="fa-solid fa-wind"></i><span>Vent</span></div></button><button class="nav-link" id="nav-precipitations-tab" data-bs-toggle="tab" data-bs-target="#nav-precipitations" type="button" role="tab" aria-controls="nav-precipitations" aria-selected="false"><div class="flex-center"><i class="fa-solid fa-cloud-rain"></i><span>Précipitations</span></div></button><button class="nav-link" id="nav-conditions-atmo-tab" data-bs-toggle="tab" data-bs-target="#nav-conditions-atmo" type="button" role="tab" aria-controls="nav-conditions-atmo" aria-selected="false"><div class="flex-center"><i class="fa-regular fa-gauge-max"></i><span>Conditions atmosphériques</span></div></button><button class="nav-link" id="nav-sol-tab" data-bs-toggle="tab" data-bs-target="#nav-sol" type="button" role="tab" aria-controls="nav-sol" aria-selected="false"><div class="flex-center"><i class="fa-solid fa-seedling"></i><span>Sol</span></div></button></div><div class="parameter-selector-toggle"><label class="toggle-switch"><input type="checkbox" id="alwaysShowLabels"><span class="slider round"></span></label><label for="alwaysShowLabels" class="parameter-selector-toggle-label">Toujours afficher les valeurs</label></div><div class="parameter-selector-toggle"><label class="toggle-switch"><input type="checkbox" id="includeAmateurStations"><span class="slider round"></span></label><label for="includeAmateurStations" class="parameter-selector-toggle-label">Inclure stations amateurs</label></div></div><div class="obs-measure-class-controls" id="obsMeasureClassControls" hidden><div class="obs-measure-class-dropdown" id="obsMeasureClassDropdown"><button type="button" class="obs-measure-class-dropdown-toggle" id="obsMeasureClassDropdownToggle" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ruler-combined" aria-hidden="true"></i><span>Qualité du site</span><span class="obs-measure-class-count" id="obsMeasureClassCount">5/5</span></button><div class="obs-measure-class-menu" id="obsMeasureClassMenu" role="menu" hidden><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="1" checked data-class="1"><span class="obs-measure-class-pill meta-sq-pill meta-sq-1">1</span><span>Classe 1</span></label><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="2" checked data-class="2"><span class="obs-measure-class-pill meta-sq-pill meta-sq-2">2</span><span>Classe 2</span></label><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="3" checked data-class="3"><span class="obs-measure-class-pill meta-sq-pill meta-sq-3">3</span><span>Classe 3</span></label><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="4" checked data-class="4"><span class="obs-measure-class-pill meta-sq-pill meta-sq-4">4</span><span>Classe 4</span></label><label class="obs-measure-class-option" role="menuitemcheckbox" aria-checked="true"><input type="checkbox" class="obs-measure-class-checkbox" value="5" checked data-class="5"><span class="obs-measure-class-pill meta-sq-pill meta-sq-5">5</span><span>Classe 5</span></label></div></div><div class="parameter-selector-toggle obs-measure-class-outline-toggle"><label class="toggle-switch"><input type="checkbox" id="showMeasureClassOutline"><span class="slider round"></span></label><label for="showMeasureClassOutline" class="parameter-selector-toggle-label">Afficher classe de mesure</label></div></div><div class="tab-content" id="nav-tabContent"><div class="tab-pane fade" id="nav-temperature_top" role="tabpanel" aria-labelledby="nav-temperature_top-tab"><div class="obs-buttons-container"><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="t" id="param-temperature" aria-label="Température actuelle" title="Température actuelle"><i class="fa-solid fa-temperature-three-quarters"></i><span>Température actuelle</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="t_change_1h" id="param-t_change_1h" aria-label="Evol. T° sur 1h" title="Evol. T° sur 1h"><i class="fa-solid fa-temperature-three-quarters"></i><span>Evol. T° sur 1h</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="t_change_24h" id="param-t_change_24h" aria-label="Evol. T° sur 24h" title="Evol. T° sur 24h"><i class="fa-solid fa-temperature-three-quarters"></i><span>Evol. T° sur 24h</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="tn_24h" id="param-temperature_min_glissante" aria-label="Température minimale (24h glissantes)" title="Température minimale (24h glissantes)"><i class="fa-solid fa-temperature-snow"></i><span>Température minimale (24h glissantes)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="tx_24h" id="param-temperature_max_glissante" aria-label="Température maximale (24h glissantes)" title="Température maximale (24h glissantes)"><i class="fa-solid fa-temperature-sun"></i><span>Température maximale (24h glissantes)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="tn_climato" id="param-temperature_min_climato" aria-label="Température minimale (climatologique - 18h -> 18h UTC)" title="Température minimale (climatologique - 18h -> 18h UTC)"><i class="fa-solid fa-temperature-snow"></i><span>Température minimale (climatologique - 18h -> 18h UTC)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="tx_climato" id="param-temperature_max_climato" aria-label="Température maximale (climatologique - 06h -> 06h UTC)" title="Température maximale (climatologique - 06h -> 06h UTC)"><i class="fa-solid fa-temperature-sun"></i><span>Température maximale (climatologique - 06h -> 06h UTC)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="td" id="param-point_de_rosee" aria-label="Point de rosée" title="Point de rosée"><i class="fa-solid fa-temperature-three-quarters"></i><span>Point de rosée</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="windchill" id="param-windchill" aria-label="Windchill" title="Windchill"><i class="fa-solid fa-snowflake"></i><span>Windchill</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="" data-field="humidex" id="param-humidex" aria-label="Humidex" title="Humidex"><i class="fa-solid fa-sun-haze"></i><span>Humidex</span></button></div></div><div class="tab-pane fade" id="nav-normales_top" role="tabpanel" aria-labelledby="nav-normales_top-tab"><div class="obs-buttons-container"><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="ecart_normales_tx" id="param-ecart_normales_tx" aria-label="Écart à la T° max. moyenne (climato)" title="Écart à la T° max. moyenne (climato)"><i class="fa-solid fa-temperature-sun"></i><span>Écart à la T° max. moyenne (climato)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="ecart_normales_tn" id="param-ecart_normales_tn" aria-label="Écart à la T° min. moyenne (climato)" title="Écart à la T° min. moyenne (climato)"><i class="fa-solid fa-temperature-snow"></i><span>Écart à la T° min. moyenne (climato)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="ecart_normales_tx_24h" id="param-ecart_normales_tx_24h" aria-label="Écart à la T° max. moyenne (24h glissantes)" title="Écart à la T° max. moyenne (24h glissantes)"><i class="fa-solid fa-temperature-sun"></i><span>Écart à la T° max. moyenne (24h glissantes)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="ecart_normales_tn_24h" id="param-ecart_normales_tn_24h" aria-label="Écart à la T° min. moyenne (24h glissantes)" title="Écart à la T° min. moyenne (24h glissantes)"><i class="fa-solid fa-temperature-snow"></i><span>Écart à la T° min. moyenne (24h glissantes)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="ecart_records_mensuels_tx" id="param-ecart_records_mensuels_tx" aria-label="Écart aux records mensuels T° max (climato)" title="Écart aux records mensuels T° max (climato)"><i class="fa-solid fa-temperature-sun"></i><span>Écart aux records mensuels T° max (climato)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="ecart_records_mensuels_tn" id="param-ecart_records_mensuels_tn" aria-label="Écart aux records mensuels T° min (climato)" title="Écart aux records mensuels T° min (climato)"><i class="fa-solid fa-temperature-snow"></i><span>Écart aux records mensuels T° min (climato)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="ecart_records_absolus_tx" id="param-ecart_records_absolus_tx" aria-label="Écart aux records absolus T° max (climato)" title="Écart aux records absolus T° max (climato)"><i class="fa-solid fa-temperature-sun"></i><span>Écart aux records absolus T° max (climato)</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="ecart_records_absolus_tn" id="param-ecart_records_absolus_tn" aria-label="Écart aux records absolus T° min (climato)" title="Écart aux records absolus T° min (climato)"><i class="fa-solid fa-temperature-snow"></i><span>Écart aux records absolus T° min (climato)</span></button></div></div><div class="tab-pane fade" id="nav-vent" role="tabpanel" aria-labelledby="nav-vent-tab"><div class="obs-buttons-container"><button class="button-obs-modern" data-extremums="max" data-unit="km/h" data-field="ff" id="param-vent_moyen" aria-label="Vent moyen" title="Vent moyen"><i class="fa-solid fa-wind"></i><span>Vent moyen</span></button><button class="button-obs-modern" data-extremums="max" data-unit="km/h" data-field="fxi10" id="param-vent_rafales" aria-label="Vent rafales" title="Vent rafales"><i class="fa-regular fa-windsock"></i><span>Vent rafales</span></button><button class="button-obs-modern" data-extremums="max" data-unit="km/h" data-field="fxi24" id="param-vent_rafales_24h" aria-label="Vent rafales max. sur 24h" title="Vent rafales max. sur 24h"><i class="fa-regular fa-windsock"></i><span>Vent rafales max. sur 24h</span></button><button class="button-obs-modern" data-extremums="" data-unit="Direction" data-field="dd" id="param-direction_vent" aria-label="Direction du vent" title="Direction du vent"><i class="fa-solid fa-compass"></i><span>Direction du vent</span></button></div></div><div class="tab-pane fade" id="nav-precipitations" role="tabpanel" aria-labelledby="nav-precipitations-tab"><div class="obs-buttons-container"><button class="button-obs-modern" data-extremums="max" data-unit="mm" data-field="rr_sum_1h" id="param-pluie_derniere_heure" aria-label="Pluie sur la dernière heure" title="Pluie sur la dernière heure"><i class="fa-solid fa-cloud-rain"></i><span>Pluie sur la dernière heure</span></button><button class="button-obs-modern" data-extremums="max" data-unit="mm" data-field="rr_sum_24h" id="param-pluie_derniere_24_heures" aria-label="Pluie sur les dernières 24 heures" title="Pluie sur les dernières 24 heures"><i class="fa-solid fa-cloud-rain"></i><span>Pluie sur les dernières 24 heures</span></button></div></div><div class="tab-pane fade" id="nav-conditions-atmo" role="tabpanel" aria-labelledby="nav-conditions-atmo-tab"><div class="obs-buttons-container"><button class="button-obs-modern" data-extremums="min,max" data-unit="hPa" data-field="pmer" id="param-pression_niveau_mer" aria-label="Pression au niveau de la mer" title="Pression au niveau de la mer"><i class="fa-regular fa-gauge-low"></i><span>Pression au niveau de la mer</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="%" data-field="u" id="param-humidite_relative" aria-label="Humidité relative" title="Humidité relative"><i class="fa-solid fa-droplet-percent"></i><span>Humidité relative</span></button><button class="button-obs-modern" data-extremums="min,max" data-unit="m" data-field="vv" id="param-visibilite" aria-label="Visibilité" title="Visibilité"><i class="fa-solid fa-eye"></i><span>Visibilité</span></button><button class="button-obs-modern" data-extremums="max" data-unit="cm" data-field="sss" id="param-couche_neige" aria-label="Hauteur de neige" title="Hauteur de neige"><i class="fa-solid fa-snowflake"></i><span>Hauteur de neige</span></button><button class="button-obs-modern" data-extremums="min,max" data-unit="h" data-field="insolh_24h" id="param-ensoleillement_24h" aria-label="Ensoleillement sur les dernières 24 heures" title="Ensoleillement sur les dernières 24 heures"><i class="fa-solid fa-sun"></i><span>Ensoleillement sur les dernières 24 heures</span></button><button class="button-obs-modern" data-extremums="min,max" data-unit="octas" data-field="n" id="param-nebulosite" aria-label="Nébulosité" title="Nébulosité"><i class="fa-solid fa-cloud"></i><span>Nébulosité</span></button><button class="button-obs-modern" data-extremums="max" data-unit="W/m²" data-field="ray_glo01" id="param-rayonnement_global" aria-label="Rayonnement global" title="Rayonnement global"><i class="fa-solid fa-solar-panel"></i><span>Rayonnement global</span></button></div></div><div class="tab-pane fade" id="nav-sol" role="tabpanel" aria-labelledby="nav-sol-tab"><div class="obs-buttons-container"><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="t_10" id="param-temperature_sol_10" aria-label="Température à 10 cm" title="Température à 10 cm"><i class="fa-solid fa-temperature-three-quarters"></i><span>Température à 10 cm</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="t_20" id="param-temperature_sol_20" aria-label="Température à 20 cm" title="Température à 20 cm"><i class="fa-solid fa-temperature-three-quarters"></i><span>Température à 20 cm</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="t_50" id="param-temperature_sol_50" aria-label="Température à 50 cm" title="Température à 50 cm"><i class="fa-solid fa-temperature-three-quarters"></i><span>Température à 50 cm</span></button><button class="button-obs-modern" data-extremums="max,min" data-unit="°C" data-field="t_100" id="param-temperature_sol_100" aria-label="Température à 100 cm" title="Température à 100 cm"><i class="fa-solid fa-temperature-three-quarters"></i><span>Température à 100 cm</span></button><button class="button-obs-modern" data-extremums="" data-unit="" data-field="etat_sol" id="param-etat_du_sol" aria-label="État du sol" title="État du sol"><i class="fa-solid fa-road"></i><span>État du sol</span></button></div></div></div></div>
+                    <div id="map" class="home-previ obs-map-container obs-map-modern" data-map-theme="light">
+                        <div id="mapBasemap" class="obs-map-basemap" data-map-theme="light" aria-hidden="true"></div>
+                        <div id="mapData" class="obs-map-data"></div>
+                        <div class="home-previ-day-container obs-map-badge">
+                            <p class="center bold" id="maj-time">Chargement des données...</p>
+                            <p class="center" id="unit"></p>
+                        </div>
+                        <div id="zoom-helper-text" class="zoom-helper-text">
+                            <span>Zoomez pour afficher les valeurs.</span>
+                            <button id="close-helper-text" class="close-helper-text">&times;</button>
+                        </div>
+                    </div>
+
+                    <div id="extremums" class="extremums-grid"></div>
+
+                </div>
+            </div>
+            <div class="col-12 col-xxl-3 col-xl-3 col-lg-3 col-md-12 col-sm-12 gx-5">
+                <div class="main-div main-div-no-padding mobile-spacing" id="sidebarVigilance" data-mode="france" data-has-dep="0">
+    <div class="title-header sidebar_vigi_title">
+        <p><i class="fa-light fa-triangle-exclamation"></i>&nbsp;&nbsp;&nbsp;Vigilance</p>
+                        <div class="sidebar_vigi_select_wrap" id="sidebarVigiSelectWrap" data-value="">
+            <button type="button" class="sidebar_vigi_select_btn" id="sidebarVigiSelectBtn" aria-haspopup="listbox" aria-expanded="false">
+                <span class="sidebar_vigi_select_label">France</span>
+                <i class="fa-solid fa-caret-down sidebar_vigi_select_caret"></i>
+            </button>
+            <div class="sidebar_vigi_select_panel" id="sidebarVigiSelectPanel" role="listbox" hidden>
+                <div class="sidebar_vigi_select_search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="sidebarVigiSelectSearch" placeholder="Rechercher..." autocomplete="off">
+                </div>
+                <ul class="sidebar_vigi_select_list" id="sidebarVigiSelectList">
+                    <li class="sidebar_vigi_select_opt is-selected" role="option" data-value="" data-search="france">France</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="01" data-search="01 ain">01 - Ain</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="02" data-search="02 aisne">02 - Aisne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="03" data-search="03 allier">03 - Allier</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="04" data-search="04 alpes-de-haute-provence">04 - Alpes-de-Haute-Provence</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="05" data-search="05 hautes-alpes">05 - Hautes-Alpes</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="06" data-search="06 alpes-maritimes">06 - Alpes-Maritimes</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="07" data-search="07 ardèche">07 - Ardèche</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="08" data-search="08 ardennes">08 - Ardennes</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="09" data-search="09 ariège">09 - Ariège</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="10" data-search="10 aube">10 - Aube</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="11" data-search="11 aude">11 - Aude</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="12" data-search="12 aveyron">12 - Aveyron</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="13" data-search="13 bouches-du-rhône">13 - Bouches-du-Rhône</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="14" data-search="14 calvados">14 - Calvados</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="15" data-search="15 cantal">15 - Cantal</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="16" data-search="16 charente">16 - Charente</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="17" data-search="17 charente-maritime">17 - Charente-Maritime</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="18" data-search="18 cher">18 - Cher</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="19" data-search="19 corrèze">19 - Corrèze</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="2A" data-search="2a corse-du-sud">2A - Corse-du-Sud</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="2B" data-search="2b haute-corse">2B - Haute-Corse</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="21" data-search="21 côte-d'or">21 - Côte-d'Or</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="22" data-search="22 côtes-d'armor">22 - Côtes-d'Armor</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="23" data-search="23 creuse">23 - Creuse</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="24" data-search="24 dordogne">24 - Dordogne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="25" data-search="25 doubs">25 - Doubs</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="26" data-search="26 drôme">26 - Drôme</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="27" data-search="27 eure">27 - Eure</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="28" data-search="28 eure-et-loir">28 - Eure-et-Loir</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="29" data-search="29 finistère">29 - Finistère</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="30" data-search="30 gard">30 - Gard</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="31" data-search="31 haute-garonne">31 - Haute-Garonne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="32" data-search="32 gers">32 - Gers</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="33" data-search="33 gironde">33 - Gironde</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="34" data-search="34 hérault">34 - Hérault</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="35" data-search="35 ille-et-vilaine">35 - Ille-et-Vilaine</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="36" data-search="36 indre">36 - Indre</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="37" data-search="37 indre-et-loire">37 - Indre-et-Loire</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="38" data-search="38 isère">38 - Isère</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="39" data-search="39 jura">39 - Jura</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="40" data-search="40 landes">40 - Landes</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="41" data-search="41 loir-et-cher">41 - Loir-et-Cher</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="42" data-search="42 loire">42 - Loire</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="43" data-search="43 haute-loire">43 - Haute-Loire</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="44" data-search="44 loire-atlantique">44 - Loire-Atlantique</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="45" data-search="45 loiret">45 - Loiret</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="46" data-search="46 lot">46 - Lot</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="47" data-search="47 lot-et-garonne">47 - Lot-et-Garonne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="48" data-search="48 lozère">48 - Lozère</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="49" data-search="49 maine-et-loire">49 - Maine-et-Loire</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="50" data-search="50 manche">50 - Manche</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="51" data-search="51 marne">51 - Marne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="52" data-search="52 haute-marne">52 - Haute-Marne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="53" data-search="53 mayenne">53 - Mayenne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="54" data-search="54 meurthe-et-moselle">54 - Meurthe-et-Moselle</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="55" data-search="55 meuse">55 - Meuse</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="56" data-search="56 morbihan">56 - Morbihan</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="57" data-search="57 moselle">57 - Moselle</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="58" data-search="58 nièvre">58 - Nièvre</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="59" data-search="59 nord">59 - Nord</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="60" data-search="60 oise">60 - Oise</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="61" data-search="61 orne">61 - Orne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="62" data-search="62 pas-de-calais">62 - Pas-de-Calais</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="63" data-search="63 puy-de-dôme">63 - Puy-de-Dôme</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="64" data-search="64 pyrénées-atlantiques">64 - Pyrénées-Atlantiques</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="65" data-search="65 hautes-pyrénées">65 - Hautes-Pyrénées</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="66" data-search="66 pyrénées-orientales">66 - Pyrénées-Orientales</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="67" data-search="67 bas-rhin">67 - Bas-Rhin</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="68" data-search="68 haut-rhin">68 - Haut-Rhin</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="69" data-search="69 rhône">69 - Rhône</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="70" data-search="70 haute-saône">70 - Haute-Saône</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="71" data-search="71 saône-et-loire">71 - Saône-et-Loire</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="72" data-search="72 sarthe">72 - Sarthe</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="73" data-search="73 savoie">73 - Savoie</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="74" data-search="74 haute-savoie">74 - Haute-Savoie</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="75" data-search="75 paris">75 - Paris</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="76" data-search="76 seine-maritime">76 - Seine-Maritime</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="77" data-search="77 seine-et-marne">77 - Seine-et-Marne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="78" data-search="78 yvelines">78 - Yvelines</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="79" data-search="79 deux-sèvres">79 - Deux-Sèvres</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="80" data-search="80 somme">80 - Somme</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="81" data-search="81 tarn">81 - Tarn</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="82" data-search="82 tarn-et-garonne">82 - Tarn-et-Garonne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="83" data-search="83 var">83 - Var</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="84" data-search="84 vaucluse">84 - Vaucluse</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="85" data-search="85 vendée">85 - Vendée</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="86" data-search="86 vienne">86 - Vienne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="87" data-search="87 haute-vienne">87 - Haute-Vienne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="88" data-search="88 vosges">88 - Vosges</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="89" data-search="89 yonne">89 - Yonne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="90" data-search="90 territoire de belfort">90 - Territoire de Belfort</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="91" data-search="91 essonne">91 - Essonne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="92" data-search="92 hauts-de-seine">92 - Hauts-de-Seine</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="93" data-search="93 seine-saint-denis">93 - Seine-Saint-Denis</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="94" data-search="94 val-de-marne">94 - Val-de-Marne</li>
+                                                                    <li class="sidebar_vigi_select_opt" role="option" data-value="95" data-search="95 val-d'oise">95 - Val-d'Oise</li>
+                                    </ul>
+                <div class="sidebar_vigi_select_empty" id="sidebarVigiSelectEmpty" hidden>Aucun résultat</div>
+            </div>
+        </div>
+            </div>
+
+    <div class="sidebar_vigi_france" data-view="france">
+        <div class="sidebar_vigi_france_map">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" class="sidebar_france_svg" preserveAspectRatio="xMidYMid meet">
+                                                        <path d="M671,505L681,472L689,475L699,473L717,496L729,489L734,497L742,497L756,482L763,486L760,498L751,501L749,509L739,514L741,531L738,547L727,559L709,533L700,544L692,540L680,541L679,534L667,527L671,505Z" class="sidebar_france_dep vigi-fill-2" data-dep="01" />
+                                                        <path d="M622,193L619,198L609,193L607,198L595,202L596,212L602,217L592,219L591,229L597,231L582,248L576,240L569,238L563,231L563,223L556,221L561,217L559,214L549,214L549,210L554,210L554,204L549,201L557,198L558,190L562,190L558,182L560,164L555,152L560,147L563,134L584,134L588,130L593,133L599,129L612,134L618,132L619,137L634,140L636,145L632,157L635,159L625,171L621,171L624,177L622,193Z" class="sidebar_france_dep vigi-fill-1" data-dep="02" />
+                                                        <path d="M554,445L562,455L581,453L582,459L594,450L600,469L618,477L618,491L603,499L607,523L599,525L598,529L592,521L584,521L580,515L563,516L558,511L553,512L544,498L539,503L534,500L528,511L520,504L517,495L506,490L505,476L509,472L526,469L523,458L526,459L533,450L535,453L549,444L554,445Z" class="sidebar_france_dep vigi-fill-1" data-dep="03" />
+                                                        <path d="M730,697L746,697L740,688L742,686L746,691L745,684L757,669L767,678L770,675L768,671L775,670L776,665L783,672L794,672L798,663L815,652L814,660L809,664L815,674L800,691L798,699L802,711L815,725L808,723L799,727L799,734L780,735L778,741L769,734L754,747L748,739L736,741L729,732L722,733L726,723L719,720L722,713L719,704L724,697L731,701L730,697Z" class="sidebar_france_dep vigi-fill-2" data-dep="04" />
+                                                        <path d="M770,606L782,614L786,608L793,607L797,617L802,617L802,628L819,634L824,649L818,649L803,659L794,672L783,672L776,665L775,670L768,671L770,675L767,678L757,669L745,684L746,691L744,687L740,688L746,697L730,697L727,683L718,683L713,674L719,673L717,668L726,670L730,667L725,663L728,652L738,652L742,643L751,640L749,637L761,632L776,633L774,619L766,617L770,606Z" class="sidebar_france_dep vigi-fill-1" data-dep="05" />
+                                                        <path d="M811,680L819,692L838,702L847,704L865,698L867,707L863,718L852,729L854,736L829,749L827,758L817,759L815,765L811,763L813,754L805,751L803,742L795,736L799,734L799,727L808,723L815,725L802,711L798,699L800,691L811,680Z" class="sidebar_france_dep vigi-fill-3" data-dep="06" />
+                                                        <path d="M651,596L659,594L659,589L670,584L672,607L676,613L674,618L678,625L669,641L671,649L665,662L662,689L652,682L648,687L641,682L636,690L627,683L622,685L623,676L611,656L609,643L621,631L629,631L633,622L639,621L638,617L644,615L643,606L648,606L651,596Z" class="sidebar_france_dep vigi-fill-2" data-dep="07" />
+                                                        <path d="M634,140L653,141L664,136L669,122L677,121L671,138L678,144L676,156L685,155L696,165L703,165L706,173L712,173L703,180L693,175L689,184L692,191L687,200L689,205L682,209L664,207L661,210L657,204L646,205L635,195L622,193L624,177L621,171L625,171L635,159L632,157L636,145L634,140Z" class="sidebar_france_dep vigi-fill-2" data-dep="08" />
+                                                        <path d="M464,785L466,794L481,800L484,809L480,818L484,824L476,826L476,830L482,837L489,835L496,844L485,845L471,853L456,845L447,850L442,839L429,840L425,834L408,829L406,820L417,814L417,803L422,798L430,798L433,804L437,801L432,796L444,790L437,784L441,781L448,791L452,790L451,784L464,785Z" class="sidebar_france_dep vigi-fill-1" data-dep="09" />
+                                                        <path d="M579,291L579,278L584,276L585,270L589,269L595,277L607,279L624,261L639,260L639,269L645,275L663,277L661,285L675,296L675,315L673,319L667,317L665,327L657,326L656,332L639,333L638,336L632,331L626,336L612,335L613,331L608,330L610,327L601,312L599,315L593,310L591,312L593,303L579,291Z" class="sidebar_france_dep vigi-fill-2" data-dep="10" />
+                                                        <path d="M464,785L475,769L478,773L488,770L499,775L502,768L523,771L521,779L525,783L531,781L535,787L543,776L544,780L568,791L558,805L554,827L543,820L534,828L510,826L507,828L509,838L497,845L489,835L482,837L476,830L476,826L484,824L480,818L484,809L481,800L466,794L464,785Z" class="sidebar_france_dep vigi-fill-2" data-dep="11" />
+                                                        <path d="M499,656L504,651L517,652L526,631L533,625L536,633L542,631L548,650L557,660L556,667L561,671L560,690L567,693L565,697L576,696L577,699L569,706L582,713L576,724L567,729L568,732L556,731L556,745L547,745L539,738L530,740L522,731L516,710L495,696L484,701L478,696L483,689L476,687L479,680L474,669L499,656Z" class="sidebar_france_dep vigi-fill-1" data-dep="12" />
+                                                        <path d="M668,723L680,726L698,741L707,741L721,748L738,744L739,748L732,750L729,756L734,759L732,765L738,772L731,773L731,782L734,781L736,786L730,795L708,791L710,782L707,777L688,780L681,770L674,780L656,776L657,770L653,768L634,767L649,755L647,752L651,744L660,745L661,728L668,723ZM686,758L685,764L690,773L696,772L700,765L695,768L686,758Z" class="sidebar_france_dep vigi-fill-3" data-dep="13" />
+                                                        <path d="M276,198L288,194L340,205L360,193L371,191L372,201L377,205L373,208L380,218L376,226L381,231L380,235L360,237L341,248L329,246L328,249L322,244L309,249L305,247L296,256L280,254L274,248L291,232L293,225L288,217L290,211L286,214L279,210L276,198Z" class="sidebar_france_dep vigi-fill-1" data-dep="14" />
+                                                        <path d="M519,572L530,576L533,582L546,583L553,591L559,584L559,591L566,591L574,608L572,616L576,621L568,625L566,631L559,630L550,653L542,631L536,633L533,625L526,631L517,652L496,654L496,637L489,621L494,620L491,613L496,611L497,599L508,587L508,580L520,581L517,578L519,572Z" class="sidebar_france_dep vigi-fill-1" data-dep="15" />
+                                                        <path d="M344,525L356,513L381,517L384,509L392,515L399,509L405,509L406,517L413,521L414,526L406,529L403,543L399,541L399,545L384,559L385,565L372,574L369,589L360,599L355,597L351,600L344,591L333,589L334,584L330,583L335,577L333,568L322,558L326,555L321,545L341,541L344,525Z" class="sidebar_france_dep vigi-fill-1" data-dep="16" />
+                                                        <path d="M252,502L256,500L266,508L247,499L252,498L252,502ZM276,492L287,487L289,492L297,489L310,509L332,514L344,525L341,541L324,543L320,547L326,555L322,558L333,568L335,577L330,583L334,584L333,589L340,589L351,597L348,609L341,610L328,602L326,604L322,591L303,587L298,574L268,550L268,543L275,541L274,535L278,534L281,521L276,510L269,506L277,497L276,492ZM268,537L258,526L257,517L268,523L272,533L269,541L268,537Z" class="sidebar_france_dep vigi-fill-1" data-dep="17" />
+                                                        <path d="M501,365L521,370L531,379L533,375L544,376L547,383L543,394L550,400L557,430L554,445L549,444L535,453L533,450L526,459L523,458L526,469L509,472L504,481L496,481L497,460L489,450L493,447L488,442L495,433L489,432L492,426L487,421L488,415L470,413L481,397L485,400L494,398L492,387L497,383L501,385L501,378L493,369L501,365Z" class="sidebar_france_dep vigi-fill-2" data-dep="18" />
+                                                        <path d="M478,551L487,546L506,554L518,547L520,555L516,561L520,581L508,580L508,587L497,599L496,611L491,613L494,620L479,621L470,626L460,615L448,617L446,607L437,605L436,599L433,600L436,596L433,592L440,582L435,580L436,572L441,573L448,565L455,566L470,553L478,551Z" class="sidebar_france_dep vigi-fill-1" data-dep="19" />
+                                                        <path d="M631,411L626,413L631,411ZM638,336L639,333L656,332L657,326L671,328L676,335L674,337L679,336L685,346L680,350L683,358L687,357L694,363L697,360L702,370L712,368L714,364L717,367L718,374L710,380L718,388L717,395L720,396L715,411L704,421L706,425L692,430L689,427L678,429L664,435L656,423L647,422L645,417L635,414L633,404L627,402L623,386L636,354L641,352L640,344L636,344L638,336Z" class="sidebar_france_dep vigi-fill-2" data-dep="21" />
+                                                        <path d="M107,265L112,264L114,249L122,252L144,245L171,280L186,266L196,264L197,270L200,267L204,273L209,270L214,276L222,276L222,295L216,302L205,305L196,317L187,312L182,314L181,321L175,326L173,316L167,318L148,309L123,315L113,311L116,302L114,292L110,291L113,286L110,281L114,278L107,265Z" class="sidebar_france_dep vigi-fill-1" data-dep="22" />
+                                                        <path d="M496,481L504,481L506,490L517,495L526,525L511,539L518,547L506,554L487,546L478,551L477,542L468,536L458,536L461,532L453,529L456,522L452,510L443,501L448,492L446,488L453,481L461,485L467,484L471,478L496,481Z" class="sidebar_france_dep vigi-fill-1" data-dep="23" />
+                                                        <path d="M393,550L403,554L401,559L405,563L409,559L419,560L423,567L429,568L427,573L440,582L434,587L436,596L433,600L436,599L437,605L446,607L447,631L423,659L414,653L407,657L404,647L400,650L393,647L379,653L374,651L369,640L370,631L364,636L350,633L356,612L354,607L348,609L351,600L355,597L360,599L368,591L370,577L385,565L384,559L393,550Z" class="sidebar_france_dep vigi-fill-1" data-dep="24" />
+                                                        <path d="M806,371L815,376L815,386L811,391L820,389L823,392L798,419L799,422L781,432L783,446L759,466L761,469L755,463L759,459L757,455L766,448L752,438L750,427L741,425L739,421L735,424L740,411L732,400L747,392L754,393L771,383L774,377L790,378L791,373L806,371Z" class="sidebar_france_dep vigi-fill-2" data-dep="25" />
+                                                        <path d="M672,590L685,585L690,591L695,590L693,595L698,596L695,611L711,615L718,611L716,639L741,648L738,652L728,652L725,663L730,667L726,670L717,668L719,673L713,674L718,683L727,683L731,701L724,697L716,704L711,696L697,694L697,685L692,688L689,685L673,693L672,686L662,683L671,649L669,641L678,625L672,607L672,590ZM678,680L678,686L684,686L689,678L683,674L678,680Z" class="sidebar_france_dep vigi-fill-2" data-dep="26" />
+                                                        <path d="M371,191L384,185L396,193L405,192L412,195L413,199L409,201L414,201L419,208L429,199L436,199L441,189L453,189L466,193L472,206L465,207L459,225L449,226L451,238L442,248L443,252L436,256L426,253L426,256L402,264L402,255L392,248L390,242L381,244L377,241L381,231L376,226L380,218L373,208L377,205L372,201L371,191Z" class="sidebar_france_dep vigi-fill-1" data-dep="27" />
+                                                        <path d="M406,264L426,256L426,253L439,255L448,245L448,239L454,240L460,257L458,265L466,269L472,283L480,285L483,290L484,303L476,321L462,321L458,326L454,324L453,330L447,328L447,331L439,333L432,332L425,321L418,321L421,316L407,319L412,314L404,310L407,308L402,298L412,293L416,278L408,272L406,264Z" class="sidebar_france_dep vigi-fill-1" data-dep="28" />
+                                                        <path d="M10,287L13,282L10,287ZM107,265L114,278L110,281L113,286L110,291L114,292L116,302L115,309L104,314L102,320L108,330L113,329L120,334L123,331L124,342L118,346L116,343L115,352L94,348L85,338L85,343L72,341L72,348L60,349L55,332L36,323L65,319L62,309L53,306L47,313L47,304L43,304L47,296L50,302L69,300L63,296L54,297L55,290L32,297L33,277L60,263L69,266L71,262L86,259L87,266L94,268L93,262L99,260L107,262L107,265Z" class="sidebar_france_dep vigi-fill-1" data-dep="29" />
+                                                        <path d="M924,872L943,877L946,884L956,888L961,903L967,906L968,923L979,922L979,938L972,949L977,947L965,970L938,948L947,938L932,933L939,919L938,916L927,918L926,913L935,902L924,893L923,886L932,883L927,875L923,876L924,872Z" class="sidebar_france_dep vigi-fill-3" data-dep="2A" />
+                                                        <path d="M979,922L968,923L967,906L961,903L956,888L946,884L943,877L924,872L930,868L930,859L936,853L938,855L945,848L953,847L958,839L967,837L972,843L974,841L977,811L984,813L982,843L988,854L990,881L990,895L979,922Z" class="sidebar_france_dep vigi-fill-3" data-dep="2B" />
+                                                        <path d="M577,699L588,704L594,704L594,698L610,703L617,691L611,678L618,671L623,676L622,685L627,683L636,690L641,682L645,687L652,682L661,688L667,697L667,708L675,717L661,728L660,745L651,744L647,752L649,755L634,767L626,763L625,755L631,750L628,741L613,727L605,727L604,718L597,720L597,724L593,723L590,730L586,725L580,728L581,725L576,724L582,713L569,706L577,699Z" class="sidebar_france_dep vigi-fill-3" data-dep="30" />
+                                                        <path d="M415,736L428,733L433,737L442,733L438,730L443,726L446,728L455,723L457,733L465,742L462,745L467,748L464,751L484,766L487,763L487,770L478,773L475,769L464,785L451,784L452,790L449,791L441,781L437,784L444,790L432,796L437,801L433,804L430,798L422,798L417,803L417,814L406,820L408,829L398,825L394,833L396,842L386,842L382,838L383,824L389,825L394,815L392,809L387,812L388,805L381,799L399,775L409,772L416,777L423,759L431,757L415,736Z" class="sidebar_france_dep vigi-fill-1" data-dep="31" />
+                                                        <path d="M356,717L362,718L366,713L377,715L390,708L396,713L406,710L403,723L411,725L411,734L431,757L423,759L416,777L416,774L403,772L392,782L363,776L359,762L355,762L350,753L340,756L332,750L338,741L338,727L335,725L349,717L355,725L356,717Z" class="sidebar_france_dep vigi-fill-1" data-dep="32" />
+                                                        <path d="M303,587L322,591L326,604L328,602L335,608L354,607L356,612L350,633L364,636L370,631L372,634L369,635L371,642L358,648L363,651L350,666L352,680L346,681L349,689L345,692L336,690L336,695L325,695L322,684L309,677L306,671L297,675L286,674L285,666L279,664L267,670L271,651L283,652L273,640L267,654L274,573L278,564L297,585L310,617L303,587Z" class="sidebar_france_dep vigi-fill-1" data-dep="33" />
+                                                        <path d="M576,724L580,724L580,728L586,725L590,730L593,723L597,724L597,720L604,718L605,727L613,727L628,741L630,753L612,762L592,777L586,786L577,784L568,791L544,780L543,776L536,787L531,781L525,783L521,779L523,771L529,767L528,749L538,752L551,743L556,745L556,731L566,733L570,725L576,724Z" class="sidebar_france_dep vigi-fill-3" data-dep="34" />
+                                                        <path d="M209,270L213,267L217,274L214,276L209,270ZM221,277L216,266L225,261L228,269L246,268L256,284L270,276L280,280L281,297L277,303L283,329L274,332L268,350L253,345L240,357L227,357L211,364L209,356L214,354L209,352L215,345L214,342L211,344L208,330L199,330L199,326L206,323L200,322L198,315L205,305L216,302L222,295L221,277Z" class="sidebar_france_dep vigi-fill-1" data-dep="35" />
+                                                        <path d="M440,407L466,399L474,404L471,414L488,415L487,421L492,426L489,432L495,433L488,442L493,447L489,450L497,460L496,481L471,478L467,484L454,484L453,481L446,488L442,483L433,487L428,473L412,464L413,455L409,450L419,449L421,427L430,421L435,423L442,415L440,407Z" class="sidebar_france_dep vigi-fill-1" data-dep="36" />
+                                                        <path d="M392,358L409,361L409,367L413,364L418,369L420,367L427,382L424,394L429,399L433,397L441,409L442,415L435,423L430,421L421,427L419,449L415,451L406,447L397,428L389,425L389,430L373,432L372,421L363,419L363,414L355,410L356,398L363,389L366,367L378,370L375,365L381,366L392,358Z" class="sidebar_france_dep vigi-fill-1" data-dep="37" />
+                                                        <path d="M727,559L735,576L746,581L746,573L750,571L761,577L765,585L760,595L762,604L770,605L766,617L774,619L776,624L776,633L754,634L749,637L751,640L736,648L716,639L718,611L711,615L695,611L698,607L698,596L693,595L695,590L690,591L685,585L672,590L668,578L676,568L672,563L688,559L689,554L696,550L689,542L692,540L700,544L709,533L727,559Z" class="sidebar_france_dep vigi-fill-1" data-dep="38" />
+                                                        <path d="M720,396L724,401L732,400L738,407L740,411L735,424L739,421L741,425L750,427L752,438L766,448L757,455L759,459L755,463L763,469L742,497L734,497L729,489L717,496L717,492L705,482L707,477L713,476L709,472L715,460L707,443L716,439L707,436L702,427L715,411L720,396Z" class="sidebar_france_dep vigi-fill-2" data-dep="39" />
+                                                        <path d="M335,755L321,759L321,754L311,760L306,757L303,760L300,756L273,764L273,759L265,764L249,761L255,748L267,670L279,664L285,666L286,674L309,672L309,677L325,688L325,695L336,695L336,690L339,690L342,700L360,703L355,725L349,717L335,725L338,727L338,741L332,750L335,755Z" class="sidebar_france_dep vigi-fill-1" data-dep="40" />
+                                                        <path d="M407,319L421,316L418,321L425,321L432,332L443,333L447,328L456,330L453,334L457,338L455,351L465,355L467,361L498,360L501,365L493,369L498,372L501,385L497,383L492,387L494,398L485,400L481,397L476,406L466,399L458,399L453,404L448,402L440,407L433,397L426,397L424,384L427,382L420,367L418,369L413,364L409,367L409,361L390,357L408,334L404,325L407,319Z" class="sidebar_france_dep vigi-fill-1" data-dep="41" />
+                                                        <path d="M612,495L611,501L620,506L632,503L637,507L647,502L646,509L640,510L635,517L641,534L645,536L643,554L653,563L663,564L663,572L667,571L669,575L669,583L655,596L643,593L642,584L635,581L619,587L617,583L612,584L617,571L598,542L602,533L598,527L607,523L603,499L612,495Z" class="sidebar_france_dep vigi-fill-1" data-dep="42" />
+                                                        <path d="M612,584L617,583L619,587L628,581L642,584L643,593L651,596L648,606L643,606L644,615L633,622L629,631L621,631L618,637L615,636L611,643L593,630L591,635L584,637L579,623L572,616L574,608L570,598L566,591L559,591L559,584L585,577L593,586L597,581L603,585L605,581L612,584Z" class="sidebar_france_dep vigi-fill-1" data-dep="43" />
+                                                        <path d="M187,382L211,374L212,362L240,357L245,350L258,345L268,350L267,355L273,358L275,366L284,368L281,377L286,378L288,388L261,396L272,402L273,410L268,412L268,416L277,419L274,423L266,417L265,422L259,422L259,430L254,433L251,421L247,424L251,437L248,439L236,437L214,416L202,413L207,405L205,398L197,403L191,398L183,398L180,389L187,382Z" class="sidebar_france_dep vigi-fill-1" data-dep="44" />
+                                                        <path d="M547,313L554,316L560,332L552,339L553,349L542,352L550,370L542,372L540,377L533,375L531,379L525,372L514,367L510,369L498,360L481,362L474,359L470,362L465,355L455,351L457,338L453,336L456,330L452,326L458,326L462,321L476,321L484,301L497,299L498,295L512,298L520,310L518,317L547,313Z" class="sidebar_france_dep vigi-fill-2" data-dep="45" />
+                                                        <path d="M448,617L460,615L470,626L488,620L496,637L495,648L499,656L474,669L477,682L461,689L456,686L454,693L450,688L442,696L437,692L438,687L434,689L426,685L423,681L427,677L422,679L417,663L423,660L428,650L439,644L438,638L447,631L445,618L448,617Z" class="sidebar_france_dep vigi-fill-1" data-dep="46" />
+                                                        <path d="M371,642L374,651L379,653L393,647L395,650L404,647L407,657L414,653L423,658L417,663L422,679L411,678L409,685L415,689L408,698L410,701L404,701L396,713L390,708L377,715L366,713L362,718L355,715L360,703L342,700L342,693L349,689L346,681L352,680L350,666L363,651L358,649L359,646L371,642Z" class="sidebar_france_dep vigi-fill-1" data-dep="47" />
+                                                        <path d="M576,621L584,637L591,635L593,630L609,643L618,670L611,678L617,691L610,703L597,698L594,698L594,704L581,703L576,696L565,697L567,693L560,690L561,671L550,653L559,630L566,631L568,625L576,621Z" class="sidebar_france_dep vigi-fill-1" data-dep="48" />
+                                                        <path d="M268,350L268,347L286,352L287,348L307,355L317,349L329,356L338,355L338,363L366,367L363,389L356,398L355,410L352,408L343,420L339,415L324,419L318,417L310,426L291,428L284,423L274,423L277,419L268,416L268,412L273,410L272,402L261,396L273,390L286,390L288,386L286,378L281,377L284,368L275,366L273,358L267,355L268,350Z" class="sidebar_france_dep vigi-fill-1" data-dep="49" />
+                                                        <path d="M276,198L279,210L286,214L290,211L288,217L292,220L293,229L274,249L280,254L295,256L302,263L299,265L301,271L294,280L284,282L270,276L259,285L252,282L246,268L258,266L250,262L244,248L248,239L244,225L245,210L242,211L230,196L225,182L228,172L221,167L221,162L243,170L256,164L266,165L269,173L264,180L276,198Z" class="sidebar_france_dep vigi-fill-1" data-dep="50" />
+                                                        <path d="M622,193L635,195L646,205L657,204L661,210L679,207L685,212L681,214L686,226L683,230L688,230L688,235L681,240L678,252L686,257L686,261L670,265L675,267L670,272L672,278L645,275L639,269L639,260L624,261L607,279L595,277L581,265L583,257L578,255L580,250L597,231L591,229L592,219L602,217L596,212L595,202L607,198L609,193L619,198L622,193Z" class="sidebar_france_dep vigi-fill-2" data-dep="51" />
+                                                        <path d="M663,277L672,278L670,272L675,267L670,265L682,262L686,264L686,270L689,268L717,288L713,296L717,294L734,310L727,321L735,324L738,333L742,332L745,337L731,347L731,359L712,360L710,367L702,370L697,360L694,363L682,357L680,350L685,346L679,336L674,337L676,335L671,328L665,327L667,317L674,318L676,303L675,296L661,285L663,277Z" class="sidebar_france_dep vigi-fill-2" data-dep="52" />
+                                                        <path d="M280,280L294,280L300,287L302,283L307,282L308,286L321,279L333,280L337,274L341,285L348,285L347,292L341,296L341,309L334,314L336,323L328,328L332,333L324,337L326,342L321,345L326,352L317,349L307,355L287,348L286,352L268,347L274,332L283,329L277,303L281,297L280,280Z" class="sidebar_france_dep vigi-fill-1" data-dep="53" />
+                                                        <path d="M717,184L737,178L748,186L746,193L754,208L752,222L747,223L749,227L761,238L774,241L771,247L778,254L790,256L804,267L814,267L827,279L807,290L795,287L794,283L791,288L774,290L772,287L762,290L760,295L749,295L749,291L743,289L746,282L736,281L737,277L733,275L737,269L733,258L737,252L735,240L742,237L739,234L742,228L740,221L735,220L733,211L737,203L728,190L716,194L719,191L717,184Z" class="sidebar_france_dep vigi-fill-2" data-dep="54" />
+                                                        <path d="M682,209L689,205L687,200L692,195L689,184L693,175L703,180L712,173L719,191L716,194L732,192L737,203L733,208L735,220L740,221L742,228L739,234L742,237L735,240L738,243L733,257L737,269L733,272L737,277L735,284L715,288L689,268L685,269L686,257L678,252L681,240L688,235L688,230L683,230L686,226L682,209Z" class="sidebar_france_dep vigi-fill-2" data-dep="55" />
+                                                        <path d="M122,365L117,362L122,365ZM138,390L147,395L146,398L136,397L133,389L138,390ZM116,343L118,346L124,342L124,333L108,330L102,320L104,314L119,311L123,315L128,312L132,315L148,309L167,318L173,316L175,326L187,312L193,317L198,316L200,322L205,321L199,330L208,330L211,344L214,342L209,352L214,354L209,356L211,374L185,383L186,376L174,373L172,377L164,378L156,373L166,374L170,370L167,364L150,371L142,370L142,380L137,363L142,355L139,354L136,363L127,355L120,358L115,350L116,343Z" class="sidebar_france_dep vigi-fill-1" data-dep="56" />
+                                                        <path d="M745,184L751,189L769,183L776,188L784,187L801,216L808,218L808,212L815,211L821,214L823,221L839,221L849,214L854,223L861,225L855,239L849,235L841,238L823,226L821,236L816,240L824,245L825,252L829,247L838,252L835,262L839,265L834,275L824,277L814,267L804,267L790,256L778,254L771,247L774,241L755,234L747,223L752,222L754,208L753,202L748,200L748,186L745,184Z" class="sidebar_france_dep vigi-fill-2" data-dep="57" />
+                                                        <path d="M543,375L542,372L558,369L567,378L574,379L578,376L584,378L585,371L599,386L606,389L609,383L610,390L615,389L618,395L627,393L627,402L634,406L623,414L622,424L618,427L625,437L623,446L607,454L601,449L590,450L592,452L582,459L581,453L565,456L557,451L554,445L557,424L550,400L543,394L547,383L543,375Z" class="sidebar_france_dep vigi-fill-2" data-dep="58" />
+                                                        <path d="M554,120L558,120L552,124L554,120ZM489,38L521,30L527,44L524,47L527,57L533,57L537,65L546,68L547,64L562,60L569,68L571,85L577,88L583,84L592,88L599,106L601,102L612,104L620,101L627,109L632,109L627,123L632,122L634,128L629,131L629,137L624,139L617,135L618,132L612,134L599,129L593,133L588,130L584,134L559,133L558,124L564,113L553,110L557,106L551,97L557,93L549,86L538,84L537,79L543,75L539,71L535,76L510,71L508,64L512,61L499,57L494,42L489,38Z" class="sidebar_france_dep vigi-fill-1" data-dep="59" />
+                                                        <path d="M470,159L478,165L506,166L526,173L528,177L546,164L560,164L558,182L562,190L558,190L557,198L549,201L554,204L554,210L549,210L549,214L555,212L561,217L555,224L532,226L506,214L504,217L490,212L468,215L465,207L472,206L466,190L471,184L466,183L465,170L468,166L464,165L470,159Z" class="sidebar_france_dep vigi-fill-1" data-dep="60" />
+                                                        <path d="M295,256L305,247L309,249L322,244L328,249L329,246L341,248L357,238L376,235L379,243L390,242L392,248L402,255L402,264L406,264L408,272L416,278L414,290L402,298L407,308L402,311L395,303L387,305L384,299L378,298L377,288L371,282L363,284L355,292L347,292L348,285L341,285L341,278L335,274L333,280L321,279L308,286L307,282L302,283L300,287L294,278L301,271L299,265L302,263L295,256Z" class="sidebar_france_dep vigi-fill-1" data-dep="61" />
+                                                        <path d="M489,38L494,42L499,57L512,61L508,64L510,71L527,76L535,76L539,71L543,75L537,79L538,84L549,86L557,93L551,97L557,106L553,110L564,113L560,116L557,131L546,132L542,128L536,132L534,123L531,127L517,122L513,127L511,121L517,115L503,113L490,116L481,104L472,101L463,104L455,97L459,84L455,68L458,65L457,51L470,43L489,38ZM554,120L552,124L558,120L554,120Z" class="sidebar_france_dep vigi-fill-1" data-dep="62" />
+                                                        <path d="M523,508L528,511L534,500L539,503L544,498L553,512L558,511L563,516L580,515L584,521L592,521L602,533L598,542L617,571L612,584L605,581L603,585L597,581L593,586L585,577L583,580L572,578L553,591L546,583L533,582L530,576L519,572L516,561L520,550L511,539L526,525L523,508Z" class="sidebar_france_dep vigi-fill-1" data-dep="63" />
+                                                        <path d="M335,755L345,756L349,766L346,770L352,771L353,778L349,780L347,795L343,794L338,808L332,811L330,828L325,831L317,829L313,833L301,815L288,816L269,806L267,808L264,805L266,800L261,803L261,809L255,807L253,803L259,787L247,784L246,788L232,778L252,760L256,764L265,764L273,759L273,764L300,756L303,760L306,757L311,760L321,754L321,759L335,755ZM344,777L346,782L344,777ZM344,788L344,782L344,788Z" class="sidebar_france_dep vigi-fill-1" data-dep="64" />
+                                                        <path d="M344,788L344,782L344,788ZM344,777L346,782L344,777ZM345,756L350,753L352,759L359,762L363,776L370,775L374,779L377,777L394,783L381,799L388,805L387,812L392,809L394,815L389,825L383,824L383,841L375,839L371,843L363,837L350,842L330,826L332,811L338,808L343,794L347,795L349,780L353,778L352,771L346,770L349,766L345,756Z" class="sidebar_france_dep vigi-fill-1" data-dep="65" />
+                                                        <path d="M496,844L509,838L507,828L510,826L534,828L543,820L554,827L555,857L561,859L563,866L557,867L548,862L530,869L530,875L517,876L502,866L486,874L480,865L467,861L468,854L483,849L485,845L496,844ZM482,863L486,865L482,863Z" class="sidebar_france_dep vigi-fill-2" data-dep="66" />
+                                                        <path d="M861,227L881,227L901,235L890,253L875,267L869,296L859,316L854,317L851,309L824,295L827,279L823,278L834,275L839,265L835,262L839,254L829,247L825,252L824,245L816,240L826,225L828,232L841,238L849,235L855,239L861,227Z" class="sidebar_france_dep vigi-fill-2" data-dep="67" />
+                                                        <path d="M832,299L851,309L851,314L858,317L857,326L861,331L853,357L859,368L853,373L853,378L848,377L844,384L835,385L830,382L825,368L819,366L822,361L820,354L809,348L814,343L815,329L832,299Z" class="sidebar_france_dep vigi-fill-2" data-dep="68" />
+                                                        <path d="M644,501L646,493L652,496L664,493L667,505L672,507L667,527L679,534L680,541L692,540L690,545L696,550L689,554L688,559L672,563L676,568L670,575L663,572L663,564L653,563L643,554L645,536L641,534L635,517L648,506L644,501Z" class="sidebar_france_dep vigi-fill-1" data-dep="69" />
+                                                        <path d="M744,336L761,326L766,335L777,332L784,339L793,334L807,347L803,353L806,371L791,373L790,378L774,377L771,383L754,393L747,392L734,400L724,401L710,380L718,374L717,367L714,364L712,368L710,366L712,360L731,359L731,347L736,342L739,344L744,336Z" class="sidebar_france_dep vigi-fill-2" data-dep="70" />
+                                                        <path d="M626,413L630,414L632,410L641,418L645,417L647,422L656,423L664,435L678,429L702,427L707,436L716,439L707,443L715,460L709,472L713,476L706,479L697,472L689,475L681,472L671,505L667,505L664,493L660,496L646,493L643,503L637,507L632,503L620,506L611,501L613,493L618,491L618,477L600,469L594,450L601,449L607,454L623,446L625,437L618,427L626,413Z" class="sidebar_france_dep vigi-fill-2" data-dep="71" />
+                                                        <path d="M347,292L355,292L363,284L371,282L377,288L378,298L384,299L387,305L395,303L399,310L412,314L404,325L408,334L403,337L403,344L390,361L381,366L375,365L378,370L338,363L338,355L329,356L321,345L326,342L324,337L332,333L328,328L336,323L334,314L341,309L341,296L347,292Z" class="sidebar_france_dep vigi-fill-1" data-dep="72" />
+                                                        <path d="M806,543L806,549L819,557L819,570L831,579L828,594L812,605L803,603L786,608L782,614L769,604L762,604L760,595L765,585L761,577L750,571L746,573L745,581L734,575L727,560L732,550L738,547L741,528L746,541L750,540L755,547L762,545L768,552L774,552L786,531L798,548L806,543Z" class="sidebar_france_dep vigi-fill-2" data-dep="73" />
+                                                        <path d="M806,543L798,548L786,531L774,552L765,551L762,545L755,547L744,537L739,514L744,514L747,509L764,507L773,498L768,495L772,487L778,489L786,483L805,484L804,488L810,495L805,509L812,510L810,517L816,517L822,529L815,537L807,538L806,543Z" class="sidebar_france_dep vigi-fill-2" data-dep="74" />
+                                                        <path d="M513,247L516,250L507,250L500,245L510,242L513,247Z" class="sidebar_france_dep vigi-fill-1" data-dep="75" />
+                                                        <path d="M443,129L449,130L463,143L470,159L464,165L468,166L465,170L466,183L471,184L466,193L443,188L436,199L429,199L419,208L414,201L409,201L413,199L412,195L405,192L396,193L384,185L374,190L357,186L356,180L364,164L389,150L425,142L443,129Z" class="sidebar_france_dep vigi-fill-1" data-dep="76" />
+                                                        <path d="M523,262L524,233L521,230L524,224L550,225L556,221L563,223L563,231L569,238L576,240L582,248L584,246L578,255L583,257L581,265L589,269L579,278L579,291L555,294L555,303L547,313L518,317L520,310L512,298L520,290L518,278L523,262Z" class="sidebar_france_dep vigi-fill-2" data-dep="77" />
+                                                        <path d="M498,241L495,250L500,254L491,258L486,275L481,274L480,285L476,286L470,280L471,275L465,273L466,269L458,265L460,257L448,228L458,224L466,228L473,225L476,230L493,231L499,237L498,241Z" class="sidebar_france_dep vigi-fill-1" data-dep="78" />
+                                                        <path d="M291,428L310,426L318,417L324,419L339,415L339,419L344,419L353,440L348,442L350,449L354,451L347,461L353,463L348,477L356,493L360,488L363,490L358,504L366,507L363,514L360,512L349,517L344,525L332,514L307,506L301,493L315,485L308,482L311,468L302,448L304,443L295,437L296,432L291,428Z" class="sidebar_france_dep vigi-fill-1" data-dep="79" />
+                                                        <path d="M443,129L452,116L464,118L454,108L456,101L463,104L472,101L481,104L490,116L503,113L517,115L511,121L513,127L522,122L531,127L534,123L536,132L542,128L546,132L558,130L563,134L560,147L555,152L560,164L546,164L528,177L526,173L499,164L474,164L463,143L449,130L443,129Z" class="sidebar_france_dep vigi-fill-1" data-dep="80" />
+                                                        <path d="M484,701L495,696L501,700L498,701L504,701L516,710L522,731L530,740L539,738L546,741L545,749L538,752L528,749L529,767L525,770L502,768L499,775L496,772L492,774L486,768L487,763L484,766L464,751L467,748L462,745L465,742L457,733L454,720L464,713L462,704L469,706L479,699L484,701Z" class="sidebar_france_dep vigi-fill-1" data-dep="81" />
+                                                        <path d="M422,679L427,677L423,681L426,685L434,689L438,687L437,692L442,696L450,688L454,693L456,686L461,689L477,682L476,687L483,689L478,696L484,701L479,699L469,706L462,704L464,713L454,720L456,723L453,725L438,730L442,733L433,737L428,733L415,736L411,734L411,725L402,720L408,712L402,712L400,708L404,701L409,703L408,698L415,689L409,685L411,678L422,679Z" class="sidebar_france_dep vigi-fill-1" data-dep="82" />
+                                                        <path d="M781,810L785,808L781,810ZM768,810L763,812L768,810ZM736,742L737,739L742,742L748,739L754,747L769,734L776,741L780,735L794,734L803,742L805,751L813,754L811,763L814,768L809,772L803,771L800,779L791,785L799,786L794,796L779,797L777,803L764,801L763,809L761,804L747,800L747,804L741,807L740,801L730,795L736,786L734,781L731,782L731,773L738,772L732,765L734,759L729,756L732,750L739,748L736,742Z" class="sidebar_france_dep vigi-fill-3" data-dep="83" />
+                                                        <path d="M678,680L683,674L689,678L684,686L678,686L678,680ZM662,689L662,683L672,686L673,693L689,685L690,688L697,685L697,694L711,696L711,700L719,704L719,709L722,708L719,720L726,723L722,733L729,732L736,742L721,748L707,741L698,741L680,726L668,723L675,717L667,708L667,697L662,689Z" class="sidebar_france_dep vigi-fill-2" data-dep="84" />
+                                                        <path d="M197,453L195,456L191,452L197,453ZM274,423L291,426L296,432L295,437L304,443L302,448L311,468L308,482L315,485L308,491L301,493L295,489L289,492L287,487L271,491L270,496L260,488L253,489L249,482L230,474L227,463L208,443L207,436L219,423L229,432L234,432L236,437L248,439L251,437L247,424L251,421L254,433L259,430L259,422L265,422L266,417L274,423ZM204,430L197,426L199,423L207,434L204,430Z" class="sidebar_france_dep vigi-fill-1" data-dep="85" />
+                                                        <path d="M344,419L352,408L363,414L363,419L372,421L373,432L389,430L389,425L397,428L398,435L413,455L412,464L428,473L428,479L432,481L430,485L421,487L417,495L411,494L405,500L406,510L399,509L392,515L384,509L381,517L364,513L366,507L358,504L363,490L360,488L356,493L348,477L353,463L347,461L354,451L350,449L348,442L353,440L344,419Z" class="sidebar_france_dep vigi-fill-1" data-dep="86" />
+                                                        <path d="M406,510L404,502L411,494L417,495L421,487L426,488L428,484L433,487L442,483L448,492L443,501L452,510L456,522L453,529L459,529L458,536L468,536L477,542L478,553L470,553L457,565L450,564L435,576L427,573L429,568L423,567L419,560L409,559L405,563L401,559L403,554L393,550L399,541L403,543L406,529L414,526L413,521L406,517L406,510Z" class="sidebar_france_dep vigi-fill-1" data-dep="87" />
+                                                        <path d="M717,288L742,280L746,282L743,289L748,290L749,295L760,295L762,290L791,288L794,283L795,287L807,290L827,279L824,295L832,299L815,329L814,343L807,347L793,334L784,339L777,332L766,335L761,326L749,335L748,331L744,336L742,332L738,333L737,326L727,321L733,308L717,294L713,296L717,288Z" class="sidebar_france_dep vigi-fill-2" data-dep="88" />
+                                                        <path d="M547,313L555,303L555,294L576,293L577,290L580,294L585,293L593,303L591,312L593,310L596,315L601,312L610,327L608,330L613,331L612,335L626,336L632,331L638,336L636,344L640,344L641,352L636,354L626,377L623,386L626,393L618,395L615,389L610,390L609,383L606,389L599,386L585,371L584,378L578,376L574,379L567,378L558,369L549,370L549,363L541,355L553,349L552,339L560,328L554,316L547,313Z" class="sidebar_france_dep vigi-fill-2" data-dep="89" />
+                                                        <path d="M807,347L820,354L822,361L819,366L828,374L826,378L818,378L819,382L815,384L815,376L807,372L804,365L803,353L807,347Z" class="sidebar_france_dep vigi-fill-2" data-dep="90" />
+                                                        <path d="M500,254L510,259L519,258L524,263L520,265L518,278L520,290L509,299L498,295L497,299L483,301L479,283L483,277L480,276L486,275L491,258L500,254Z" class="sidebar_france_dep vigi-fill-2" data-dep="91" />
+                                                        <path d="M504,237L507,237L506,242L500,246L507,250L506,258L495,250L496,242L504,237Z" class="sidebar_france_dep vigi-fill-1" data-dep="92" />
+                                                        <path d="M522,231L524,251L513,247L504,237L515,237L522,231Z" class="sidebar_france_dep vigi-fill-1" data-dep="93" />
+                                                        <path d="M507,250L520,247L525,254L523,262L519,258L505,256L507,250Z" class="sidebar_france_dep vigi-fill-1" data-dep="94" />
+                                                        <path d="M524,224L515,237L505,235L498,241L499,237L493,231L459,225L465,210L474,216L490,212L502,217L506,214L524,224Z" class="sidebar_france_dep vigi-fill-1" data-dep="95" />
+                            </svg>
+        </div>
+        <div class="sidebar_vigi_france_counts">
+            <div class="sidebar_vigi_count">
+                <span class="sidebar_vigi_count_dot vigi-2-bg"></span>
+                <span class="sidebar_vigi_count_num">32</span>
+                <span class="sidebar_vigi_count_label">Jaune</span>
+            </div>
+            <div class="sidebar_vigi_count">
+                <span class="sidebar_vigi_count_dot vigi-3-bg"></span>
+                <span class="sidebar_vigi_count_num">7</span>
+                <span class="sidebar_vigi_count_label">Orange</span>
+            </div>
+            <div class="sidebar_vigi_count">
+                <span class="sidebar_vigi_count_dot vigi-4-bg"></span>
+                <span class="sidebar_vigi_count_num">0</span>
+                <span class="sidebar_vigi_count_label">Rouge</span>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="sidebar_vigi_footer">
+        <a href="/vigilance" class="sidebar_vigi_link">Voir la vigilance <i class="fa-solid fa-arrow-right"></i></a>
+        <p class="vigi_time"><i class="fa-regular fa-clock"></i>&nbsp;&nbsp; Dernière mise à jour Lundi à 06:00</p>
+    </div>
+</div>
+<script>
+(function(){
+    var root = document.getElementById('sidebarVigilance');
+    if (!root) return;
+    var locked = root.getAttribute('data-locked') === '1';
+    var wrap = document.getElementById('sidebarVigiSelectWrap');
+    if (!wrap || locked) return;
+
+    var btn = document.getElementById('sidebarVigiSelectBtn');
+    var panel = document.getElementById('sidebarVigiSelectPanel');
+    var search = document.getElementById('sidebarVigiSelectSearch');
+    var list = document.getElementById('sidebarVigiSelectList');
+    var empty = document.getElementById('sidebarVigiSelectEmpty');
+    var options = Array.prototype.slice.call(list.querySelectorAll('.sidebar_vigi_select_opt'));
+
+    function setCookie(name, value) {
+        var expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+        document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
+    }
+
+    function openPanel() {
+        panel.hidden = false;
+        wrap.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+        search.value = '';
+        filterOptions('');
+        setTimeout(function(){ search.focus(); }, 0);
+    }
+
+    function closePanel() {
+        panel.hidden = true;
+        wrap.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+    }
+
+    function filterOptions(q) {
+        q = q.trim().toLowerCase();
+        var visible = 0;
+        options.forEach(function(opt){
+            var s = opt.getAttribute('data-search') || '';
+            var match = q === '' || s.indexOf(q) !== -1;
+            opt.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+        empty.hidden = visible !== 0;
+    }
+
+    function selectOption(value) {
+        if (value === '') {
+            try { localStorage.setItem('vigiSidebarMode', 'france'); } catch (e) {}
+            setCookie('vigi_sidebar_mode', 'france');
+            setCookie('vigi_user_dep', '');
+        } else {
+            try {
+                localStorage.setItem('vigiSidebarMode', 'local');
+                localStorage.setItem('vigiUserDep', value);
+            } catch (e) {}
+            setCookie('vigi_sidebar_mode', 'local');
+            setCookie('vigi_user_dep', value);
+        }
+        window.location.reload();
+    }
+
+    btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if (panel.hidden) openPanel(); else closePanel();
+    });
+
+    search.addEventListener('input', function(){
+        filterOptions(search.value);
+    });
+
+    search.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') { e.preventDefault(); closePanel(); }
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            var first = options.find(function(o){ return o.style.display !== 'none'; });
+            if (first) selectOption(first.getAttribute('data-value'));
+        }
+    });
+
+    list.addEventListener('click', function(e){
+        var opt = e.target.closest('.sidebar_vigi_select_opt');
+        if (!opt) return;
+        selectOption(opt.getAttribute('data-value'));
+    });
+
+    document.addEventListener('click', function(e){
+        if (panel.hidden) return;
+        if (!wrap.contains(e.target)) closePanel();
+    });
+})();
+</script>
+<div class="main-div main-div-no-padding">
+    <div class="title-header">
+        <p>Application mobile</p>
+    </div>
+    <div class="row g-0">
+        <div class="col-6">
+            <div class="store-container" style="display: flex; flex-direction: column; align-items: center; padding: 0.75rem;">
+                <a href="/ios?s=side"><img src="/assets/promo/black.svg" class="img-fluid store-image"></a>
+                <p style="text-align: center; font-size: 0.85rem; color: #6c757d; margin-top: 0.5rem; margin-bottom: 0;">iOS</p>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="store-container" style="display: flex; flex-direction: column; align-items: center; padding: 0.75rem;">
+                <a href="/android?s=side"><img src="/assets/promo/gplay.png" class="img-fluid store-image"></a>
+                <p style="text-align: center; font-size: 0.85rem; color: #6c757d; margin-top: 0.5rem; margin-bottom: 0;">Android</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="main-div main-div-no-padding">
+    <div class="title-header">
+        <p><i class="fa-light fa-circle-info"></i>&nbsp;&nbsp;&nbsp;Fil d'actualités</p>
+    </div>
+    <div class="">
+        <div class="actu_div"><p class="actu_time"><span><i class="fa-regular fa-timer"></i>&nbsp; Il y a 3 heures</span><a class="button-small" href="https://www.facebook.com/365096336905207/posts/365096336905207_1631545568977712" target="_blank">Voir plus <i class="fa-solid fa-angles-right"></i></a></p><p class="actu_content">On pourrait, avec un peu de chance, avoir quelques gouttes entre mercredi et jeudi la semaine prochaine (et encore, sans certitude). Pas de grosse pluie à attendre, ce n'est pas ça qui réglera la sécheresse sur la région.
+
+Aucune pluie conséquente en dehors de ça en vue pour le moment d'ici fin juillet, en tout cas. 😢
+
+Bonne soirée,
+Hugo</p></div><div class="actu_div"><p class="actu_time"><span><i class="fa-regular fa-timer"></i>&nbsp; Il y a 4 heures</span><a class="button-small" href="https://www.facebook.com/365096336905207/posts/365096336905207_1631521935646742" target="_blank">Voir plus <i class="fa-solid fa-angles-right"></i></a></p><p class="actu_content">> Prévisions pour le 18/07 :
+En matinée, il faudra s'attendre à quelques passages très chargés avec des plaques de grisaille et potentiellement quelques brumes. Les plus chanceux pourront profiter de belles éclaircies tout de même ! Températures comprises entre 16°C et 18°C. Vent faible.
+
+Dans l'après-midi, ces plaques de grisaille vont se dissiper au fil des heures, et le soleil s'imposera progressivement notamment en soirée. Quelques nuages plus menaçants pourraient faire leur apparition sur le sud de la région en approchant de la Picardie. Températures comprises entre 21°C et 26°C. Vent modéré.
+
+Pensez à regarder les cartes pour voir le temps prévu!
+Bonne soirée ! :) Hugo.
+
+----
+
+👉 Retrouvez les prévisions pour votre ville sur https://meteo-npdc.fr/previsions/ma-ville/</p></div><div class="actu_div"><p class="actu_time"><span><i class="fa-regular fa-timer"></i>&nbsp; Il y a 6 heures</span><a class="button-small" href="https://www.facebook.com/365096336905207/posts/365096336905207_1631423538989915" target="_blank">Voir plus <i class="fa-solid fa-angles-right"></i></a></p><p class="actu_content">Demain sera une journée à nouveau avec un ciel assez chargé, mais surtout une baisse des températures qui va se poursuivre. Les maximales ne dépasseront pas les 22°C à 25°C, ce qui vous donnera déjà un bel aperçu des températures de dimanche. 😎
+
+A tout à l'heure pour votre bulletin détaillé... :)
+Hugo</p></div><div class="actu_div"><p class="actu_time"><span><i class="fa-regular fa-timer"></i>&nbsp; Il y a 11 heures</span><a class="button-small" href="https://www.facebook.com/365096336905207/posts/365096336905207_1631179002347702" target="_blank">Voir plus <i class="fa-solid fa-angles-right"></i></a></p><p class="actu_content">Vous avez froid aujourd'hui ? Sortez les combinaisons de ski 😁 Dimanche sera une journée bien froide (hé oui, pour une fois on passera légèrement sous les normales). Les maximales de la journée ne dépasseront pas les 20°C à 22°C sur notre région. Et ce sera pareil lundi ! 😎
+
+J'avais presque envie de vous remettre des pingouins et la banquise sur la carte... 😜
+
+Hugo</p></div><div class="actu_div"><p class="actu_time"><span><i class="fa-regular fa-timer"></i>&nbsp; Il y a 14 heures</span><a class="button-small" href="https://www.facebook.com/365096336905207/posts/365096336905207_1631087729023496" target="_blank">Voir plus <i class="fa-solid fa-angles-right"></i></a></p><p class="actu_content">Bonjoooour le Noooord 😎 En cette première journée de baisse des températures, on ne relève que de 19°C à 22°C ce matin. On pourrait presque dire que c’est frais tellement on a eu l’habitude de températures trop élevées 😄
+
+Pas mal de nuages présents également ce matin, mais le soleil n’est jamais très loin. 
+
+Cet après-midi, pas de grosses chaleurs pour une fois, avec des maximales de 23°c à 27°C.
+
+Bon vendredi ! 
+Hugo</p></div>    </div>
+</div>
+            </div>
+        </div>
+    </div>
+
+        <script>window.OBS_TEMPERATURE_FIELDS = ["t","t_change_1h","t_change_24h","tn_24h","tx_24h","tn_climato","tx_climato","td","windchill","humidex"];</script>
+        <script src="/assets/js/observations.js?1784326633"></script>
+
+</main>
+
+<footer class="footer">
+    <p>© Hugo Derave / Météo Nord-Pas-de-Calais 2012 - 2026 | App Store est une marque de service d’Apple Inc. | <a href="/mentions-legales">Mentions légales</a></p>
+<p></p>
+<div class="theme-toggle" role="group" aria-label="Thème">
+    <button type="button" class="theme-toggle__btn" data-theme-set="auto" title="Suivre le système" aria-label="Thème automatique">
+        <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i><span>Auto</span>
+    </button>
+    <button type="button" class="theme-toggle__btn" data-theme-set="light" title="Thème clair" aria-label="Thème clair">
+        <i class="fa-solid fa-sun" aria-hidden="true"></i><span>Clair</span>
+    </button>
+    <button type="button" class="theme-toggle__btn" data-theme-set="dark" title="Thème sombre" aria-label="Thème sombre">
+        <i class="fa-solid fa-moon" aria-hidden="true"></i><span>Sombre</span>
+    </button>
+</div>
+
+<script src="/assets/js/theme.js?1784326633" defer></script>
+<script defer data-domain="meteo-npdc.fr" src="https://cirrus.meteo-npdc.fr/js/pl5.js"></script>
+<script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+
+<script>
+    setInterval(function() {
+        if (window.plausible) {
+            window.plausible('Heartbeat', {props: {interval: '5min'}});
+        }
+    }, 300000);
+</script>
+</footer>
+</body>
+</html>

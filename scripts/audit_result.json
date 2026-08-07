@@ -1,0 +1,20 @@
+[
+  "DERNIER_RELEVE=2026-03-03T16:00:00+00:00|AGE=17min",
+  "STATIONS_ACTIVES_1H=1997",
+  "Valenciennes|59606004|age=17|T=17.1|U=49|FF=5|FXI=9|DD=200|TD=6.3|RR=0|P=1025.5",
+  "Steenvoorde|59580003|age=17|T=13.9|U=79|FF=14|FXI=19|DD=10|TD=10.3|RR=0|P=null",
+  "Lille|59343001|age=17|T=18.2|U=41|FF=2|FXI=4|DD=210|TD=4.7|RR=0|P=1025.4",
+  "Douai|59178001|age=17|T=17.5|U=null|FF=null|FXI=null|DD=null|TD=null|RR=0|P=null",
+  "Dunkerque|59183001|age=17|T=10.1|U=90|FF=16|FXI=23|DD=20|TD=8.5|RR=0|P=1026.8",
+  "Boulogne|62160001|age=17|T=12.7|U=75|FF=13|FXI=27|DD=50|TD=8.4|RR=0|P=1026.1",
+  "Chauny|02173002|age=317|T=13.7|U=65|FF=3|FXI=8|DD=140|TD=7.2|RR=0|P=null",
+  "Paris|75114001|age=23|T=17.7|U=44|FF=10|FXI=20|DD=120|TD=5.3|RR=0|P=1024",
+  "Lyon|69029001|age=17|T=16.2|U=49|FF=9|FXI=17|DD=160|TD=5.5|RR=0|P=1023.8",
+  "Marseille|13055001|age=17|T=16.5|U=null|FF=null|FXI=null|DD=null|TD=null|RR=0|P=null",
+  "Toulouse|31069002|ABSENT",
+  "Bordeaux|33281007|ABSENT",
+  "Strasbourg|67124005|ABSENT",
+  "Rennes|35281001|age=23|T=18|U=51|FF=12|FXI=19|DD=90|TD=7.7|RR=0|P=1023.2",
+  "Nantes|44020001|age=17|T=17.6|U=54|FF=16|FXI=24|DD=100|TD=8.2|RR=0|P=1022.1",
+  "NORD_MISSING=0"
+]

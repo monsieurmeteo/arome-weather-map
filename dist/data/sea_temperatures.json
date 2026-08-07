@@ -1,0 +1,873 @@
+[
+  {
+    "id": "9HA4777",
+    "name": "Bateau 9HA4777",
+    "type": "bateau",
+    "latitude": 43.7636,
+    "longitude": 5.4731,
+    "temperature": 24.0,
+    "time": "16:00",
+    "pixel_coords": [
+      528.0,
+      582.0
+    ]
+  },
+  {
+    "id": "62050",
+    "name": "Bouée 62050",
+    "type": "bouee",
+    "latitude": 50.0,
+    "longitude": -4.4,
+    "temperature": 20.4,
+    "time": "18:00",
+    "pixel_coords": [
+      158.0,
+      217.0
+    ]
+  },
+  {
+    "id": "62103",
+    "name": "Bouée 62103",
+    "type": "bouee",
+    "latitude": 49.9,
+    "longitude": -2.9,
+    "temperature": 17.9,
+    "time": "18:00",
+    "pixel_coords": [
+      210.0,
+      225.0
+    ]
+  },
+  {
+    "id": "62107",
+    "name": "Bouée 62107",
+    "type": "bouee",
+    "latitude": 50.1,
+    "longitude": -6.1,
+    "temperature": 18.9,
+    "time": "18:00",
+    "pixel_coords": [
+      100.0,
+      206.0
+    ]
+  },
+  {
+    "id": "62170",
+    "name": "Bouée 62170",
+    "type": "bouee",
+    "latitude": 51.5045,
+    "longitude": 2.0007,
+    "temperature": 19.1,
+    "time": "18:00",
+    "pixel_coords": [
+      377.0,
+      146.0
+    ]
+  },
+  {
+    "id": "62304",
+    "name": "Bouée 62304",
+    "type": "bouee",
+    "latitude": 51.2679,
+    "longitude": 1.7993,
+    "temperature": 18.7,
+    "time": "18:00",
+    "pixel_coords": [
+      371.0,
+      157.0
+    ]
+  },
+  {
+    "id": "62305",
+    "name": "Bouée 62305",
+    "type": "bouee",
+    "latitude": 50.4,
+    "longitude": -0.0,
+    "temperature": 17.5,
+    "time": "18:00",
+    "pixel_coords": [
+      311.0,
+      201.0
+    ]
+  },
+  {
+    "id": "1801670",
+    "name": "Bouée 1801670",
+    "type": "bouee",
+    "latitude": 50.3735,
+    "longitude": -7.2716,
+    "temperature": 19.0,
+    "time": "18:00",
+    "pixel_coords": [
+      61.0,
+      188.0
+    ]
+  },
+  {
+    "id": "2801968",
+    "name": "Bouée 2801968",
+    "type": "bouee",
+    "latitude": 49.1188,
+    "longitude": -5.379,
+    "temperature": 20.4,
+    "time": "18:00",
+    "pixel_coords": [
+      123.0,
+      255.0
+    ]
+  },
+  {
+    "id": "4401651",
+    "name": "Bouée 4401651",
+    "type": "bouee",
+    "latitude": 49.1981,
+    "longitude": -4.0895,
+    "temperature": 20.6,
+    "time": "17:00",
+    "pixel_coords": [
+      168.0,
+      256.0
+    ]
+  },
+  {
+    "id": "4EEWQMW",
+    "name": "Bateau 4EEWQMW",
+    "type": "bateau",
+    "latitude": 44.0684,
+    "longitude": -3.5617,
+    "temperature": 21.6,
+    "time": "18:00",
+    "pixel_coords": [
+      155.0,
+      578.0
+    ]
+  },
+  {
+    "id": "6100001",
+    "name": "Bouée 6100001",
+    "type": "bouee",
+    "latitude": 43.38,
+    "longitude": 7.83,
+    "temperature": 27.1,
+    "time": "18:00",
+    "pixel_coords": [
+      630.0,
+      566.0
+    ]
+  },
+  {
+    "id": "6100002",
+    "name": "Bouée 6100002",
+    "type": "bouee",
+    "latitude": 43.1962,
+    "longitude": 5.0808,
+    "temperature": 24.4,
+    "time": "18:00",
+    "pixel_coords": [
+      507.0,
+      654.0
+    ]
+  },
+  {
+    "id": "6100021",
+    "name": "Bouée 6100021",
+    "type": "bouee",
+    "latitude": 43.4386,
+    "longitude": 6.3599,
+    "temperature": 26.8,
+    "time": "18:00",
+    "pixel_coords": [
+      566.0,
+      597.0
+    ]
+  },
+  {
+    "id": "6100022",
+    "name": "Bouée 6100022",
+    "type": "bouee",
+    "latitude": 43.6767,
+    "longitude": 7.401,
+    "temperature": 27.3,
+    "time": "17:00",
+    "pixel_coords": [
+      611.0,
+      549.0
+    ]
+  },
+  {
+    "id": "6100023",
+    "name": "Bouée 6100023",
+    "type": "bouee",
+    "latitude": 42.0355,
+    "longitude": 9.1349,
+    "temperature": 26.8,
+    "time": "18:00",
+    "pixel_coords": [
+      690.0,
+      675.0
+    ]
+  },
+  {
+    "id": "6100188",
+    "name": "Bouée 6100188",
+    "type": "bouee",
+    "latitude": 43.565,
+    "longitude": 3.5775,
+    "temperature": 23.4,
+    "time": "18:00",
+    "pixel_coords": [
+      443.0,
+      634.0
+    ]
+  },
+  {
+    "id": "6100190",
+    "name": "Bouée 6100190",
+    "type": "bouee",
+    "latitude": 43.9879,
+    "longitude": 3.9985,
+    "temperature": 25.2,
+    "time": "18:00",
+    "pixel_coords": [
+      465.0,
+      583.0
+    ]
+  },
+  {
+    "id": "6100191",
+    "name": "Bouée 6100191",
+    "type": "bouee",
+    "latitude": 43.7923,
+    "longitude": 3.4571,
+    "temperature": 22.6,
+    "time": "18:00",
+    "pixel_coords": [
+      440.0,
+      610.0
+    ]
+  },
+  {
+    "id": "6100196",
+    "name": "Bouée 6100196",
+    "type": "bouee",
+    "latitude": 43.2396,
+    "longitude": 4.155,
+    "temperature": 24.0,
+    "time": "18:00",
+    "pixel_coords": [
+      465.0,
+      666.0
+    ]
+  },
+  {
+    "id": "6100219",
+    "name": "Bouée 6100219",
+    "type": "bouee",
+    "latitude": 43.2974,
+    "longitude": 9.632,
+    "temperature": 29.0,
+    "time": "18:00",
+    "pixel_coords": [
+      706.0,
+      523.0
+    ]
+  },
+  {
+    "id": "6100280",
+    "name": "Bouée 6100280",
+    "type": "bouee",
+    "latitude": 42.9016,
+    "longitude": 2.3521,
+    "temperature": 27.9,
+    "time": "18:00",
+    "pixel_coords": [
+      374.0,
+      740.0
+    ]
+  },
+  {
+    "id": "6100289",
+    "name": "Bouée 6100289",
+    "type": "bouee",
+    "latitude": 43.7266,
+    "longitude": 5.407,
+    "temperature": 26.2,
+    "time": "18:00",
+    "pixel_coords": [
+      525.0,
+      587.0
+    ]
+  },
+  {
+    "id": "6100295",
+    "name": "Bouée 6100295",
+    "type": "bouee",
+    "latitude": 42.303,
+    "longitude": 9.6811,
+    "temperature": 28.2,
+    "time": "18:00",
+    "pixel_coords": [
+      714.0,
+      617.0
+    ]
+  },
+  {
+    "id": "6101031",
+    "name": "Bouée 6101031",
+    "type": "bouee",
+    "latitude": 42.5474,
+    "longitude": 7.8702,
+    "temperature": 27.8,
+    "time": "18:00",
+    "pixel_coords": [
+      632.0,
+      658.0
+    ]
+  },
+  {
+    "id": "6101032",
+    "name": "Bouée 6101032",
+    "type": "bouee",
+    "latitude": 41.8032,
+    "longitude": 10.2841,
+    "temperature": 27.6,
+    "time": "18:00",
+    "pixel_coords": [
+      743.0,
+      650.0
+    ]
+  },
+  {
+    "id": "6101033",
+    "name": "Bouée 6101033",
+    "type": "bouee",
+    "latitude": 42.9138,
+    "longitude": 8.4734,
+    "temperature": 27.8,
+    "time": "18:00",
+    "pixel_coords": [
+      659.0,
+      594.0
+    ]
+  },
+  {
+    "id": "6101034",
+    "name": "Bouée 6101034",
+    "type": "bouee",
+    "latitude": 42.8509,
+    "longitude": 5.9741,
+    "temperature": 25.1,
+    "time": "18:00",
+    "pixel_coords": [
+      545.0,
+      679.0
+    ]
+  },
+  {
+    "id": "6101035",
+    "name": "Bouée 6101035",
+    "type": "bouee",
+    "latitude": 42.218,
+    "longitude": 7.3058,
+    "temperature": 27.0,
+    "time": "18:00",
+    "pixel_coords": [
+      602.0,
+      735.0
+    ]
+  },
+  {
+    "id": "6101036",
+    "name": "Bouée 6101036",
+    "type": "bouee",
+    "latitude": 43.0017,
+    "longitude": 6.9454,
+    "temperature": 26.3,
+    "time": "18:00",
+    "pixel_coords": [
+      591.0,
+      631.0
+    ]
+  },
+  {
+    "id": "6200001",
+    "name": "Bouée 6200001",
+    "type": "bouee",
+    "latitude": 45.23,
+    "longitude": -5.0,
+    "temperature": 22.9,
+    "time": "18:00",
+    "pixel_coords": [
+      116.0,
+      477.0
+    ]
+  },
+  {
+    "id": "6200024",
+    "name": "Bouée 6200024",
+    "type": "bouee",
+    "latitude": 44.2512,
+    "longitude": -2.8242,
+    "temperature": 24.7,
+    "time": "18:00",
+    "pixel_coords": [
+      186.0,
+      569.0
+    ]
+  },
+  {
+    "id": "6200025",
+    "name": "Bouée 6200025",
+    "type": "bouee",
+    "latitude": 44.0026,
+    "longitude": -6.0819,
+    "temperature": 22.2,
+    "time": "18:00",
+    "pixel_coords": [
+      61.0,
+      553.0
+    ]
+  },
+  {
+    "id": "6200050",
+    "name": "Bouée 6200050",
+    "type": "bouee",
+    "latitude": 50.0668,
+    "longitude": -4.3722,
+    "temperature": 20.4,
+    "time": "18:00",
+    "pixel_coords": [
+      159.0,
+      214.0
+    ]
+  },
+  {
+    "id": "6200053",
+    "name": "Bouée 6200053",
+    "type": "bouee",
+    "latitude": 48.5917,
+    "longitude": -4.146,
+    "temperature": 17.1,
+    "time": "18:00",
+    "pixel_coords": [
+      165.0,
+      286.0
+    ]
+  },
+  {
+    "id": "6200059",
+    "name": "Bouée 6200059",
+    "type": "bouee",
+    "latitude": 49.6477,
+    "longitude": -1.6499,
+    "temperature": 17.5,
+    "time": "17:00",
+    "pixel_coords": [
+      254.0,
+      238.0
+    ]
+  },
+  {
+    "id": "6200066",
+    "name": "Bouée 6200066",
+    "type": "bouee",
+    "latitude": 44.2531,
+    "longitude": -1.3212,
+    "temperature": 25.3,
+    "time": "18:00",
+    "pixel_coords": [
+      245.0,
+      578.0
+    ]
+  },
+  {
+    "id": "6200067",
+    "name": "Bouée 6200067",
+    "type": "bouee",
+    "latitude": 46.7566,
+    "longitude": -2.3681,
+    "temperature": 21.6,
+    "time": "17:00",
+    "pixel_coords": [
+      224.0,
+      393.0
+    ]
+  },
+  {
+    "id": "6200069",
+    "name": "Bouée 6200069",
+    "type": "bouee",
+    "latitude": 48.0888,
+    "longitude": -5.0717,
+    "temperature": 19.9,
+    "time": "18:00",
+    "pixel_coords": [
+      131.0,
+      308.0
+    ]
+  },
+  {
+    "id": "6200074",
+    "name": "Bouée 6200074",
+    "type": "bouee",
+    "latitude": 47.143,
+    "longitude": -3.3871,
+    "temperature": 22.6,
+    "time": "18:00",
+    "pixel_coords": [
+      188.0,
+      367.0
+    ]
+  },
+  {
+    "id": "6200078",
+    "name": "Bouée 6200078",
+    "type": "bouee",
+    "latitude": 47.1204,
+    "longitude": -2.8657,
+    "temperature": 24.7,
+    "time": "18:00",
+    "pixel_coords": [
+      207.0,
+      370.0
+    ]
+  },
+  {
+    "id": "6200079",
+    "name": "Bouée 6200079",
+    "type": "bouee",
+    "latitude": 44.1734,
+    "longitude": -1.3688,
+    "temperature": 25.9,
+    "time": "18:00",
+    "pixel_coords": [
+      242.0,
+      585.0
+    ]
+  },
+  {
+    "id": "6200082",
+    "name": "Bouée 6200082",
+    "type": "bouee",
+    "latitude": 44.068,
+    "longitude": -7.758,
+    "temperature": 21.3,
+    "time": "18:00",
+    "pixel_coords": [
+      3.0,
+      524.0
+    ]
+  },
+  {
+    "id": "6200091",
+    "name": "Bouée 6200091",
+    "type": "bouee",
+    "latitude": 54.5433,
+    "longitude": -4.8294,
+    "temperature": 16.0,
+    "time": "18:00",
+    "pixel_coords": [
+      140.0,
+      29.0
+    ]
+  },
+  {
+    "id": "6200094",
+    "name": "Bouée 6200094",
+    "type": "bouee",
+    "latitude": 52.0991,
+    "longitude": -6.4685,
+    "temperature": 16.9,
+    "time": "18:00",
+    "pixel_coords": [
+      89.0,
+      119.0
+    ]
+  },
+  {
+    "id": "6200103",
+    "name": "Bouée 6200103",
+    "type": "bouee",
+    "latitude": 49.9009,
+    "longitude": -2.8714,
+    "temperature": 17.9,
+    "time": "18:00",
+    "pixel_coords": [
+      211.0,
+      225.0
+    ]
+  },
+  {
+    "id": "6200251",
+    "name": "Bouée 6200251",
+    "type": "bouee",
+    "latitude": 46.8156,
+    "longitude": -2.5361,
+    "temperature": 23.5,
+    "time": "18:00",
+    "pixel_coords": [
+      218.0,
+      389.0
+    ]
+  },
+  {
+    "id": "6200252",
+    "name": "Bouée 6200252",
+    "type": "bouee",
+    "latitude": 50.176,
+    "longitude": 1.2893,
+    "temperature": 20.9,
+    "time": "18:00",
+    "pixel_coords": [
+      357.0,
+      208.0
+    ]
+  },
+  {
+    "id": "6200253",
+    "name": "Bouée 6200253",
+    "type": "bouee",
+    "latitude": 45.7346,
+    "longitude": -1.0002,
+    "temperature": 22.7,
+    "time": "18:00",
+    "pixel_coords": [
+      271.0,
+      462.0
+    ]
+  },
+  {
+    "id": "6802050",
+    "name": "Bouée 6802050",
+    "type": "bouee",
+    "latitude": 42.681,
+    "longitude": 3.6307,
+    "temperature": 27.9,
+    "time": "18:00",
+    "pixel_coords": [
+      427.0,
+      767.0
+    ]
+  },
+  {
+    "id": "7894569",
+    "name": "Bouée 7894569",
+    "type": "bouee",
+    "latitude": 50.0815,
+    "longitude": -9.0026,
+    "temperature": 18.7,
+    "time": "18:00",
+    "pixel_coords": [
+      3.0,
+      190.0
+    ]
+  },
+  {
+    "id": "7XPKEJR",
+    "name": "Bateau 7XPKEJR",
+    "type": "bateau",
+    "latitude": 53.7988,
+    "longitude": 8.4568,
+    "temperature": 21.5,
+    "time": "18:00",
+    "pixel_coords": [
+      579.0,
+      14.0
+    ]
+  },
+  {
+    "id": "BYR9MQB",
+    "name": "Bateau BYR9MQB",
+    "type": "bateau",
+    "latitude": 50.5725,
+    "longitude": 1.2109,
+    "temperature": 18.0,
+    "time": "18:00",
+    "pixel_coords": [
+      353.0,
+      190.0
+    ]
+  },
+  {
+    "id": "CVTKCAL",
+    "name": "Bateau CVTKCAL",
+    "type": "bateau",
+    "latitude": 53.7988,
+    "longitude": 8.4568,
+    "temperature": 20.9,
+    "time": "18:00",
+    "pixel_coords": [
+      579.0,
+      14.0
+    ]
+  },
+  {
+    "id": "EHHTB7Q",
+    "name": "Bateau EHHTB7Q",
+    "type": "bateau",
+    "latitude": 53.7725,
+    "longitude": 8.4503,
+    "temperature": 31.1,
+    "time": "18:00",
+    "pixel_coords": [
+      579.0,
+      15.0
+    ]
+  },
+  {
+    "id": "EUCFR02",
+    "name": "Bateau EUCFR02",
+    "type": "bateau",
+    "latitude": 49.4041,
+    "longitude": -4.0966,
+    "temperature": 20.4,
+    "time": "18:00",
+    "pixel_coords": [
+      168.0,
+      246.0
+    ]
+  },
+  {
+    "id": "EUCFR06",
+    "name": "Bateau EUCFR06",
+    "type": "bateau",
+    "latitude": 49.2016,
+    "longitude": -4.0325,
+    "temperature": 20.3,
+    "time": "18:00",
+    "pixel_coords": [
+      170.0,
+      256.0
+    ]
+  },
+  {
+    "id": "JZR5NVG",
+    "name": "Bateau JZR5NVG",
+    "type": "bateau",
+    "latitude": 43.5749,
+    "longitude": 6.0343,
+    "temperature": 29.0,
+    "time": "18:00",
+    "pixel_coords": [
+      552.0,
+      590.0
+    ]
+  },
+  {
+    "id": "MERFR18",
+    "name": "Bateau MERFR18",
+    "type": "bateau",
+    "latitude": 43.5814,
+    "longitude": 3.5059,
+    "temperature": 23.3,
+    "time": "17:00",
+    "pixel_coords": [
+      440.0,
+      633.0
+    ]
+  },
+  {
+    "id": "PTQNL3P",
+    "name": "Bateau PTQNL3P",
+    "type": "bateau",
+    "latitude": 47.1126,
+    "longitude": -6.9145,
+    "temperature": 18.0,
+    "time": "18:00",
+    "pixel_coords": [
+      62.0,
+      348.0
+    ]
+  },
+  {
+    "id": "SXZPW9C",
+    "name": "Bateau SXZPW9C",
+    "type": "bateau",
+    "latitude": 47.6,
+    "longitude": -3.4312,
+    "temperature": 23.1,
+    "time": "18:00",
+    "pixel_coords": [
+      188.0,
+      341.0
+    ]
+  },
+  {
+    "id": "ZGXRBQD",
+    "name": "Bateau ZGXRBQD",
+    "type": "bateau",
+    "latitude": 54.4328,
+    "longitude": 6.0783,
+    "temperature": 19.7,
+    "time": "18:00",
+    "pixel_coords": [
+      497.0,
+      9.0
+    ]
+  },
+  {
+    "id": "QTLQSUC",
+    "name": "Bateau QTLQSUC",
+    "type": "bateau",
+    "latitude": 49.0911,
+    "longitude": -8.0445,
+    "temperature": 19.0,
+    "time": "17:00",
+    "pixel_coords": [
+      32.0,
+      241.0
+    ]
+  },
+  {
+    "id": "EUCFR03",
+    "name": "Bateau EUCFR03",
+    "type": "bateau",
+    "latitude": 49.4876,
+    "longitude": -0.415,
+    "temperature": 20.6,
+    "time": "18:00",
+    "pixel_coords": [
+      298.0,
+      245.0
+    ]
+  },
+  {
+    "id": "9HA5209",
+    "name": "Bateau 9HA5209",
+    "type": "bateau",
+    "latitude": 49.5444,
+    "longitude": -1.6234,
+    "temperature": 19.9,
+    "time": "18:00",
+    "pixel_coords": [
+      255.0,
+      243.0
+    ]
+  },
+  {
+    "id": "EUCFR07",
+    "name": "Bateau EUCFR07",
+    "type": "bateau",
+    "latitude": 42.6116,
+    "longitude": 9.4616,
+    "temperature": 28.2,
+    "time": "18:00",
+    "pixel_coords": [
+      703.0,
+      592.0
+    ]
+  },
+  {
+    "id": "EUCFR08",
+    "name": "Bateau EUCFR08",
+    "type": "bateau",
+    "latitude": 43.765,
+    "longitude": 5.5189,
+    "temperature": 25.5,
+    "time": "18:00",
+    "pixel_coords": [
+      530.0,
+      581.0
+    ]
+  }
+]

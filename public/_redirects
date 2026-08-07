@@ -1,0 +1,8 @@
+# Proxy pour Météo France - Observations Standard
+/api-meteo/*  https://public-api.meteofrance.fr/public/DPObs/v1/:splat  200
+
+# Proxy pour Météo France - Paquets 6mn
+/api-meteo-paquet/*  https://public-api.meteofrance.fr/public/DPPaquetObs/v1/:splat  200
+
+# Pour supporter le routage React (SPA)
+/*  /index.html  200

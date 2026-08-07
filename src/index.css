@@ -1,0 +1,410 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Palette Météo Premium - Deep & Vibrant */
+  --color-primary: #0f172a;
+  /* Slate 900 */
+  --color-primary-light: #1e293b;
+  /* Slate 800 */
+  --color-accent: #38bdf8;
+  /* Sky 400 */
+  --color-accent-hover: #0ea5e9;
+  /* Sky 500 */
+
+  --color-bg-main: #f8fafc;
+  /* Slate 50 */
+  --color-bg-card: rgba(255, 255, 255, 0.8);
+  --color-glass-border: rgba(255, 255, 255, 0.4);
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-orange: #f97316;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+
+  --color-text-main: #1e293b;
+  --color-text-muted: #64748b;
+  --color-text-light: #f1f5f9;
+
+  /* Shadows & Glassmorphism */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+  --glass-blur: blur(12px);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1.25rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 4rem;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-size: 95%;
+  /* Réduction globale pour affiner l'interface */
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(circle at top right, #e2e8f0, #f8fafc);
+  color: var(--color-text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+ul {
+  list-style: none;
+}
+
+/* Glassmorphism Components */
+.card {
+  background: var(--color-bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-glass);
+  padding: var(--spacing-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.1);
+}
+
+/* Layout Utilities */
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.flex {
+  display: flex;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.text-primary {
+  color: var(--color-accent);
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-hover);
+  transform: scale(1.02);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 5px;
+  border: 2px solid #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* =========================================
+   RESPONSIVE & MOBILE STYLES
+   ========================================= */
+
+/* Par défaut (Desktop) : Header mobile caché */
+.mobile-header {
+  display: none;
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  align-items: center;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mobile-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.menu-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* OVERLAY (Fond sombre quand sidebar ouverte) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 45;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* TABLETTE & MOBILE (< 1024px) */
+@media (max-width: 1024px) {
+
+  /* Layout global */
+  .app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* Afficher le header mobile */
+  .mobile-header {
+    display: flex;
+  }
+
+  /* Sidebar : Tiroir coulissant */
+  .sidebar {
+    transform: translateX(-100%);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    width: 280px;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Afficher overlay */
+  .sidebar-overlay {
+    display: block;
+    /* Uniquement visible si présent dans le DOM (géré par React) */
+  }
+
+  /* Main Content : Prend toute la place */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100%;
+    padding: 1rem;
+    overflow-x: hidden;
+    /* Evite le scroll horizontal global */
+  }
+
+  /* GRIDS RESPONSIVES */
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    /* 2 cols sur tablette */
+    gap: 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+  }
+
+  /* TABLEAUX */
+  .table-wrapper,
+  .monthly-table-wrapper {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+    border-radius: 8px;
+    /* Moins rond sur mobile */
+  }
+
+  .obs-table td,
+  .obs-table th,
+  .monthly-table td,
+  .monthly-table th {
+    padding: 8px 4px !important;
+    /* Cellules plus compactes */
+    font-size: 0.8rem;
+  }
+}
+
+/* SMARTPHONE ONLY (< 640px) */
+@media (max-width: 640px) {
+  .summary-grid {
+    grid-template-columns: 1fr !important;
+    /* 1 col sur mobile */
+  }
+
+  .detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .title-row {
+    flex-wrap: wrap;
+  }
+
+  .btn-outline {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
+  /* Ajustements fins pour les tableaux */
+  .day-cell {
+    min-width: 40px !important;
+    width: 40px !important;
+  }
+}
+
+/* =========================================
+   PRINT STYLES - MASQUAGE GLOBAL
+   ========================================= */
+@media print {
+
+  /* Masquer complètement le header mobile et la sidebar */
+  .mobile-header,
+  .sidebar,
+  .sidebar-overlay,
+  .menu-btn {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Reset du layout pour l'impression */
+  .app-layout {
+    display: block !important;
+    width: 100% !important;
+    min-height: auto !important;
+  }
+
+  /* Le contenu principal prend tout l'espace */
+  .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+
+  /* Pas de fond dégradé en impression */
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html {
+    background: white !important;
+  }
+
+  /* Cards sans effets visuels en impression */
+  .card {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+}

@@ -1,0 +1,384 @@
+/* ─── Layout ─────────────────────────────────────────────── */
+.sea-map-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+}
+
+.sea-map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid rgba(14, 165, 233, 0.2);
+    flex-shrink: 0;
+}
+
+.sea-map-header h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0;
+}
+
+.sea-map-header-actions { display: flex; gap: 8px; }
+
+.sea-map-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ─── Map ────────────────────────────────────────────────── */
+.leaflet-map-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.map-overlay-loader,
+.map-overlay-error {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding: 24px;
+}
+
+.map-overlay-error h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+.map-overlay-error p {
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* ─── Sidebar ────────────────────────────────────────────── */
+.sea-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: rgba(15, 23, 42, 0.97);
+    border-left: 1px solid rgba(14, 165, 233, 0.15);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+}
+
+.filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.filter-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+}
+
+/* ─── Stats row ──────────────────────────────────────────── */
+.sea-stats-row {
+    display: flex;
+    gap: 6px;
+    padding: 10px;
+    background: rgba(14, 165, 233, 0.06);
+    border-radius: 10px;
+    border: 1px solid rgba(14, 165, 233, 0.15);
+}
+
+.sea-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.stat-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #38bdf8;
+    line-height: 1;
+}
+
+.stat-lbl {
+    font-size: 0.6rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ─── Controls ───────────────────────────────────────────── */
+.sst-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sst-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #cbd5e1;
+}
+
+.sst-toggle input[type="checkbox"] {
+    accent-color: #0ea5e9;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+.sst-slider-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.sst-slider {
+    width: 100%;
+    accent-color: #0ea5e9;
+    cursor: pointer;
+    height: 4px;
+}
+
+/* ─── Gradient Legend ─────────────────────────────────────── */
+.sst-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.sst-gradient-bar {
+    height: 18px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sst-legend-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+/* ─── Info card ──────────────────────────────────────────── */
+.sea-info-card {
+    padding: 12px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sea-info-card h2 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin: 0 0 4px 0;
+}
+
+.sea-info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    gap: 8px;
+}
+
+.sea-info-row .label { color: #64748b; }
+.sea-info-row .value { color: #e2e8f0; font-weight: 600; text-align: right; }
+.sea-info-row .value.temp { color: #fb923c; font-size: 1rem; }
+
+/* ─── Buttons ────────────────────────────────────────────── */
+.sea-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: rgba(14, 165, 233, 0.1);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    color: #38bdf8;
+}
+
+.sea-btn:hover { background: rgba(14, 165, 233, 0.2); }
+.sea-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Station markers ─────────────────────────────────────── */
+.sea-marker-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* ─── Popup ──────────────────────────────────────────────── */
+.popup-details { font-family: 'Inter', sans-serif; min-width: 180px; }
+.popup-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 6px;
+}
+
+.popup-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #0ea5e9;
+    text-decoration: none;
+}
+
+.popup-link:hover { text-decoration: underline; }
+
+/* ─── Leaflet overrides ──────────────────────────────────── */
+.leaflet-popup-content-wrapper {
+    border-radius: 10px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+}
+
+/* ─── SST notice ────────────────────────────────────────────── */
+.sst-notice {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 900;
+    background: rgba(15,23,42,0.92);
+    border: 1px solid rgba(14,165,233,0.4);
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #38bdf8;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ─── Date badge ─────────────────────────────────────────────── */
+.sst-date-badge {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    background: rgba(30,41,59,0.8);
+    border: 1px solid rgba(71,85,105,0.4);
+    border-radius: 6px;
+    padding: 4px 10px;
+}
+
+/* ─── Filter buttons ─────────────────────────────────────────── */
+.filter-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sea-btn.active {
+    background: rgba(14,165,233,0.25);
+    border-color: rgba(14,165,233,0.6);
+    color: #7dd3fc;
+}
+
+/* ─── Utility ────────────────────────────────────────────────── */
+.animate-spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.flex { display: flex; }
+.gap-2 { gap: 8px; }
+.mb-1 { margin-bottom: 4px; }
+.items-center { align-items: center; }
+.text-sky-400 { color: #38bdf8; }
+.text-rose-500 { color: #f43f5e; }
+.font-semibold { font-weight: 600; }
+.text-xs { font-size: 0.75rem; }
+.uppercase { text-transform: uppercase; }
+.tracking-wider { letter-spacing: 0.05em; }
+.text-slate-400 { color: #94a3b8; }
+.leading-relaxed { line-height: 1.6; }
+.m-0 { margin: 0; }
+.capitalize { text-transform: capitalize; }
+.text-warning { color: #fb923c; }
+
+/* ─── Hover Badge ────────────────────────────────────────────── */
+.sst-hover-badge {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(14, 165, 233, 0.4);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    pointer-events: none;
+}
+
+.sst-hover-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+}
+
+.sst-hover-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #38bdf8;
+}
+

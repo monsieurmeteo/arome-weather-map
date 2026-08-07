@@ -1,0 +1,11 @@
+ecmwf-opendata==0.3.8
+cfgrib==0.9.14.0
+xarray==2024.3.0
+numpy==1.26.4
+matplotlib==3.8.4
+cartopy==0.23.0
+scipy==1.13.0
+supabase==2.4.3
+requests==2.31.0
+pillow==10.3.0
+eccodes==1.7.0

@@ -1,0 +1,72 @@
+/* --- TEXT LIST SECTION --- */
+.vigilance-text-list-section {
+    margin-top: 30px;
+    width: 100%;
+}
+
+.text-list-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.text-list-card h3 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: #0f172a;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 15px;
+}
+
+.phenomenon-text-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.phenom-text-group {
+    background: white;
+}
+
+.phenom-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.phenom-header h4 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dept-text-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vigilance-paragraph {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #334155;
+    background: #f8fafc;
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    /* Left border provided by inline style */
+}
+
+.no-vigilance-text {
+    font-weight: 600;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    margin-top: 10px;
+}
