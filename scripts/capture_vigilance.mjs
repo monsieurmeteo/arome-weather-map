@@ -11,8 +11,10 @@ dotenv.config({ path: '.env.local' });
 
 
 // Accepte VITE_SUPABASE_URL ou SUPABASE_URL (compatibilité GitHub Actions)
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const rawUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://ubdevaemtwbzxksjlhjg.supabase.co';
+const supabaseUrl = rawUrl.trim();
+const rawKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_publishable_1qhA0xAnNSd3VxpoLdxYrQ_yUemEhaP';
+const supabaseKey = rawKey.trim();
 
 // Debug: afficher quelles variables sont disponibles
 console.log('🔑 VITE_SUPABASE_URL:', supabaseUrl ? '✅ défini' : '❌ manquant');
@@ -70,10 +72,16 @@ async function captureAndUpload() {
         console.error("⚠️ Copernicus SST échoué:", e.message);
     }
 
-    const browser = await puppeteer.launch({
+    const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+    const launchOptions = {
         headless: "new",
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security']
-    });
+    };
+    if (fs.existsSync(chromePath)) {
+        launchOptions.executablePath = chromePath;
+    }
+
+    const browser = await puppeteer.launch(launchOptions);
 
     try {
         const periods = [

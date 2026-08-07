@@ -101,21 +101,8 @@ def scrape():
     print(f"Successfully scraped {len(stations_list)} unique stations. Saved to {output_path}")
 
     # Try uploading to Supabase Storage
-    supabase_url = os.environ.get('SUPABASE_URL') or os.environ.get('VITE_SUPABASE_URL')
-    supabase_key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY') or os.environ.get('VITE_SUPABASE_SERVICE_ROLE_KEY')
-
-    # Load from .env.local if not in environment
-    if (not supabase_url or not supabase_key) and os.path.exists('.env.local'):
-        with open('.env.local', 'r') as f:
-            for line in f:
-                if '=' in line and not line.strip().startswith('#'):
-                    k, v = line.strip().split('=', 1)
-                    k = k.strip()
-                    v = v.strip().strip('"\'')
-                    if k in ('VITE_SUPABASE_URL', 'SUPABASE_URL'):
-                        supabase_url = v
-                    elif k in ('VITE_SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SERVICE_ROLE_KEY'):
-                        supabase_key = v
+    supabase_url = (os.environ.get('SUPABASE_URL') or os.environ.get('VITE_SUPABASE_URL') or 'https://ubdevaemtwbzxksjlhjg.supabase.co').strip()
+    supabase_key = (os.environ.get('VITE_SUPABASE_ANON_KEY') or os.environ.get('SUPABASE_SERVICE_ROLE_KEY') or 'sb_publishable_1qhA0xAnNSd3VxpoLdxYrQ_yUemEhaP').strip()
 
     if supabase_url and supabase_key:
         print("Uploading sea_temperatures.json to Supabase Storage...")
