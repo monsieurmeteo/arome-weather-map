@@ -42,5 +42,10 @@ jobs:
           git config --global user.name "Météo Automatique"
           git config --global user.email "meteo-bot@cnews.fr"
           git add meteofrance_data*.json meteofrance_*.csv meteofrance_token.json
-          git commit -m "Mise à jour automatique des prévisions Météo-France, CSV et token"
-          git push origin main
+          git diff --staged --quiet
+          if ($LASTEXITCODE -ne 0) {
+              git commit -m "Mise à jour automatique des prévisions Météo-France, CSV et token"
+              git push origin main
+          } else {
+              Write-Output "Aucun changement détecté dans les prévisions."
+          }

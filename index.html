@@ -4270,7 +4270,14 @@
                 try {
                     const zoneVal = document.getElementById('zone-select').value || 'france_pictos';
                     const dataFile = zoneVal === 'france_pictos' ? 'meteofrance_data.json' : `meteofrance_data_${zoneVal}.json`;
-                    const res = await fetch(dataFile);
+                    
+                    // ponytail: fetch directly from GitHub raw with timestamp anti-cache, fallback to Vercel relative path
+                    const ghUrl = `https://raw.githubusercontent.com/monsieurmeteo/europe-1-v2/main/${dataFile}?t=${Date.now()}`;
+                    let res = await fetch(ghUrl);
+                    if (!res.ok) {
+                        res = await fetch(dataFile);
+                    }
+
                     if (res.ok) {
                         globalWeatherData = await res.json();
                         isUsingMFData = true;
