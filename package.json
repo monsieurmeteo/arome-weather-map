@@ -1,5 +1,7 @@
 {
-  "dependencies": {
-    "puppeteer": "^24.37.5"
+  "name": "europe-1-v2",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Static site ready'"
   }
 }
