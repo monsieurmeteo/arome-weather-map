@@ -1128,6 +1128,59 @@
                 }
             });
         }
+
+        // Raccordement direct et robuste des menus déroulants
+        var layerSelect = document.getElementById('direct-layer-select');
+        if (layerSelect) {
+            layerSelect.addEventListener('change', function(e) {
+                setLayer(e.target.value);
+            });
+        }
+
+        var modelSelect = document.getElementById('select-model');
+        if (modelSelect) {
+            modelSelect.addEventListener('change', function(e) {
+                var val = e.target.value;
+                var names = {
+                    arome: 'AROME HD 1,3 km (Météo-France)',
+                    arpege: 'ARPEGE Europe 5 km (Météo-France)',
+                    icon: 'ICON-EU 7 km (DWD Allemagne)',
+                    gfs: 'GFS 13 km (NOAA USA)',
+                    ecmwf: 'ECMWF IFS 9 km (Centre Européen)'
+                };
+                if (mapTitle) {
+                    mapTitle.textContent = names[val] || 'Modèle Météo';
+                }
+                var badge = document.querySelector('.amfm-title .amfm-badge');
+                if (badge) {
+                    badge.textContent = val.toUpperCase();
+                }
+                // Forcer le rechargement de l'échéance active
+                renderStep(currentStep);
+            });
+        }
+
+        var regionSelect = document.getElementById('select-region');
+        if (regionSelect) {
+            regionSelect.addEventListener('change', function(e) {
+                var val = e.target.value;
+                var coords = {
+                    france: { scale: 1, u: 0.5, v: 0.5 },
+                    hdf: { scale: 2.8, u: 0.53, v: 0.28 },
+                    idf: { scale: 3.8, u: 0.52, v: 0.38 },
+                    ara: { scale: 2.6, u: 0.64, v: 0.58 },
+                    paca: { scale: 3.0, u: 0.68, v: 0.72 },
+                    occitanie: { scale: 2.6, u: 0.48, v: 0.70 },
+                    naq: { scale: 2.4, u: 0.38, v: 0.58 },
+                    bretagne: { scale: 3.0, u: 0.28, v: 0.38 },
+                    normandie: { scale: 3.0, u: 0.42, v: 0.32 },
+                    grandest: { scale: 2.6, u: 0.68, v: 0.35 },
+                    corse: { scale: 4.2, u: 0.78, v: 0.82 }
+                };
+                var target = coords[val] || coords.france;
+                focusOnPoint(target.u, target.v, target.scale);
+            });
+        }
 function setLayer(layer) {
             if (!manifest.layers[layer]) {
                 return;
@@ -1270,14 +1323,30 @@ function setLayer(layer) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.uniform1i(gl.getUniformLocation(program, 'uWeather'), 0);
 
+            var maskTexture = gl.createTexture();
+            var maskImage = new Image();
+            maskImage.src = 'output/maps/mask_france.png';
+            maskImage.onload = function() {
+                gl.activeTexture(gl.TEXTURE1);
+                gl.bindTexture(gl.TEXTURE_2D, maskTexture);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskImage);
+            };
+
             return {
                 gl: gl,
                 program: program,
                 texture: texture,
+                maskTexture: maskTexture,
                 scale: gl.getUniformLocation(program, 'uScale'),
                 translation: gl.getUniformLocation(program, 'uTranslation'),
                 aspect: gl.getUniformLocation(program, 'uAspect'),
                 hasWeather: gl.getUniformLocation(program, 'uHasWeather'),
+                maskSampler: gl.getUniformLocation(program, 'uMask'),
+                useMask: gl.getUniformLocation(program, 'uUseMask'),
                 ready: false
             };
         }

@@ -8,8 +8,8 @@
     <style>
         :root {
             --amfm-bg: #070b14;
-            --amfm-surface: rgba(13, 19, 33, 0.94);
-            --amfm-border: rgba(255, 255, 255, 0.16);
+            --amfm-surface: rgba(13, 19, 33, 0.92);
+            --amfm-border: rgba(255, 255, 255, 0.14);
             --amfm-accent: #00d2ff;
             --amfm-text: #f8fafc;
             --amfm-muted: #94a3b8;
@@ -20,17 +20,24 @@
         .amfm-viewport { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; background: #070b14; cursor: grab; }
         .amfm-viewport:active { cursor: grabbing; }
         .amfm-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        
+        /* Header Supérieur Comme Avant */
         .amfm-header { position: absolute; top: 14px; left: 14px; right: 14px; z-index: 100; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
-        .amfm-card { pointer-events: auto; background: var(--amfm-surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--amfm-border); border-radius: 12px; padding: 8px 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); display: flex; align-items: center; gap: 12px; }
+        .amfm-card { pointer-events: auto; background: var(--amfm-surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--amfm-border); border-radius: 12px; padding: 8px 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 12px; }
         .amfm-title { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; color: #fff; }
         .amfm-badge { background: linear-gradient(135deg, #0284c7, #00d2ff); color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
         .amfm-btn { background: rgba(255,255,255,0.08); border: 1px solid var(--amfm-border); color: #fff; padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
         .amfm-btn:hover { background: rgba(0, 210, 255, 0.25); border-color: var(--amfm-accent); }
+        .btn-download { background: linear-gradient(135deg, #0284c7, #00d2ff) !important; color: #fff !important; font-weight: 800 !important; }
         .amfm-controls { display: flex; align-items: center; gap: 10px; }
         select { background: rgba(8,12,20,0.95); border: 1px solid var(--amfm-border); color: #fff; font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 8px; outline: none; cursor: pointer; }
         select:hover { border-color: var(--amfm-accent); }
-        .amfm-legend { position: absolute; left: 16px; bottom: 92px; z-index: 100; background: var(--amfm-surface); backdrop-filter: blur(20px); border: 1px solid var(--amfm-border); border-radius: 12px; padding: 10px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); min-width: 290px; }
-        .amfm-timeline { position: absolute; bottom: 14px; left: 14px; right: 14px; z-index: 100; background: var(--amfm-surface); backdrop-filter: blur(24px); border: 1px solid var(--amfm-border); border-radius: 16px; padding: 10px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); display: flex; align-items: center; gap: 18px; }
+
+        /* Légende */
+        .amfm-legend { position: absolute; left: 16px; bottom: 92px; z-index: 100; background: var(--amfm-surface); backdrop-filter: blur(20px); border: 1px solid var(--amfm-border); border-radius: 12px; padding: 10px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); min-width: 280px; }
+        
+        /* Timeline Inférieure */
+        .amfm-timeline { position: absolute; bottom: 14px; left: 14px; right: 14px; z-index: 100; background: var(--amfm-surface); backdrop-filter: blur(24px); border: 1px solid var(--amfm-border); border-radius: 16px; padding: 10px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 18px; }
         .amfm-player { display: flex; align-items: center; gap: 8px; }
         .amfm-player button { background: rgba(255,255,255,0.08); border: 1px solid var(--amfm-border); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; }
         .amfm-player button:hover { background: #0284c7; border-color: var(--amfm-accent); }
@@ -39,14 +46,11 @@
         .amfm-validity { color: var(--amfm-accent); }
         .amfm-lead { background: rgba(0,210,255,0.18); border: 1px solid rgba(0,210,255,0.3); padding: 2px 8px; border-radius: 6px; }
         input[type="range"] { width: 100%; height: 6px; border-radius: 3px; accent-color: var(--amfm-accent); cursor: pointer; }
+        
+        /* Sonde */
         .amfm-probe { position: fixed; z-index: 1500; pointer-events: none; background: rgba(8,12,20,0.95); border: 1px solid var(--amfm-accent); border-radius: 8px; padding: 6px 10px; display: none; }
         .amfm-probe.active { display: block; }
         .amfm-probe-val { font-size: 16px; font-weight: 800; color: var(--amfm-accent); }
-        .amfm-layer-menu { position: fixed; top: 70px; left: 14px; z-index: 1200; background: var(--amfm-surface); backdrop-filter: blur(24px); border: 1px solid var(--amfm-border); border-radius: 16px; padding: 16px; width: 340px; max-height: 80vh; overflow-y: auto; display: none; }
-        .amfm-layer-menu.active { display: block; }
-        .amfm-layer-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
-        .amfm-layer-item { padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.05); }
-        .amfm-layer-item:hover, .amfm-layer-item.active { background: rgba(0,210,255,0.25); color: #fff; }
     </style>
 </head>
 <body>
@@ -56,7 +60,7 @@
          data-timezone="Europe/Paris"
          data-animation="1">
         
-        <!-- Header -->
+        <!-- Header Supérieur -->
         <header class="amfm-header">
             <div class="amfm-card">
                 <div class="amfm-title">
@@ -67,8 +71,17 @@
             </div>
 
             <div class="amfm-card amfm-controls">
-                <!-- Sélecteur direct de Calque Météo -->
-                <select id="direct-layer-select">
+                <!-- Sélecteur de Modèle -->
+                <select id="select-model" title="Modèle">
+                    <option value="arome" selected>🇫🇷 AROME HD (1,3 km)</option>
+                    <option value="arpege">🇫🇷 ARPEGE (5 km)</option>
+                    <option value="icon">🇩🇪 ICON-EU (7 km)</option>
+                    <option value="gfs">🇺🇸 GFS (13 km)</option>
+                    <option value="ecmwf">🇪🇺 ECMWF IFS (9 km)</option>
+                </select>
+
+                <!-- Sélecteur direct de Calque Météo 100% Opérationnel -->
+                <select id="direct-layer-select" title="Paramètre météo">
                     <optgroup label="🌡️ Températures">
                         <option value="temperature" selected>🌡️ Température à 2 m (°C)</option>
                         <option value="temperature_ressentie">❄️ Température ressentie (°C)</option>
@@ -98,12 +111,12 @@
                 </select>
 
                 <!-- Sélecteur de Région -->
-                <select id="select-region" data-amfm-region-select>
+                <select id="select-region" data-amfm-region-select title="Région">
                     <option value="france">🇫🇷 France Entière</option>
                     <option value="hdf">🏘️ Hauts-de-France</option>
                     <option value="idf">🗼 Île-de-France</option>
                     <option value="ara">⛰️ Auvergne-Rhône-Alpes</option>
-                    <option value="paca">☀️ Provence-Alpes-Côte d'Azur</option>
+                    <option value="paca">☀️ PACA</option>
                     <option value="occitanie">🌞 Occitanie</option>
                     <option value="naq">🌊 Nouvelle-Aquitaine</option>
                     <option value="bretagne">⛵ Bretagne</option>
@@ -112,6 +125,12 @@
                     <option value="corse">🏝️ Corse</option>
                 </select>
 
+                <!-- Bouton Télécharger Carte HD -->
+                <button type="button" class="amfm-btn btn-download" data-amfm-capture title="Télécharger la carte HD">
+                    <i class="fa-solid fa-download"></i> Télécharger
+                </button>
+
+                <!-- Recadrer -->
                 <button type="button" class="amfm-btn" data-amfm-reset title="Recentrer la carte">
                     <i class="fa-solid fa-compress"></i> Recadrer
                 </button>
@@ -125,13 +144,13 @@
             <canvas class="amfm-canvas" data-amfm-labels></canvas>
         </main>
 
-        <!-- Sonde de Pixel sous le curseur -->
+        <!-- Sonde de Pixel -->
         <div class="amfm-probe" data-amfm-probe>
             <div class="amfm-probe-val" data-amfm-probe-value>—</div>
             <div style="font-size:10px; color:#94a3b8;" data-amfm-probe-label>Température</div>
         </div>
 
-        <!-- Éléments d'état du modèle -->
+        <!-- Éléments d'état internes requis par le moteur -->
         <div style="display:none;">
             <span data-amfm-current-layer></span>
             <button data-amfm-menu-toggle></button>
@@ -151,7 +170,6 @@
             <span data-amfm-zoom-level></span>
             <span data-amfm-tool-hint></span>
             <span data-amfm-advanced-tools></span>
-            <span data-amfm-capture></span>
             <span data-amfm-pin></span>
             <div data-amfm-diagram-popup>
                 <span data-amfm-diagram-title></span>
@@ -189,19 +207,14 @@
     </div>
 
     <!-- Script du Moteur Original -->
-    <script src="js/arome-map.js?v=2.1.0"></script>
+    <script src="js/arome-map.js?v=2.8.0"></script>
     <script>
-        // Raccordement du sélecteur direct de calque météo
         document.addEventListener('DOMContentLoaded', () => {
-            const select = document.getElementById('direct-layer-select');
-            if (select) {
-                select.addEventListener('change', (e) => {
-                    const app = document.querySelector('[data-amfm-app]');
-                    if (app) {
-                        app.dataset.variable = e.target.value;
-                        const event = new CustomEvent('layerchange', { detail: { layer: e.target.value } });
-                        window.dispatchEvent(event);
-                    }
+            const layerSelect = document.getElementById('direct-layer-select');
+            if (layerSelect) {
+                layerSelect.addEventListener('change', (e) => {
+                    const event = new CustomEvent('layerchange', { detail: { layer: e.target.value } });
+                    window.dispatchEvent(event);
                 });
             }
         });
