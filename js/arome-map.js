@@ -1137,26 +1137,43 @@
             });
         }
 
+        function switchModel(modelKey) {
+            var modelMap = {
+                arome: { path: 'output', name: 'AROME HD (1,3 km)', badge: '1,3 KM' },
+                arpege: { path: 'output/arpege', name: 'ARPEGE Europe (5 km)', badge: '5 KM' },
+                icon: { path: 'output/icon', name: 'ICON-EU (7 km)', badge: '7 KM' },
+                gfs: { path: 'output/gfs', name: 'GFS Monde (13 km)', badge: '13 KM' },
+                ecmwf: { path: 'output/ecmwf', name: 'ECMWF IFS (9 km)', badge: '9 KM' }
+            };
+            var target = modelMap[modelKey] || modelMap.arome;
+            baseUrl = target.path;
+            
+            var titleSpan = document.querySelector('.amfm-title span');
+            if (titleSpan) {
+                titleSpan.textContent = 'MODÈLE ' + target.name.toUpperCase();
+            }
+            var badge = document.querySelector('.amfm-title .amfm-badge');
+            if (badge) {
+                badge.textContent = target.badge;
+            }
+
+            fetchJson(baseUrl + '/maps/index.json')
+                .then(function(payload) {
+                    if (payload && payload.layers && Array.isArray(payload.steps)) {
+                        manifest = payload;
+                        renderStep(currentStep);
+                    }
+                })
+                .catch(function(err) {
+                    console.warn('Erreur chargement modèle:', err);
+                    renderStep(currentStep);
+                });
+        }
+
         var modelSelect = document.getElementById('select-model');
         if (modelSelect) {
             modelSelect.addEventListener('change', function(e) {
-                var val = e.target.value;
-                var names = {
-                    arome: 'AROME HD 1,3 km (Météo-France)',
-                    arpege: 'ARPEGE Europe 5 km (Météo-France)',
-                    icon: 'ICON-EU 7 km (DWD Allemagne)',
-                    gfs: 'GFS 13 km (NOAA USA)',
-                    ecmwf: 'ECMWF IFS 9 km (Centre Européen)'
-                };
-                if (mapTitle) {
-                    mapTitle.textContent = names[val] || 'Modèle Météo';
-                }
-                var badge = document.querySelector('.amfm-title .amfm-badge');
-                if (badge) {
-                    badge.textContent = val.toUpperCase();
-                }
-                // Forcer le rechargement de l'échéance active
-                renderStep(currentStep);
+                switchModel(e.target.value);
             });
         }
 
