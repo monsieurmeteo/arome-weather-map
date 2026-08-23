@@ -2053,40 +2053,55 @@ function setLayer(layer) {
 
         fetchJson(baseUrl + '/maps/index.json')
             .then(function (payload) {
-                if (!payload || payload.status !== 'ok' ||
-                        !payload.layers || !Array.isArray(payload.steps)) {
+                if (!payload || !payload.layers || !Array.isArray(payload.steps)) {
                     throw new Error('manifeste cartographique invalide');
                 }
                 manifest = payload;
-                buildLayerMenu();
-                buildLegend();
-                loadVectorOverlay(payload.overlay);
-                loadPlaces();
+                if (typeof buildLayerMenu === 'function') buildLayerMenu();
+                if (typeof buildLegend === 'function') buildLegend();
+                if (payload.overlay && typeof loadVectorOverlay === 'function') loadVectorOverlay(payload.overlay);
+                if (typeof loadPlaces === 'function') loadPlaces();
 
-                if (payload.run_time) {
-                    run.textContent = 'Run du ' +
-                        runFormat.format(new Date(payload.run_time)).replace(':', 'h') +
-                        ' • résolution 1,3 km';
-                    mapRun.textContent = 'Run AROME ' +
-                        runLabelUtc(payload.run_time);
+                if (run && payload.run_time) {
+                    try {
+                        run.textContent = 'Run du ' +
+                            runFormat.format(new Date(payload.run_time)).replace(':', 'h') +
+                            ' • résolution 1,3 km';
+                    } catch (e) {}
                 }
-                if (payload.generated_at) {
-                    generated.textContent = 'Cartes mises à jour le ' +
-                        runFormat.format(new Date(payload.generated_at)).replace(':', 'h') +
-                        ' • Module v' + moduleVersion;
+                if (mapRun && payload.run_time) {
+                    try {
+                        mapRun.textContent = 'Run AROME ' + runLabelUtc(payload.run_time);
+                    } catch (e) {}
+                }
+                if (generated && payload.generated_at) {
+                    try {
+                        generated.textContent = 'Cartes mises à jour le ' +
+                            runFormat.format(new Date(payload.generated_at)).replace(':', 'h') +
+                            ' • Module v' + moduleVersion;
+                    } catch (e) {}
+                }
+                if (stale && payload.generated_at) {
                     stale.hidden = (Date.now() - new Date(payload.generated_at).getTime()) <=
                         8 * 60 * 60 * 1000;
                 }
                 var steps = availableSteps();
                 currentStep = initialStep(steps);
-                setMenuOpen(!window.matchMedia ||
-                    !window.matchMedia('(max-width: 760px)').matches);
+                if (typeof setLayerMenuOpen === 'function') {
+                    setLayerMenuOpen(!window.matchMedia ||
+                        !window.matchMedia('(max-width: 760px)').matches);
+                }
                 applyTransform();
                 renderStep(currentStep);
-                focusLocation(pendingFocus);
+                if (pendingFocus && typeof focusLocation === 'function') {
+                    focusLocation(pendingFocus);
+                }
             })
             .catch(function (error) {
-                showError('Les cartes AROME ne sont pas encore publiées : ' + error.message);
+                console.error('Erreur chargement manifeste:', error);
+                if (typeof showError === 'function') {
+                    showError('Chargement des cartes : ' + error.message);
+                }
             });
     }
 
