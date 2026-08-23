@@ -431,12 +431,15 @@
             var box = viewport.getBoundingClientRect();
             var screenX = clientX - box.left;
             var screenY = clientY - box.top;
-            var mapX = (screenX - box.width / 2 - transform.x) /
-                transform.scale + box.width / 2;
-            var mapY = (screenY - box.height / 2 - transform.y) /
-                transform.scale + box.height / 2;
-            var u = mapX / box.width;
-            var v = mapY / box.height;
+            var mapAspect = 2200.0 / 1640.0;
+            var viewAspect = box.width / (box.height || 1);
+            var ax = viewAspect > mapAspect ? viewAspect / mapAspect : 1.0;
+            var ay = viewAspect < mapAspect ? mapAspect / viewAspect : 1.0;
+            var uScale = viewAspect > mapAspect ? (box.height / 1640.0) : (box.width / 2200.0);
+            var mapW = 2200.0 * uScale * transform.scale;
+            var mapH = 1640.0 * uScale * transform.scale;
+            var u = (screenX - (box.width / 2 + transform.x)) / mapW + 0.5;
+            var v = (screenY - (box.height / 2 + transform.y)) / mapH + 0.5;
             if (u < 0 || u > 1 || v < 0 || v > 1) {
                 return null;
             }
@@ -1195,7 +1198,7 @@
                     corse: { scale: 4.2, u: 0.78, v: 0.82 }
                 };
                 var target = coords[val] || coords.france;
-                focusOnPoint(target.u, target.v, target.scale);
+                focusLocation(target);
             });
         }
 function setLayer(layer) {
@@ -1203,6 +1206,10 @@ function setLayer(layer) {
                 return;
             }
             currentLayer = layer;
+            var dSel = document.getElementById('direct-layer-select');
+            if (dSel && dSel.value !== layer) {
+                dSel.value = layer;
+            }
             refreshLayerMenu();
             buildLegend();
             var steps = availableSteps();
