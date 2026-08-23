@@ -1,0 +1,159 @@
+{
+  "model": "arome",
+  "model_name": "AROME France (1,3 km)",
+  "provider": "Météo-France",
+  "generated_at": "2026-08-23T21:28:38.905934+00:00",
+  "run_time": "2026-08-23T18:00:00+00:00",
+  "bounds": {
+    "south": 38.0,
+    "west": -12.0,
+    "north": 57.0,
+    "east": 18.0
+  },
+  "width": 2200,
+  "height": 1640,
+  "layers": {
+    "temperature": {
+      "label": "Température à 2 m",
+      "unit": "°C",
+      "decimals": 1
+    },
+    "pluie_1h": {
+      "label": "Pluie horaire",
+      "unit": "mm/h",
+      "decimals": 1
+    },
+    "rafales": {
+      "label": "Rafales de vent",
+      "unit": "km/h",
+      "decimals": 0
+    },
+    "mucape": {
+      "label": "Instabilité orageuse",
+      "unit": "J/kg",
+      "decimals": 0
+    }
+  },
+  "steps": [
+    {
+      "lead_hour": 0,
+      "valid_time": "2026-08-23T18:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/000.webp",
+        "pluie_1h": "maps/pluie_1h/000.webp",
+        "rafales": "maps/rafales/000.webp",
+        "mucape": "maps/mucape/000.webp"
+      }
+    },
+    {
+      "lead_hour": 1,
+      "valid_time": "2026-08-23T19:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/001.webp",
+        "pluie_1h": "maps/pluie_1h/001.webp",
+        "rafales": "maps/rafales/001.webp",
+        "mucape": "maps/mucape/001.webp"
+      }
+    },
+    {
+      "lead_hour": 2,
+      "valid_time": "2026-08-23T20:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/002.webp",
+        "pluie_1h": "maps/pluie_1h/002.webp",
+        "rafales": "maps/rafales/002.webp",
+        "mucape": "maps/mucape/002.webp"
+      }
+    },
+    {
+      "lead_hour": 3,
+      "valid_time": "2026-08-23T21:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/003.webp",
+        "pluie_1h": "maps/pluie_1h/003.webp",
+        "rafales": "maps/rafales/003.webp",
+        "mucape": "maps/mucape/003.webp"
+      }
+    },
+    {
+      "lead_hour": 4,
+      "valid_time": "2026-08-23T22:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/004.webp",
+        "pluie_1h": "maps/pluie_1h/004.webp",
+        "rafales": "maps/rafales/004.webp",
+        "mucape": "maps/mucape/004.webp"
+      }
+    },
+    {
+      "lead_hour": 5,
+      "valid_time": "2026-08-23T23:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/005.webp",
+        "pluie_1h": "maps/pluie_1h/005.webp",
+        "rafales": "maps/rafales/005.webp",
+        "mucape": "maps/mucape/005.webp"
+      }
+    },
+    {
+      "lead_hour": 6,
+      "valid_time": "2026-08-24T00:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/006.webp",
+        "pluie_1h": "maps/pluie_1h/006.webp",
+        "rafales": "maps/rafales/006.webp",
+        "mucape": "maps/mucape/006.webp"
+      }
+    },
+    {
+      "lead_hour": 7,
+      "valid_time": "2026-08-24T01:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/007.webp",
+        "pluie_1h": "maps/pluie_1h/007.webp",
+        "rafales": "maps/rafales/007.webp",
+        "mucape": "maps/mucape/007.webp"
+      }
+    },
+    {
+      "lead_hour": 8,
+      "valid_time": "2026-08-24T02:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/008.webp",
+        "pluie_1h": "maps/pluie_1h/008.webp",
+        "rafales": "maps/rafales/008.webp",
+        "mucape": "maps/mucape/008.webp"
+      }
+    },
+    {
+      "lead_hour": 9,
+      "valid_time": "2026-08-24T03:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/009.webp",
+        "pluie_1h": "maps/pluie_1h/009.webp",
+        "rafales": "maps/rafales/009.webp",
+        "mucape": "maps/mucape/009.webp"
+      }
+    },
+    {
+      "lead_hour": 10,
+      "valid_time": "2026-08-24T04:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/010.webp",
+        "pluie_1h": "maps/pluie_1h/010.webp",
+        "rafales": "maps/rafales/010.webp",
+        "mucape": "maps/mucape/010.webp"
+      }
+    },
+    {
+      "lead_hour": 11,
+      "valid_time": "2026-08-24T05:00:00+00:00",
+      "files": {
+        "temperature": "maps/temperature/011.webp",
+        "pluie_1h": "maps/pluie_1h/011.webp",
+        "rafales": "maps/rafales/011.webp",
+        "mucape": "maps/mucape/011.webp"
+      }
+    }
+  ]
+}
