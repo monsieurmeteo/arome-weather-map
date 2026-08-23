@@ -205,14 +205,18 @@
 
         function showError(message) {
             stopAnimation();
-            loading.hidden = true;
-            errorBox.textContent = message;
-            errorBox.hidden = false;
+            if (loading) loading.hidden = true;
+            if (errorBox) {
+                errorBox.textContent = message;
+                errorBox.hidden = false;
+            }
         }
 
         function clearError() {
-            errorBox.hidden = true;
-            errorBox.textContent = '';
+            if (errorBox) {
+                errorBox.hidden = true;
+                errorBox.textContent = '';
+            }
         }
 
         function parseProbe(buffer) {

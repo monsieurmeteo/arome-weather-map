@@ -420,6 +420,144 @@
         }
       ]
     },
+    "vent": {
+      "label": "Vent moyen à 10 m",
+      "unit": "km/h",
+      "group": "Vent",
+      "decimals": 0,
+      "transparent_below": null,
+      "discrete": false,
+      "stops": [
+        {
+          "value": 0,
+          "color": "#eef7ea"
+        },
+        {
+          "value": 10,
+          "color": "#a7db8d"
+        },
+        {
+          "value": 20,
+          "color": "#5cc27d"
+        },
+        {
+          "value": 30,
+          "color": "#38aaa5"
+        },
+        {
+          "value": 40,
+          "color": "#347cc3"
+        },
+        {
+          "value": 50,
+          "color": "#6558b8"
+        },
+        {
+          "value": 60,
+          "color": "#a43e94"
+        },
+        {
+          "value": 80,
+          "color": "#d63c57"
+        },
+        {
+          "value": 100,
+          "color": "#7e1736"
+        }
+      ]
+    },
+    "rafales": {
+      "label": "Rafales à 10 m",
+      "unit": "km/h",
+      "group": "Vent",
+      "decimals": 0,
+      "transparent_below": null,
+      "discrete": false,
+      "stops": [
+        {
+          "value": 0,
+          "color": "#edf7e8"
+        },
+        {
+          "value": 20,
+          "color": "#a9d77d"
+        },
+        {
+          "value": 40,
+          "color": "#f0cf46"
+        },
+        {
+          "value": 60,
+          "color": "#ef8b2c"
+        },
+        {
+          "value": 80,
+          "color": "#db3d3d"
+        },
+        {
+          "value": 100,
+          "color": "#9e235d"
+        },
+        {
+          "value": 130,
+          "color": "#4d1647"
+        },
+        {
+          "value": 160,
+          "color": "#25152e"
+        }
+      ]
+    },
+    "mucape": {
+      "label": "MUCAPE instantanée",
+      "unit": "J/kg",
+      "group": "Instabilité",
+      "decimals": 0,
+      "transparent_below": 25.0,
+      "discrete": false,
+      "stops": [
+        {
+          "value": 0,
+          "color": "#f3f5f8"
+        },
+        {
+          "value": 100,
+          "color": "#d8ebff"
+        },
+        {
+          "value": 300,
+          "color": "#91c8ff"
+        },
+        {
+          "value": 500,
+          "color": "#41a8df"
+        },
+        {
+          "value": 800,
+          "color": "#31c878"
+        },
+        {
+          "value": 1200,
+          "color": "#d5e52f"
+        },
+        {
+          "value": 1800,
+          "color": "#ffc62d"
+        },
+        {
+          "value": 2500,
+          "color": "#ff7a22"
+        },
+        {
+          "value": 3500,
+          "color": "#e83028"
+        },
+        {
+          "value": 5000,
+          "color": "#8c1d74"
+        }
+      ]
+    },
     "neige": {
       "label": "Neige sur 1 h (équivalent eau)",
       "unit": "mm",
@@ -552,274 +690,6 @@
         }
       ]
     },
-    "equivalent_eau_neige": {
-      "label": "Cumul neigeux (équivalent eau)",
-      "unit": "mm",
-      "group": "Précipitations",
-      "decimals": 1,
-      "transparent_below": 0.03,
-      "discrete": true,
-      "stops": [
-        {
-          "value": 0.1,
-          "color": "#f5f5f7"
-        },
-        {
-          "value": 1,
-          "color": "#c9e6ff"
-        },
-        {
-          "value": 2,
-          "color": "#7fbbff"
-        },
-        {
-          "value": 3,
-          "color": "#438fff"
-        },
-        {
-          "value": 5,
-          "color": "#1bd0ef"
-        },
-        {
-          "value": 7,
-          "color": "#00b8bd"
-        },
-        {
-          "value": 10,
-          "color": "#00ca76"
-        },
-        {
-          "value": 15,
-          "color": "#32e300"
-        },
-        {
-          "value": 20,
-          "color": "#86ed00"
-        },
-        {
-          "value": 25,
-          "color": "#d2ef00"
-        },
-        {
-          "value": 30,
-          "color": "#fff000"
-        },
-        {
-          "value": 40,
-          "color": "#ffd000"
-        },
-        {
-          "value": 50,
-          "color": "#ff9900"
-        },
-        {
-          "value": 60,
-          "color": "#ff6500"
-        },
-        {
-          "value": 70,
-          "color": "#ff2e00"
-        },
-        {
-          "value": 80,
-          "color": "#ef0054"
-        },
-        {
-          "value": 90,
-          "color": "#d000a7"
-        },
-        {
-          "value": 100,
-          "color": "#a000e8"
-        },
-        {
-          "value": 125,
-          "color": "#6900dc"
-        },
-        {
-          "value": 150,
-          "color": "#4b00b4"
-        },
-        {
-          "value": 175,
-          "color": "#291078"
-        },
-        {
-          "value": 200,
-          "color": "#661070"
-        }
-      ]
-    },
-    "graupel": {
-      "label": "Graupel",
-      "unit": "mm",
-      "group": "Précipitations",
-      "decimals": 1,
-      "transparent_below": 0.03,
-      "discrete": true,
-      "stops": [
-        {
-          "value": 0.1,
-          "color": "#f5f5f7"
-        },
-        {
-          "value": 1,
-          "color": "#c9e6ff"
-        },
-        {
-          "value": 2,
-          "color": "#7fbbff"
-        },
-        {
-          "value": 3,
-          "color": "#438fff"
-        },
-        {
-          "value": 5,
-          "color": "#1bd0ef"
-        },
-        {
-          "value": 7,
-          "color": "#00b8bd"
-        },
-        {
-          "value": 10,
-          "color": "#00ca76"
-        },
-        {
-          "value": 15,
-          "color": "#32e300"
-        },
-        {
-          "value": 20,
-          "color": "#86ed00"
-        },
-        {
-          "value": 25,
-          "color": "#d2ef00"
-        },
-        {
-          "value": 30,
-          "color": "#fff000"
-        },
-        {
-          "value": 40,
-          "color": "#ffd000"
-        },
-        {
-          "value": 50,
-          "color": "#ff9900"
-        },
-        {
-          "value": 60,
-          "color": "#ff6500"
-        },
-        {
-          "value": 70,
-          "color": "#ff2e00"
-        },
-        {
-          "value": 80,
-          "color": "#ef0054"
-        },
-        {
-          "value": 90,
-          "color": "#d000a7"
-        },
-        {
-          "value": 100,
-          "color": "#a000e8"
-        }
-      ]
-    },
-    "vent": {
-      "label": "Vent moyen à 10 m",
-      "unit": "km/h",
-      "group": "Vent",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#eef7ea"
-        },
-        {
-          "value": 10,
-          "color": "#a7db8d"
-        },
-        {
-          "value": 20,
-          "color": "#5cc27d"
-        },
-        {
-          "value": 30,
-          "color": "#38aaa5"
-        },
-        {
-          "value": 40,
-          "color": "#347cc3"
-        },
-        {
-          "value": 50,
-          "color": "#6558b8"
-        },
-        {
-          "value": 60,
-          "color": "#a43e94"
-        },
-        {
-          "value": 80,
-          "color": "#d63c57"
-        },
-        {
-          "value": 100,
-          "color": "#7e1736"
-        }
-      ]
-    },
-    "rafales": {
-      "label": "Rafales à 10 m",
-      "unit": "km/h",
-      "group": "Vent",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#edf7e8"
-        },
-        {
-          "value": 20,
-          "color": "#a9d77d"
-        },
-        {
-          "value": 40,
-          "color": "#f0cf46"
-        },
-        {
-          "value": 60,
-          "color": "#ef8b2c"
-        },
-        {
-          "value": 80,
-          "color": "#db3d3d"
-        },
-        {
-          "value": 100,
-          "color": "#9e235d"
-        },
-        {
-          "value": 130,
-          "color": "#4d1647"
-        },
-        {
-          "value": 160,
-          "color": "#25152e"
-        }
-      ]
-    },
     "pression": {
       "label": "Pression au niveau de la mer (estimée)",
       "unit": "hPa",
@@ -862,180 +732,6 @@
         }
       ]
     },
-    "pression_surface": {
-      "label": "Pression au sol",
-      "unit": "hPa",
-      "group": "Pression et géopotentiel",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 700,
-          "color": "#44205f"
-        },
-        {
-          "value": 800,
-          "color": "#3455a6"
-        },
-        {
-          "value": 900,
-          "color": "#36a1bd"
-        },
-        {
-          "value": 950,
-          "color": "#54bf7c"
-        },
-        {
-          "value": 1000,
-          "color": "#d6d64c"
-        },
-        {
-          "value": 1030,
-          "color": "#ed9a36"
-        },
-        {
-          "value": 1060,
-          "color": "#b52f43"
-        }
-      ]
-    },
-    "nebulosite": {
-      "label": "Nébulosité totale",
-      "unit": "%",
-      "group": "Nuages et humidité",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#dceef6"
-        },
-        {
-          "value": 20,
-          "color": "#c8dce5"
-        },
-        {
-          "value": 40,
-          "color": "#abbac5"
-        },
-        {
-          "value": 60,
-          "color": "#8997a4"
-        },
-        {
-          "value": 80,
-          "color": "#626e79"
-        },
-        {
-          "value": 100,
-          "color": "#343d46"
-        }
-      ]
-    },
-    "nuages_bas": {
-      "label": "Couverture nuageuse basse",
-      "unit": "%",
-      "group": "Nuages et humidité",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#e6f4fa"
-        },
-        {
-          "value": 20,
-          "color": "#cddfe7"
-        },
-        {
-          "value": 40,
-          "color": "#adbec8"
-        },
-        {
-          "value": 60,
-          "color": "#8997a4"
-        },
-        {
-          "value": 80,
-          "color": "#626e79"
-        },
-        {
-          "value": 100,
-          "color": "#343d46"
-        }
-      ]
-    },
-    "nuages_moyens": {
-      "label": "Couverture nuageuse moyenne",
-      "unit": "%",
-      "group": "Nuages et humidité",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#e6f4fa"
-        },
-        {
-          "value": 20,
-          "color": "#cddfe7"
-        },
-        {
-          "value": 40,
-          "color": "#adbec8"
-        },
-        {
-          "value": 60,
-          "color": "#8997a4"
-        },
-        {
-          "value": 80,
-          "color": "#626e79"
-        },
-        {
-          "value": 100,
-          "color": "#343d46"
-        }
-      ]
-    },
-    "nuages_eleves": {
-      "label": "Couverture nuageuse élevée",
-      "unit": "%",
-      "group": "Nuages et humidité",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#e6f4fa"
-        },
-        {
-          "value": 20,
-          "color": "#cddfe7"
-        },
-        {
-          "value": 40,
-          "color": "#adbec8"
-        },
-        {
-          "value": 60,
-          "color": "#8997a4"
-        },
-        {
-          "value": 80,
-          "color": "#626e79"
-        },
-        {
-          "value": 100,
-          "color": "#343d46"
-        }
-      ]
-    },
     "humidite": {
       "label": "Humidité relative à 2 m",
       "unit": "%",
@@ -1067,56 +763,6 @@
         {
           "value": 100,
           "color": "#28569f"
-        }
-      ]
-    },
-    "mucape": {
-      "label": "MUCAPE instantanée",
-      "unit": "J/kg",
-      "group": "Instabilité",
-      "decimals": 0,
-      "transparent_below": 25.0,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#f3f5f8"
-        },
-        {
-          "value": 100,
-          "color": "#d8ebff"
-        },
-        {
-          "value": 300,
-          "color": "#91c8ff"
-        },
-        {
-          "value": 500,
-          "color": "#41a8df"
-        },
-        {
-          "value": 800,
-          "color": "#31c878"
-        },
-        {
-          "value": 1200,
-          "color": "#d5e52f"
-        },
-        {
-          "value": 1800,
-          "color": "#ffc62d"
-        },
-        {
-          "value": 2500,
-          "color": "#ff7a22"
-        },
-        {
-          "value": 3500,
-          "color": "#e83028"
-        },
-        {
-          "value": 5000,
-          "color": "#8c1d74"
         }
       ]
     },
@@ -1185,56 +831,6 @@
           "color": "#ffffff"
         }
       ]
-    },
-    "altitude": {
-      "label": "Altitude du relief AROME",
-      "unit": "m",
-      "group": "Relief",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": -50,
-          "color": "#d6e8ef"
-        },
-        {
-          "value": 0,
-          "color": "#d8e8c1"
-        },
-        {
-          "value": 100,
-          "color": "#b8d98c"
-        },
-        {
-          "value": 300,
-          "color": "#9bc267"
-        },
-        {
-          "value": 600,
-          "color": "#c3b563"
-        },
-        {
-          "value": 1000,
-          "color": "#b88d58"
-        },
-        {
-          "value": 1500,
-          "color": "#966b52"
-        },
-        {
-          "value": 2200,
-          "color": "#765054"
-        },
-        {
-          "value": 3200,
-          "color": "#eeeeee"
-        },
-        {
-          "value": 4500,
-          "color": "#ffffff"
-        }
-      ]
     }
   },
   "steps": [
@@ -1256,24 +852,6 @@
         "pression": "maps/pression/000.webp",
         "humidite": "maps/humidite/000.webp",
         "reflectivite": "maps/reflectivite/000.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/000.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/000.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/000.hkv.gz",
-        "humidex": "maps/values/humidex/000.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/000.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/000.hkv.gz",
-        "neige": "maps/values/neige/000.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/000.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/000.hkv.gz",
-        "graupel": "maps/values/graupel/000.hkv.gz",
-        "vent": "maps/values/vent/000.hkv.gz",
-        "pression": "maps/values/pression/000.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/000.hkv.gz",
-        "humidite": "maps/values/humidite/000.hkv.gz",
-        "mucape": "maps/values/mucape/000.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1294,30 +872,6 @@
         "pression": "maps/pression/001.webp",
         "humidite": "maps/humidite/001.webp",
         "reflectivite": "maps/reflectivite/001.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/001.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/001.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/001.hkv.gz",
-        "humidex": "maps/values/humidex/001.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/001.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/001.hkv.gz",
-        "neige": "maps/values/neige/001.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/001.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/001.hkv.gz",
-        "graupel": "maps/values/graupel/001.hkv.gz",
-        "vent": "maps/values/vent/001.hkv.gz",
-        "rafales": "maps/values/rafales/001.hkv.gz",
-        "pression": "maps/values/pression/001.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/001.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/001.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/001.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/001.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/001.hkv.gz",
-        "humidite": "maps/values/humidite/001.hkv.gz",
-        "mucape": "maps/values/mucape/001.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/001.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1338,30 +892,6 @@
         "pression": "maps/pression/002.webp",
         "humidite": "maps/humidite/002.webp",
         "reflectivite": "maps/reflectivite/002.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/002.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/002.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/002.hkv.gz",
-        "humidex": "maps/values/humidex/002.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/002.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/002.hkv.gz",
-        "neige": "maps/values/neige/002.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/002.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/002.hkv.gz",
-        "graupel": "maps/values/graupel/002.hkv.gz",
-        "vent": "maps/values/vent/002.hkv.gz",
-        "rafales": "maps/values/rafales/002.hkv.gz",
-        "pression": "maps/values/pression/002.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/002.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/002.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/002.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/002.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/002.hkv.gz",
-        "humidite": "maps/values/humidite/002.hkv.gz",
-        "mucape": "maps/values/mucape/002.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/002.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1382,30 +912,6 @@
         "pression": "maps/pression/003.webp",
         "humidite": "maps/humidite/003.webp",
         "reflectivite": "maps/reflectivite/003.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/003.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/003.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/003.hkv.gz",
-        "humidex": "maps/values/humidex/003.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/003.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/003.hkv.gz",
-        "neige": "maps/values/neige/003.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/003.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/003.hkv.gz",
-        "graupel": "maps/values/graupel/003.hkv.gz",
-        "vent": "maps/values/vent/003.hkv.gz",
-        "rafales": "maps/values/rafales/003.hkv.gz",
-        "pression": "maps/values/pression/003.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/003.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/003.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/003.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/003.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/003.hkv.gz",
-        "humidite": "maps/values/humidite/003.hkv.gz",
-        "mucape": "maps/values/mucape/003.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/003.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1426,30 +932,6 @@
         "pression": "maps/pression/004.webp",
         "humidite": "maps/humidite/004.webp",
         "reflectivite": "maps/reflectivite/004.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/004.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/004.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/004.hkv.gz",
-        "humidex": "maps/values/humidex/004.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/004.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/004.hkv.gz",
-        "neige": "maps/values/neige/004.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/004.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/004.hkv.gz",
-        "graupel": "maps/values/graupel/004.hkv.gz",
-        "vent": "maps/values/vent/004.hkv.gz",
-        "rafales": "maps/values/rafales/004.hkv.gz",
-        "pression": "maps/values/pression/004.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/004.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/004.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/004.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/004.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/004.hkv.gz",
-        "humidite": "maps/values/humidite/004.hkv.gz",
-        "mucape": "maps/values/mucape/004.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/004.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1470,30 +952,6 @@
         "pression": "maps/pression/005.webp",
         "humidite": "maps/humidite/005.webp",
         "reflectivite": "maps/reflectivite/005.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/005.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/005.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/005.hkv.gz",
-        "humidex": "maps/values/humidex/005.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/005.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/005.hkv.gz",
-        "neige": "maps/values/neige/005.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/005.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/005.hkv.gz",
-        "graupel": "maps/values/graupel/005.hkv.gz",
-        "vent": "maps/values/vent/005.hkv.gz",
-        "rafales": "maps/values/rafales/005.hkv.gz",
-        "pression": "maps/values/pression/005.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/005.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/005.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/005.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/005.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/005.hkv.gz",
-        "humidite": "maps/values/humidite/005.hkv.gz",
-        "mucape": "maps/values/mucape/005.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/005.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1514,30 +972,6 @@
         "pression": "maps/pression/006.webp",
         "humidite": "maps/humidite/006.webp",
         "reflectivite": "maps/reflectivite/006.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/006.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/006.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/006.hkv.gz",
-        "humidex": "maps/values/humidex/006.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/006.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/006.hkv.gz",
-        "neige": "maps/values/neige/006.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/006.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/006.hkv.gz",
-        "graupel": "maps/values/graupel/006.hkv.gz",
-        "vent": "maps/values/vent/006.hkv.gz",
-        "rafales": "maps/values/rafales/006.hkv.gz",
-        "pression": "maps/values/pression/006.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/006.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/006.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/006.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/006.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/006.hkv.gz",
-        "humidite": "maps/values/humidite/006.hkv.gz",
-        "mucape": "maps/values/mucape/006.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/006.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1558,30 +992,6 @@
         "pression": "maps/pression/007.webp",
         "humidite": "maps/humidite/007.webp",
         "reflectivite": "maps/reflectivite/007.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/007.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/007.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/007.hkv.gz",
-        "humidex": "maps/values/humidex/007.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/007.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/007.hkv.gz",
-        "neige": "maps/values/neige/007.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/007.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/007.hkv.gz",
-        "graupel": "maps/values/graupel/007.hkv.gz",
-        "vent": "maps/values/vent/007.hkv.gz",
-        "rafales": "maps/values/rafales/007.hkv.gz",
-        "pression": "maps/values/pression/007.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/007.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/007.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/007.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/007.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/007.hkv.gz",
-        "humidite": "maps/values/humidite/007.hkv.gz",
-        "mucape": "maps/values/mucape/007.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/007.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1602,30 +1012,6 @@
         "pression": "maps/pression/008.webp",
         "humidite": "maps/humidite/008.webp",
         "reflectivite": "maps/reflectivite/008.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/008.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/008.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/008.hkv.gz",
-        "humidex": "maps/values/humidex/008.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/008.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/008.hkv.gz",
-        "neige": "maps/values/neige/008.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/008.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/008.hkv.gz",
-        "graupel": "maps/values/graupel/008.hkv.gz",
-        "vent": "maps/values/vent/008.hkv.gz",
-        "rafales": "maps/values/rafales/008.hkv.gz",
-        "pression": "maps/values/pression/008.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/008.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/008.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/008.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/008.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/008.hkv.gz",
-        "humidite": "maps/values/humidite/008.hkv.gz",
-        "mucape": "maps/values/mucape/008.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/008.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1646,30 +1032,6 @@
         "pression": "maps/pression/009.webp",
         "humidite": "maps/humidite/009.webp",
         "reflectivite": "maps/reflectivite/009.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/009.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/009.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/009.hkv.gz",
-        "humidex": "maps/values/humidex/009.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/009.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/009.hkv.gz",
-        "neige": "maps/values/neige/009.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/009.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/009.hkv.gz",
-        "graupel": "maps/values/graupel/009.hkv.gz",
-        "vent": "maps/values/vent/009.hkv.gz",
-        "rafales": "maps/values/rafales/009.hkv.gz",
-        "pression": "maps/values/pression/009.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/009.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/009.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/009.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/009.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/009.hkv.gz",
-        "humidite": "maps/values/humidite/009.hkv.gz",
-        "mucape": "maps/values/mucape/009.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/009.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1690,30 +1052,6 @@
         "pression": "maps/pression/010.webp",
         "humidite": "maps/humidite/010.webp",
         "reflectivite": "maps/reflectivite/010.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/010.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/010.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/010.hkv.gz",
-        "humidex": "maps/values/humidex/010.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/010.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/010.hkv.gz",
-        "neige": "maps/values/neige/010.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/010.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/010.hkv.gz",
-        "graupel": "maps/values/graupel/010.hkv.gz",
-        "vent": "maps/values/vent/010.hkv.gz",
-        "rafales": "maps/values/rafales/010.hkv.gz",
-        "pression": "maps/values/pression/010.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/010.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/010.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/010.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/010.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/010.hkv.gz",
-        "humidite": "maps/values/humidite/010.hkv.gz",
-        "mucape": "maps/values/mucape/010.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/010.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1734,30 +1072,6 @@
         "pression": "maps/pression/011.webp",
         "humidite": "maps/humidite/011.webp",
         "reflectivite": "maps/reflectivite/011.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/011.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/011.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/011.hkv.gz",
-        "humidex": "maps/values/humidex/011.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/011.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/011.hkv.gz",
-        "neige": "maps/values/neige/011.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/011.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/011.hkv.gz",
-        "graupel": "maps/values/graupel/011.hkv.gz",
-        "vent": "maps/values/vent/011.hkv.gz",
-        "rafales": "maps/values/rafales/011.hkv.gz",
-        "pression": "maps/values/pression/011.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/011.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/011.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/011.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/011.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/011.hkv.gz",
-        "humidite": "maps/values/humidite/011.hkv.gz",
-        "mucape": "maps/values/mucape/011.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/011.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1778,30 +1092,6 @@
         "pression": "maps/pression/012.webp",
         "humidite": "maps/humidite/012.webp",
         "reflectivite": "maps/reflectivite/012.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/012.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/012.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/012.hkv.gz",
-        "humidex": "maps/values/humidex/012.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/012.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/012.hkv.gz",
-        "neige": "maps/values/neige/012.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/012.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/012.hkv.gz",
-        "graupel": "maps/values/graupel/012.hkv.gz",
-        "vent": "maps/values/vent/012.hkv.gz",
-        "rafales": "maps/values/rafales/012.hkv.gz",
-        "pression": "maps/values/pression/012.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/012.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/012.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/012.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/012.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/012.hkv.gz",
-        "humidite": "maps/values/humidite/012.hkv.gz",
-        "mucape": "maps/values/mucape/012.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/012.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1822,30 +1112,6 @@
         "pression": "maps/pression/013.webp",
         "humidite": "maps/humidite/013.webp",
         "reflectivite": "maps/reflectivite/013.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/013.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/013.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/013.hkv.gz",
-        "humidex": "maps/values/humidex/013.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/013.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/013.hkv.gz",
-        "neige": "maps/values/neige/013.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/013.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/013.hkv.gz",
-        "graupel": "maps/values/graupel/013.hkv.gz",
-        "vent": "maps/values/vent/013.hkv.gz",
-        "rafales": "maps/values/rafales/013.hkv.gz",
-        "pression": "maps/values/pression/013.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/013.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/013.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/013.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/013.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/013.hkv.gz",
-        "humidite": "maps/values/humidite/013.hkv.gz",
-        "mucape": "maps/values/mucape/013.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/013.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1866,30 +1132,6 @@
         "pression": "maps/pression/014.webp",
         "humidite": "maps/humidite/014.webp",
         "reflectivite": "maps/reflectivite/014.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/014.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/014.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/014.hkv.gz",
-        "humidex": "maps/values/humidex/014.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/014.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/014.hkv.gz",
-        "neige": "maps/values/neige/014.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/014.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/014.hkv.gz",
-        "graupel": "maps/values/graupel/014.hkv.gz",
-        "vent": "maps/values/vent/014.hkv.gz",
-        "rafales": "maps/values/rafales/014.hkv.gz",
-        "pression": "maps/values/pression/014.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/014.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/014.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/014.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/014.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/014.hkv.gz",
-        "humidite": "maps/values/humidite/014.hkv.gz",
-        "mucape": "maps/values/mucape/014.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/014.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1910,30 +1152,6 @@
         "pression": "maps/pression/015.webp",
         "humidite": "maps/humidite/015.webp",
         "reflectivite": "maps/reflectivite/015.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/015.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/015.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/015.hkv.gz",
-        "humidex": "maps/values/humidex/015.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/015.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/015.hkv.gz",
-        "neige": "maps/values/neige/015.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/015.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/015.hkv.gz",
-        "graupel": "maps/values/graupel/015.hkv.gz",
-        "vent": "maps/values/vent/015.hkv.gz",
-        "rafales": "maps/values/rafales/015.hkv.gz",
-        "pression": "maps/values/pression/015.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/015.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/015.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/015.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/015.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/015.hkv.gz",
-        "humidite": "maps/values/humidite/015.hkv.gz",
-        "mucape": "maps/values/mucape/015.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/015.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1954,30 +1172,6 @@
         "pression": "maps/pression/016.webp",
         "humidite": "maps/humidite/016.webp",
         "reflectivite": "maps/reflectivite/016.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/016.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/016.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/016.hkv.gz",
-        "humidex": "maps/values/humidex/016.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/016.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/016.hkv.gz",
-        "neige": "maps/values/neige/016.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/016.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/016.hkv.gz",
-        "graupel": "maps/values/graupel/016.hkv.gz",
-        "vent": "maps/values/vent/016.hkv.gz",
-        "rafales": "maps/values/rafales/016.hkv.gz",
-        "pression": "maps/values/pression/016.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/016.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/016.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/016.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/016.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/016.hkv.gz",
-        "humidite": "maps/values/humidite/016.hkv.gz",
-        "mucape": "maps/values/mucape/016.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/016.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -1998,30 +1192,6 @@
         "pression": "maps/pression/017.webp",
         "humidite": "maps/humidite/017.webp",
         "reflectivite": "maps/reflectivite/017.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/017.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/017.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/017.hkv.gz",
-        "humidex": "maps/values/humidex/017.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/017.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/017.hkv.gz",
-        "neige": "maps/values/neige/017.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/017.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/017.hkv.gz",
-        "graupel": "maps/values/graupel/017.hkv.gz",
-        "vent": "maps/values/vent/017.hkv.gz",
-        "rafales": "maps/values/rafales/017.hkv.gz",
-        "pression": "maps/values/pression/017.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/017.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/017.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/017.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/017.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/017.hkv.gz",
-        "humidite": "maps/values/humidite/017.hkv.gz",
-        "mucape": "maps/values/mucape/017.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/017.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -2042,30 +1212,6 @@
         "pression": "maps/pression/018.webp",
         "humidite": "maps/humidite/018.webp",
         "reflectivite": "maps/reflectivite/018.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/018.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/018.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/018.hkv.gz",
-        "humidex": "maps/values/humidex/018.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/018.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/018.hkv.gz",
-        "neige": "maps/values/neige/018.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/018.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/018.hkv.gz",
-        "graupel": "maps/values/graupel/018.hkv.gz",
-        "vent": "maps/values/vent/018.hkv.gz",
-        "rafales": "maps/values/rafales/018.hkv.gz",
-        "pression": "maps/values/pression/018.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/018.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/018.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/018.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/018.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/018.hkv.gz",
-        "humidite": "maps/values/humidite/018.hkv.gz",
-        "mucape": "maps/values/mucape/018.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/018.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -2086,30 +1232,6 @@
         "pression": "maps/pression/019.webp",
         "humidite": "maps/humidite/019.webp",
         "reflectivite": "maps/reflectivite/019.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/019.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/019.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/019.hkv.gz",
-        "humidex": "maps/values/humidex/019.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/019.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/019.hkv.gz",
-        "neige": "maps/values/neige/019.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/019.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/019.hkv.gz",
-        "graupel": "maps/values/graupel/019.hkv.gz",
-        "vent": "maps/values/vent/019.hkv.gz",
-        "rafales": "maps/values/rafales/019.hkv.gz",
-        "pression": "maps/values/pression/019.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/019.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/019.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/019.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/019.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/019.hkv.gz",
-        "humidite": "maps/values/humidite/019.hkv.gz",
-        "mucape": "maps/values/mucape/019.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/019.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -2130,30 +1252,6 @@
         "pression": "maps/pression/020.webp",
         "humidite": "maps/humidite/020.webp",
         "reflectivite": "maps/reflectivite/020.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/020.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/020.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/020.hkv.gz",
-        "humidex": "maps/values/humidex/020.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/020.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/020.hkv.gz",
-        "neige": "maps/values/neige/020.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/020.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/020.hkv.gz",
-        "graupel": "maps/values/graupel/020.hkv.gz",
-        "vent": "maps/values/vent/020.hkv.gz",
-        "rafales": "maps/values/rafales/020.hkv.gz",
-        "pression": "maps/values/pression/020.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/020.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/020.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/020.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/020.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/020.hkv.gz",
-        "humidite": "maps/values/humidite/020.hkv.gz",
-        "mucape": "maps/values/mucape/020.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/020.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -2174,30 +1272,6 @@
         "pression": "maps/pression/021.webp",
         "humidite": "maps/humidite/021.webp",
         "reflectivite": "maps/reflectivite/021.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/021.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/021.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/021.hkv.gz",
-        "humidex": "maps/values/humidex/021.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/021.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/021.hkv.gz",
-        "neige": "maps/values/neige/021.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/021.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/021.hkv.gz",
-        "graupel": "maps/values/graupel/021.hkv.gz",
-        "vent": "maps/values/vent/021.hkv.gz",
-        "rafales": "maps/values/rafales/021.hkv.gz",
-        "pression": "maps/values/pression/021.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/021.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/021.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/021.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/021.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/021.hkv.gz",
-        "humidite": "maps/values/humidite/021.hkv.gz",
-        "mucape": "maps/values/mucape/021.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/021.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -2218,30 +1292,6 @@
         "pression": "maps/pression/022.webp",
         "humidite": "maps/humidite/022.webp",
         "reflectivite": "maps/reflectivite/022.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/022.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/022.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/022.hkv.gz",
-        "humidex": "maps/values/humidex/022.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/022.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/022.hkv.gz",
-        "neige": "maps/values/neige/022.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/022.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/022.hkv.gz",
-        "graupel": "maps/values/graupel/022.hkv.gz",
-        "vent": "maps/values/vent/022.hkv.gz",
-        "rafales": "maps/values/rafales/022.hkv.gz",
-        "pression": "maps/values/pression/022.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/022.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/022.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/022.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/022.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/022.hkv.gz",
-        "humidite": "maps/values/humidite/022.hkv.gz",
-        "mucape": "maps/values/mucape/022.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/022.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -2262,30 +1312,6 @@
         "pression": "maps/pression/023.webp",
         "humidite": "maps/humidite/023.webp",
         "reflectivite": "maps/reflectivite/023.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/023.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/023.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/023.hkv.gz",
-        "humidex": "maps/values/humidex/023.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/023.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/023.hkv.gz",
-        "neige": "maps/values/neige/023.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/023.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/023.hkv.gz",
-        "graupel": "maps/values/graupel/023.hkv.gz",
-        "vent": "maps/values/vent/023.hkv.gz",
-        "rafales": "maps/values/rafales/023.hkv.gz",
-        "pression": "maps/values/pression/023.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/023.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/023.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/023.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/023.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/023.hkv.gz",
-        "humidite": "maps/values/humidite/023.hkv.gz",
-        "mucape": "maps/values/mucape/023.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/023.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     },
     {
@@ -2306,33 +1332,11 @@
         "pression": "maps/pression/024.webp",
         "humidite": "maps/humidite/024.webp",
         "reflectivite": "maps/reflectivite/024.webp"
-      },
-      "probes": {
-        "temperature": "maps/values/temperature/024.hkv.gz",
-        "temperature_ressentie": "maps/values/temperature_ressentie/024.hkv.gz",
-        "point_rosee": "maps/values/point_rosee/024.hkv.gz",
-        "humidex": "maps/values/humidex/024.hkv.gz",
-        "pluie_1h": "maps/values/pluie_1h/024.hkv.gz",
-        "pluie_cumul": "maps/values/pluie_cumul/024.hkv.gz",
-        "neige": "maps/values/neige/024.hkv.gz",
-        "neige_au_sol": "maps/values/neige_au_sol/024.hkv.gz",
-        "equivalent_eau_neige": "maps/values/equivalent_eau_neige/024.hkv.gz",
-        "graupel": "maps/values/graupel/024.hkv.gz",
-        "vent": "maps/values/vent/024.hkv.gz",
-        "rafales": "maps/values/rafales/024.hkv.gz",
-        "pression": "maps/values/pression/024.hkv.gz",
-        "pression_surface": "maps/values/pression_surface/024.hkv.gz",
-        "nebulosite": "maps/values/nebulosite/024.hkv.gz",
-        "nuages_bas": "maps/values/nuages_bas/024.hkv.gz",
-        "nuages_moyens": "maps/values/nuages_moyens/024.hkv.gz",
-        "nuages_eleves": "maps/values/nuages_eleves/024.hkv.gz",
-        "humidite": "maps/values/humidite/024.hkv.gz",
-        "mucape": "maps/values/mucape/024.hkv.gz",
-        "reflectivite": "maps/values/reflectivite/024.hkv.gz",
-        "altitude": "maps/values/altitude/statique.hkv.gz"
       }
     }
   ],
   "places": "maps/communes.json",
-  "model_key": "arome"
+  "model_name": "AROME HD (1,3 km)",
+  "provider": "Météo-France",
+  "resolution": "1,3 km (0.01°)"
 }
