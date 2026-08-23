@@ -1577,7 +1577,7 @@ function setLayer(layer) {
                     var bucket = placeBuckets.get(latitude + '|' + longitude) || [];
                     for (var index = 0; index < bucket.length; index += 1) {
                         if (Number(bucket[index][1]) < density.population) {
-                            break;
+                            continue;
                         }
                         candidates.push(bucket[index]);
                     }
@@ -1672,14 +1672,15 @@ function setLayer(layer) {
                 if (Number(place[1]) < density.population) {
                     break;
                 }
-                var mapX = (Number(place[3]) - Number(bounds.west)) /
-                    longitudeSpan * width;
-                var mapY = (northY - mercator(Number(place[2]))) /
-                    mercatorSpan * height;
-                var screenX = (mapX - width / 2) * transform.scale +
-                    width / 2 + transform.x;
-                var screenY = (mapY - height / 2) * transform.scale +
-                    height / 2 + transform.y;
+                var mapAspect = 2200.0 / 1640.0;
+                var viewAspect = width / (height || 1);
+                var uScale = viewAspect > mapAspect ? (height / 1640.0) : (width / 2200.0);
+                var mapW = 2200.0 * uScale;
+                var mapH = 1640.0 * uScale;
+                var u = (Number(place[3]) - Number(bounds.west)) / longitudeSpan;
+                var v = (northY - mercator(Number(place[2]))) / mercatorSpan;
+                var screenX = (u - 0.5) * (mapW * transform.scale) + width / 2 + transform.x;
+                var screenY = (v - 0.5) * (mapH * transform.scale) + height / 2 + transform.y;
                 if (screenX < -80 || screenX > width + 80 ||
                         screenY < -15 || screenY > height + 15) {
                     continue;
@@ -1953,7 +1954,7 @@ function setLayer(layer) {
                 x: event.clientX,
                 y: event.clientY
             });
-            viewport.setPointerCapture(event.pointerId);
+            try { viewport.setPointerCapture(event.pointerId); } catch (e) {}
             startGesture();
             viewport.classList.add('is-dragging');
         });
