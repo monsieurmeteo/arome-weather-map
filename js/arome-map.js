@@ -1059,27 +1059,40 @@
                 return;
             }
             currentStep = clamp(index, 0, steps.length - 1);
-            slider.max = String(steps.length - 1);
-            slider.value = String(currentStep);
-            previousButton.disabled = currentStep === 0;
-            nextButton.disabled = currentStep === steps.length - 1;
+            if (slider) {
+                slider.max = String(steps.length - 1);
+                slider.value = String(currentStep);
+            }
+            if (previousButton) previousButton.disabled = currentStep === 0;
+            if (nextButton) nextButton.disabled = currentStep === steps.length - 1;
 
             var step = steps[currentStep];
             var date = new Date(step.valid_time);
-            validity.textContent = validityFormat.format(date).replace(':', 'h');
-            lead.textContent = 'H+' + String(step.lead_hour).padStart(2, '0');
+            var dateFormatted = '';
+            try {
+                dateFormatted = validityFormat.format(date).replace(':', 'h');
+            } catch (e) {
+                dateFormatted = date.toLocaleTimeString('fr-FR');
+            }
+            if (validity) validity.textContent = dateFormatted;
+            if (lead) lead.textContent = 'H+' + String(step.lead_hour).padStart(2, '0');
             var layer = manifest.layers[currentLayer];
-            viewport.setAttribute(
-                'aria-label',
-                (layer ? layer.label : 'Carte météo') + ' — ' + validity.textContent
-            );
-            mapTitle.textContent = (layer ? layer.label : 'Carte AROME') +
-                (layer && layer.unit ? ' (' + layer.unit + ')' : '');
-            mapDate.textContent = mapDateFormat.format(date).replace(':', 'h') +
-                ' (+' + step.lead_hour + 'h)';
+            if (viewport) {
+                viewport.setAttribute(
+                    'aria-label',
+                    (layer ? layer.label : 'Carte météo') + ' — ' + dateFormatted
+                );
+            }
+            if (mapTitle) {
+                mapTitle.textContent = (layer ? layer.label : 'Carte AROME') +
+                    (layer && layer.unit ? ' (' + layer.unit + ')' : '');
+            }
+            if (mapDate) {
+                mapDate.textContent = dateFormatted + ' (+' + step.lead_hour + 'h)';
+            }
 
             clearError();
-            loading.hidden = false;
+            if (loading) loading.hidden = false;
             currentWeatherImage = null;
             samplerReady = false;
             hideProbe();
@@ -1094,7 +1107,7 @@
                 }
                 uploadWeatherImage(loader);
                 prepareImageSampler(loader);
-                loading.hidden = true;
+                if (loading) loading.hidden = true;
                 preloadNeighbour(steps, currentStep);
             };
             loader.onerror = function () {
