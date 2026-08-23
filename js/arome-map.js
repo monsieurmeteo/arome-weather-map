@@ -1164,6 +1164,12 @@
                 .then(function(payload) {
                     if (payload && payload.layers && Array.isArray(payload.steps)) {
                         manifest = payload;
+                        if (!manifest.layers[currentLayer]) {
+                            currentLayer = Object.keys(manifest.layers)[0] || 'temperature';
+                            var dSel = document.getElementById('direct-layer-select');
+                            if (dSel) dSel.value = currentLayer;
+                        }
+                        buildLegend();
                         renderStep(currentStep);
                     }
                 })
