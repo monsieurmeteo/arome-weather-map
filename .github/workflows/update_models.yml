@@ -18,7 +18,7 @@ concurrency:
 jobs:
   update-weather-models:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 120
 
     env:
       METEOFRANCE_TOKEN: ${{ secrets.METEOFRANCE_TOKEN }}
@@ -49,10 +49,10 @@ jobs:
 
       - name: Execution du Pipeline Multi-Modeles
         run: |
-          # Pour l'instant : uniquement AROME (rapide via WMS).
-          # Les autres modèles (ARPEGE, ICON, GFS, ECMWF) seront réactivés plus tard.
+          # Pour l'instant : AROME via open data (GRIB2 data.gouv.fr, gratuit).
+          # Les autres modèles seront réactivés plus tard.
           # -u = sortie non bufferisée (progression visible en temps réel dans les logs)
-          python -u pipeline/fetch_and_render_all.py --model arome
+          python -u pipeline/arome_open_data.py
 
       - name: Commit et Push des nouvelles cartes
         run: |
