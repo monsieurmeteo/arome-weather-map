@@ -4,5 +4,12 @@ __pycache__/
 .DS_Store
 *.tmp
 .system_generated/
-
 _mc/
+
+# ── Fichiers inutiles au site et au dépôt ─────────────────────────────
+.chrome_*/
+dist/
+public/
+.vercel/
+exports_csv/
+data/

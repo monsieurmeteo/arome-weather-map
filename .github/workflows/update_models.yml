@@ -2,14 +2,12 @@ name: "Mise a Jour Automatique Multi-Modeles Meteo (24/7)"
 
 on:
   schedule:
-    # Toutes les 3h — runs AROME à 00z/03z/06z/09z/12z/15z/18z/21z
+    # Toutes les 3h — met à jour les 5 modèles (runs 00z/06z/12z/18z)
     - cron: '15 1,4,7,10,13,16,19,22 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: "weather-pipeline"
@@ -70,13 +68,5 @@ jobs:
             git commit --no-edit || true
           }
           git push origin main
-
-      - name: Televersement de l'artefact GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-        if: success()
-
-      - name: Deploiement sur GitHub Pages
-        uses: actions/deploy-pages@v4
-        if: success()
+          # (Le déploiement est géré par le workflow deploy-pages.yml,
+          #  déclenché automatiquement par ce push.)

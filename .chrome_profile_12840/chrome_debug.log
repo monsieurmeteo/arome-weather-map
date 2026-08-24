@@ -1,5 +1,0 @@
-[13272:13600:0715/204851.037:INFO:components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc:239] No machine level policy manager exists.
-[22368:17372:0715/204851.141:ERROR:ui\gl\direct_composition_support.cc:247] GetGpuDriverOverlayInfo: Failed to retrieve video device
-[13272:13600:0715/204851.847:INFO:CONSOLE:4917] "Uncaught SyntaxError: Missing catch or finally after try", source: http://127.0.0.1:8001/index.html?headless=true&use_mf=true&day=0&period=morning&zone=paca&param=weather_temp&auto_save=true&highlight=true (4917)
-[13272:13600:0715/204851.873:INFO:CONSOLE:0] "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o", source: http://127.0.0.1:8001/index.html?headless=true&use_mf=true&day=0&period=morning&zone=paca&param=weather_temp&auto_save=true&highlight=true (0)
-[13272:3172:0715/204854.712:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
