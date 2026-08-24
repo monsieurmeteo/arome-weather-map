@@ -533,8 +533,9 @@ def bilinear_sample(fields, communes):
 
 def quantize(values, scale, offset):
     q = np.round((values + offset) / scale)
+    q = np.clip(q, -32767, 32767)
     q[~np.isfinite(values)] = NAN_I16
-    return np.clip(q, -32767, 32767).astype(np.int16)
+    return q.astype(np.int16)
 
 
 # ── Écriture des fichiers par département ───────────────────────────────────
@@ -602,8 +603,9 @@ def write_department_files(out_dir, run_str, leads, per_lead_values, communes):
                     mat[:, j] = NAN_I16
                     continue
                 q = np.round((np.asarray(arr, dtype=np.float64)[idxs] + offset) / scale)
+                q = np.clip(q, -32767, 32767)
                 q[~np.isfinite(np.asarray(arr, dtype=np.float64)[idxs])] = NAN_I16
-                mat[:, j] = np.clip(q, -32767, 32767).astype(np.int16)
+                mat[:, j] = q.astype(np.int16)
             mats.append(mat)
         data = np.concatenate(mats, axis=1).ravel() if mats else \
             np.zeros(0, dtype=np.int16)
