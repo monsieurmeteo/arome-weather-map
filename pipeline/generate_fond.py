@@ -202,10 +202,10 @@ def generate_svg(out_path=None):
             out.append(_polygon_path(rings, bbox))
         return " ".join(p for p in out if p)
 
-    # Pays d'Europe de l'Ouest visibles dans le cadre (le viewBox découpe
-    # le reste ; on évite les coordonnées gigantesques des pays lointains)
+    # Pays d'Europe visibles dans le cadre (la France est exclue ici
+    # car elle est tracée avec une précision officielle maximale via depts_d).
     WESTERN_EUROPE = {
-        "France", "United Kingdom", "Ireland", "Belgium", "Netherlands",
+        "United Kingdom", "Ireland", "Belgium", "Netherlands",
         "Luxembourg", "Germany", "Switzerland", "Austria", "Italy",
         "Spain", "Portugal", "Andorra", "Monaco", "Liechtenstein",
         "Denmark", "Czechia", "Czech Republic", "Poland", "Croatia",
