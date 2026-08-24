@@ -112,6 +112,7 @@
         var captureButton = app.querySelector('[data-amfm-capture]');
         var captureJpegButton = app.querySelector('[data-amfm-capture-jpeg]');
         var captureGifButton = app.querySelector('[data-amfm-capture-gif]');
+        var toggleCitiesButton = app.querySelector('[data-amfm-toggle-cities]');
         var pinButton = app.querySelector('[data-amfm-pin]');
         var diagramPopup = app.querySelector('[data-amfm-diagram-popup]');
         var diagramTitle = app.querySelector('[data-amfm-diagram-title]');
@@ -130,6 +131,7 @@
         var gesture = null;
         var places = [];
         var placeBuckets = new Map();
+        var citiesVisible = true;
         var vectorDefinition = null;
         var currentWeatherImage = null;
         var logoImage = new Image();
@@ -817,14 +819,25 @@
             }
 
             var margin = 24;
-            var bannerH = 118;
+            var bannerH = 130;
             var bannerY = 84;
+            // Largeur du cartouche adaptée au contenu (titre + échéance)
+            context.font = '700 34px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
+            var titleText = modelTitle + ' • ' + (layer ? layer.label : '') +
+                (layer && layer.unit ? ' (' + layer.unit + ')' : '');
+            var dateText = dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '') +
+                ' — Météo-Climat Pro';
+            var titleW = context.measureText(titleText).width;
+            var dateW = context.measureText(dateText).width;
+            var bannerW = Math.min(output.width - margin * 2,
+                Math.max(titleW, dateW) + 44);
             context.fillStyle = 'rgba(7, 11, 20, 0.94)';
             context.beginPath();
             if (typeof context.roundRect === 'function') {
-                context.roundRect(margin, bannerY, Math.min(output.width - margin * 2, 660), bannerH, 16);
+                context.roundRect(margin, bannerY, bannerW, bannerH, 16);
             } else {
-                context.rect(margin, bannerY, Math.min(output.width - margin * 2, 660), bannerH);
+                context.rect(margin, bannerY, bannerW, bannerH);
             }
             context.fill();
             context.strokeStyle = 'rgba(0, 210, 255, 0.75)';
@@ -834,17 +847,11 @@
             // Ligne 1 : modèle + paramètre (gros, blanc)
             context.fillStyle = '#ffffff';
             context.font = '700 34px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
-            context.fillText(
-                modelTitle + ' • ' + (layer ? layer.label : '') +
-                (layer && layer.unit ? ' (' + layer.unit + ')' : ''),
-                margin + 18, bannerY + 48
-            );
+            context.fillText(titleText, margin + 18, bannerY + 52);
 
             // Ligne 2 : échéance (gros, cyan) + run
             context.fillStyle = '#00d2ff';
-            context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            var leadText = step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '';
+            context.font = '700 27px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var runLabel = '';
             if (manifest && manifest.run_time) {
                 try {
@@ -852,40 +859,41 @@
                 } catch (e) {}
             }
             context.fillText(
-                dateStr + leadText + runLabel + ' — Météo-Climat Pro',
-                margin + 18, bannerY + 84
+                dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '') +
+                runLabel + ' — Météo-Climat Pro',
+                margin + 18, bannerY + 92
             );
 
             // Légende colorimétrique centrée en bas (comme météociel)
             if (layer && typeof window.getLayerPalette === 'function' &&
                     typeof window.paletteTicks === 'function') {
                 try {
-                    var legendW = 700;
-                    var legendH = 74;
+                    var legendW = 900;
+                    var legendH = 92;
                     var legendX = (output.width - legendW) / 2;
                     var legendY = output.height - legendH - 20;
-                    context.fillStyle = 'rgba(7, 11, 20, 0.92)';
+                    context.fillStyle = 'rgba(7, 11, 20, 0.94)';
                     context.beginPath();
                     if (typeof context.roundRect === 'function') {
-                        context.roundRect(legendX - 16, legendY - 8,
-                            legendW + 32, legendH + 26, 14);
+                        context.roundRect(legendX - 20, legendY - 10,
+                            legendW + 40, legendH + 32, 16);
                     } else {
-                        context.rect(legendX - 16, legendY - 8,
-                            legendW + 32, legendH + 26);
+                        context.rect(legendX - 20, legendY - 10,
+                            legendW + 40, legendH + 32);
                     }
                     context.fill();
-                    context.strokeStyle = 'rgba(0, 210, 255, 0.35)';
-                    context.lineWidth = 1.5;
+                    context.strokeStyle = 'rgba(0, 210, 255, 0.6)';
+                    context.lineWidth = 2;
                     context.stroke();
 
                     // Étiquette + unité (centrées au-dessus de la barre)
                     context.fillStyle = '#ffffff';
-                    context.font = '700 19px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     context.textAlign = 'center';
                     context.textBaseline = 'alphabetic';
                     var legendLabel = (layer.label || 'Échelle') +
                         (layer.unit ? ' (' + layer.unit + ')' : '');
-                    context.fillText(legendLabel, output.width / 2, legendY + 20);
+                    context.fillText(legendLabel, output.width / 2, legendY + 26);
 
                     // Barre dégradée depuis les stops structurés de la palette
                     var pal = window.getLayerPalette(currentLayer);
@@ -895,7 +903,7 @@
                         pal.transparent_below : (stops.length ? stops[0].value : 0);
                     var max = stops.length ? stops[stops.length - 1].value : 1;
                     var span = (max - low) || 1;
-                    var barY = legendY + 34;
+                    var barY = legendY + 44;
                     var gradient = context.createLinearGradient(legendX, 0,
                         legendX + legendW, 0);
                     var gradientBuilt = false;
@@ -913,22 +921,22 @@
                     context.fillStyle = gradientBuilt ? gradient : '#3478c5';
                     context.beginPath();
                     if (typeof context.roundRect === 'function') {
-                        context.roundRect(legendX, barY, legendW, 16, 8);
+                        context.roundRect(legendX, barY, legendW, 22, 10);
                     } else {
-                        context.rect(legendX, barY, legendW, 16);
+                        context.rect(legendX, barY, legendW, 22);
                     }
                     context.fill();
                     context.strokeStyle = 'rgba(255,255,255,0.5)';
-                    context.lineWidth = 1;
+                    context.lineWidth = 1.5;
                     context.stroke();
 
                     // Ticks de valeurs
-                    context.fillStyle = '#dbe7ff';
-                    context.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    context.fillStyle = '#e6eeff';
+                    context.font = '700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     var ticks = window.paletteTicks(currentLayer);
                     ticks.forEach(function (tick, i) {
                         var x = legendX + (ticks.length > 1 ? i / (ticks.length - 1) : 0.5) * legendW;
-                        context.fillText(String(tick), x, barY + 34);
+                        context.fillText(String(tick), x, barY + 46);
                     });
                     context.textAlign = 'left';
                 } catch (legendError) {
@@ -1723,10 +1731,10 @@
                 if (regionData && Array.isArray(regionData.center) &&
                         regionData.center.length >= 2) {
                     // Zoom précis sur le centre de la région (coordonnées réelles).
-                    // scale = 2^(zoom−6) : France (6) → 1×, région (7-8) → 2-4×,
-                    // département/IDF (9) → 8×, commune (12) → 32× (max 24).
+                    // scale = 2^(zoom−6)×1.6 : France (6) → 1×, région (7-8) → 3-6×,
+                    // département/IDF (9) → 13×, commune (12) → 38× (max 30).
                     var regionScale = val === 'france' ? 1 :
-                        Math.min(24, Math.max(1.5, Math.pow(2, (regionData.zoom || 7) - 6)));
+                        Math.min(30, Math.max(2.2, Math.pow(2, (regionData.zoom || 7) - 6) * 1.6));
                     focusLocation({
                         latitude: Number(regionData.center[0]),
                         longitude: Number(regionData.center[1]),
@@ -2350,7 +2358,7 @@
             resizeCanvas(labelsCanvas, width, height, pixelRatio);
             labelsContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
             labelsContext.clearRect(0, 0, width, height);
-            if (!places.length || !manifest.bounds) {
+            if (!citiesVisible || !places.length || !manifest.bounds) {
                 return;
             }
 
@@ -2643,6 +2651,14 @@
         }
         if (captureGifButton) {
             captureGifButton.addEventListener('click', captureGif);
+        }
+        if (toggleCitiesButton) {
+            toggleCitiesButton.addEventListener('click', function () {
+                citiesVisible = !citiesVisible;
+                toggleCitiesButton.classList.toggle('is-active', citiesVisible);
+                toggleCitiesButton.setAttribute('aria-pressed', citiesVisible ? 'true' : 'false');
+                scheduleRender();
+            });
         }
         if (pinButton) {
             pinButton.addEventListener('click', function () {

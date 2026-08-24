@@ -231,11 +231,11 @@ def generate_svg(out_path=None):
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<svg xmlns="http://www.w3.org/2000/svg" '
         'viewBox="0 0 %d %d" width="%d" height="%d">\n'
-        '<path d="%s" fill="none" stroke="#6b7a86" stroke-width="2" '
+        '<path d="%s" fill="none" stroke="#1a1f26" stroke-width="2.2" '
         'stroke-linejoin="round" stroke-linecap="round"/>\n'
-        '<path d="%s" fill="none" stroke="#8a97a3" stroke-width="1.45" '
+        '<path d="%s" fill="none" stroke="#333c46" stroke-width="1.5" '
         'stroke-linejoin="round" stroke-linecap="round"/>\n'
-        '<path d="%s" fill="none" stroke="#9aa6b0" stroke-width="0.8" '
+        '<path d="%s" fill="none" stroke="#4a5560" stroke-width="0.9" '
         'stroke-linejoin="round" stroke-linecap="round"/>\n'
         '</svg>\n' % (WIDTH, HEIGHT, WIDTH, HEIGHT, pays_d, regions_d, depts_d)
     )
