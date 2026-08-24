@@ -714,10 +714,17 @@ def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
                 save_tile(tile_name, arr, lats, lons, out_dir, lead,
                           step_files, regridded)
 
-        # Rafale max cumulée depuis le run (paramètre « rafale max échéance »)
+        # Rafale max cumulée depuis le run (paramètre « rafale max échéance »).
+        # NB : à H+0 les rafales sont NaN (pas de max sur un intervalle vide) ;
+        # on initialise à 0 pour que le cumul ne soit pas pollué par NaN.
         prev_max = previous_state.get("gust_max")
-        gust_max = fields["wind_gust_kmh"] if prev_max is None \
-            else np.maximum(prev_max, fields["wind_gust_kmh"])
+        cur_gust = fields["wind_gust_kmh"]
+        if prev_max is None:
+            gust_max = np.where(np.isfinite(cur_gust), cur_gust, 0.0)
+        else:
+            gust_max = np.maximum(np.nan_to_num(prev_max, nan=0.0),
+                                  np.nan_to_num(cur_gust, nan=0.0))
+            gust_max[~np.isfinite(prev_max) & ~np.isfinite(cur_gust)] = np.nan
         previous_state["gust_max"] = gust_max
         fields["wind_gust_max_kmh"] = gust_max
         save_tile("rafales_cumul", gust_max, lats, lons, out_dir, lead,
