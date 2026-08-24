@@ -58,6 +58,7 @@ jobs:
             echo "Aucune nouvelle carte a pousser."
           else
             git commit -m "Mise a jour automatique des modeles meteo [$(date -u +'%Y-%m-%d %H:%MZ')]"
+            git pull --rebase origin main
             git push origin main
           fi
 
