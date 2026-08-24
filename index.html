@@ -132,6 +132,19 @@
             white-space: nowrap;
         }
 
+        .amfm-headline {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--amfm-accent);
+            font-variant-numeric: tabular-nums;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+        .amfm-headline .amfm-headline-layer {
+            color: var(--amfm-muted);
+            font-weight: 600;
+        }
+
         .amfm-badge {
             background: #00d2ff;
             color: #070b14 !important;
@@ -450,6 +463,7 @@
                     <span>MODÈLE AROME HD</span>
                     <span class="amfm-badge">1,3 km</span>
                 </div>
+                <div class="amfm-headline" data-amfm-headline aria-live="polite">Chargement…</div>
             </div>
 
             <div class="amfm-card amfm-controls" role="region" aria-label="Contrôles de la carte">

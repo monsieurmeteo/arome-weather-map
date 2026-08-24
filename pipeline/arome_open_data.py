@@ -703,6 +703,10 @@ def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
         if not fields:
             print("  H+%02d: aucun champ calculé" % lead)
             return False
+        # CRITIQUE : réinjecte l'état des cumuls (rain_total, snow_total,
+        # graupel_total, fresh_snow) pour que l'échéance suivante calcule les
+        # valeurs HORAIRES par différence (cumul(H+n) − cumul(H+n−1)).
+        previous_state.update(state)
 
         # ── Tuiles ─────────────────────────────────────────────────────
         lats = LAT0 - np.arange(NJ) * STEP

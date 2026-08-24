@@ -700,7 +700,8 @@
             output.height = 1640;
             var context = output.getContext('2d');
 
-            context.fillStyle = '#a5a6b0';
+            // Fond sombre (thème du site) — plus de gris autour de la France
+            context.fillStyle = '#0b1220';
             context.fillRect(0, 0, output.width, output.height);
 
             // Transformation courante, en coordonnées carte (même logique que drawVectors)
@@ -712,11 +713,11 @@
             var offX = 1100 + transform.x / uScale - hScale * 1100.0;
             var offY = 820 + transform.y / uScale - vScale * 820.0;
 
-            // Fond de carte : silhouette de la France (masque) en gris clair
+            // Fond de carte : silhouette de la France (masque) légèrement plus claire
             if (franceMaskImage && franceMaskImage.complete && franceMaskImage.naturalWidth) {
                 context.save();
                 context.transform(hScale, 0, 0, vScale, offX, offY);
-                context.globalAlpha = 0.30;
+                context.globalAlpha = 0.55;
                 context.drawImage(franceMaskImage, 0, 0);
                 context.restore();
                 context.globalAlpha = 1;
@@ -733,14 +734,18 @@
                 context.save();
                 context.transform(hScale, 0, 0, vScale, offX, offY);
                 vectorDefinition.paths.forEach(function (entry) {
-                    if (entry.kind === 'department' && transform.scale > 3.2) {
-                        return;
-                    }
-                    if (entry.kind === 'region' && transform.scale > 10) {
-                        return;
+                    // Estompage progressif comme météociel : les contours restent
+                    // visibles mais s'atténuent quand on zoome (jamais disparition brutale).
+                    var fade = 1;
+                    if (entry.kind === 'department') {
+                        fade = transform.scale <= 3 ? 1 :
+                            Math.max(0.22, 1 - (transform.scale - 3) / 14);
+                    } else if (entry.kind === 'region') {
+                        fade = transform.scale <= 8 ? 1 :
+                            Math.max(0.35, 1 - (transform.scale - 8) / 20);
                     }
                     context.strokeStyle = entry.colour;
-                    context.globalAlpha = entry.opacity;
+                    context.globalAlpha = (entry.opacity || 1) * fade;
                     context.lineCap = entry.lineCap;
                     context.lineJoin = entry.lineJoin;
                     context.lineWidth = entry.width / hScale;
@@ -770,7 +775,9 @@
                 context.restore();
             }
 
-            // Cartouche d'antenne (Modèle • Paramètre • Validité)
+            // Cartouche d'antenne (Modèle • Paramètre • Validité) — en haut à
+            // gauche comme météociel. Placé sous le header HTML (≈80 px) et
+            // au-dessus du sélecteur de région sur mobile.
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
             var step = availableSteps()[currentStep];
             var dateStr = '';
@@ -784,13 +791,13 @@
 
             var margin = 24;
             var bannerH = 96;
-            var bannerY = output.height - bannerH - margin;
+            var bannerY = 84;
             context.fillStyle = 'rgba(7, 11, 20, 0.92)';
             context.beginPath();
             if (typeof context.roundRect === 'function') {
-                context.roundRect(margin, bannerY, output.width - margin * 2, bannerH, 16);
+                context.roundRect(margin, bannerY, Math.min(output.width - margin * 2, 620), bannerH, 16);
             } else {
-                context.rect(margin, bannerY, output.width - margin * 2, bannerH);
+                context.rect(margin, bannerY, Math.min(output.width - margin * 2, 620), bannerH);
             }
             context.fill();
             context.strokeStyle = 'rgba(0, 210, 255, 0.45)';
@@ -813,6 +820,86 @@
                 dateStr + leadText + ' — Météo-Climat Pro',
                 margin + 18, bannerY + 76
             );
+
+            // Légende colorimétrique centrée en bas (comme météociel)
+            if (layer && typeof window.getLayerPalette === 'function' &&
+                    typeof window.paletteTicks === 'function') {
+                try {
+                    var legendW = 700;
+                    var legendH = 74;
+                    var legendX = (output.width - legendW) / 2;
+                    var legendY = output.height - legendH - 20;
+                    context.fillStyle = 'rgba(7, 11, 20, 0.92)';
+                    context.beginPath();
+                    if (typeof context.roundRect === 'function') {
+                        context.roundRect(legendX - 16, legendY - 8,
+                            legendW + 32, legendH + 26, 14);
+                    } else {
+                        context.rect(legendX - 16, legendY - 8,
+                            legendW + 32, legendH + 26);
+                    }
+                    context.fill();
+                    context.strokeStyle = 'rgba(0, 210, 255, 0.35)';
+                    context.lineWidth = 1.5;
+                    context.stroke();
+
+                    // Étiquette + unité (centrées au-dessus de la barre)
+                    context.fillStyle = '#ffffff';
+                    context.font = '700 19px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    context.textAlign = 'center';
+                    context.textBaseline = 'alphabetic';
+                    var legendLabel = (layer.label || 'Échelle') +
+                        (layer.unit ? ' (' + layer.unit + ')' : '');
+                    context.fillText(legendLabel, output.width / 2, legendY + 20);
+
+                    // Barre dégradée depuis les stops structurés de la palette
+                    var pal = window.getLayerPalette(currentLayer);
+                    var stops = pal && pal.stops ? pal.stops : [];
+                    var low = (pal && pal.transparent_below !== null &&
+                        pal.transparent_below !== undefined) ?
+                        pal.transparent_below : (stops.length ? stops[0].value : 0);
+                    var max = stops.length ? stops[stops.length - 1].value : 1;
+                    var span = (max - low) || 1;
+                    var barY = legendY + 34;
+                    var gradient = context.createLinearGradient(legendX, 0,
+                        legendX + legendW, 0);
+                    var gradientBuilt = false;
+                    if (pal && pal.transparent_below !== null &&
+                            pal.transparent_below !== undefined) {
+                        gradient.addColorStop(0, 'rgba(0,0,0,0)');
+                        gradientBuilt = true;
+                    }
+                    stops.forEach(function (s) {
+                        var position = Math.max(0, Math.min(1,
+                            (Number(s.value) - low) / span));
+                        gradient.addColorStop(position, s.color);
+                        gradientBuilt = true;
+                    });
+                    context.fillStyle = gradientBuilt ? gradient : '#3478c5';
+                    context.beginPath();
+                    if (typeof context.roundRect === 'function') {
+                        context.roundRect(legendX, barY, legendW, 16, 8);
+                    } else {
+                        context.rect(legendX, barY, legendW, 16);
+                    }
+                    context.fill();
+                    context.strokeStyle = 'rgba(255,255,255,0.5)';
+                    context.lineWidth = 1;
+                    context.stroke();
+
+                    // Ticks de valeurs
+                    context.fillStyle = '#dbe7ff';
+                    context.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    var ticks = window.paletteTicks(currentLayer);
+                    ticks.forEach(function (tick, i) {
+                        var x = legendX + (ticks.length > 1 ? i / (ticks.length - 1) : 0.5) * legendW;
+                        context.fillText(String(tick), x, barY + 34);
+                    });
+                    context.textAlign = 'left';
+                } catch (legendError) {
+                    console.warn('Légende export ignorée :', legendError);
+                }
+            }
 
             return output;
         }
@@ -1352,6 +1439,24 @@
             if (mapDate) {
                 mapDate.textContent = dateFormatted + ' (' + leadStr + ')';
             }
+            // Ligne d'en-tête en haut à gauche : paramètre + échéance (comme météociel)
+            var headline = app.querySelector('[data-amfm-headline]');
+            if (headline) {
+                var layerName = layer ? layer.label : currentLayer;
+                var runLabel = '';
+                try {
+                    runLabel = runFormat.format(new Date(step.valid_time)).replace(':', 'h');
+                } catch (e) {
+                    runLabel = dateFormatted;
+                }
+                headline.innerHTML = '';
+                var layerSpan = document.createElement('span');
+                layerSpan.className = 'amfm-headline-layer';
+                layerSpan.textContent = layerName +
+                    (layer && layer.unit ? ' (' + layer.unit + ')' : '') + ' — ';
+                headline.appendChild(layerSpan);
+                headline.appendChild(document.createTextNode(runLabel + ' ' + leadStr));
+            }
 
             clearError();
             if (loading) loading.hidden = false;
@@ -1397,26 +1502,59 @@
 
         var regionSelect = app.querySelector('[data-amfm-region-select]');
         if (regionSelect) {
+            // Correspondance ids du menu déroulant → clés de Europe1Regions (regions.js)
+            var REGION_KEYS = {
+                france: 'france',
+                hdf: 'hdf',
+                normandie: 'normandie',
+                idf: 'ile-de-france',
+                grandest: 'grand-est',
+                bretagne: 'bretagne',
+                pdl: 'pdl',
+                cvl: 'cvl',
+                bfc: 'bfc',
+                naq: 'naq',
+                ara: 'ara',
+                occitanie: 'occitanie',
+                paca: 'paca',
+                corse: 'corse'
+            };
+            var fallbackCoords = {
+                france: { scale: 1, u: 0.5, v: 0.5 },
+                hdf: { scale: 2.8, u: 0.53, v: 0.28 },
+                normandie: { scale: 3.0, u: 0.42, v: 0.32 },
+                idf: { scale: 3.8, u: 0.52, v: 0.38 },
+                grandest: { scale: 2.6, u: 0.68, v: 0.35 },
+                bretagne: { scale: 3.0, u: 0.28, v: 0.38 },
+                pdl: { scale: 2.6, u: 0.38, v: 0.39 },
+                cvl: { scale: 2.8, u: 0.50, v: 0.34 },
+                bfc: { scale: 2.6, u: 0.61, v: 0.38 },
+                naq: { scale: 2.4, u: 0.38, v: 0.58 },
+                ara: { scale: 2.6, u: 0.64, v: 0.58 },
+                occitanie: { scale: 2.6, u: 0.48, v: 0.70 },
+                paca: { scale: 3.0, u: 0.68, v: 0.72 },
+                corse: { scale: 4.2, u: 0.78, v: 0.82 }
+            };
             regionSelect.addEventListener('change', function (e) {
-                var val = e.target.value;
-                var coords = {
-                    france: { scale: 1, u: 0.5, v: 0.5 },
-                    hdf: { scale: 2.8, u: 0.53, v: 0.28 },
-                    normandie: { scale: 3.0, u: 0.42, v: 0.32 },
-                    idf: { scale: 3.8, u: 0.52, v: 0.38 },
-                    grandest: { scale: 2.6, u: 0.68, v: 0.35 },
-                    bretagne: { scale: 3.0, u: 0.28, v: 0.38 },
-                    pdl: { scale: 2.6, u: 0.38, v: 0.39 },
-                    cvl: { scale: 2.8, u: 0.50, v: 0.34 },
-                    bfc: { scale: 2.6, u: 0.61, v: 0.38 },
-                    naq: { scale: 2.4, u: 0.38, v: 0.58 },
-                    ara: { scale: 2.6, u: 0.64, v: 0.58 },
-                    occitanie: { scale: 2.6, u: 0.48, v: 0.70 },
-                    paca: { scale: 3.0, u: 0.68, v: 0.72 },
-                    corse: { scale: 4.2, u: 0.78, v: 0.82 }
-                };
-                var target = coords[val] || coords.france;
-                focusOnPoint(target.u, target.v, target.scale);
+                var val = e.target.value || 'france';
+                var regionData = null;
+                var key = REGION_KEYS[val];
+                if (key && typeof window.Europe1Regions === 'object' &&
+                        window.Europe1Regions && window.Europe1Regions[key]) {
+                    regionData = window.Europe1Regions[key];
+                }
+                if (regionData && Array.isArray(regionData.center) &&
+                        regionData.center.length >= 2) {
+                    // Zoom précis sur le centre de la région (coordonnées réelles)
+                    focusLocation({
+                        latitude: Number(regionData.center[0]),
+                        longitude: Number(regionData.center[1]),
+                        scale: Math.max(4, Math.round((regionData.zoom || 7) * 4.2))
+                    });
+                } else {
+                    var target = fallbackCoords[val] || fallbackCoords.france;
+                    focusOnPoint(target.u, target.v, target.scale);
+                }
                 updateUrl();
             });
         }
@@ -1636,8 +1774,8 @@
                 'uniform float uHasWeather;\n' +
                 'uniform float uHasMask;\n' +
                 'void main(){\n' +
-                ' vec3 sea=vec3(0.6471,0.6510,0.6902);\n' +
-                ' vec3 land=vec3(0.76,0.78,0.81);\n' +
+                ' vec3 sea=vec3(0.043,0.055,0.086);\n' +
+                ' vec3 land=vec3(0.075,0.090,0.125);\n' +
                 ' vec2 uv=((vUv-vec2(0.5))*uAspect-uTranslation)/uScale+vec2(0.5);\n' +
                 ' vec3 base=sea;\n' +
                 ' if(uHasMask>0.5 && uv.x>=0.0 && uv.x<=1.0 && uv.y>=0.0 && uv.y<=1.0){\n' +
@@ -1771,7 +1909,7 @@
                 return;
             }
             fallbackContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-            fallbackContext.fillStyle = '#a5a6b0';
+            fallbackContext.fillStyle = '#0b1220';
             fallbackContext.fillRect(0, 0, width, height);
             if (!currentWeatherImage) {
                 return;
@@ -1935,27 +2073,27 @@
 
         function labelDensity() {
             if (transform.scale < 1.35) {
-                return { population: 250000, maximum: 18, size: 10 };
+                return { population: 90000, maximum: 40, size: 11 };
             }
             if (transform.scale < 2.25) {
-                return { population: 80000, maximum: 34, size: 10 };
+                return { population: 35000, maximum: 60, size: 11 };
             }
             if (transform.scale < 3.75) {
-                return { population: 18000, maximum: 68, size: 11 };
+                return { population: 12000, maximum: 90, size: 11 };
             }
             if (transform.scale < 6) {
-                return { population: 4000, maximum: 115, size: 11 };
+                return { population: 3000, maximum: 130, size: 11 };
             }
             if (transform.scale < 8) {
-                return { population: 900, maximum: 170, size: 11 };
+                return { population: 700, maximum: 190, size: 12 };
             }
             if (transform.scale < 16) {
-                return { population: 150, maximum: 240, size: 12 };
+                return { population: 120, maximum: 250, size: 12 };
             }
             if (transform.scale < 32) {
-                return { population: 30, maximum: 210, size: 12 };
+                return { population: 20, maximum: 220, size: 12 };
             }
-            return { population: 1, maximum: 180, size: 12 };
+            return { population: 1, maximum: 190, size: 12 };
         }
 
         function overlaps(rectangle, occupied) {
@@ -2072,7 +2210,9 @@
                     });
                     scheduleRender();
                 })
-                .catch(function () {
+                .catch(function (error) {
+                    console.warn('Villes non chargées (' +
+                        (manifest && manifest.places) + ') :', error);
                     places = [];
                     placeBuckets = new Map();
                 });
