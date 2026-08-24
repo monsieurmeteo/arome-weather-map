@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: "weather-pipeline"
@@ -71,5 +73,26 @@ jobs:
             git commit --no-edit || true
           }
           git push origin main
-          # (Le déploiement est géré par le workflow deploy-pages.yml,
-          #  déclenché automatiquement par ce push.)
+
+      # ── Déploiement intégré (le push GITHUB_TOKEN ne redéclenche pas
+      #    deploy-pages.yml, donc on déploie ici directement). ──────────
+      - name: Preparation du site (fichiers necessaires uniquement)
+        run: |
+          mkdir -p _site
+          cp index.html _site/ 2>/dev/null || true
+          cp logo.png _site/ 2>/dev/null || true
+          cp -r js _site/ 2>/dev/null || true
+          cp -r css _site/ 2>/dev/null || true
+          cp -r output _site/ 2>/dev/null || true
+
+      - name: Configuration Pages
+        uses: actions/configure-pages@v5
+
+      - name: Televersement de l'artefact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+      - name: Deploiement sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
