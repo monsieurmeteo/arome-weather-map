@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Prévisions par commune — AROME HD 1,3 km | Météo-Climat Pro</title>
+    <meta name="description" content="Prévisions météo horaires AROME HD (1,3 km) pour toutes les communes de France : température, pluie, vent, orages (MUCAPE, LCL, foudre, grêle), neige. Recherche par commune ou code postal.">
+    <meta name="theme-color" content="#0b1220">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <style>
+        :root {
+            --bg: #0b1220;
+            --bg2: #101a2e;
+            --card: rgba(20, 30, 50, 0.85);
+            --card-solid: #141f36;
+            --border: rgba(148, 180, 255, 0.14);
+            --text: #eaf1fb;
+            --muted: #8fa3c0;
+            --accent: #35c7ff;
+            --accent2: #7b6cff;
+            --ok: #2dd4a7;
+            --warn: #ffc93c;
+            --danger: #ff5d5d;
+            --severe: #ff2e97;
+            --radius: 16px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html, body {
+            background: radial-gradient(1200px 600px at 80% -10%, rgba(123,108,255,0.16), transparent 60%),
+                        radial-gradient(900px 500px at -10% 10%, rgba(53,199,255,0.12), transparent 55%),
+                        var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100dvh;
+        }
+        body { padding: 18px 16px 60px; max-width: 1200px; margin: 0 auto; }
+
+        /* ── Header ─────────────────────────────── */
+        .mcp-header {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 14px; flex-wrap: wrap; margin-bottom: 18px;
+        }
+        .mcp-brand { display: flex; align-items: center; gap: 12px; }
+        .mcp-brand img { height: 34px; width: auto; border-radius: 8px; }
+        .mcp-brand h1 { font-size: 19px; font-weight: 800; letter-spacing: 0.2px; }
+        .mcp-brand .sub { font-size: 12px; color: var(--muted); font-weight: 600; }
+        .mcp-badge {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff; font-size: 11px; font-weight: 900; padding: 3px 10px;
+            border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .mcp-back a {
+            color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px;
+            border: 1px solid var(--border); border-radius: 10px; background: var(--card);
+            transition: all .2s;
+        }
+        .mcp-back a:hover { color: var(--accent); border-color: var(--accent); }
+
+        /* ── Recherche ──────────────────────────── */
+        .mcp-search-wrap { position: relative; margin-bottom: 20px; }
+        .mcp-search {
+            display: flex; gap: 10px; align-items: center;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 8px; backdrop-filter: blur(14px);
+        }
+        .mcp-search input {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: var(--text); font-size: 16px; font-weight: 700; padding: 10px 12px;
+            min-width: 0;
+        }
+        .mcp-search input::placeholder { color: var(--muted); font-weight: 600; }
+        .mcp-search .mcp-locate {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none; color: #fff; font-weight: 800; font-size: 13px;
+            padding: 12px 16px; border-radius: 12px; cursor: pointer; white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 7px; transition: transform .15s, filter .2s;
+        }
+        .mcp-search .mcp-locate:hover { filter: brightness(1.15); }
+        .mcp-search .mcp-locate:active { transform: scale(0.97); }
+        .mcp-search .mcp-locate.is-loading { opacity: .7; pointer-events: none; }
+
+        .mcp-results {
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 50;
+            background: var(--card-solid); border: 1px solid var(--border);
+            border-radius: 14px; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.5);
+            display: none; max-height: 340px; overflow-y: auto;
+        }
+        .mcp-results.open { display: block; }
+        .mcp-result {
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            width: 100%; padding: 11px 16px; background: none; border: none; cursor: pointer;
+            color: var(--text); text-align: left; font-size: 14px; border-bottom: 1px solid var(--border);
+        }
+        .mcp-result:last-child { border-bottom: none; }
+        .mcp-result:hover, .mcp-result.is-active { background: rgba(53,199,255,0.12); }
+        .mcp-result .r-name { font-weight: 800; }
+        .mcp-result .r-detail { color: var(--muted); font-size: 12px; font-weight: 600; }
+
+        /* ── Statut / infos run ─────────────────── */
+        .mcp-meta {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            font-size: 12.5px; color: var(--muted); font-weight: 600; margin-bottom: 18px;
+        }
+        .mcp-meta .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; }
+        .mcp-meta .run-name { color: var(--accent); font-weight: 800; }
+
+        /* ── Cartes de synthèse ─────────────────── */
+        .mcp-summary {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px; margin-bottom: 18px;
+        }
+        .mcp-sum-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 14px 16px; backdrop-filter: blur(10px);
+        }
+        .mcp-sum-card .s-label { font-size: 11px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .6px; }
+        .mcp-sum-card .s-value { font-size: 22px; font-weight: 900; margin-top: 5px; display: flex; align-items: center; gap: 8px; }
+        .mcp-sum-card .s-sub { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 600; }
+        .risk-pill {
+            display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px;
+            border-radius: 999px; font-size: 13px; font-weight: 800; color: #fff;
+        }
+        .risk-0 { background: rgba(140,160,190,.35); color: var(--muted); }
+        .risk-1 { background: linear-gradient(135deg,#2dd4a7,#1fa97f); }
+        .risk-2 { background: linear-gradient(135deg,#ffc93c,#f5a623); color: #1d1500; }
+        .risk-3 { background: linear-gradient(135deg,#ff8a3c,#ff5d5d); }
+        .risk-4 { background: linear-gradient(135deg,#ff2e97,#b3125f); }
+
+        /* ── Onglets ────────────────────────────── */
+        .mcp-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .mcp-tab {
+            background: var(--card); border: 1px solid var(--border); color: var(--muted);
+            padding: 10px 18px; border-radius: 12px; font-size: 14px; font-weight: 800;
+            cursor: pointer; transition: all .2s; display: inline-flex; gap: 8px; align-items: center;
+        }
+        .mcp-tab:hover { color: var(--text); border-color: var(--accent); }
+        .mcp-tab.active {
+            background: linear-gradient(135deg, rgba(53,199,255,.18), rgba(123,108,255,.18));
+            color: var(--accent); border-color: rgba(53,199,255,.5);
+        }
+        .mcp-panel { display: none; }
+        .mcp-panel.active { display: block; }
+
+        /* ── Tableaux ───────────────────────────── */
+        .mcp-table-wrap {
+            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+            overflow: auto; max-height: 560px; backdrop-filter: blur(10px);
+        }
+        table.mcp-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+        .mcp-table thead th {
+            position: sticky; top: 0; background: #182546;
+            padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+            color: var(--muted); font-weight: 800; text-align: right; white-space: nowrap;
+            border-bottom: 1px solid var(--border); z-index: 2;
+        }
+        .mcp-table thead th:first-child, .mcp-table tbody td:first-child { text-align: left; position: sticky; left: 0; }
+        .mcp-table thead th:first-child { background: #182546; z-index: 3; }
+        .mcp-table tbody td {
+            padding: 9px 12px; text-align: right; white-space: nowrap;
+            border-bottom: 1px solid rgba(148,180,255,.07); font-variant-numeric: tabular-nums;
+        }
+        .mcp-table tbody tr:hover { background: rgba(53,199,255,.06); }
+        .mcp-table tbody td:first-child { background: rgba(16,26,46,.9); font-weight: 800; }
+        .mcp-table tr.mcp-new-day td { border-top: 2px solid rgba(53,199,255,.35); }
+        .mcp-day-cell { color: var(--accent); font-weight: 800; font-size: 12px; }
+        .mcp-hour { font-weight: 800; color: var(--text); }
+        .temp-hot { color: #ff6b5d; font-weight: 800; }
+        .temp-warm { color: #ffb84d; font-weight: 800; }
+        .temp-mild { color: #7bff9b; }
+        .temp-cool { color: #4dc3ff; }
+        .temp-cold { color: #9b7bff; }
+        .num-strong { font-weight: 800; color: var(--text); }
+        .badge-cell { display: inline-flex; align-items: center; gap: 5px; }
+        .mcp-condition { font-size: 15px; }
+        .wind-arrow { display: inline-block; transition: none; }
+        .muted { color: var(--muted); }
+
+        /* ── Graphiques ─────────────────────────── */
+        .mcp-charts {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 12px; margin-bottom: 18px;
+        }
+        .mcp-chart-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 14px 16px; backdrop-filter: blur(10px);
+        }
+        .mcp-chart-card h3 { font-size: 13px; color: var(--muted); font-weight: 800; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+        .mcp-chart-card svg { width: 100%; height: 150px; display: block; }
+
+        /* ── Pied ───────────────────────────────── */
+        .mcp-footer { margin-top: 26px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.7; }
+        .mcp-footer a { color: var(--accent); text-decoration: none; }
+
+        .mcp-error {
+            background: rgba(255,93,93,.1); border: 1px solid rgba(255,93,93,.4); color: #ffb3b3;
+            padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 14px; margin-bottom: 14px;
+            display: none;
+        }
+        .mcp-loading {
+            text-align: center; padding: 40px; color: var(--muted); font-weight: 700; display: none;
+        }
+        .mcp-loading .spin { display: inline-block; width: 26px; height: 26px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: mcp-spin .8s linear infinite; margin-bottom: 10px; }
+        @keyframes mcp-spin { to { transform: rotate(360deg); } }
+
+        .mcp-city-title { font-size: 24px; font-weight: 900; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .mcp-city-title .postal { color: var(--muted); font-size: 14px; font-weight: 700; }
+        .mcp-city-meta { font-size: 12.5px; color: var(--muted); margin-bottom: 16px; font-weight: 600; }
+
+        @media (max-width: 640px) {
+            body { padding: 12px 10px 40px; }
+            .mcp-search { flex-direction: column; }
+            .mcp-search .mcp-locate { width: 100%; justify-content: center; }
+            .mcp-summary { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="mcp-header">
+        <div class="mcp-brand">
+            <img src="logo.png" alt="Météo-Climat Pro">
+            <div>
+                <h1>Prévisions par commune <span class="mcp-badge">AROME 1,3 km</span></h1>
+                <div class="sub">Modèle AROME HD de Météo-France — open data</div>
+            </div>
+        </div>
+        <div class="mcp-back"><a href="index.html"><i class="fa-solid fa-map-location-dot"></i> Cartes AROME</a></div>
+    </header>
+
+    <div class="mcp-search-wrap">
+        <div class="mcp-search">
+            <i class="fa-solid fa-magnifying-glass" style="color:var(--muted);padding-left:10px;"></i>
+            <input type="text" id="mcp-input" placeholder="Commune ou code postal (ex : Lyon, 75015, 59800…)" autocomplete="off" aria-label="Rechercher une commune ou un code postal">
+            <button type="button" class="mcp-locate" id="mcp-locate"><i class="fa-solid fa-location-crosshairs"></i> Me localiser</button>
+        </div>
+        <div class="mcp-results" id="mcp-results" role="listbox"></div>
+    </div>
+
+    <div class="mcp-meta" id="mcp-meta" style="display:none;">
+        <span class="dot"></span>
+        <span>Run du <span class="run-name" id="mcp-run">…</span> • <span id="mcp-generated">…</span></span>
+    </div>
+
+    <div class="mcp-error" id="mcp-error"></div>
+    <div class="mcp-loading" id="mcp-loading"><div class="spin"></div><div>Chargement des prévisions…</div></div>
+
+    <main id="mcp-main" style="display:none;">
+        <div class="mcp-city-title" id="mcp-city">—</div>
+        <div class="mcp-city-meta" id="mcp-city-meta"></div>
+
+        <div class="mcp-summary" id="mcp-summary"></div>
+
+        <div class="mcp-charts" id="mcp-charts"></div>
+
+        <div class="mcp-tabs" role="tablist">
+            <button class="mcp-tab active" data-panel="general" role="tab">🌡️ Général</button>
+            <button class="mcp-tab" data-panel="storms" role="tab">⛈️ Orages</button>
+            <button class="mcp-tab" data-panel="snow" role="tab">❄️ Neige</button>
+        </div>
+
+        <div class="mcp-panel active" id="panel-general" role="tabpanel">
+            <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-general"><thead></thead><tbody></tbody></table></div>
+        </div>
+        <div class="mcp-panel" id="panel-storms" role="tabpanel">
+            <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-storms"><thead></thead><tbody></tbody></table></div>
+        </div>
+        <div class="mcp-panel" id="panel-snow" role="tabpanel">
+            <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-snow"><thead></thead><tbody></tbody></table></div>
+        </div>
+    </main>
+
+    <footer class="mcp-footer">
+        Prévisions AROME HD 0,01° (≈1,3 km) — données Météo-France en open data (data.gouv.fr), palettes météociel.<br>
+        Les valeurs sont extraites par interpolation bilinéaire à la position exacte de la commune. Rafales max = maximum cumulé depuis le début du run.
+    </footer>
+
+    <script src="js/previsions.js?v=1.0.0"></script>
+</body>
+</html>

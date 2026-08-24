@@ -13,3 +13,10 @@ public/
 .vercel/
 exports_csv/
 data/
+
+# ── Recherche & fichiers de référence (jamais déployés) ──
+_research/
+.audit_tmp/
+*.grib2.idx
+*.grib2
+
