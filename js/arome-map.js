@@ -952,17 +952,22 @@
         }
 
         function refreshLayerMenu() {
+            if (!manifest || !manifest.layers) return;
             var current = manifest.layers[currentLayer];
-            currentLayerText.textContent = current ? current.label : 'Choisir une carte';
-            layerGrid.querySelectorAll('[data-amfm-layer-key]').forEach(function (button) {
-                var active = button.dataset.amfmLayerKey === currentLayer;
-                button.classList.toggle('is-active', active);
-                button.setAttribute('aria-pressed', active ? 'true' : 'false');
-            });
+            if (currentLayerText) {
+                currentLayerText.textContent = current ? current.label : 'Choisir une carte';
+            }
+            if (layerGrid) {
+                layerGrid.querySelectorAll('[data-amfm-layer-key]').forEach(function (button) {
+                    var active = button.dataset.amfmLayerKey === currentLayer;
+                    button.classList.toggle('is-active', active);
+                    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+                });
+            }
         }
 
         function buildLayerMenu() {
-            if (!layerGrid) return;
+            if (!layerGrid || !manifest || !manifest.layers) return;
             var groupOrder = [
                 'Températures',
                 'Précipitations',
@@ -1025,24 +1030,32 @@
         }
 
         function buildLegend() {
-            legend.replaceChildren();
+            if (!legend || !manifest || !manifest.layers) return;
             var layer = manifest.layers[currentLayer];
-            if (!layer || !Array.isArray(layer.stops) || !layer.stops.length) {
-                return;
+            var labelEl = app.querySelector('[data-amfm-legend-label]');
+            var unitEl = app.querySelector('[data-amfm-legend-unit]');
+            if (labelEl && layer) labelEl.textContent = layer.label || 'Échelle';
+            if (unitEl && layer) unitEl.textContent = layer.unit || '';
+            if (Array.isArray(layer && layer.stops) && layer.stops.length) {
+                legend.classList.toggle('is-dense', layer.stops.length > 16);
+                var strip = document.createElement('div');
+                strip.className = 'amfm-legend-strip';
+                layer.stops.forEach(function (stop) {
+                    var item = document.createElement('div');
+                    item.className = 'amfm-legend-stop';
+                    item.style.backgroundColor = stop.color;
+                    var label = document.createElement('span');
+                    label.textContent = stop.value;
+                    item.appendChild(label);
+                    strip.appendChild(item);
+                });
+                var existingStrip = legend.querySelector('.amfm-legend-strip');
+                if (existingStrip) {
+                    existingStrip.replaceWith(strip);
+                } else {
+                    legend.appendChild(strip);
+                }
             }
-            legend.classList.toggle('is-dense', layer.stops.length > 16);
-            var strip = document.createElement('div');
-            strip.className = 'amfm-legend-strip';
-            layer.stops.forEach(function (stop) {
-                var item = document.createElement('div');
-                item.className = 'amfm-legend-stop';
-                item.style.backgroundColor = stop.color;
-                var label = document.createElement('span');
-                label.textContent = stop.value;
-                item.appendChild(label);
-                strip.appendChild(item);
-            });
-            legend.appendChild(strip);
         }
 
         function preloadNeighbour(steps, index) {
