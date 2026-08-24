@@ -2467,39 +2467,36 @@
         // ────────────────────────────────────────────────────────────────────
         function computeMapRect(width, height, t) {
             t = t || transform;
-            var mapAspect = 2200.0 / 1640.0;
-            var viewAspect = width / (height || 1);
+            // Échelle de base UNIQUE : cover du viewport par le raster 2200×1640.
+            // Tous les calculs (pan, zoom roue, pinch, focusLocation) utilisent
+            // cette même valeur pour rester cohérents.
+            var s = Math.max(width / 2200.0, height / 1640.0);
             var bbox = null;
             if (t.scale <= 1.15) {
                 bbox = computeVisibleBBox();
             }
             if (bbox) {
-                // Cadrage France entière : on calcule l'échelle pour que l'ensemble
-                // du territoire (de Dunkerque à la Corse, de Brest à Strasbourg)
-                // soit 100% visible dans la zone utile de l'écran (entre le header
-                // compact et la timeline), sans aucun rognage ni zone étirée.
+                // Cadrage France entière : on adapte s pour que la France tienne
+                // entièrement dans la zone utile visible (header ~50px + timeline ~50px).
                 var availH = Math.max(180, height - 100);
                 var availW = Math.max(260, width - 24);
                 var bw = Math.max(100, bbox.x1 - bbox.x0);
                 var bh = Math.max(100, bbox.y1 - bbox.y0);
-                // Échelle ajustée avec marge de sécurité (~4%)
                 var sFrance = Math.min(availW / (bw * 1.05), availH / (bh * 1.05));
-                var s = sFrance;
 
                 var cx = (bbox.x0 + bbox.x1) / 2;
                 var cy = (bbox.y0 + bbox.y1) / 2;
                 var bboxRect = {
-                    x: width / 2 - cx * s,
-                    y: height / 2 - cy * s,
-                    w: 2200.0 * s,
-                    h: 1640.0 * s
+                    x: width / 2 - cx * sFrance,
+                    y: height / 2 - cy * sFrance,
+                    w: 2200.0 * sFrance,
+                    h: 1640.0 * sFrance
                 };
                 if (t.scale <= 1.001) {
                     return bboxRect;
                 }
-                // INTERPOLATION FLUIDE : entre scale 1 et 1.15, on fond
-                // progressivement le cadrage France dans le mode zoom libre
-                var coverScale = Math.max(width / 2200.0, height / 1640.0) * t.scale;
+                // INTERPOLATION FLUIDE entre vue France et mode zoom libre
+                var coverScale = s * t.scale;
                 var coverRect = {
                     x: width / 2 + t.x - 1100.0 * coverScale,
                     y: height / 2 + t.y - 820.0 * coverScale,
@@ -2514,9 +2511,8 @@
                     h: bboxRect.h + (coverRect.h - bboxRect.h) * f
                 };
             }
-            // Mode Zoom / Déplacement libre
-            var baseScale = Math.max(width / 2200.0, height / 1640.0);
-            var scale = baseScale * t.scale;
+            // Mode zoom/pan libre : cohérent avec changeZoom, pan et pinch
+            var scale = s * t.scale;
             return {
                 x: width / 2 + t.x - 1100.0 * scale,
                 y: height / 2 + t.y - 820.0 * scale,
@@ -2707,10 +2703,23 @@
 
         function applyTransform() {
             if (!viewport) return;
-            var maxX = viewport.clientWidth * (transform.scale - 1) / 2;
-            var maxY = viewport.clientHeight * (transform.scale - 1) / 2;
-            transform.x = clamp(transform.x, -maxX, maxX);
-            transform.y = clamp(transform.y, -maxY, maxY);
+            var w = viewport.clientWidth;
+            var h = viewport.clientHeight;
+            if (transform.scale > 1.001) {
+                // Même base que computeMapRect : s = max(w/2200, h/1640)
+                var s = Math.max(w / 2200.0, h / 1640.0);
+                var totalScale = s * transform.scale;
+                var rasterW = 2200.0 * totalScale;
+                var rasterH = 1640.0 * totalScale;
+                // On empêche de sortir du raster (au plus un demi-viewport de débord)
+                var maxX = Math.max(0, (rasterW - w) / 2);
+                var maxY = Math.max(0, (rasterH - h) / 2);
+                transform.x = Math.max(-maxX, Math.min(maxX, transform.x));
+                transform.y = Math.max(-maxY, Math.min(maxY, transform.y));
+            } else {
+                transform.x = 0;
+                transform.y = 0;
+            }
             if (zoomLevel) zoomLevel.textContent = Math.round(transform.scale * 100) + ' %';
             if (zoomOut) zoomOut.disabled = transform.scale <= 1.001;
             if (zoomIn) zoomIn.disabled = transform.scale >= maxScale - 0.001;
@@ -2805,12 +2814,16 @@
             var southY = mercator(Number(bounds.south));
             var u = (longitude - west) / (east - west);
             var v = (northY - mercator(latitude)) / (northY - southY);
-            var scale = clamp(Number(pendingFocus.scale) || 2, 1, maxScale);
-            var baseScale = Math.max(width / 2200.0, height / 1640.0);
+            var scale = clamp(Number(pendingFocus.scale) || 2, 1.16, maxScale);
+            // Même baseScale que computeMapRect et applyTransform pour cohérence totale
+            var s = Math.max(width / 2200.0, height / 1640.0);
             transform.scale = scale;
-            // Projection UNIQUE : le point ciblé se place exactement au centre de l'écran.
-            transform.x = 2200.0 * baseScale * scale * (0.5 - u);
-            transform.y = 1640.0 * baseScale * scale * (0.5 - v);
+            // Le raster est centré en (width/2 + tx, height/2 + ty) dans computeMapRect.
+            // On veut que le point (u,v) soit au centre de l'écran :
+            //   width/2 + tx + (u - 0.5) * 2200 * s * scale = width/2
+            // → tx = (0.5 - u) * 2200 * s * scale
+            transform.x = 2200.0 * s * scale * (0.5 - u);
+            transform.y = 1640.0 * s * scale * (0.5 - v);
             pendingFocus = null;
             applyTransform();
         }
