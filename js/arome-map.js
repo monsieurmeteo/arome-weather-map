@@ -2837,7 +2837,7 @@
                 var bh = Math.max(100, bbox.y1 - bbox.y0);
                 var sFrance = Math.min(availW / (bw * 1.05), availH / (bh * 1.05));
 
-                var cx = (bbox.x0 + bbox.x1) / 2 - (bbox.x1 - bbox.x0) * 0.05;
+                var cx = (bbox.x0 + bbox.x1) / 2 - (bbox.x1 - bbox.x0) * 0.15;
                 var cy = (bbox.y0 + bbox.y1) / 2;
                 var bboxRect = {
                     x: width / 2 - cx * sFrance,
