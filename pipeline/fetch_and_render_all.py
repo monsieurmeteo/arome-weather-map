@@ -179,6 +179,44 @@ def _fetch_arome_tile(session, token, wms_layer, style, time_str, ref_str, dst):
         pass
     return False
 
+def compute_physical_cumulative_gusts(model_dir, lead_hours):
+    rf_dir = os.path.join(model_dir, "rafales")
+    cumul_dir = ensure_dir(os.path.join(model_dir, "rafales_cumul"))
+    max_score = None
+    max_rgba = None
+    
+    def _wind_score(r, g, b, a):
+        score = np.zeros_like(r, dtype=float)
+        valid = a > 30
+        m_mag = valid & (r > 110) & (b > 110) & (g < 120)
+        score[m_mag] = 110.0 + (r[m_mag].astype(float) + b[m_mag].astype(float)) / 10.0
+        m_viol = valid & (b > 150) & (r > 40) & (g < 130) & ~m_mag
+        score[m_viol] = 90.0 + (b[m_viol].astype(float) - g[m_viol].astype(float)) / 5.0
+        m_bleu = valid & (b > 130) & (r < 90) & (g < 150) & ~m_mag & ~m_viol
+        score[m_bleu] = 70.0 + (b[m_bleu].astype(float) - r[m_bleu].astype(float)) / 5.0
+        m_cyan = valid & (b > 120) & (g > 120) & (r < 110) & ~m_mag & ~m_viol & ~m_bleu
+        score[m_cyan] = 50.0 + (g[m_cyan].astype(float) + b[m_cyan].astype(float)) / 10.0
+        m_vert = valid & (g > 120) & (b < 140) & ~m_mag & ~m_viol & ~m_bleu & ~m_cyan
+        score[m_vert] = 30.0 + (255.0 - r[m_vert].astype(float)) / 8.0
+        m_faible = valid & (score == 0)
+        score[m_faible] = 10.0
+        return score
+
+    for lh in lead_hours:
+        rf_file = os.path.join(rf_dir, "%03d.webp" % lh)
+        if os.path.exists(rf_file):
+            arr = np.array(Image.open(rf_file).convert("RGBA"))
+            curr_score = _wind_score(arr[:,:,0], arr[:,:,1], arr[:,:,2], arr[:,:,3])
+            if max_score is None:
+                max_score = curr_score.copy()
+                max_rgba = arr.copy()
+            else:
+                mask = curr_score > max_score
+                max_score[mask] = curr_score[mask]
+                max_rgba[mask] = arr[mask]
+            dst_c = os.path.join(cumul_dir, "%03d.webp" % lh)
+            Image.fromarray(max_rgba, "RGBA").save(dst_c, format="WEBP", quality=85)
+
 def run_arome(max_hours=48):
     token = get_mf_token()
     if not token:
@@ -217,15 +255,9 @@ def run_arome(max_hours=48):
             if i % 50 == 0 or i == total:
                 print("  AROME %d/%d (%d%%)" % (i, total, i*100//total))
 
-    # Calcul rafales cumulées
-    max_gust = None
-    for lh in lead_hours:
-        rf_file = os.path.join(out_dir, "rafales", "%03d.webp" % lh)
-        if os.path.exists(rf_file):
-            arr = np.array(Image.open(rf_file).convert("RGBA"))
-            max_gust = arr.copy() if max_gust is None else np.maximum(max_gust, arr)
-            dst_c = os.path.join(out_dir, "rafales_cumul", "%03d.webp" % lh)
-            Image.fromarray(max_gust, "RGBA").save(dst_c, format="WEBP", quality=85)
+    # Calcul physique des rafales cumulées
+    compute_physical_cumulative_gusts(out_dir, lead_hours)
+    compute_physical_cumulative_gusts(arome_dir, lead_hours)
 
     for layer in LAYERS:
         for lh in lead_hours:
