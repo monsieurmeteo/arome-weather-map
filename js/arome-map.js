@@ -135,6 +135,9 @@
         var logoImage = new Image();
         logoImage.crossOrigin = 'anonymous';
         logoImage.src = app.dataset.logo || 'logo.png';
+        var franceMaskImage = new Image();
+        franceMaskImage.crossOrigin = 'anonymous';
+        franceMaskImage.src = resolvePath('maps/mask_france.png');
         var currentProbe = null;
         var probeLoadToken = 0;
         var samplerCanvas = document.createElement('canvas');
@@ -697,7 +700,7 @@
             output.height = 1640;
             var context = output.getContext('2d');
 
-            context.fillStyle = '#070b14';
+            context.fillStyle = '#080c18';
             context.fillRect(0, 0, output.width, output.height);
 
             // Transformation courante, en coordonnées carte (même logique que drawVectors)
@@ -708,6 +711,16 @@
             var vScale = transform.scale;
             var offX = 1100 + transform.x / uScale - hScale * 1100.0;
             var offY = 820 + transform.y / uScale - vScale * 820.0;
+
+            // Fond de carte : silhouette de la France (masque) en gris clair
+            if (franceMaskImage && franceMaskImage.complete && franceMaskImage.naturalWidth) {
+                context.save();
+                context.transform(hScale, 0, 0, vScale, offX, offY);
+                context.globalAlpha = 0.30;
+                context.drawImage(franceMaskImage, 0, 0);
+                context.restore();
+                context.globalAlpha = 1;
+            }
 
             // Dalle météo (pleine résolution native)
             context.save();
@@ -1616,13 +1629,20 @@
                 'precision mediump float;\n' +
                 'varying vec2 vUv;\n' +
                 'uniform sampler2D uWeather;\n' +
+                'uniform sampler2D uMask;\n' +
                 'uniform float uScale;\n' +
                 'uniform vec2 uTranslation;\n' +
                 'uniform vec2 uAspect;\n' +
                 'uniform float uHasWeather;\n' +
+                'uniform float uHasMask;\n' +
                 'void main(){\n' +
-                ' vec3 base=vec3(0.6471,0.6510,0.6902);\n' +
+                ' vec3 dark=vec3(0.031,0.047,0.094);\n' +
+                ' vec3 land=vec3(0.42,0.46,0.52);\n' +
                 ' vec2 uv=((vUv-vec2(0.5))*uAspect-uTranslation)/uScale+vec2(0.5);\n' +
+                ' vec3 base=dark;\n' +
+                ' if(uHasMask>0.5 && uv.x>=0.0 && uv.x<=1.0 && uv.y>=0.0 && uv.y<=1.0){\n' +
+                '  base=mix(dark,land,texture2D(uMask,uv).r);\n' +
+                ' }\n' +
                 ' if(uHasWeather<0.5||uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){\n' +
                 '  gl_FragColor=vec4(base,1.0);return;\n' +
                 ' }\n' +
@@ -1676,6 +1696,8 @@
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskImage);
+                webgl.maskReady = true;
+                scheduleRender();
             };
 
             return {
@@ -1689,7 +1711,8 @@
                 hasWeather: gl.getUniformLocation(program, 'uHasWeather'),
                 maskSampler: gl.getUniformLocation(program, 'uMask'),
                 useMask: gl.getUniformLocation(program, 'uUseMask'),
-                ready: false
+                ready: false,
+                maskReady: false
             };
         }
 
@@ -1736,6 +1759,8 @@
                     (transform.y / height) * ay
                 );
                 gl.uniform1f(webgl.hasWeather, webgl.ready ? 1 : 0);
+                gl.uniform1i(webgl.maskSampler, 1);
+                gl.uniform1f(webgl.useMask, webgl.maskReady ? 1 : 0);
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
                 return;
             }
