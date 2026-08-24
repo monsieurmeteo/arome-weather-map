@@ -154,8 +154,9 @@
             return new Response(new Blob([buf]).stream()
                 .pipeThrough(new DecompressionStream('deflate'))).arrayBuffer();
         }
-        // Fallback : pas de DecompressionStream → on charge sans compression
-        return Promise.resolve(buf);
+        return Promise.reject(new Error(
+            'Votre navigateur ne supporte pas la décompression native (DecompressionStream). ' +
+            'Utilisez une version récente de Chrome, Firefox, Safari ou Edge.'));
     }
 
     function loadDepartment(dept) {
@@ -209,12 +210,12 @@
         var colScale = [], colOffset = [], colNames = [];
         for (var j3 = 0; j3 < ncols; j3++) {
             var cname = '';
-            for (var j4 = 0; j4 < 16; j4++) {
+            for (var j4 = 0; j4 < 32; j4++) {
                 var cc2 = dv.getUint8(off + j4);
                 if (cc2 === 0) break;
                 cname += String.fromCharCode(cc2);
             }
-            off += 16;
+            off += 32;
             colScale.push(dv.getFloat32(off, true)); off += 4;
             colOffset.push(dv.getFloat32(off, true)); off += 4;
             colNames.push(cname);

@@ -577,9 +577,9 @@ def write_department_files(out_dir, run_str, leads, per_lead_values, communes):
             header += struct.pack("<f", float(communes[i][5]))   # lat
             header += struct.pack("<f", float(communes[i][6]))   # lon
             header += struct.pack("<I", int(communes[i][4]))     # population
-        # Colonnes : nom(16) + échelle + offset
+        # Colonnes : nom(32) + échelle + offset
         for cname, scale, offset in COMMUNE_COLUMNS:
-            header += cname.encode("ascii", "replace")[:16].ljust(16, b"\0")
+            header += cname.encode("ascii", "replace")[:32].ljust(32, b"\0")
             header += struct.pack("<ff", scale, offset)
         # Échéances : heures
         for lh in leads_sorted:
