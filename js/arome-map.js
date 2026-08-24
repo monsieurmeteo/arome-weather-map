@@ -804,8 +804,7 @@
             }
 
             // Cartouche d'antenne (Modèle • Paramètre • Validité) — en haut à
-            // gauche comme météociel. Placé sous le header HTML (≈80 px) et
-            // au-dessus du sélecteur de région sur mobile.
+            // gauche comme météociel. Placé sous le header HTML (≈80 px).
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
             var step = availableSteps()[currentStep];
             var dateStr = '';
@@ -818,35 +817,43 @@
             }
 
             var margin = 24;
-            var bannerH = 96;
+            var bannerH = 118;
             var bannerY = 84;
-            context.fillStyle = 'rgba(7, 11, 20, 0.92)';
+            context.fillStyle = 'rgba(7, 11, 20, 0.94)';
             context.beginPath();
             if (typeof context.roundRect === 'function') {
-                context.roundRect(margin, bannerY, Math.min(output.width - margin * 2, 620), bannerH, 16);
+                context.roundRect(margin, bannerY, Math.min(output.width - margin * 2, 660), bannerH, 16);
             } else {
-                context.rect(margin, bannerY, Math.min(output.width - margin * 2, 620), bannerH);
+                context.rect(margin, bannerY, Math.min(output.width - margin * 2, 660), bannerH);
             }
             context.fill();
-            context.strokeStyle = 'rgba(0, 210, 255, 0.45)';
-            context.lineWidth = 2;
+            context.strokeStyle = 'rgba(0, 210, 255, 0.75)';
+            context.lineWidth = 3;
             context.stroke();
 
+            // Ligne 1 : modèle + paramètre (gros, blanc)
             context.fillStyle = '#ffffff';
-            context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '700 34px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
             context.fillText(
                 modelTitle + ' • ' + (layer ? layer.label : '') +
                 (layer && layer.unit ? ' (' + layer.unit + ')' : ''),
-                margin + 18, bannerY + 44
+                margin + 18, bannerY + 48
             );
 
+            // Ligne 2 : échéance (gros, cyan) + run
             context.fillStyle = '#00d2ff';
-            context.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var leadText = step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '';
+            var runLabel = '';
+            if (manifest && manifest.run_time) {
+                try {
+                    runLabel = ' • run ' + String(manifest.run_time).slice(11, 16) + 'Z';
+                } catch (e) {}
+            }
             context.fillText(
-                dateStr + leadText + ' — Météo-Climat Pro',
-                margin + 18, bannerY + 76
+                dateStr + leadText + runLabel + ' — Météo-Climat Pro',
+                margin + 18, bannerY + 84
             );
 
             // Légende colorimétrique centrée en bas (comme météociel)
@@ -926,6 +933,74 @@
                     context.textAlign = 'left';
                 } catch (legendError) {
                     console.warn('Légende export ignorée :', legendError);
+                }
+            }
+
+            // Villes sur l'export (comme l'affichage écran)
+            if (manifest && manifest.bounds && places.length) {
+                try {
+                    var bounds = manifest.bounds;
+                    var northY = mercator(Number(bounds.north));
+                    var southY = mercator(Number(bounds.south));
+                    var longitudeSpan = Number(bounds.east) - Number(bounds.west);
+                    var mercatorSpan = northY - southY;
+                    if (longitudeSpan && mercatorSpan) {
+                        var exportScale = hScale;   // zoom courant
+                        var popMin = exportScale < 1.35 ? 90000 :
+                            (exportScale < 2.25 ? 35000 :
+                            (exportScale < 3.75 ? 12000 :
+                            (exportScale < 6 ? 3000 :
+                            (exportScale < 8 ? 700 : 120))));
+                        var maxLabels = exportScale < 1.35 ? 40 :
+                            (exportScale < 2.25 ? 60 :
+                            (exportScale < 3.75 ? 90 :
+                            (exportScale < 6 ? 130 :
+                            (exportScale < 8 ? 190 : 250))));
+                        context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                        context.textAlign = 'center';
+                        context.textBaseline = 'middle';
+                        context.lineJoin = 'round';
+                        context.strokeStyle = 'rgba(8, 19, 28, 0.94)';
+                        context.fillStyle = '#ffffff';
+                        context.lineWidth = 4;
+                        var occupied = [];
+                        var drawn = 0;
+                        for (var pi = 0; pi < places.length; pi += 1) {
+                            var place = places[pi];
+                            if (!Array.isArray(place) || place.length < 4) { continue; }
+                            if (Number(place[1]) < popMin) { break; }
+                            var u = (Number(place[3]) - Number(bounds.west)) / longitudeSpan;
+                            var v = (northY - mercator(Number(place[2]))) / mercatorSpan;
+                            var sx = (u - 0.5) * (2200 * exportScale) + 1100 + transform.x / uScale;
+                            var sy = (v - 0.5) * (1640 * exportScale) + 820 + transform.y / uScale;
+                            if (sx < -60 || sx > output.width + 60 || sy < -20 || sy > output.height + 20) {
+                                continue;
+                            }
+                            var text = String(place[0]);
+                            var tw = context.measureText(text).width;
+                            var rect = { left: sx - tw / 2 - 5, right: sx + tw / 2 + 5,
+                                         top: sy - 16, bottom: sy + 16 };
+                            var clash = false;
+                            for (var oi = 0; oi < occupied.length; oi += 1) {
+                                var other = occupied[oi];
+                                if (rect.left < other.right && rect.right > other.left &&
+                                        rect.top < other.bottom && rect.bottom > other.top) {
+                                    clash = true;
+                                    break;
+                                }
+                            }
+                            if (clash) { continue; }
+                            occupied.push(rect);
+                            context.strokeText(text, sx, sy);
+                            context.fillText(text, sx, sy);
+                            drawn += 1;
+                            if (drawn >= maxLabels) { break; }
+                        }
+                        context.textAlign = 'left';
+                        context.textBaseline = 'alphabetic';
+                    }
+                } catch (labelError) {
+                    console.warn('Villes export ignorées :', labelError);
                 }
             }
 

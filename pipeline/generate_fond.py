@@ -24,9 +24,11 @@ sys.path.insert(0, os.path.join(BASE_DIR, "pipeline"))
 from fetch_and_render_all import BOUNDS, WIDTH, HEIGHT  # noqa: E402
 
 COUNTRIES_FILE = os.path.join(BASE_DIR, "config", "countries-50m.geojson")
+REGIONS_FILE = os.path.join(BASE_DIR, "config", "regions-france.geojson")
 DEPARTEMENTS_URL = ("https://raw.githubusercontent.com/gregoiredavid/"
                     "france-geojson/master/departements.geojson")
 MASK_FILE = os.path.join(BASE_DIR, "output", "arome", "maps", "mask_france.png")
+SVG_FILE = os.path.join(BASE_DIR, "output", "arome", "maps", "frontieres.svg")
 
 # Couleurs style Positron (cartes claires MapLibre, comme meteo-npdc)
 OCEAN = (143, 163, 184)        # #8FA3B8
@@ -143,11 +145,114 @@ def generate_france_mask(out_path=None):
     return out_path
 
 
+def _polygon_path(rings, bbox=None):
+    """Construit un path SVG 'd' depuis des anneaux projetés (x, y).
+    bbox = (xmin, ymin, xmax, ymax) : les anneaux entièrement hors bbox
+    sont ignorés (évite des coordonnées gigantesques dans le SVG)."""
+    parts = []
+    for ring in rings:
+        pts = _ring_to_xy(ring)
+        if len(pts) < 3:
+            continue
+        if bbox:
+            xs = [p[0] for p in pts]
+            ys = [p[1] for p in pts]
+            if max(xs) < bbox[0] or min(xs) > bbox[2] or \
+                    max(ys) < bbox[1] or min(ys) > bbox[3]:
+                continue
+        d = "M%.1f %.1f " % pts[0]
+        d += "L" + " ".join("%.1f %.1f" % p for p in pts[1:])
+        d += "Z"
+        parts.append(d)
+    return " ".join(parts)
+
+
+def _load_geojson(path_or_url):
+    if path_or_url.startswith("http"):
+        req = urllib.request.urlopen(path_or_url, timeout=60)
+        return json.loads(req.read().decode("utf-8"))
+    with open(path_or_url, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def generate_svg(out_path=None):
+    """Régénère frontieres.svg dans la projection EXACTE des tuiles (BOUNDS).
+    Trois couches (classées par le front selon stroke-width) :
+      - pays (2.0) : frontières internationales
+      - régions (1.45) : limites des 13 régions françaises
+      - départements (0.8) : contours des 96 départements
+    """
+    out_path = out_path or SVG_FILE
+    countries = _load_geojson(COUNTRIES_FILE)
+    regions = _load_geojson(REGIONS_FILE)
+    depts = _load_geojson(DEPARTEMENTS_URL)
+
+    def build_paths(collection, keep=None, bbox=None):
+        out = []
+        for feat in collection.get("features", []):
+            props = feat.get("properties", {})
+            name = props.get("NAME") or props.get("ADMIN") or \
+                props.get("nom") or props.get("name") or ""
+            if keep and name not in keep:
+                continue
+            geom = feat.get("geometry")
+            if not geom:
+                continue
+            # Filtre par bbox de la feature : ignore les pays loin du canvas
+            if bbox and feat.get("bbox"):
+                fb = feat["bbox"]  # [minLon, minLat, maxLon, maxLat]
+                # Convertit les 4 coins en pixels et vérifie l'intersection
+                xs = [_project((fb[0], fb[1]))[0], _project((fb[2], fb[1]))[0],
+                      _project((fb[0], fb[3]))[0], _project((fb[2], fb[3]))[0]]
+                ys = [_project((fb[0], fb[1]))[1], _project((fb[2], fb[1]))[1],
+                      _project((fb[0], fb[3]))[1], _project((fb[2], fb[3]))[1]]
+                if max(xs) < bbox[0] or min(xs) > bbox[2] or \
+                        max(ys) < bbox[1] or min(ys) > bbox[3]:
+                    continue
+            rings = list(_iter_rings(geom))
+            out.append(_polygon_path(rings, bbox))
+        return " ".join(p for p in out if p)
+
+    # Pays d'Europe de l'Ouest visibles dans le cadre (le viewBox découpe
+    # le reste ; on évite les coordonnées gigantesques des pays lointains)
+    WESTERN_EUROPE = {
+        "France", "United Kingdom", "Ireland", "Belgium", "Netherlands",
+        "Luxembourg", "Germany", "Switzerland", "Austria", "Italy",
+        "Spain", "Portugal", "Andorra", "Monaco", "Liechtenstein",
+        "Denmark", "Czechia", "Czech Republic", "Poland", "Croatia",
+        "Slovenia", "San Marino", "Vatican", "Malta", "Algeria",
+        "Morocco", "Tunisia", "Libya",
+    }
+    pays_d = build_paths(countries, keep=WESTERN_EUROPE)
+    regions_d = build_paths(regions)
+    depts_d = build_paths(depts)
+
+    svg = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<svg xmlns="http://www.w3.org/2000/svg" '
+        'viewBox="0 0 %d %d" width="%d" height="%d">\n'
+        '<path d="%s" fill="none" stroke="#6b7a86" stroke-width="2" '
+        'stroke-linejoin="round" stroke-linecap="round"/>\n'
+        '<path d="%s" fill="none" stroke="#8a97a3" stroke-width="1.45" '
+        'stroke-linejoin="round" stroke-linecap="round"/>\n'
+        '<path d="%s" fill="none" stroke="#9aa6b0" stroke-width="0.8" '
+        'stroke-linejoin="round" stroke-linecap="round"/>\n'
+        '</svg>\n' % (WIDTH, HEIGHT, WIDTH, HEIGHT, pays_d, regions_d, depts_d)
+    )
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(svg)
+    print("SVG frontières régénéré : %s (%d octets)" % (out_path, len(svg)))
+    return out_path
+
+
 def generate_all():
-    """Génère le fond de carte + le masque France (bornes correctes)."""
+    """Génère le fond de carte + le masque France + les frontières (projection
+    identique aux tuiles → plus aucun décalage)."""
     maps_dir = os.path.join(BASE_DIR, "output", "arome", "maps")
     generate_fond(os.path.join(maps_dir, "fond.webp"))
     generate_france_mask(os.path.join(maps_dir, "mask_france.png"))
+    generate_svg(os.path.join(maps_dir, "frontieres.svg"))
 
 
 if __name__ == "__main__":

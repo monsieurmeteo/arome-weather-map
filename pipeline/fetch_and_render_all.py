@@ -22,7 +22,7 @@ urllib3.disable_warnings()
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 WIDTH, HEIGHT = 2200, 1640
-BOUNDS = {"south": 38.0, "west": -12.0, "north": 53.0, "east": 16.0}
+BOUNDS = {"south": 39.5, "west": -8.5, "north": 52.5, "east": 13.5}
 
 TOKEN_PATH = os.path.expanduser(
     r"~/.gemini/config/skills/dpclim/config/dpclim_token.txt"
