@@ -676,74 +676,88 @@
         }
 
         function composeCaptureCanvas() {
-            if (!weatherCanvas || !weatherCanvas.width) {
+            if (!currentWeatherImage) {
                 return null;
             }
+            // Export broadcast : résolution native 2200×1640, plein cadre,
+            // indépendant du zoom/pan courant de l'écran.
             var output = document.createElement('canvas');
-            output.width = weatherCanvas.width;
-            output.height = weatherCanvas.height;
+            output.width = 2200;
+            output.height = 1640;
             var context = output.getContext('2d');
-            
+
             // 1. Fond sombre
             context.fillStyle = '#070b14';
             context.fillRect(0, 0, output.width, output.height);
-            
-            // 2. Dalle météo décodée
-            if (currentWeatherImage) {
-                var mapAspect = 2200.0 / 1640.0;
-                var viewAspect = output.width / output.height;
-                var uScale = viewAspect > mapAspect ? (output.height / 1640.0) : (output.width / 2200.0);
-                var mapW = 2200.0 * uScale * transform.scale;
-                var mapH = 1640.0 * uScale * transform.scale;
-                var mapX = (output.width - mapW) / 2 + transform.x;
-                var mapY = (output.height - mapH) / 2 + transform.y;
-                context.drawImage(currentWeatherImage, mapX, mapY, mapW, mapH);
-            } else if (weatherCanvas) {
-                context.drawImage(weatherCanvas, 0, 0);
+
+            // 2. Dalle météo décodée à sa taille native (plein cadre)
+            context.drawImage(currentWeatherImage, 0, 0, output.width, output.height);
+
+            // 3. Frontières géographiques (surcouche vectorielle) à l'échelle native
+            if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
+                context.save();
+                context.scale(
+                    output.width / vectorDefinition.width,
+                    output.height / vectorDefinition.height
+                );
+                vectorDefinition.paths.forEach(function (entry) {
+                    context.strokeStyle = entry.colour;
+                    context.globalAlpha = entry.opacity;
+                    context.lineCap = entry.lineCap;
+                    context.lineJoin = entry.lineJoin;
+                    context.lineWidth = entry.width;
+                    context.stroke(entry.path);
+                });
+                context.restore();
+                context.globalAlpha = 1;
             }
-            
-            // 3. Frontières et villes
-            if (vectorCanvas) context.drawImage(vectorCanvas, 0, 0);
-            if (labelsCanvas) context.drawImage(labelsCanvas, 0, 0);
-            
-            // 4. Cartouche d'antenne Météo-Climat Pro HD
+
+            // 4. Cartouche d'antenne Météo-Climat Pro (Modèle • Paramètre • Validité)
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
             var step = availableSteps()[currentStep];
             var dateStr = '';
             if (step) {
                 try {
                     dateStr = validityFormat.format(new Date(step.valid_time)).replace(':', 'h');
-                } catch(e) {
+                } catch (e) {
                     dateStr = new Date(step.valid_time).toLocaleDateString('fr-FR');
                 }
             }
-            
-            var bannerH = 68;
-            var bannerY = output.height - bannerH - 20;
-            context.fillStyle = 'rgba(7, 11, 20, 0.90)';
+
+            var margin = 24;
+            var bannerH = 96;
+            var bannerY = output.height - bannerH - margin;
+            context.fillStyle = 'rgba(7, 11, 20, 0.92)';
             context.beginPath();
             if (typeof context.roundRect === 'function') {
-                context.roundRect(20, bannerY, output.width - 40, bannerH, 12);
+                context.roundRect(margin, bannerY, output.width - margin * 2, bannerH, 16);
             } else {
-                context.rect(20, bannerY, output.width - 40, bannerH);
+                context.rect(margin, bannerY, output.width - margin * 2, bannerH);
             }
             context.fill();
-            context.strokeStyle = 'rgba(0, 210, 255, 0.4)';
-            context.lineWidth = 1.5;
+            context.strokeStyle = 'rgba(0, 210, 255, 0.45)';
+            context.lineWidth = 2;
             context.stroke();
-            
+
             // Titre & Paramètre
             context.fillStyle = '#ffffff';
-            context.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            var modelTitle = (manifest ? manifest.model_name : 'AROME HD');
-            context.fillText(modelTitle + ' • ' + (layer ? layer.label : '') + (layer && layer.unit ? ' (' + layer.unit + ')' : ''), 36, bannerY + 30);
-            
-            // Date & Branding
+            context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
+            context.fillText(
+                modelTitle + ' • ' + (layer ? layer.label : '') +
+                (layer && layer.unit ? ' (' + layer.unit + ')' : ''),
+                margin + 18, bannerY + 44
+            );
+
+            // Date, échéance & branding
             context.fillStyle = '#00d2ff';
-            context.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            var leadText = step ? ' (H+' + String(step.lead_hour).padStart(2,'0') + ')' : '';
-            context.fillText(dateStr + leadText + ' — Météo-Climat Pro (meteo-climat-pro.fr)', 36, bannerY + 54);
-            
+            context.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var leadText = step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '';
+            context.fillText(
+                dateStr + leadText + ' — Météo-Climat Pro',
+                margin + 18, bannerY + 76
+            );
+
             return output;
         }
 
@@ -1088,30 +1102,30 @@
             refreshLayerMenu();
         }
 
-        var PALETTE_GRADIENTS = {
-            temperature: { css: 'linear-gradient(to right, #4900ff, #0080ff, #00ffe6, #ffffff, #78ff78, #00c800, #ffff00, #ffa500, #ff5000, #c80000, #8c0000, #640050)', ticks: ['-15°', '0°', '15°', '30°', '45°'] },
-            temperature_ressentie: { css: 'linear-gradient(to right, #4900ff, #00c8ff, #ffffff, #78ff78, #ffff00, #ff5000, #8c0000)', ticks: ['-20°', '-5°', '10°', '25°', '40°'] },
-            point_rosee: { css: 'linear-gradient(to right, #c8c8ff, #64c8ff, #32c864, #00c800, #c8c800, #ff6400)', ticks: ['-10°', '0°', '10°', '20°', '25°'] },
-            humidex: { css: 'linear-gradient(to right, #c8c8ff, #64ff64, #ffff00, #ffa500, #ff5000, #c80000, #640000)', ticks: ['20', '25', '30', '35', '45+'] },
-            pluie_1h: { css: 'linear-gradient(to right, rgba(0,0,0,0), #add8e6, #0064ff, #00c800, #ffff00, #ffa500, #ff0000, #a000a0)', ticks: ['0', '1', '5', '15', '30+ mm'] },
-            pluie_cumul: { css: 'linear-gradient(to right, rgba(0,0,0,0), #add8e6, #0064ff, #00c800, #ffff00, #ffa500, #ff0000, #a000a0)', ticks: ['0', '5', '25', '50', '100+ mm'] },
-            reflectivite: { css: 'linear-gradient(to right, rgba(0,0,0,0), #64c8ff, #0000ff, #00ff00, #ffff00, #ffa500, #ff0000, #a000a0)', ticks: ['5', '20', '35', '50', '65 dBZ'] },
-            graupel: { css: 'linear-gradient(to right, rgba(0,0,0,0), #c8e6ff, #64c8ff, #ffa500, #c800c8)', ticks: ['0', '1', '5', '10', '15+ mm'] },
-            vent: { css: 'linear-gradient(to right, #c8e6ff, #00c8ff, #00c864, #ffff00, #ffa500, #ff3c00, #c80000, #640064)', ticks: ['0', '20', '50', '80', '120+ km/h'] },
-            rafales: { css: 'linear-gradient(to right, #c8e6ff, #00c8ff, #00c864, #ffff00, #ffa500, #ff3c00, #c80000, #640064)', ticks: ['0', '30', '60', '90', '140+ km/h'] },
-            rafales_cumul: { css: 'linear-gradient(to right, #c8e6ff, #00c8ff, #00c864, #ffff00, #ffa500, #ff3c00, #c80000, #640064)', ticks: ['0', '30', '60', '90', '140+ km/h'] },
-            nebulosite: { css: 'linear-gradient(to right, rgba(255,255,255,0), #dce6f0, #a0b4c8, #647896, #3c465a)', ticks: ['0%', '25%', '50%', '75%', '100%'] },
-            nuages_bas: { css: 'linear-gradient(to right, rgba(255,255,255,0), #fff0b4, #ffb450, #c85000)', ticks: ['0%', '30%', '60%', '100%'] },
-            nuages_moyens: { css: 'linear-gradient(to right, rgba(255,255,255,0), #b4f0c8, #50c878, #008c3c)', ticks: ['0%', '30%', '60%', '100%'] },
-            nuages_eleves: { css: 'linear-gradient(to right, rgba(255,255,255,0), #c8dcff, #78a0f0, #2850c8)', ticks: ['0%', '30%', '60%', '100%'] },
-            humidite: { css: 'linear-gradient(to right, #c89664, #dcb478, #ffffc8, #b4ffb4, #00c8c8, #0064ff, #0000c8)', ticks: ['20%', '40%', '60%', '80%', '100%'] },
-            mucape: { css: 'linear-gradient(to right, rgba(50,50,50,0), #6464ff, #00ffc8, #00c800, #ffff00, #ffa500, #ff0000, #a000a0)', ticks: ['0', '250', '1000', '2500', '4000+ J/kg'] },
-            neige: { css: 'linear-gradient(to right, rgba(0,0,0,0), #c8e6ff, #64b4ff, #3264c8, #0000b4, #640096)', ticks: ['0', '1', '5', '10', '20+ cm/h'] },
-            neige_au_sol: { css: 'linear-gradient(to right, rgba(0,0,0,0), #c8e6ff, #96c8ff, #6496ff, #3264c8, #0000b4, #640096)', ticks: ['0', '5', '20', '50', '150+ cm'] },
-            equivalent_eau_neige: { css: 'linear-gradient(to right, rgba(0,0,0,0), #c8e6ff, #64b4ff, #3264c8, #0000b4)', ticks: ['0', '2', '5', '15', '30+ mm'] },
-            pression: { css: 'linear-gradient(to right, #820082, #0000c8, #0096ff, #00c896, #00b400, #c8c8c8, #ffdc64, #ff9600, #c85000)', ticks: ['970', '990', '1013', '1025', '1035 hPa'] },
-            pression_surface: { css: 'linear-gradient(to right, #820082, #0000c8, #00b400, #c8c8c8, #c85000)', ticks: ['850', '920', '980', '1013', '1035 hPa'] }
-        };
+        function applyPaletteStops() {
+            if (!manifest || !manifest.layers || typeof window.getLayerPalette !== 'function') {
+                return;
+            }
+            Object.keys(manifest.layers).forEach(function (key) {
+                var layer = manifest.layers[key];
+                var pal = window.getLayerPalette(key);
+                if (!layer.stops || !layer.stops.length) {
+                    layer.stops = pal.stops;
+                }
+                if (layer.transparent_below === undefined || layer.transparent_below === null) {
+                    layer.transparent_below = pal.transparent_below;
+                }
+                if (!layer.unit && pal.unit) {
+                    layer.unit = pal.unit;
+                }
+                if (layer.decimals === undefined || layer.decimals === null) {
+                    layer.decimals = pal.decimals;
+                }
+                if (!layer.label && pal.label) {
+                    layer.label = pal.label;
+                }
+            });
+        }
 
         function buildLegend() {
             if (!legend || !manifest || !manifest.layers) return;
@@ -1120,14 +1134,17 @@
             var unitEl = app.querySelector('[data-amfm-legend-unit]');
             var barEl = app.querySelector('[data-amfm-legend-bar]');
             var ticksEl = app.querySelector('[data-amfm-legend-ticks]');
-            
+
             if (labelEl && layer) labelEl.textContent = layer.label || 'Échelle';
             if (unitEl && layer) unitEl.textContent = layer.unit || '';
-            
-            var pal = PALETTE_GRADIENTS[currentLayer] || PALETTE_GRADIENTS.temperature;
-            if (barEl) barEl.style.background = pal.css;
-            if (ticksEl && pal.ticks) {
-                ticksEl.innerHTML = pal.ticks.map(function(t) { return '<span>' + t + '</span>'; }).join('');
+
+            if (barEl && typeof window.paletteGradientCSS === 'function') {
+                barEl.style.background = window.paletteGradientCSS(currentLayer);
+            }
+            if (ticksEl && typeof window.paletteTicks === 'function') {
+                ticksEl.innerHTML = window.paletteTicks(currentLayer).map(function (t) {
+                    return '<span>' + t + '</span>';
+                }).join('');
             }
         }
 
@@ -1265,19 +1282,21 @@
 
         function switchModel(modelKey) {
             var modelMap = {
-                arome: { path: 'output', name: 'AROME HD (1,3 km)', badge: '1,3 KM' },
-                arpege: { path: 'output/arpege', name: 'ARPEGE Europe (5 km)', badge: '5 KM' },
-                icon: { path: 'output/icon', name: 'ICON-EU (7 km)', badge: '7 KM' },
-                gfs: { path: 'output/gfs', name: 'GFS Monde (13 km)', badge: '13 KM' },
-                ecmwf: { path: 'output/ecmwf', name: 'ECMWF IFS (9 km)', badge: '9 KM' }
+                arome: { path: 'output/arome', name: 'AROME HD', badge: '1,3 KM' },
+                arpege: { path: 'output/arpege', name: 'ARPEGE Europe', badge: '5 KM' },
+                icon: { path: 'output/icon', name: 'ICON-EU', badge: '7 KM' },
+                gfs: { path: 'output/gfs', name: 'GFS Monde', badge: '13 KM' },
+                ecmwf: { path: 'output/ecmwf', name: 'ECMWF IFS', badge: '9 KM' }
             };
             var target = modelMap[modelKey] || modelMap.arome;
             var prevBaseUrl = baseUrl;
             baseUrl = target.path;
+            app.dataset.baseUrl = target.path;
+            app.dataset.model = modelKey;
 
             var titleSpan = document.querySelector('.amfm-title span');
             if (titleSpan) {
-                titleSpan.textContent = 'MODÈLE ' + target.name.toUpperCase();
+                titleSpan.textContent = 'MODÈLE ' + target.name;
             }
             var badge = document.querySelector('.amfm-title .amfm-badge');
             if (badge) {
@@ -1286,21 +1305,27 @@
 
             fetchJson(baseUrl + '/maps/index.json')
                 .then(function(payload) {
-                    if (payload && payload.layers && Array.isArray(payload.steps)) {
-                        manifest = payload;
-                        currentStep = 0;
-                        if (!manifest.layers[currentLayer]) {
-                            currentLayer = Object.keys(manifest.layers)[0] || 'temperature';
-                            var dSel = document.getElementById('direct-layer-select');
-                            if (dSel) dSel.value = currentLayer;
-                        }
-                        buildLegend();
-                        renderStep(0);
+                    if (!payload || !payload.layers || !Array.isArray(payload.steps)) {
+                        throw new Error('manifeste invalide');
                     }
+                    manifest = payload;
+                    applyPaletteStops();
+                    currentStep = 0;
+                    if (!manifest.layers[currentLayer]) {
+                        currentLayer = Object.keys(manifest.layers)[0] || 'temperature';
+                        var dSel = document.getElementById('direct-layer-select');
+                        if (dSel) dSel.value = currentLayer;
+                    }
+                    if (typeof buildLayerMenu === 'function') buildLayerMenu();
+                    buildLegend();
+                    renderStep(0);
                 })
-                .catch(function(err) {
-                    // Revert — don't render AROME images with a broken baseUrl
+                .catch(function () {
+                    // Revert — ne jamais afficher les images d'un autre modèle
+                    // sous une baseUrl cassée.
                     baseUrl = prevBaseUrl;
+                    app.dataset.baseUrl = prevBaseUrl;
+                    app.dataset.model = 'arome';
                     if (titleSpan) titleSpan.textContent = 'MODÈLE AROME HD';
                     if (badge) badge.textContent = '1,3 KM';
                     var modelSel = document.getElementById('select-model');
@@ -1467,7 +1492,7 @@
 
             var maskTexture = gl.createTexture();
             var maskImage = new Image();
-            maskImage.src = 'output/maps/mask_france.png';
+            maskImage.src = resolvePath('maps/mask_france.png');
             maskImage.onload = function() {
                 gl.activeTexture(gl.TEXTURE1);
                 gl.bindTexture(gl.TEXTURE_2D, maskTexture);
@@ -2216,6 +2241,7 @@
                     throw new Error('manifeste cartographique invalide');
                 }
                 manifest = payload;
+                applyPaletteStops();
                 if (typeof buildLayerMenu === 'function') buildLayerMenu();
                 if (typeof buildLegend === 'function') buildLegend();
                 if (payload.overlay && typeof loadVectorOverlay === 'function') loadVectorOverlay(payload.overlay);

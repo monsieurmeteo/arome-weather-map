@@ -160,8 +160,14 @@ AROME_WMS_MAP = {
     "pression_surface":      ("PRESSURE__GROUND_OR_WATER_SURFACE", "P__LEVEL__SHADING"),
 }
 AROME_WMS = "https://public-api.meteofrance.fr/public/arome/1.0/wms/MF-NWP-HIGHRES-AROME-001-FRANCE-WMS/GetMap"
+# Endpoint ARPEGE Europe 5 km. Surchargable via ARPEGE_WMS_URL si l'URL officielle
+# évolue (convention Météo-France : MF-NWP-GLOBAL-ARPEGE-001-EURAT5-WMS).
+ARPEGE_WMS = os.environ.get(
+    "ARPEGE_WMS_URL",
+    "https://public-api.meteofrance.fr/public/arpege/1.0/wms/MF-NWP-GLOBAL-ARPEGE-001-EURAT5-WMS/GetMap"
+)
 
-def _fetch_arome_tile(session, token, wms_layer, style, time_str, ref_str, dst):
+def _fetch_mf_tile(session, token, wms_url, wms_layer, style, time_str, ref_str, dst):
     headers = {"apikey": token, "Authorization": "Bearer " + token, "User-Agent": "Mozilla/5.0"}
     params = {"service": "WMS", "version": "1.3.0", "request": "GetMap",
               "layers": wms_layer, "styles": style,
@@ -170,7 +176,7 @@ def _fetch_arome_tile(session, token, wms_layer, style, time_str, ref_str, dst):
               "format": "image/png", "transparent": "TRUE",
               "time": time_str, "reference_time": ref_str}
     try:
-        r = session.get(AROME_WMS, params=params, headers=headers, timeout=30, verify=False)
+        r = session.get(wms_url, params=params, headers=headers, timeout=30, verify=False)
         if r.status_code == 200 and len(r.content) > 1000:
             img = Image.open(io.BytesIO(r.content)).convert("RGBA")
             img.save(dst, format="WEBP", quality=85, method=4)
@@ -178,6 +184,9 @@ def _fetch_arome_tile(session, token, wms_layer, style, time_str, ref_str, dst):
     except Exception:
         pass
     return False
+
+def _fetch_arome_tile(session, token, wms_layer, style, time_str, ref_str, dst):
+    return _fetch_mf_tile(session, token, AROME_WMS, wms_layer, style, time_str, ref_str, dst)
 
 def compute_physical_cumulative_gusts(model_dir, lead_hours):
     rf_dir = os.path.join(model_dir, "rafales")
@@ -272,6 +281,51 @@ def run_arome(max_hours=48):
     write_manifest(arome_dir, steps, meta)
     print("  OK AROME 48h termine")
 
+# ─── ARPEGE Europe (4 Jours / 102h) ──────────────────────────────────────────
+def run_arpege(max_hours=102):
+    token = get_mf_token()
+    if not token:
+        print("ERROR ARPEGE: token Meteo-France introuvable (env METEOFRANCE_TOKEN)")
+        return
+    print("ARPEGE Europe (5 km) - 4 Jours (H+102)...")
+    arpege_dir = ensure_dir(os.path.join(OUTPUT_DIR, "arpege", "maps"))
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    run_h = (now.hour // 3) * 3
+    run_dt = now.replace(hour=run_h, minute=0, second=0, microsecond=0)
+    if (now - run_dt).total_seconds() < 5400:
+        run_dt -= datetime.timedelta(hours=3)
+    ref_str = run_dt.strftime("%Y-%m-%dT%H:00:00Z")
+
+    # ARPEGE = pas de 3h sur H+00..H+102
+    lead_hours = list(range(0, max_hours + 1, 3))
+    session = requests.Session()
+    steps = []
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futs = []
+        for lh in lead_hours:
+            vt = run_dt + datetime.timedelta(hours=lh)
+            time_str = vt.strftime("%Y-%m-%dT%H:00:00Z")
+            step = {"lead_hour": lh, "valid_time": vt.isoformat(), "files": {}}
+            for layer in LAYERS:
+                wl, st = AROME_WMS_MAP.get(layer, AROME_WMS_MAP["temperature"])
+                dst = os.path.join(arpege_dir, layer, "%03d.webp" % lh)
+                ensure_dir(os.path.dirname(dst))
+                step["files"][layer] = "maps/%s/%03d.webp" % (layer, lh)
+                futs.append(ex.submit(_fetch_mf_tile, session, token, ARPEGE_WMS, wl, st, time_str, ref_str, dst))
+            steps.append(step)
+        total = len(futs)
+        for i, _ in enumerate(as_completed(futs), 1):
+            if i % 50 == 0 or i == total:
+                print("  ARPEGE %d/%d (%d%%)" % (i, total, i * 100 // total))
+
+    compute_physical_cumulative_gusts(arpege_dir, lead_hours)
+
+    meta = {"name": "ARPEGE Europe (5 km)", "provider": "Meteo-France",
+            "resolution": "5 km (0.05 deg)", "run_time": run_dt.isoformat()}
+    write_manifest(arpege_dir, steps, meta)
+    print("  OK ARPEGE 4 Jours termine")
+
 # ─── 2. GFS MONDE (16 Jours / 384h) ──────────────────────────────────────────
 def run_gfs(max_hours=384):
     try:
@@ -348,13 +402,23 @@ def run_gfs(max_hours=384):
             dst = os.path.join(gfs_dir, layer, "%03d.webp" % lh)
             ensure_dir(os.path.dirname(dst))
             step["files"][layer] = "maps/%s/%03d.webp" % (layer, lh)
+
+            # Vent moyen = module du vecteur (U, V) → km/h (jamais le seul U !)
+            if layer == "vent":
+                if "UGRD" in cached and "VGRD" in cached:
+                    u, la, lo = cached["UGRD"]
+                    v = cached["VGRD"][0]
+                    spd = np.sqrt(u.astype(np.float32) ** 2 + v.astype(np.float32) ** 2) * 3.6
+                    save_webp(regrid(spd, la, lo), layer, dst)
+                continue
+
             key = gfs_layer_var.get(layer, "TMP")
             if key in cached:
                 d, la, lo = cached[key]
                 if layer in ("temperature","temperature_ressentie","humidex") and d.max() > 200: d = d - 273.15
                 elif layer == "point_rosee" and d.max() > 200: d = d - 273.15
                 elif layer in ("pression","pression_surface") and d.max() > 10000: d = d / 100.0
-                elif layer in ("vent","rafales","rafales_cumul") and d.max() < 200: d = d * 3.6
+                elif layer in ("rafales","rafales_cumul") and d.max() < 200: d = d * 3.6
                 rf = regrid(d, la, lo)
                 if layer == "rafales_cumul":
                     max_gust_field = rf.copy() if max_gust_field is None else np.maximum(max_gust_field, rf)
@@ -421,6 +485,37 @@ def run_ecmwf(max_hours=240):
                 dst = os.path.join(ecmwf_dir, layer, "%03d.webp" % lh)
                 ensure_dir(os.path.dirname(dst))
                 step["files"][layer] = "maps/%s/%03d.webp" % (layer, lh)
+
+                # Vent moyen = module (10u, 10v) → km/h (jamais le seul 10u !)
+                if layer == "vent":
+                    handled = False
+                    for ds in all_ds:
+                        if "10u" not in ds.data_vars or "10v" not in ds.data_vars:
+                            continue
+                        try:
+                            sub = ds.sel(step=np.timedelta64(lh, "h"), method="nearest")
+                        except Exception:
+                            sub = ds.isel(step=0) if "step" in ds.dims else ds
+                        u = sub["10u"].values
+                        v = sub["10v"].values
+                        spd = np.sqrt(u.astype(np.float32) ** 2 + v.astype(np.float32) ** 2) * 3.6
+                        save_webp(regrid(spd, ds.latitude.values, ds.longitude.values), layer, dst)
+                        handled = True
+                        break
+                    # Fallback documenté si 10u/10v ne sont pas co-localisés dans un même dataset.
+                    if not handled:
+                        for ds in all_ds:
+                            if "10u" not in ds.data_vars:
+                                continue
+                            try:
+                                sub = ds.sel(step=np.timedelta64(lh, "h"), method="nearest")
+                            except Exception:
+                                sub = ds.isel(step=0) if "step" in ds.dims else ds
+                            d = sub["10u"].values * 3.6
+                            save_webp(regrid(d, ds.latitude.values, ds.longitude.values), layer, dst)
+                            break
+                    continue
+
                 param = ecmwf_param_map.get(layer, "2t")
                 for ds in all_ds:
                     if param not in ds.data_vars: continue
@@ -433,7 +528,7 @@ def run_ecmwf(max_hours=240):
                     if layer in ("temperature","temperature_ressentie","humidex") and d.max() > 200: d = d - 273.15
                     elif layer == "point_rosee" and d.max() > 200: d = d - 273.15
                     elif layer in ("pression","pression_surface") and d.max() > 10000: d = d / 100.0
-                    elif layer in ("vent","rafales","rafales_cumul"): d = d * 3.6
+                    elif layer in ("rafales","rafales_cumul"): d = d * 3.6
                     elif layer in ("nebulosite","nuages_bas","nuages_moyens","nuages_eleves") and d.max() <= 1.0: d = d * 100.0
                     rf = regrid(d, la, lo)
                     if layer == "rafales_cumul":
@@ -528,11 +623,11 @@ def run_icon(max_hours=78):
                                      "resolution": "7 km (0.0625 deg)", "run_time": run_dt.isoformat()})
     print("  OK ICON-EU 3 Jours termine")
 
-RUNNERS = {"arome": run_arome, "icon": run_icon, "gfs": run_gfs, "ecmwf": run_ecmwf}
+RUNNERS = {"arome": run_arome, "arpege": run_arpege, "icon": run_icon, "gfs": run_gfs, "ecmwf": run_ecmwf}
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", choices=["arome","icon","gfs","ecmwf","all"], default="all")
+    parser.add_argument("--model", choices=["arome","arpege","icon","gfs","ecmwf","all"], default="all")
     args = parser.parse_args()
     targets = list(RUNNERS.keys()) if args.model == "all" else [args.model]
     for model in targets:
