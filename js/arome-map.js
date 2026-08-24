@@ -1274,11 +1274,16 @@
             var offX = gifRect.x;
             var offY = gifRect.y;
 
-            // Workers : DÉSACTIVÉS volontairement. gif.js 0.2.0 charge son
-            // worker depuis un Blob cross-origin (cdnjs) → échec silencieux
-            // sur GitHub Pages. Le mode synchrone (workers: 0) est fiable
-            // partout ; pour 52 frames de 550×410 l'encodage reste rapide.
-            var gifOptions = { quality: 10, width: gw, height: gh, workers: 0 };
+            // gif.worker.js est hébergé localement (js/gif.worker.js) → workers fiables
+            // sur GitHub Pages sans problème CORS. On utilise 2 workers pour accélérer
+            // l'encodage des 52 frames.
+            var gifOptions = {
+                quality: 10,
+                width: gw,
+                height: gh,
+                workers: 2,
+                workerScript: 'js/gif.worker.js'
+            };
             var gif = new window.GIF(gifOptions);
             var index = 0;
 
