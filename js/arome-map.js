@@ -1098,8 +1098,6 @@
 
             clearError();
             if (loading) loading.hidden = false;
-            currentWeatherImage = null;
-            samplerReady = false;
             hideProbe();
             var token = ++loadToken;
             var nextSource = versioned(step.files[currentLayer]);
@@ -1117,6 +1115,7 @@
             };
             loader.onerror = function () {
                 if (token === loadToken) {
+                    if (loading) loading.hidden = true;
                     showError('Cette carte n’est pas encore disponible. Réessayez dans quelques instants.');
                 }
             };
