@@ -770,26 +770,25 @@
             // (projection UNIQUE computeMapRect), convertie vers le canvas
             // natif 2200×1640 — jamais de bandes vides, jamais de déformation.
             var hScale, vScale, offX, offY;
-            var outW = 2200;
-            var outH = 1640;
 
             if (transform.scale <= 1.15) {
-                // Vue France métropolitaine + Corse : respect strict du ratio 1:1 (aucun étirement)
-                var fx0 = 240;  // Ouest Bretagne / Atlantique
+                // Vue France métropolitaine + Corse : inscrite dans le canvas officiel HD 2200×1640
+                var fx0 = 260;  // Ouest Bretagne / Atlantique
                 var fx1 = 1860; // Est Alsace / Corse
-                var fy0 = 130;  // Nord Dunkerque / Manche
-                var fy1 = 1480; // Sud Corse / Méditerranée
-                var fw = fx1 - fx0;
-                var fh = fy1 - fy0;
-                outW = 2200;
-                outH = Math.round(outW * fh / fw);
-                hScale = outW / fw;
-                vScale = hScale; // Échelle strictement isotrope : ZÉRO étirement
-                offX = -fx0 * hScale;
-                offY = -fy0 * vScale;
+                var fy0 = 110;  // Nord Dunkerque / Manche
+                var fy1 = 1530; // Sud Corse / Méditerranée
+                var fw = fx1 - fx0; // 1600
+                var fh = fy1 - fy0; // 1420
+                var scale = Math.min(2200.0 / fw, 1640.0 / fh);
+                hScale = scale;
+                vScale = scale; // Échelle strictement isotrope 1:1
+                var cx = (fx0 + fx1) / 2;
+                var cy = (fy0 + fy1) / 2;
+                offX = 1100 - cx * scale;
+                offY = 820 - cy * scale;
             } else {
                 // Vue zoomée (région/département) : reproduit la portion du
-                // raster visible à l'écran, en cover sur le canvas natif.
+                // raster visible à l'écran, cadrée dans le canvas officiel HD 2200×1640.
                 var viewRect = computeMapRect(vw, vh);
                 var u0 = (0 - viewRect.x) / viewRect.w;
                 var u1 = (vw - viewRect.x) / viewRect.w;
@@ -797,18 +796,19 @@
                 var v1 = (vh - viewRect.y) / viewRect.h;
                 var vueW = Math.max(0.01, u1 - u0);
                 var vueH = Math.max(0.01, v1 - v0);
-                outW = 2200;
-                outH = Math.round(outW * (vueH * 1640.0) / (vueW * 2200.0));
-                hScale = outW / (vueW * 2200.0);
-                vScale = hScale; // Échelle isotrope 1:1
-                offX = -u0 * 2200.0 * hScale;
-                offY = -v0 * 1640.0 * vScale;
+                var k = Math.min(2200.0 / (vueW * 2200.0), 1640.0 / (vueH * 1640.0));
+                hScale = k;
+                vScale = k; // Échelle strictement isotrope 1:1
+                var uc = (u0 + u1) / 2;
+                var vc = (v0 + v1) / 2;
+                offX = 1100 - uc * 2200.0 * k;
+                offY = 820 - vc * 1640.0 * k;
             }
 
-            // Export à la résolution HD de la carte, sans aucune déformation géométrique.
+            // Export à la résolution standard HD officielle de la carte (2200×1640)
             var output = document.createElement('canvas');
-            output.width = outW;
-            output.height = outH;
+            output.width = 2200;
+            output.height = 1640;
             var context = output.getContext('2d');
 
             // Cadre sombre autour du domaine
