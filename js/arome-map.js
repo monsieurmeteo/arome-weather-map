@@ -690,35 +690,34 @@
             if (!vw || !vh) {
                 return null;
             }
-            // Capturer la VUE COURANTE (France entière OU région zoomée)
-            // à ~2200px de large, pour un export fidèle à ce qu'on voit.
-            var targetW = 2200;
-            var scale = targetW / vw;
+            // Export à la résolution NATIVE de la carte (2200×1640), en capturant
+            // la vue courante (zoom/pan/région) sans sous-échantillonnage.
             var output = document.createElement('canvas');
-            output.width = targetW;
-            output.height = Math.max(1, Math.round(vh * scale));
+            output.width = 2200;
+            output.height = 1640;
             var context = output.getContext('2d');
 
             context.fillStyle = '#070b14';
             context.fillRect(0, 0, output.width, output.height);
 
-            // Dalle météo à la transformation courante (zoom/pan/région)
+            // Transformation courante, en coordonnées carte (même logique que drawVectors)
             var mapAspect = 2200.0 / 1640.0;
             var viewAspect = vw / vh;
             var uScale = viewAspect > mapAspect ? (vh / 1640.0) : (vw / 2200.0);
-            var mapW = 2200.0 * uScale * transform.scale * scale;
-            var mapH = 1640.0 * uScale * transform.scale * scale;
-            var mapX = (output.width / 2) + transform.x * scale;
-            var mapY = (output.height / 2) + transform.y * scale;
-            context.drawImage(currentWeatherImage, mapX, mapY, mapW, mapH);
+            var hScale = transform.scale;
+            var vScale = transform.scale;
+            var offX = 1100 + transform.x / uScale - hScale * 1100.0;
+            var offY = 820 + transform.y / uScale - vScale * 820.0;
+
+            // Dalle météo (pleine résolution native)
+            context.save();
+            context.transform(hScale, 0, 0, vScale, offX, offY);
+            context.drawImage(currentWeatherImage, 0, 0);
+            context.restore();
 
             // Frontières à la transformation courante (départements estompés en zoom)
             if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
                 context.save();
-                var hScale = transform.scale * uScale * scale;
-                var vScale = transform.scale * uScale * scale;
-                var offX = output.width / 2 + transform.x * scale - hScale * 1100.0;
-                var offY = output.height / 2 + transform.y * scale - vScale * 820.0;
                 context.transform(hScale, 0, 0, vScale, offX, offY);
                 vectorDefinition.paths.forEach(function (entry) {
                     if (entry.kind === 'department' && transform.scale > 3.2) {
@@ -738,23 +737,20 @@
                 context.globalAlpha = 1;
             }
 
-            // Facteur d'échelle pour les éléments fixes (logo, cartouche)
-            var k = scale / 1.5;
-
             // Logo Météo-Climat Pro (en haut à droite de la carte)
             if (logoImage && logoImage.complete && logoImage.naturalWidth) {
-                var logoW = Math.round(240 * k);
+                var logoW = 240;
                 var logoH = Math.round(logoW * logoImage.naturalHeight / logoImage.naturalWidth);
-                var pad = Math.round(24 * k);
+                var pad = 24;
                 var lx = output.width - pad - logoW;
                 var ly = pad;
                 context.save();
                 context.fillStyle = 'rgba(7, 11, 20, 0.72)';
                 context.beginPath();
                 if (typeof context.roundRect === 'function') {
-                    context.roundRect(lx - pad / 2, ly - pad / 3, logoW + pad, logoH + pad * 2 / 3, 12 * k);
+                    context.roundRect(lx - 12, ly - 8, logoW + 24, logoH + 16, 12);
                 } else {
-                    context.rect(lx - pad / 2, ly - pad / 3, logoW + pad, logoH + pad * 2 / 3);
+                    context.rect(lx - 12, ly - 8, logoW + 24, logoH + 16);
                 }
                 context.fill();
                 context.drawImage(logoImage, lx, ly, logoW, logoH);
@@ -773,13 +769,13 @@
                 }
             }
 
-            var margin = Math.round(24 * k);
-            var bannerH = Math.round(96 * k);
+            var margin = 24;
+            var bannerH = 96;
             var bannerY = output.height - bannerH - margin;
             context.fillStyle = 'rgba(7, 11, 20, 0.92)';
             context.beginPath();
             if (typeof context.roundRect === 'function') {
-                context.roundRect(margin, bannerY, output.width - margin * 2, bannerH, 16 * k);
+                context.roundRect(margin, bannerY, output.width - margin * 2, bannerH, 16);
             } else {
                 context.rect(margin, bannerY, output.width - margin * 2, bannerH);
             }
@@ -789,20 +785,20 @@
             context.stroke();
 
             context.fillStyle = '#ffffff';
-            context.font = '700 ' + Math.round(30 * k) + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
             context.fillText(
                 modelTitle + ' • ' + (layer ? layer.label : '') +
                 (layer && layer.unit ? ' (' + layer.unit + ')' : ''),
-                margin + 18, bannerY + Math.round(44 * k)
+                margin + 18, bannerY + 44
             );
 
             context.fillStyle = '#00d2ff';
-            context.font = '600 ' + Math.round(22 * k) + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var leadText = step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '';
             context.fillText(
                 dateStr + leadText + ' — Météo-Climat Pro',
-                margin + 18, bannerY + Math.round(76 * k)
+                margin + 18, bannerY + 76
             );
 
             return output;
