@@ -1257,26 +1257,73 @@
                 setToolHint('Encodage GIF indisponible (bibliothèque gif.js non chargée — vérifiez le CDN).');
                 return;
             }
-            var gw = 550;
+            var gw = 720;
             var gh = Math.round(gw * 1640 / 2200);
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
-            // Vue courante (zoom/pan/région) figée pour toutes les frames
-            var frameTransform = {
-                scale: transform.scale,
-                x: transform.x,
-                y: transform.y
-            };
-            // Projection UNIQUE (computeMapRect) : identique à l'écran,
-            // au WebGL/fallback, aux vecteurs et à l'export.
-            var gifRect = computeMapRect(gw, gh, frameTransform);
-            var hScale = gifRect.w / 2200.0;
-            var vScale = gifRect.h / 1640.0;
-            var offX = gifRect.x;
-            var offY = gifRect.y;
+            var vw = viewport.clientWidth;
+            var vh = viewport.clientHeight;
+            var hScale, vScale, offX, offY;
+            if (transform.scale <= 1.15) {
+                var exportBBox = computeVisibleBBox();
+                if (exportBBox) {
+                    var pad = 0.045;
+                    var ebw = (exportBBox.x1 - exportBBox.x0) * (1 + 2 * pad);
+                    var ebh = (exportBBox.y1 - exportBBox.y0) * (1 + 2 * pad);
+                    var mapAspect = 2200.0 / 1640.0;
+                    if (ebw / ebh > mapAspect) { ebh = ebw / mapAspect; }
+                    else { ebw = ebh * mapAspect; }
+                    hScale = gw / ebw;
+                    vScale = hScale;
+                    offX = gw / 2 - ((exportBBox.x0 + exportBBox.x1) / 2) * hScale;
+                    offY = gh / 2 - ((exportBBox.y0 + exportBBox.y1) / 2) * vScale;
+                } else {
+                    hScale = gw / 2200.0;
+                    vScale = gh / 1640.0;
+                    offX = 0;
+                    offY = 0;
+                }
+            } else {
+                // Vue zoomée / région : reproduit fidèlement la portion visible à l'écran
+                var viewRect = computeMapRect(vw, vh);
+                var u0 = (0 - viewRect.x) / viewRect.w;
+                var u1 = (vw - viewRect.x) / viewRect.w;
+                var v0 = (0 - viewRect.y) / viewRect.h;
+                var v1 = (vh - viewRect.y) / viewRect.h;
+                var vueW = u1 - u0;
+                var vueH = v1 - v0;
+                var k = Math.max(gw / (vueW * 2200.0), gh / (vueH * 1640.0));
+                hScale = k;
+                vScale = k;
+                var uc = (u0 + u1) / 2;
+                var vc = (v0 + v1) / 2;
+                offX = gw / 2 - uc * 2200.0 * k;
+                offY = gh / 2 - vc * 1640.0 * k;
+            }
 
-            // gif.worker.js est hébergé localement (js/gif.worker.js) → workers fiables
-            // sur GitHub Pages sans problème CORS. On utilise 2 workers pour accélérer
-            // l'encodage des 52 frames.
+            // Priorité villes pour la région choisie
+            var prioritySet = null;
+            try {
+                var regionSelect = document.getElementById('select-region');
+                var regionKey = regionSelect ? regionSelect.value : 'france';
+                var REGION_KEY_MAP = {
+                    france: 'france', hdf: 'hdf', normandie: 'normandie',
+                    idf: 'ile-de-france', grandest: 'grand-est',
+                    bretagne: 'bretagne', pdl: 'pdl', cvl: 'cvl',
+                    bfc: 'bfc', naq: 'naq', ara: 'ara',
+                    occitanie: 'occitanie', paca: 'paca', corse: 'corse'
+                };
+                var regDef = window.Europe1Regions &&
+                    window.Europe1Regions[REGION_KEY_MAP[regionKey] || regionKey];
+                if (regDef && regDef.cities && regDef.cities.length) {
+                    prioritySet = new Set();
+                    regDef.cities.forEach(function (city) {
+                        var name = String(city.name || '').toLowerCase()
+                            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                        if (name) prioritySet.add(name);
+                    });
+                }
+            } catch (e) {}
+
             var gifOptions = {
                 quality: 10,
                 width: gw,
@@ -1287,9 +1334,12 @@
             var gif = new window.GIF(gifOptions);
             var index = 0;
 
-            function drawFrame(canvas, img, leadHour) {
+            function drawFrame(canvas, img, stepObj) {
                 var ctx = canvas.getContext('2d');
-                // Cadre sombre (contour carré) puis fond de carte dans le domaine
+                var leadHour = stepObj ? stepObj.lead_hour : 0;
+                var validTime = stepObj ? stepObj.valid_time : null;
+
+                // 1. Fond sombre & Fond de carte
                 ctx.fillStyle = '#0b1220';
                 ctx.fillRect(0, 0, gw, gh);
                 ctx.save();
@@ -1305,7 +1355,8 @@
                     ctx.fillStyle = '#a5a6b0';
                     ctx.fillRect(0, 0, gw, gh);
                 }
-                // Dalle météo : maillage sur tout le domaine (comme l'écran)
+
+                // 2. Dalle météo
                 var weatherLayer = document.createElement('canvas');
                 weatherLayer.width = gw;
                 weatherLayer.height = gh;
@@ -1315,18 +1366,19 @@
                 wctx.drawImage(img, 0, 0);
                 wctx.restore();
                 ctx.drawImage(weatherLayer, 0, 0);
-                // Frontières (avec estompage progressif)
+
+                // 3. Frontières
                 if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
                     ctx.save();
                     ctx.transform(hScale, 0, 0, vScale, offX, offY);
                     vectorDefinition.paths.forEach(function (entry) {
                         var fade = 1;
                         if (entry.kind === 'department') {
-                            fade = frameTransform.scale <= 3 ? 1 :
-                                Math.max(0.22, 1 - (frameTransform.scale - 3) / 14);
+                            fade = transform.scale <= 3 ? 1 :
+                                Math.max(0.22, 1 - (transform.scale - 3) / 14);
                         } else if (entry.kind === 'region') {
-                            fade = frameTransform.scale <= 8 ? 1 :
-                                Math.max(0.35, 1 - (frameTransform.scale - 8) / 20);
+                            fade = transform.scale <= 8 ? 1 :
+                                Math.max(0.35, 1 - (transform.scale - 8) / 20);
                         }
                         ctx.strokeStyle = entry.colour;
                         ctx.globalAlpha = (entry.opacity || 1) * fade;
@@ -1335,13 +1387,208 @@
                     });
                     ctx.restore();
                 }
-                ctx.restore(); // fin du clip
-                // Cartouche bas : paramètre + échéance
-                ctx.fillStyle = 'rgba(7, 11, 20, 0.85)';
-                ctx.fillRect(0, gh - 26, gw, 26);
+                ctx.restore(); // Fin du clip domaine
+
+                // 4. Logo Météo-Climat Pro (haut droit)
+                var logoW = 95;
+                var logoH = 28;
+                if (logoImage && logoImage.complete && logoImage.naturalWidth) {
+                    logoH = Math.round(logoW * logoImage.naturalHeight / logoImage.naturalWidth);
+                    var lx = gw - 12 - logoW;
+                    var ly = 10;
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(7, 11, 20, 0.78)';
+                    ctx.beginPath();
+                    if (typeof ctx.roundRect === 'function') {
+                        ctx.roundRect(lx - 6, ly - 4, logoW + 12, logoH + 8, 6);
+                    } else {
+                        ctx.rect(lx - 6, ly - 4, logoW + 12, logoH + 8);
+                    }
+                    ctx.fill();
+                    ctx.drawImage(logoImage, lx, ly, logoW, logoH);
+                    ctx.restore();
+                }
+
+                // 5. Cartouche Officiel (haut gauche)
+                var prettyLabel = layer ? layer.label : '';
+                var prettyUnit = layer && layer.unit ? layer.unit : '';
+                if (typeof window.getLayerPalette === 'function') {
+                    try {
+                        var prettyPal = window.getLayerPalette(currentLayer);
+                        if (prettyPal) {
+                            prettyLabel = prettyPal.label || prettyLabel;
+                            prettyUnit = prettyPal.unit !== undefined ? prettyPal.unit : prettyUnit;
+                        }
+                    } catch (e) {}
+                }
+                var dateStr = '';
+                if (validTime) {
+                    try {
+                        dateStr = validityFormat.format(new Date(validTime)).replace(':', 'h');
+                    } catch (e) {
+                        dateStr = new Date(validTime).toLocaleDateString('fr-FR');
+                    }
+                }
+                var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
+                var titleText = modelTitle + ' • ' + prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : '');
+                var dateText = dateStr + ' (H+' + String(leadHour).padStart(2, '0') + ')';
+
+                var bMargin = 10;
+                var bY = 10;
+                var bH = 50;
+                ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                var tW = ctx.measureText(titleText).width;
+                ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                var dW = ctx.measureText(dateText).width;
+                var bW = Math.min(gw - 120, Math.max(tW, dW) + 24);
+
+                ctx.save();
+                ctx.fillStyle = 'rgba(7, 11, 20, 0.90)';
+                ctx.beginPath();
+                if (typeof ctx.roundRect === 'function') {
+                    ctx.roundRect(bMargin, bY, bW, bH, 8);
+                } else {
+                    ctx.rect(bMargin, bY, bW, bH);
+                }
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0, 210, 255, 0.7)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.fillText(titleText, bMargin + 10, bY + 20);
+
                 ctx.fillStyle = '#00d2ff';
-                ctx.font = 'bold 15px sans-serif';
-                ctx.fillText((layer ? layer.label : '') + '  H+' + String(leadHour).padStart(2, '0'), 8, gh - 8);
+                ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.fillText(dateText + ' — Météo-Climat Pro', bMargin + 10, bY + 39);
+                ctx.restore();
+
+                // 6. Légende colorimétrique (bas centre)
+                var legY = gh - 38;
+                var legW = 340;
+                var legH = 28;
+                var legX = (gw - legW) / 2;
+                if (layer && typeof window.getLayerPalette === 'function' && typeof window.paletteTicks === 'function') {
+                    try {
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(7, 11, 20, 0.90)';
+                        ctx.beginPath();
+                        if (typeof ctx.roundRect === 'function') {
+                            ctx.roundRect(legX - 10, legY - 4, legW + 20, legH + 8, 8);
+                        } else {
+                            ctx.rect(legX - 10, legY - 4, legW + 20, legH + 8);
+                        }
+                        ctx.fill();
+
+                        var pal = window.getLayerPalette(currentLayer);
+                        var stops = pal && pal.stops ? pal.stops : [];
+                        var low = (pal && pal.transparent_below !== null && pal.transparent_below !== undefined) ?
+                            pal.transparent_below : (stops.length ? stops[0].value : 0);
+                        var max = stops.length ? stops[stops.length - 1].value : 1;
+                        var span = (max - low) || 1;
+                        var grad = ctx.createLinearGradient(legX, 0, legX + legW, 0);
+                        stops.forEach(function (s) {
+                            var pos = Math.max(0, Math.min(1, (Number(s.value) - low) / span));
+                            grad.addColorStop(pos, s.color);
+                        });
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(legX, legY + 2, legW, 10);
+                        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(legX, legY + 2, legW, 10);
+
+                        ctx.fillStyle = '#eaf1ff';
+                        ctx.font = 'bold 9px sans-serif';
+                        ctx.textAlign = 'center';
+                        var ticks = window.paletteTicks(currentLayer);
+                        ticks.forEach(function (tick, i) {
+                            var tx = legX + (ticks.length > 1 ? i / (ticks.length - 1) : 0.5) * legW;
+                            ctx.fillText(String(tick), tx, legY + 22);
+                        });
+                        ctx.restore();
+                    } catch (e) {}
+                }
+
+                // 7. Villes sur chaque frame du GIF
+                if (manifest && manifest.bounds && places && places.length && citiesVisible !== false) {
+                    try {
+                        var bounds = manifest.bounds;
+                        var northY = mercator(Number(bounds.north));
+                        var southY = mercator(Number(bounds.south));
+                        var lonSpan = Number(bounds.east) - Number(bounds.west);
+                        var latSpan = northY - southY;
+                        if (lonSpan && latSpan) {
+                            var expScale = hScale * (2200 / gw);
+                            var popMin = expScale < 1.35 ? 200000 :
+                                (expScale < 2.25 ? 80000 :
+                                (expScale < 3.75 ? 30000 :
+                                (expScale < 6 ? 8000 : 2000)));
+                            var maxLabels = expScale < 1.35 ? 22 :
+                                (expScale < 2.25 ? 32 : 45);
+
+                            ctx.save();
+                            ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.strokeStyle = 'rgba(8, 19, 28, 0.94)';
+                            ctx.fillStyle = '#ffffff';
+                            ctx.lineWidth = 3;
+
+                            var occupied = [];
+                            // Safe zone cartouche
+                            occupied.push({ left: bMargin - 4, right: bMargin + bW + 4, top: bY - 4, bottom: bY + bH + 4 });
+                            // Safe zone logo
+                            occupied.push({ left: gw - 12 - logoW - 6, right: gw, top: 4, bottom: 10 + logoH + 6 });
+                            // Safe zone légende
+                            occupied.push({ left: legX - 12, right: legX + legW + 12, top: legY - 6, bottom: gh });
+
+                            var orderedPlaces = places;
+                            if (prioritySet && prioritySet.size) {
+                                orderedPlaces = places.slice().sort(function (a, b) {
+                                    var aP = prioritySet.has(String(a[0]).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+                                    var bP = prioritySet.has(String(b[0]).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+                                    if (aP !== bP) return aP ? -1 : 1;
+                                    return Number(b[1]) - Number(a[1]);
+                                });
+                            }
+
+                            var drawn = 0;
+                            for (var pi = 0; pi < orderedPlaces.length; pi++) {
+                                var pl = orderedPlaces[pi];
+                                if (!Array.isArray(pl) || pl.length < 4) continue;
+                                if (Number(pl[1]) < popMin) {
+                                    var isP = prioritySet && prioritySet.has(String(pl[0]).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+                                    if (!isP) continue;
+                                }
+                                var u = (Number(pl[3]) - Number(bounds.west)) / lonSpan;
+                                var v = (northY - mercator(Number(pl[2]))) / latSpan;
+                                var sx = u * 2200 * hScale + offX;
+                                var sy = v * 1640 * vScale + offY;
+                                if (sx < 15 || sx > gw - 15 || sy < 15 || sy > gh - 15) continue;
+
+                                var cityName = String(pl[0]);
+                                var tw = ctx.measureText(cityName).width;
+                                var rect = { left: sx - tw / 2 - 4, right: sx + tw / 2 + 4, top: sy - 8, bottom: sy + 8 };
+                                var clash = false;
+                                for (var oi = 0; oi < occupied.length; oi++) {
+                                    var o = occupied[oi];
+                                    if (rect.left < o.right && rect.right > o.left && rect.top < o.bottom && rect.bottom > o.top) {
+                                        clash = true;
+                                        break;
+                                    }
+                                }
+                                if (clash) continue;
+                                occupied.push(rect);
+                                ctx.strokeText(cityName, sx, sy);
+                                ctx.fillText(cityName, sx, sy);
+                                drawn++;
+                                if (drawn >= maxLabels) break;
+                            }
+                            ctx.restore();
+                        }
+                    } catch (e) {}
+                }
             }
 
             function next() {
@@ -1357,8 +1604,8 @@
                     var canvas = document.createElement('canvas');
                     canvas.width = gw;
                     canvas.height = gh;
-                    drawFrame(canvas, img, step.lead_hour);
-                    gif.addFrame(canvas, { copy: true, delay: 350 });
+                    drawFrame(canvas, img, step);
+                    gif.addFrame(canvas, { copy: true, delay: 1000 });
                     index += 1;
                     next();
                 };
