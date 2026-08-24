@@ -47,7 +47,9 @@ jobs:
 
       - name: Execution du Pipeline Multi-Modeles
         run: |
-          python pipeline/fetch_and_render_all.py --model all
+          # Pour l'instant : uniquement AROME (rapide via WMS).
+          # Les autres modèles (ARPEGE, ICON, GFS, ECMWF) seront réactivés plus tard.
+          python pipeline/fetch_and_render_all.py --model arome
 
       - name: Commit et Push des nouvelles cartes
         run: |
