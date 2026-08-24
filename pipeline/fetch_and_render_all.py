@@ -11,6 +11,7 @@ Pipeline Multi-Modèles Météo — Portées Officielles Complètes
 """
 
 import os, sys, json, datetime, io, bz2, tempfile, shutil, argparse
+import threading, time
 import requests, numpy as np, urllib3
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from PIL import Image
@@ -667,6 +668,23 @@ ARPEGE_WMS = os.environ.get(
     "https://public-api.meteofrance.fr/public/arpege/1.0/wms/MF-NWP-GLOBAL-ARPEGE-001-EURAT5-WMS/GetMap"
 )
 
+# Limiteur de débit Météo-France (50 requêtes/minute) — évite les erreurs 429.
+_mf_rate_lock = threading.Lock()
+_mf_rate_times = []
+
+
+def _mf_rate_wait():
+    with _mf_rate_lock:
+        now = time.time()
+        _mf_rate_times[:] = [t for t in _mf_rate_times if now - t < 60]
+        if len(_mf_rate_times) >= 50:
+            wait = 60 - (now - _mf_rate_times[0]) + 0.3
+            time.sleep(wait)
+            now = time.time()
+            _mf_rate_times[:] = [t for t in _mf_rate_times if now - t < 60]
+        _mf_rate_times.append(time.time())
+
+
 def _fetch_mf_tile(session, token, wms_url, wms_layer, style, time_str, ref_str, dst):
     headers = {"apikey": token, "Authorization": "Bearer " + token, "User-Agent": "Mozilla/5.0"}
     params = {"service": "WMS", "version": "1.3.0", "request": "GetMap",
@@ -676,13 +694,16 @@ def _fetch_mf_tile(session, token, wms_url, wms_layer, style, time_str, ref_str,
               "format": "image/png", "transparent": "TRUE",
               "time": time_str, "reference_time": ref_str}
     try:
+        _mf_rate_wait()
         r = session.get(wms_url, params=params, headers=headers, timeout=30, verify=False)
         if r.status_code == 200 and len(r.content) > 1000:
             img = Image.open(io.BytesIO(r.content)).convert("RGBA")
             img.save(dst, format="WEBP", quality=85, method=4)
             return True
-    except Exception:
-        pass
+        elif r.status_code != 200:
+            print("  [WMS] %s -> HTTP %d" % (wms_layer, r.status_code), flush=True)
+    except Exception as e:
+        print("  [WMS] %s -> erreur: %s" % (wms_layer, e), flush=True)
     return False
 
 def _fetch_arome_tile(session, token, wms_layer, style, time_str, ref_str, dst):
@@ -772,7 +793,8 @@ def run_arome(max_hours=51):
         for lh in lead_hours:
             src = os.path.join(out_dir, layer, "%03d.webp" % lh)
             dst = os.path.join(arome_dir, layer, "%03d.webp" % lh)
-            if os.path.exists(src) and not os.path.exists(dst):
+            # Toujours écraser pour que output/arome reçoive bien les nouvelles tuiles
+            if os.path.exists(src):
                 shutil.copy2(src, dst)
 
     meta = {"name": "AROME HD (1,3 km)", "provider": "Meteo-France",
