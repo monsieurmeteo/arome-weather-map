@@ -3,11 +3,11 @@
 """
 Pipeline Multi-Modèles Météo — Portées Officielles Complètes
 ============================================================
- 1. AROME HD   (1.3 km) → 48 heures  (H+00 à H+48, pas de 1h)
- 2. ICON-EU    (7 km)   → 3 jours    (H+00 à H+78, pas de 2h/3h)
- 3. ARPEGE     (5 km)   → 4 jours    (H+00 à H+102, pas de 3h)
- 4. ECMWF IFS  (9 km)   → 10 jours   (H+00 à H+240, pas de 6h)
- 5. GFS Monde  (13 km)  → 16 jours   (H+00 à H+384, pas de 6h/12h)
+ 1. AROME HD   (1.3 km) → H+00 à H+51  (pas de 1h)
+ 2. ICON-EU    (7 km)   → H+00 à H+120 (pas de 1h puis 3h)
+ 3. ARPEGE     (5 km)   → H+00 à H+114 (pas de 1h puis 3h)
+ 4. ECMWF IFS  (9 km)   → H+00 à H+240 (pas de 3h puis 6h)
+ 5. GFS Monde  (13 km)  → H+00 à H+384 (pas de 3h puis 6h)
 """
 
 import os, sys, json, datetime, io, bz2, tempfile, shutil, argparse
@@ -256,20 +256,20 @@ def compute_physical_cumulative_gusts(model_dir, lead_hours):
             dst_c = os.path.join(cumul_dir, "%03d.webp" % lh)
             Image.fromarray(max_rgba, "RGBA").save(dst_c, format="WEBP", quality=85)
 
-def run_arome(max_hours=48):
+def run_arome(max_hours=51):
     token = get_mf_token()
     if not token:
         print("ERROR AROME: token Meteo-France introuvable (env METEOFRANCE_TOKEN)")
         return
-    print(f"AROME HD (1.3 km) - 48 Heures...")
+    print(f"AROME HD (1.3 km) - H+00 a H+51 (pas de 1h)...")
     out_dir   = ensure_dir(os.path.join(OUTPUT_DIR, "maps"))
     arome_dir = ensure_dir(os.path.join(OUTPUT_DIR, "arome", "maps"))
 
     now   = datetime.datetime.now(datetime.timezone.utc)
-    run_h = (now.hour // 3) * 3
+    run_h = (now.hour // 6) * 6
     run_dt = now.replace(hour=run_h, minute=0, second=0, microsecond=0)
     if (now - run_dt).total_seconds() < 5400:
-        run_dt -= datetime.timedelta(hours=3)
+        run_dt -= datetime.timedelta(hours=6)
     ref_str = run_dt.strftime("%Y-%m-%dT%H:00:00Z")
 
     lead_hours = list(range(0, max_hours + 1))
@@ -312,23 +312,23 @@ def run_arome(max_hours=48):
     print("  OK AROME 48h termine")
 
 # ─── ARPEGE Europe (4 Jours / 102h) ──────────────────────────────────────────
-def run_arpege(max_hours=102):
+def run_arpege(max_hours=114):
     token = get_mf_token()
     if not token:
         print("ERROR ARPEGE: token Meteo-France introuvable (env METEOFRANCE_TOKEN)")
         return
-    print("ARPEGE Europe (5 km) - 4 Jours (H+102)...")
+    print("ARPEGE Europe (5 km) - H+00 a H+114...")
     arpege_dir = ensure_dir(os.path.join(OUTPUT_DIR, "arpege", "maps"))
 
     now = datetime.datetime.now(datetime.timezone.utc)
-    run_h = (now.hour // 3) * 3
+    run_h = (now.hour // 6) * 6
     run_dt = now.replace(hour=run_h, minute=0, second=0, microsecond=0)
     if (now - run_dt).total_seconds() < 5400:
-        run_dt -= datetime.timedelta(hours=3)
+        run_dt -= datetime.timedelta(hours=6)
     ref_str = run_dt.strftime("%Y-%m-%dT%H:00:00Z")
 
-    # ARPEGE = pas de 3h sur H+00..H+102
-    lead_hours = list(range(0, max_hours + 1, 3))
+    # ARPEGE = pas de 1h jusqu'à H+48, puis pas de 3h jusqu'à H+114
+    lead_hours = list(range(0, 49)) + list(range(51, max_hours + 1, 3))
     session = requests.Session()
     steps = []
     with ThreadPoolExecutor(max_workers=8) as ex:
@@ -479,7 +479,8 @@ def run_ecmwf(max_hours=240):
     if (now - run_dt).total_seconds() < 18000:
         run_dt -= datetime.timedelta(hours=12)
 
-    lead_hours = list(range(0, max_hours + 1, 6))
+    # ECMWF open data = pas de 3h jusqu'à H+144, puis pas de 6h jusqu'à H+240
+    lead_hours = list(range(0, 145, 3)) + list(range(150, max_hours + 1, 6))
     client = Client("ecmwf", beta=True)
     ecmwf_param_map = {"temperature":"2t","temperature_ressentie":"2t","point_rosee":"2d",
                        "humidex":"2t","pluie_1h":"tp","pluie_cumul":"tp","reflectivite":"tp",
@@ -586,23 +587,24 @@ ICON_VARS = {
     "pression": "pmsl", "pression_surface": "ps", "humidite": "relhum_2m",
 }
 
-def run_icon(max_hours=78):
+def run_icon(max_hours=120):
     try:
         import cfgrib
     except ImportError:
         print("ERROR ICON: cfgrib non installe")
         return
-    print("ICON-EU (7 km) - 3 Jours (H+78)...")
+    print("ICON-EU (7 km) - H+00 a H+120...")
     icon_dir = ensure_dir(os.path.join(OUTPUT_DIR, "icon", "maps"))
     now = datetime.datetime.now(datetime.timezone.utc)
-    run_h = (now.hour // 3) * 3
+    run_h = (now.hour // 6) * 6
     run_dt = now.replace(hour=run_h, minute=0, second=0, microsecond=0)
     if (now - run_dt).total_seconds() < 7200:
-        run_dt -= datetime.timedelta(hours=3)
+        run_dt -= datetime.timedelta(hours=6)
     day_str = run_dt.strftime("%Y%m%d")
     h_str = "%02d" % run_dt.hour
 
-    lead_hours = list(range(0, max_hours + 1, 2))
+    # ICON-EU = pas de 1h jusqu'à H+48, puis pas de 3h jusqu'à H+120
+    lead_hours = list(range(0, 49)) + list(range(51, max_hours + 1, 3))
     steps = []
     max_gust_field = None
     for lh in lead_hours:
