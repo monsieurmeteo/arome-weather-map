@@ -572,11 +572,48 @@ def apply_palette(data, palette):
     rgba[data >= vs[-1]] = cs[-1].astype(np.uint8)
     return rgba
 
+def _mercator_y(lat):
+    """Y de Mercator (radians) pour une latitude en degrés."""
+    return np.log(np.tan(np.pi / 4 + np.radians(lat) / 2))
+
+
+def _inverse_mercator_y(y):
+    """Latitude (degrés) depuis un Y de Mercator (radians)."""
+    return np.degrees(2 * np.arctan(np.exp(y)) - np.pi / 2)
+
+
+def _reproject_to_mercator(img):
+    """Re-projette une image WMS EPSG:4326 (équirectangulaire) vers Mercator.
+
+    Rééchelonnage vertical ligne par ligne (la longitude reste linéaire,
+    seule la latitude devient Mercator). Nécessaire car le WMS ne fournit
+    que du EPSG:4326, alors que le front-end attend du Mercator.
+    """
+    arr = np.array(img).astype(np.float32)
+    h = arr.shape[0]
+    north_y = _mercator_y(BOUNDS["north"])
+    south_y = _mercator_y(BOUNDS["south"])
+    # Latitude de chaque ligne Mercator (nord en haut)
+    lat_tgt = _inverse_mercator_y(np.linspace(north_y, south_y, h))
+    # Ligne source équirectangulaire correspondante (latitude linéaire)
+    src_rows = (BOUNDS["north"] - lat_tgt) / (BOUNDS["north"] - BOUNDS["south"]) * (h - 1)
+    src_rows = np.clip(src_rows, 0, h - 1)
+    lo = np.floor(src_rows).astype(int)
+    hi = np.ceil(src_rows).astype(int)
+    frac = (src_rows - lo)[:, None, None]
+    out = arr[lo] * (1 - frac) + arr[hi] * frac
+    return Image.fromarray(out.astype(np.uint8))
+
+
 def regrid(data, lats, lons):
     if lats[0] > lats[-1]:
         lats, data = lats[::-1], data[::-1, :]
-    lat_out = np.linspace(BOUNDS["south"], BOUNDS["north"], HEIGHT)[::-1]
-    lon_out = np.linspace(BOUNDS["west"],  BOUNDS["east"],  WIDTH)
+    # Projection Mercator (comme la référence alertes-meteo.com) :
+    # espacement vertical selon la latitude de Mercator, nord en haut.
+    lat_out = _inverse_mercator_y(
+        np.linspace(_mercator_y(BOUNDS["north"]), _mercator_y(BOUNDS["south"]), HEIGHT)
+    )
+    lon_out = np.linspace(BOUNDS["west"], BOUNDS["east"], WIDTH)
     lo, la  = np.meshgrid(lon_out, lat_out)
     pts = np.stack([la.ravel(), lo.ravel()], axis=-1)
     pts[:,0] = np.clip(pts[:,0], lats[0], lats[-1])
@@ -700,6 +737,9 @@ def _fetch_mf_tile(session, token, wms_url, wms_layer, style, time_str, ref_str,
         r = session.get(wms_url, params=params, headers=headers, timeout=30, verify=False)
         if r.status_code == 200 and len(r.content) > 1000:
             img = Image.open(io.BytesIO(r.content)).convert("RGBA")
+            # Le WMS renvoie de l'EPSG:4326 (équirectangulaire) ; on le
+            # re-projette en Mercator pour correspondre au front-end.
+            img = _reproject_to_mercator(img)
             img.save(dst, format="WEBP", quality=85, method=4)
             return True
         elif r.status_code != 200:
