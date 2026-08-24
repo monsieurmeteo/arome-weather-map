@@ -2497,26 +2497,28 @@
             t = t || transform;
             var mapAspect = 2200.0 / 1640.0;
             var viewAspect = width / (height || 1);
-            var s = viewAspect > mapAspect ? (width / 2200.0) : (height / 1640.0);
             var bbox = null;
             if (t.scale <= 1.15) {
                 bbox = computeVisibleBBox();
             }
             if (bbox) {
-                // Cadrage France : le raster 2200×1640 remplit tout le viewport
-                // en COVER + CLAMP (jamais de bandes vides, jamais de zone sans
-                // maillage), centré au mieux sur le rectangle réellement couvert
-                // par le maillage (masque France). La France (Corse incluse)
-                // tient entière dans le cadre sur tous les ratios paysage, et
-                // les coins non maillés du trapèze AROME en Mercator sortent
-                // du viewport.
+                // Cadrage France entière : on calcule l'échelle pour que l'ensemble
+                // du territoire (de Dunkerque à la Corse, de Brest à Strasbourg)
+                // soit 100% visible dans la zone utile de l'écran (entre le header
+                // compact et la timeline), sans aucun rognage ni zone étirée.
+                var availH = Math.max(180, height - 100);
+                var availW = Math.max(260, width - 24);
+                var bw = Math.max(100, bbox.x1 - bbox.x0);
+                var bh = Math.max(100, bbox.y1 - bbox.y0);
+                // Échelle ajustée avec marge de sécurité (~4%)
+                var sFrance = Math.min(availW / (bw * 1.05), availH / (bh * 1.05));
+                var s = sFrance;
+
                 var cx = (bbox.x0 + bbox.x1) / 2;
                 var cy = (bbox.y0 + bbox.y1) / 2;
-                // Rect du cadrage France (comme vu au scale = 1) : le clamp
-                // garantit que le raster couvre TOUT le viewport.
                 var bboxRect = {
-                    x: Math.max(Math.min(width / 2 - cx * s, 0), width - 2200.0 * s),
-                    y: Math.max(Math.min(height / 2 - cy * s, 0), height - 1640.0 * s),
+                    x: width / 2 - cx * s,
+                    y: height / 2 - cy * s,
                     w: 2200.0 * s,
                     h: 1640.0 * s
                 };
@@ -2524,9 +2526,8 @@
                     return bboxRect;
                 }
                 // INTERPOLATION FLUIDE : entre scale 1 et 1.15, on fond
-                // progressivement le cadrage France dans le mode cover, pour
-                // que le premier zoom soit continu (pas de saut brutal).
-                var coverScale = s * t.scale;
+                // progressivement le cadrage France dans le mode zoom libre
+                var coverScale = Math.max(width / 2200.0, height / 1640.0) * t.scale;
                 var coverRect = {
                     x: width / 2 + t.x - 1100.0 * coverScale,
                     y: height / 2 + t.y - 820.0 * coverScale,
@@ -2541,8 +2542,9 @@
                     h: bboxRect.h + (coverRect.h - bboxRect.h) * f
                 };
             }
-            // Cover pur : le raster remplit tout le viewport, sans bandes.
-            var scale = s * t.scale;
+            // Mode Zoom / Déplacement libre
+            var baseScale = Math.max(width / 2200.0, height / 1640.0);
+            var scale = baseScale * t.scale;
             return {
                 x: width / 2 + t.x - 1100.0 * scale,
                 y: height / 2 + t.y - 820.0 * scale,
