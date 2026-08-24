@@ -685,60 +685,83 @@
             if (!currentWeatherImage) {
                 return null;
             }
-            // Export broadcast : résolution native 2200×1640, plein cadre,
-            // indépendant du zoom/pan courant de l'écran.
+            var vw = viewport.clientWidth;
+            var vh = viewport.clientHeight;
+            if (!vw || !vh) {
+                return null;
+            }
+            // Capturer la VUE COURANTE (France entière OU région zoomée)
+            // à ~2200px de large, pour un export fidèle à ce qu'on voit.
+            var targetW = 2200;
+            var scale = targetW / vw;
             var output = document.createElement('canvas');
-            output.width = 2200;
-            output.height = 1640;
+            output.width = targetW;
+            output.height = Math.max(1, Math.round(vh * scale));
             var context = output.getContext('2d');
 
-            // 1. Fond sombre
             context.fillStyle = '#070b14';
             context.fillRect(0, 0, output.width, output.height);
 
-            // 2. Dalle météo décodée à sa taille native (plein cadre)
-            context.drawImage(currentWeatherImage, 0, 0, output.width, output.height);
+            // Dalle météo à la transformation courante (zoom/pan/région)
+            var mapAspect = 2200.0 / 1640.0;
+            var viewAspect = vw / vh;
+            var uScale = viewAspect > mapAspect ? (vh / 1640.0) : (vw / 2200.0);
+            var mapW = 2200.0 * uScale * transform.scale * scale;
+            var mapH = 1640.0 * uScale * transform.scale * scale;
+            var mapX = (output.width / 2) + transform.x * scale;
+            var mapY = (output.height / 2) + transform.y * scale;
+            context.drawImage(currentWeatherImage, mapX, mapY, mapW, mapH);
 
-            // 3. Frontières géographiques (surcouche vectorielle) à l'échelle native
+            // Frontières à la transformation courante (départements estompés en zoom)
             if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
                 context.save();
-                context.scale(
-                    output.width / vectorDefinition.width,
-                    output.height / vectorDefinition.height
-                );
+                var hScale = transform.scale * uScale * scale;
+                var vScale = transform.scale * uScale * scale;
+                var offX = output.width / 2 + transform.x * scale - hScale * 1100.0;
+                var offY = output.height / 2 + transform.y * scale - vScale * 820.0;
+                context.transform(hScale, 0, 0, vScale, offX, offY);
                 vectorDefinition.paths.forEach(function (entry) {
+                    if (entry.kind === 'department' && transform.scale > 3.2) {
+                        return;
+                    }
+                    if (entry.kind === 'region' && transform.scale > 10) {
+                        return;
+                    }
                     context.strokeStyle = entry.colour;
                     context.globalAlpha = entry.opacity;
                     context.lineCap = entry.lineCap;
                     context.lineJoin = entry.lineJoin;
-                    context.lineWidth = entry.width;
+                    context.lineWidth = entry.width / hScale;
                     context.stroke(entry.path);
                 });
                 context.restore();
                 context.globalAlpha = 1;
             }
 
+            // Facteur d'échelle pour les éléments fixes (logo, cartouche)
+            var k = scale / 1.5;
+
             // Logo Météo-Climat Pro (en haut à droite de la carte)
             if (logoImage && logoImage.complete && logoImage.naturalWidth) {
-                var logoW = 240;
+                var logoW = Math.round(240 * k);
                 var logoH = Math.round(logoW * logoImage.naturalHeight / logoImage.naturalWidth);
-                var pad = 24;
+                var pad = Math.round(24 * k);
                 var lx = output.width - pad - logoW;
                 var ly = pad;
                 context.save();
                 context.fillStyle = 'rgba(7, 11, 20, 0.72)';
                 context.beginPath();
                 if (typeof context.roundRect === 'function') {
-                    context.roundRect(lx - 12, ly - 8, logoW + 24, logoH + 16, 12);
+                    context.roundRect(lx - pad / 2, ly - pad / 3, logoW + pad, logoH + pad * 2 / 3, 12 * k);
                 } else {
-                    context.rect(lx - 12, ly - 8, logoW + 24, logoH + 16);
+                    context.rect(lx - pad / 2, ly - pad / 3, logoW + pad, logoH + pad * 2 / 3);
                 }
                 context.fill();
                 context.drawImage(logoImage, lx, ly, logoW, logoH);
                 context.restore();
             }
 
-            // 4. Cartouche d'antenne Météo-Climat Pro (Modèle • Paramètre • Validité)
+            // Cartouche d'antenne (Modèle • Paramètre • Validité)
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
             var step = availableSteps()[currentStep];
             var dateStr = '';
@@ -750,13 +773,13 @@
                 }
             }
 
-            var margin = 24;
-            var bannerH = 96;
+            var margin = Math.round(24 * k);
+            var bannerH = Math.round(96 * k);
             var bannerY = output.height - bannerH - margin;
             context.fillStyle = 'rgba(7, 11, 20, 0.92)';
             context.beginPath();
             if (typeof context.roundRect === 'function') {
-                context.roundRect(margin, bannerY, output.width - margin * 2, bannerH, 16);
+                context.roundRect(margin, bannerY, output.width - margin * 2, bannerH, 16 * k);
             } else {
                 context.rect(margin, bannerY, output.width - margin * 2, bannerH);
             }
@@ -765,23 +788,21 @@
             context.lineWidth = 2;
             context.stroke();
 
-            // Titre & Paramètre
             context.fillStyle = '#ffffff';
-            context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '700 ' + Math.round(30 * k) + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
             context.fillText(
                 modelTitle + ' • ' + (layer ? layer.label : '') +
                 (layer && layer.unit ? ' (' + layer.unit + ')' : ''),
-                margin + 18, bannerY + 44
+                margin + 18, bannerY + Math.round(44 * k)
             );
 
-            // Date, échéance & branding
             context.fillStyle = '#00d2ff';
-            context.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '600 ' + Math.round(22 * k) + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var leadText = step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '';
             context.fillText(
                 dateStr + leadText + ' — Météo-Climat Pro',
-                margin + 18, bannerY + 76
+                margin + 18, bannerY + Math.round(76 * k)
             );
 
             return output;
@@ -1760,15 +1781,18 @@
                     throw new Error('surcouche vectorielle invalide');
                 }
                 var paths = Array.from(svg.querySelectorAll('path')).map(
-                    function (node, index) {
+                    function (node) {
+                        var width = Number(node.getAttribute('stroke-width') || 1);
+                        // Classification par épaisseur : département (fin), région (moyen), pays/côte (épais)
+                        var kind = width <= 1.0 ? 'department' : (width <= 1.6 ? 'region' : 'country');
                         return {
                             path: new Path2D(node.getAttribute('d') || ''),
                             colour: node.getAttribute('stroke') || '#101116',
                             opacity: Number(node.getAttribute('stroke-opacity') || 1),
-                            width: Number(node.getAttribute('stroke-width') || 1),
+                            width: width,
                             lineCap: node.getAttribute('stroke-linecap') || 'butt',
                             lineJoin: node.getAttribute('stroke-linejoin') || 'miter',
-                            department: index === 0
+                            kind: kind
                         };
                     }
                 );
@@ -1806,7 +1830,11 @@
                 pixelRatio * offsetY
             );
             vectorDefinition.paths.forEach(function (entry) {
-                if (entry.department && transform.scale > 3.2) {
+                // Comme météociel : les limites de département s'estompent en zoomant
+                if (entry.kind === 'department' && transform.scale > 3.2) {
+                    return;
+                }
+                if (entry.kind === 'region' && transform.scale > 10) {
                     return;
                 }
                 vectorContext.strokeStyle = entry.colour;
