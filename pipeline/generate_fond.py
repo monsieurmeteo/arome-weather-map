@@ -212,26 +212,25 @@ def generate_svg(out_path=None):
         "Slovenia", "San Marino", "Vatican", "Malta", "Algeria",
         "Morocco", "Tunisia", "Libya",
     }
+    # 1. Pays d'Europe voisins (sans la France)
     pays_d = build_paths(countries, keep=WESTERN_EUROPE)
-    regions_d = build_paths(regions)
+    # 2. Départements et côtes françaises haute définition (officiel unique)
     depts_d = build_paths(depts)
 
     svg = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<svg xmlns="http://www.w3.org/2000/svg" '
         'viewBox="0 0 %d %d" width="%d" height="%d">\n'
-        '<path d="%s" fill="none" stroke="#1a1f26" stroke-width="2.2" '
+        '<path d="%s" fill="none" stroke="#1a1f26" stroke-width="2.0" '
         'stroke-linejoin="round" stroke-linecap="round"/>\n'
-        '<path d="%s" fill="none" stroke="#333c46" stroke-width="1.5" '
+        '<path d="%s" fill="none" stroke="#222831" stroke-width="1.0" '
         'stroke-linejoin="round" stroke-linecap="round"/>\n'
-        '<path d="%s" fill="none" stroke="#4a5560" stroke-width="0.9" '
-        'stroke-linejoin="round" stroke-linecap="round"/>\n'
-        '</svg>\n' % (WIDTH, HEIGHT, WIDTH, HEIGHT, pays_d, regions_d, depts_d)
+        '</svg>\n' % (WIDTH, HEIGHT, WIDTH, HEIGHT, pays_d, depts_d)
     )
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(svg)
-    print("SVG frontières régénéré : %s (%d octets)" % (out_path, len(svg)))
+    print("SVG frontières régénéré (sans doublon) : %s (%d octets)" % (out_path, len(svg)))
     return out_path
 
 
