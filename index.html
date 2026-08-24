@@ -495,6 +495,165 @@
         }
         .amfm-probe-label { font-size: 10.5px; color: var(--amfm-muted); }
 
+        /* Modal de Personnalisation GIF */
+        .amfm-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: rgba(4, 7, 13, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: amfmFadeIn 0.2s ease-out;
+        }
+        .amfm-modal-overlay[hidden] { display: none !important; }
+        @keyframes amfmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .amfm-modal-box {
+            background: rgba(11, 18, 32, 0.96);
+            border: 1px solid rgba(0, 210, 255, 0.4);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 440px;
+            padding: 22px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 210, 255, 0.15);
+            color: #fff;
+        }
+        .amfm-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 10px;
+        }
+        .amfm-modal-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--amfm-accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .amfm-modal-close {
+            background: none;
+            border: none;
+            color: var(--amfm-muted);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+        }
+        .amfm-modal-close:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+        .amfm-form-group {
+            margin-bottom: 14px;
+        }
+        .amfm-form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--amfm-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .amfm-radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .amfm-radio-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+        .amfm-radio-card:hover {
+            background: rgba(0, 210, 255, 0.08);
+            border-color: rgba(0, 210, 255, 0.3);
+        }
+        .amfm-radio-card input[type="radio"] {
+            accent-color: var(--amfm-accent);
+            cursor: pointer;
+        }
+        .amfm-range-custom {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            padding-left: 26px;
+        }
+        .amfm-select-mini {
+            background: rgba(7, 11, 20, 0.9);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            border-radius: 6px;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .amfm-modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .amfm-btn-generate-gif {
+            flex: 1;
+            background: linear-gradient(135deg, #0099ff, #00d2ff);
+            color: #070b14;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+            transition: transform 0.15s ease;
+        }
+        .amfm-btn-generate-gif:hover { transform: translateY(-1px); }
+        .amfm-btn-generate-gif:disabled { opacity: 0.6; cursor: not-allowed; }
+        .amfm-progress-container {
+            margin-top: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+        }
+        .amfm-progress-bar-bg {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .amfm-progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0099ff, #00d2ff);
+            border-radius: 4px;
+            transition: width 0.15s ease;
+        }
+        .amfm-progress-text {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--amfm-accent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
         /* 📱 RESPONSIVE */
         @media (max-width: 1024px) {
             .amfm-navbar {
@@ -693,13 +852,84 @@
                 <input type="range" data-amfm-slider min="0" max="24" value="0" step="1" aria-label="Curseur d'échéance temporelle" aria-valuetext="H+00">
             </div>
         </footer>
+
+        <!-- Modal de Personnalisation GIF -->
+        <div class="amfm-modal-overlay" data-amfm-gif-modal hidden>
+            <div class="amfm-modal-box" role="dialog" aria-modal="true" aria-labelledby="amfm-gif-title">
+                <div class="amfm-modal-header">
+                    <div class="amfm-modal-title" id="amfm-gif-title">
+                        <i class="fa-solid fa-film"></i> Exporter l'Animation GIF
+                    </div>
+                    <button type="button" class="amfm-modal-close" data-amfm-gif-close aria-label="Fermer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="amfm-form-group">
+                    <label class="amfm-form-label">Plage d'échéances à inclure</label>
+                    <div class="amfm-radio-group">
+                        <label class="amfm-radio-card">
+                            <input type="radio" name="gif-range" value="all" checked>
+                            <span><strong>Tout le run</strong> (H+01 → H+51)</span>
+                        </label>
+                        <label class="amfm-radio-card">
+                            <input type="radio" name="gif-range" value="24h">
+                            <span><strong>Prochaines 24h</strong> (H+01 → H+24)</span>
+                        </label>
+                        <label class="amfm-radio-card">
+                            <input type="radio" name="gif-range" value="48h">
+                            <span><strong>Prochaines 48h</strong> (H+01 → H+48)</span>
+                        </label>
+                        <label class="amfm-radio-card">
+                            <input type="radio" name="gif-range" value="custom">
+                            <span><strong>Personnalisé</strong></span>
+                        </label>
+                        <div class="amfm-range-custom" data-amfm-gif-custom-range style="display:none;">
+                            <span>De :</span>
+                            <select class="amfm-select-mini" data-amfm-gif-start aria-label="Échéance de début"></select>
+                            <span>À :</span>
+                            <select class="amfm-select-mini" data-amfm-gif-end aria-label="Échéance de fin"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="amfm-form-group">
+                    <label class="amfm-form-label">Vitesse de lecture</label>
+                    <div style="display:flex; gap:8px;">
+                        <label class="amfm-radio-card" style="flex:1;">
+                            <input type="radio" name="gif-speed" value="500"> <span>0.5s</span>
+                        </label>
+                        <label class="amfm-radio-card" style="flex:1;">
+                            <input type="radio" name="gif-speed" value="1000" checked> <span>1s (Défaut)</span>
+                        </label>
+                        <label class="amfm-radio-card" style="flex:1;">
+                            <input type="radio" name="gif-speed" value="1500"> <span>1.5s</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="amfm-progress-container" data-amfm-gif-progress-box style="display:none;">
+                    <div class="amfm-progress-text">
+                        <span data-amfm-gif-status-text><i class="fa-solid fa-hourglass-half fa-spin"></i> Génération en cours…</span>
+                        <span data-amfm-gif-percent>0%</span>
+                    </div>
+                    <div class="amfm-progress-bar-bg">
+                        <div class="amfm-progress-bar-fill" data-amfm-gif-bar></div>
+                    </div>
+                </div>
+
+                <div class="amfm-modal-actions">
+                    <button type="button" class="amfm-btn-generate-gif" data-amfm-gif-submit>
+                        <i class="fa-solid fa-download"></i> Lancer la Génération GIF
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts : palettes (source unique) puis moteur cartographique -->
     <script src="js/palettes.js?v=1.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="js/regions.js?v=1.0.0"></script>
-    <script src="js/arome-map.js?v=5.5.5"></script>
+    <script src="js/arome-map.js?v=5.5.6"></script>
 </body>
 </html>
 

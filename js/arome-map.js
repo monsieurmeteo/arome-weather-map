@@ -1247,36 +1247,142 @@
             }, mimeType, format === 'jpeg' ? 0.92 : undefined);
         }
 
-        function captureGif() {
+        // ────────────────────────────────────────────────────────────────────
+        // EXPORT GIF ANIMÉ PROFESSIONNEL (avec modal & sélection d'échéances)
+        // ────────────────────────────────────────────────────────────────────
+        var gifModal = app.querySelector('[data-amfm-gif-modal]');
+        var gifModalClose = app.querySelector('[data-amfm-gif-close]');
+        var gifCustomRangeDiv = app.querySelector('[data-amfm-gif-custom-range]');
+        var gifStartSelect = app.querySelector('[data-amfm-gif-start]');
+        var gifEndSelect = app.querySelector('[data-amfm-gif-end]');
+        var gifProgressBox = app.querySelector('[data-amfm-gif-progress-box]');
+        var gifPercentText = app.querySelector('[data-amfm-gif-percent]');
+        var gifProgressBar = app.querySelector('[data-amfm-gif-bar]');
+        var gifStatusText = app.querySelector('[data-amfm-gif-status-text]');
+        var gifSubmitBtn = app.querySelector('[data-amfm-gif-submit]');
+
+        function openGifModal() {
             var steps = availableSteps();
             if (!steps.length) {
-                setToolHint('Aucune carte disponible pour générer le GIF.');
+                showError('Aucune échéance disponible pour le GIF.');
                 return;
             }
+            if (gifModal) {
+                // Remplir les sélecteurs de plage personnalisée
+                if (gifStartSelect && gifEndSelect) {
+                    gifStartSelect.innerHTML = '';
+                    gifEndSelect.innerHTML = '';
+                    steps.forEach(function (step, i) {
+                        var opt1 = document.createElement('option');
+                        opt1.value = String(i);
+                        opt1.textContent = 'H+' + String(step.lead_hour).padStart(2, '0');
+                        gifStartSelect.appendChild(opt1);
+
+                        var opt2 = document.createElement('option');
+                        opt2.value = String(i);
+                        opt2.textContent = 'H+' + String(step.lead_hour).padStart(2, '0');
+                        if (i === steps.length - 1) opt2.selected = true;
+                        gifEndSelect.appendChild(opt2);
+                    });
+                }
+                if (gifProgressBox) gifProgressBox.style.display = 'none';
+                if (gifSubmitBtn) {
+                    gifSubmitBtn.disabled = false;
+                    gifSubmitBtn.innerHTML = '<i class="fa-solid fa-download"></i> Lancer la Génération GIF';
+                }
+                gifModal.hidden = false;
+            } else {
+                startGifGeneration();
+            }
+        }
+
+        if (gifModalClose) {
+            gifModalClose.addEventListener('click', function () {
+                if (gifModal) gifModal.hidden = true;
+            });
+        }
+        if (gifModal) {
+            gifModal.addEventListener('click', function (e) {
+                if (e.target === gifModal) gifModal.hidden = true;
+            });
+            var rangeRadios = gifModal.querySelectorAll('input[name="gif-range"]');
+            rangeRadios.forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    if (gifCustomRangeDiv) {
+                        gifCustomRangeDiv.style.display = (radio.value === 'custom') ? 'flex' : 'none';
+                    }
+                });
+            });
+        }
+        if (gifSubmitBtn) {
+            gifSubmitBtn.addEventListener('click', function () {
+                startGifGeneration();
+            });
+        }
+
+        function startGifGeneration() {
+            var allSteps = availableSteps();
+            if (!allSteps.length) return;
             if (typeof window.GIF !== 'function') {
-                setToolHint('Encodage GIF indisponible (bibliothèque gif.js non chargée — vérifiez le CDN).');
+                showError('Bibliothèque gif.js non chargée.');
                 return;
             }
-            var gw = 720;
-            var gh = Math.round(gw * 1640 / 2200);
-            var layer = manifest && manifest.layers && manifest.layers[currentLayer];
+
+            // Déterminer la plage d'échéances choisie
+            var selectedRange = 'all';
+            var checkedRange = gifModal ? gifModal.querySelector('input[name="gif-range"]:checked') : null;
+            if (checkedRange) selectedRange = checkedRange.value;
+
+            var filteredSteps = allSteps;
+            if (selectedRange === '24h') {
+                filteredSteps = allSteps.filter(function (s) { return Number(s.lead_hour) <= 24; });
+            } else if (selectedRange === '48h') {
+                filteredSteps = allSteps.filter(function (s) { return Number(s.lead_hour) <= 48; });
+            } else if (selectedRange === 'custom') {
+                var startIdx = gifStartSelect ? parseInt(gifStartSelect.value, 10) : 0;
+                var endIdx = gifEndSelect ? parseInt(gifEndSelect.value, 10) : allSteps.length - 1;
+                if (startIdx > endIdx) { var tmp = startIdx; startIdx = endIdx; endIdx = tmp; }
+                filteredSteps = allSteps.slice(startIdx, endIdx + 1);
+            }
+            if (!filteredSteps.length) filteredSteps = allSteps;
+
+            // Déterminer la vitesse
+            var frameDelay = 1000;
+            var checkedSpeed = gifModal ? gifModal.querySelector('input[name="gif-speed"]:checked') : null;
+            if (checkedSpeed) frameDelay = parseInt(checkedSpeed.value, 10) || 1000;
+
+            // Interface de progression
+            if (gifProgressBox) gifProgressBox.style.display = 'block';
+            if (gifSubmitBtn) {
+                gifSubmitBtn.disabled = true;
+                gifSubmitBtn.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> Génération en cours…';
+            }
+            if (captureGifButton) {
+                captureGifButton.classList.add('is-loading');
+                captureGifButton.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>0%</span>';
+            }
+
+            // Calcul du CADRAGE EXACT sans bandes noires
+            var gw = 760;
+            var gh;
+            var hScale, vScale, offX, offY;
             var vw = viewport.clientWidth;
             var vh = viewport.clientHeight;
-            var hScale, vScale, offX, offY;
+            var layer = manifest && manifest.layers && manifest.layers[currentLayer];
+
             if (transform.scale <= 1.15) {
                 var exportBBox = computeVisibleBBox();
                 if (exportBBox) {
-                    var pad = 0.045;
+                    var pad = 0.035;
                     var ebw = (exportBBox.x1 - exportBBox.x0) * (1 + 2 * pad);
                     var ebh = (exportBBox.y1 - exportBBox.y0) * (1 + 2 * pad);
-                    var mapAspect = 2200.0 / 1640.0;
-                    if (ebw / ebh > mapAspect) { ebh = ebw / mapAspect; }
-                    else { ebw = ebh * mapAspect; }
+                    gh = Math.round(gw * ebh / ebw);
                     hScale = gw / ebw;
-                    vScale = hScale;
+                    vScale = gh / ebh;
                     offX = gw / 2 - ((exportBBox.x0 + exportBBox.x1) / 2) * hScale;
                     offY = gh / 2 - ((exportBBox.y0 + exportBBox.y1) / 2) * vScale;
                 } else {
+                    gh = Math.round(gw * 1640.0 / 2200.0);
                     hScale = gw / 2200.0;
                     vScale = gh / 1640.0;
                     offX = 0;
@@ -1289,15 +1395,13 @@
                 var u1 = (vw - viewRect.x) / viewRect.w;
                 var v0 = (0 - viewRect.y) / viewRect.h;
                 var v1 = (vh - viewRect.y) / viewRect.h;
-                var vueW = u1 - u0;
-                var vueH = v1 - v0;
-                var k = Math.max(gw / (vueW * 2200.0), gh / (vueH * 1640.0));
-                hScale = k;
-                vScale = k;
-                var uc = (u0 + u1) / 2;
-                var vc = (v0 + v1) / 2;
-                offX = gw / 2 - uc * 2200.0 * k;
-                offY = gh / 2 - vc * 1640.0 * k;
+                var vueW = Math.max(0.01, u1 - u0);
+                var vueH = Math.max(0.01, v1 - v0);
+                gh = Math.round(gw * (vueH * 1640.0) / (vueW * 2200.0));
+                hScale = gw / (vueW * 2200.0);
+                vScale = gh / (vueH * 1640.0);
+                offX = -u0 * 2200.0 * hScale;
+                offY = -v0 * 1640.0 * vScale;
             }
 
             // Priorité villes pour la région choisie
@@ -1344,7 +1448,7 @@
                 ctx.fillRect(0, 0, gw, gh);
                 ctx.save();
                 ctx.beginPath();
-                ctx.rect(offX, offY, 2200 * hScale, 1640 * vScale);
+                ctx.rect(0, 0, gw, gh);
                 ctx.clip();
                 if (fondImageElement && fondImageElement.complete && fondImageElement.naturalWidth) {
                     ctx.save();
@@ -1387,17 +1491,17 @@
                     });
                     ctx.restore();
                 }
-                ctx.restore(); // Fin du clip domaine
+                ctx.restore(); // Fin du clip
 
-                // 4. Logo Météo-Climat Pro (haut droit)
+                // 4. Logo Météo-Climat Pro (calé en haut à droite à l'intérieur du cadre)
                 var logoW = 95;
                 var logoH = 28;
                 if (logoImage && logoImage.complete && logoImage.naturalWidth) {
                     logoH = Math.round(logoW * logoImage.naturalHeight / logoImage.naturalWidth);
                     var lx = gw - 12 - logoW;
-                    var ly = 10;
+                    var ly = 12;
                     ctx.save();
-                    ctx.fillStyle = 'rgba(7, 11, 20, 0.78)';
+                    ctx.fillStyle = 'rgba(7, 11, 20, 0.82)';
                     ctx.beginPath();
                     if (typeof ctx.roundRect === 'function') {
                         ctx.roundRect(lx - 6, ly - 4, logoW + 12, logoH + 8, 6);
@@ -1409,7 +1513,7 @@
                     ctx.restore();
                 }
 
-                // 5. Cartouche Officiel (haut gauche)
+                // 5. Cartouche Officiel (calé en haut à gauche à l'intérieur du cadre)
                 var prettyLabel = layer ? layer.label : '';
                 var prettyUnit = layer && layer.unit ? layer.unit : '';
                 if (typeof window.getLayerPalette === 'function') {
@@ -1433,17 +1537,17 @@
                 var titleText = modelTitle + ' • ' + prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : '');
                 var dateText = dateStr + ' (H+' + String(leadHour).padStart(2, '0') + ')';
 
-                var bMargin = 10;
-                var bY = 10;
+                var bMargin = 12;
+                var bY = 12;
                 var bH = 50;
-                ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                 var tW = ctx.measureText(titleText).width;
-                ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                 var dW = ctx.measureText(dateText).width;
                 var bW = Math.min(gw - 120, Math.max(tW, dW) + 24);
 
                 ctx.save();
-                ctx.fillStyle = 'rgba(7, 11, 20, 0.90)';
+                ctx.fillStyle = 'rgba(7, 11, 20, 0.92)';
                 ctx.beginPath();
                 if (typeof ctx.roundRect === 'function') {
                     ctx.roundRect(bMargin, bY, bW, bH, 8);
@@ -1464,15 +1568,15 @@
                 ctx.fillText(dateText + ' — Météo-Climat Pro', bMargin + 10, bY + 39);
                 ctx.restore();
 
-                // 6. Légende colorimétrique (bas centre)
-                var legY = gh - 38;
-                var legW = 340;
-                var legH = 28;
+                // 6. Légende colorimétrique (calée en bas à l'intérieur du cadre)
+                var legW = Math.min(340, gw - 40);
+                var legH = 26;
+                var legY = gh - 34;
                 var legX = (gw - legW) / 2;
                 if (layer && typeof window.getLayerPalette === 'function' && typeof window.paletteTicks === 'function') {
                     try {
                         ctx.save();
-                        ctx.fillStyle = 'rgba(7, 11, 20, 0.90)';
+                        ctx.fillStyle = 'rgba(7, 11, 20, 0.92)';
                         ctx.beginPath();
                         if (typeof ctx.roundRect === 'function') {
                             ctx.roundRect(legX - 10, legY - 4, legW + 20, legH + 8, 8);
@@ -1493,10 +1597,10 @@
                             grad.addColorStop(pos, s.color);
                         });
                         ctx.fillStyle = grad;
-                        ctx.fillRect(legX, legY + 2, legW, 10);
+                        ctx.fillRect(legX, legY + 2, legW, 9);
                         ctx.strokeStyle = 'rgba(255,255,255,0.4)';
                         ctx.lineWidth = 1;
-                        ctx.strokeRect(legX, legY + 2, legW, 10);
+                        ctx.strokeRect(legX, legY + 2, legW, 9);
 
                         ctx.fillStyle = '#eaf1ff';
                         ctx.font = 'bold 9px sans-serif';
@@ -1504,7 +1608,7 @@
                         var ticks = window.paletteTicks(currentLayer);
                         ticks.forEach(function (tick, i) {
                             var tx = legX + (ticks.length > 1 ? i / (ticks.length - 1) : 0.5) * legW;
-                            ctx.fillText(String(tick), tx, legY + 22);
+                            ctx.fillText(String(tick), tx, legY + 20);
                         });
                         ctx.restore();
                     } catch (e) {}
@@ -1536,11 +1640,8 @@
                             ctx.lineWidth = 3;
 
                             var occupied = [];
-                            // Safe zone cartouche
                             occupied.push({ left: bMargin - 4, right: bMargin + bW + 4, top: bY - 4, bottom: bY + bH + 4 });
-                            // Safe zone logo
-                            occupied.push({ left: gw - 12 - logoW - 6, right: gw, top: 4, bottom: 10 + logoH + 6 });
-                            // Safe zone légende
+                            occupied.push({ left: gw - 12 - logoW - 6, right: gw, top: 4, bottom: 12 + logoH + 6 });
                             occupied.push({ left: legX - 12, right: legX + legW + 12, top: legY - 6, bottom: gh });
 
                             var orderedPlaces = places;
@@ -1592,12 +1693,12 @@
             }
 
             function next() {
-                if (index >= steps.length) {
-                    setToolHint('Génération du GIF… finalisation');
+                if (index >= filteredSteps.length) {
+                    if (gifStatusText) gifStatusText.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> Finalisation du fichier GIF…';
                     gif.render();
                     return;
                 }
-                var step = steps[index];
+                var step = filteredSteps[index];
                 var img = new Image();
                 img.crossOrigin = 'anonymous';
                 img.onload = function () {
@@ -1605,8 +1706,14 @@
                     canvas.width = gw;
                     canvas.height = gh;
                     drawFrame(canvas, img, step);
-                    gif.addFrame(canvas, { copy: true, delay: 1000 });
+                    gif.addFrame(canvas, { copy: true, delay: frameDelay });
                     index += 1;
+                    var pct = Math.round((index / filteredSteps.length) * 50);
+                    if (gifProgressBar) gifProgressBar.style.width = pct + '%';
+                    if (gifPercentText) gifPercentText.textContent = pct + '%';
+                    if (captureGifButton) {
+                        captureGifButton.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>' + pct + '%</span>';
+                    }
                     next();
                 };
                 img.onerror = function () {
@@ -1616,9 +1723,13 @@
                 img.src = versioned(step.files[currentLayer]);
             }
 
-            setToolHint('Génération du GIF…');
             gif.on('progress', function (p) {
-                setToolHint('Génération du GIF… ' + Math.round(p * 100) + ' %');
+                var pct = 50 + Math.round(p * 50);
+                if (gifProgressBar) gifProgressBar.style.width = pct + '%';
+                if (gifPercentText) gifPercentText.textContent = pct + '%';
+                if (captureGifButton) {
+                    captureGifButton.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>' + pct + '%</span>';
+                }
             });
             gif.on('finished', function (blob) {
                 var url = URL.createObjectURL(blob);
@@ -1632,10 +1743,20 @@
                 link.click();
                 document.body.removeChild(link);
                 window.setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-                setToolHint('');
+
+                if (gifModal) gifModal.hidden = true;
+                if (captureGifButton) {
+                    captureGifButton.classList.remove('is-loading');
+                    captureGifButton.innerHTML = '<i class="fa-solid fa-film"></i> <span>GIF</span>';
+                }
+                setToolHint('GIF généré avec succès !');
             });
             if (typeof gif.on === 'function') {
                 gif.on('abort', function () {
+                    if (captureGifButton) {
+                        captureGifButton.classList.remove('is-loading');
+                        captureGifButton.innerHTML = '<i class="fa-solid fa-film"></i> <span>GIF</span>';
+                    }
                     setToolHint('Génération du GIF interrompue.');
                 });
             }
@@ -3163,7 +3284,7 @@
             captureJpegButton.addEventListener('click', function () { captureImage('jpeg'); });
         }
         if (captureGifButton) {
-            captureGifButton.addEventListener('click', captureGif);
+            captureGifButton.addEventListener('click', openGifModal);
         }
         if (toggleCitiesButton) {
             toggleCitiesButton.addEventListener('click', function () {
