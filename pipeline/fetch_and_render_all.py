@@ -732,20 +732,24 @@ def _fetch_mf_tile(session, token, wms_url, wms_layer, style, time_str, ref_str,
               "width": str(WIDTH), "height": str(HEIGHT),
               "format": "image/png", "transparent": "TRUE",
               "time": time_str, "reference_time": ref_str}
-    try:
-        _mf_rate_wait()
-        r = session.get(wms_url, params=params, headers=headers, timeout=30, verify=False)
-        if r.status_code == 200 and len(r.content) > 1000:
-            img = Image.open(io.BytesIO(r.content)).convert("RGBA")
-            # Le WMS renvoie de l'EPSG:4326 (équirectangulaire) ; on le
-            # re-projette en Mercator pour correspondre au front-end.
-            img = _reproject_to_mercator(img)
-            img.save(dst, format="WEBP", quality=85, method=4)
-            return True
-        elif r.status_code != 200:
-            print("  [WMS] %s -> HTTP %d" % (wms_layer, r.status_code), flush=True)
-    except Exception as e:
-        print("  [WMS] %s -> erreur: %s" % (wms_layer, e), flush=True)
+    # Réessai jusqu'à 3 fois pour récupérer les erreurs 502/429 ponctuelles.
+    for attempt in range(3):
+        try:
+            _mf_rate_wait()
+            r = session.get(wms_url, params=params, headers=headers, timeout=30, verify=False)
+            if r.status_code == 200 and len(r.content) > 1000:
+                img = Image.open(io.BytesIO(r.content)).convert("RGBA")
+                # Le WMS renvoie de l'EPSG:4326 (équirectangulaire) ; on le
+                # re-projette en Mercator pour correspondre au front-end.
+                img = _reproject_to_mercator(img)
+                img.save(dst, format="WEBP", quality=85, method=4)
+                return True
+            elif r.status_code != 200:
+                print("  [WMS] %s -> HTTP %d (essai %d/3)" % (wms_layer, r.status_code, attempt + 1), flush=True)
+        except Exception as e:
+            print("  [WMS] %s -> erreur (essai %d/3): %s" % (wms_layer, attempt + 1, e), flush=True)
+        if attempt < 2:
+            time.sleep(1.2)
     return False
 
 def _fetch_arome_tile(session, token, wms_layer, style, time_str, ref_str, dst):
