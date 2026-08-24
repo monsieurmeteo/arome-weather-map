@@ -1393,14 +1393,17 @@
                 var coords = {
                     france: { scale: 1, u: 0.5, v: 0.5 },
                     hdf: { scale: 2.8, u: 0.53, v: 0.28 },
-                    idf: { scale: 3.8, u: 0.52, v: 0.38 },
-                    ara: { scale: 2.6, u: 0.64, v: 0.58 },
-                    paca: { scale: 3.0, u: 0.68, v: 0.72 },
-                    occitanie: { scale: 2.6, u: 0.48, v: 0.70 },
-                    naq: { scale: 2.4, u: 0.38, v: 0.58 },
-                    bretagne: { scale: 3.0, u: 0.28, v: 0.38 },
                     normandie: { scale: 3.0, u: 0.42, v: 0.32 },
+                    idf: { scale: 3.8, u: 0.52, v: 0.38 },
                     grandest: { scale: 2.6, u: 0.68, v: 0.35 },
+                    bretagne: { scale: 3.0, u: 0.28, v: 0.38 },
+                    pdl: { scale: 2.6, u: 0.38, v: 0.39 },
+                    cvl: { scale: 2.8, u: 0.50, v: 0.34 },
+                    bfc: { scale: 2.6, u: 0.61, v: 0.38 },
+                    naq: { scale: 2.4, u: 0.38, v: 0.58 },
+                    ara: { scale: 2.6, u: 0.64, v: 0.58 },
+                    occitanie: { scale: 2.6, u: 0.48, v: 0.70 },
+                    paca: { scale: 3.0, u: 0.68, v: 0.72 },
                     corse: { scale: 4.2, u: 0.78, v: 0.82 }
                 };
                 var target = coords[val] || coords.france;
