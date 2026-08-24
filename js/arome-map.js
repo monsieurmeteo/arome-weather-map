@@ -1130,7 +1130,16 @@
             }
         });
 
-        var regionSelect = app.querySelector('#select-region');
+        function focusOnPoint(u, v, scale) {
+            var w = viewport.clientWidth;
+            var h = viewport.clientHeight;
+            transform.scale = clamp(scale || 1, 1, maxScale);
+            transform.x = w * transform.scale * (0.5 - u);
+            transform.y = h * transform.scale * (0.5 - v);
+            applyTransform();
+        }
+
+        var regionSelect = app.querySelector('[data-amfm-region-select]');
         if (regionSelect) {
             regionSelect.addEventListener('change', function (e) {
                 var val = e.target.value;
@@ -1148,9 +1157,7 @@
                     corse: { scale: 4.2, u: 0.78, v: 0.82 }
                 };
                 var target = coords[val] || coords.france;
-                if (typeof focusOnPoint === 'function') {
-                    focusOnPoint(target.u, target.v, target.scale);
-                }
+                focusOnPoint(target.u, target.v, target.scale);
             });
         }
 
@@ -1171,8 +1178,9 @@
                 ecmwf: { path: 'output/ecmwf', name: 'ECMWF IFS (9 km)', badge: '9 KM' }
             };
             var target = modelMap[modelKey] || modelMap.arome;
+            var prevBaseUrl = baseUrl;
             baseUrl = target.path;
-            
+
             var titleSpan = document.querySelector('.amfm-title span');
             if (titleSpan) {
                 titleSpan.textContent = 'MODÈLE ' + target.name.toUpperCase();
@@ -1186,18 +1194,25 @@
                 .then(function(payload) {
                     if (payload && payload.layers && Array.isArray(payload.steps)) {
                         manifest = payload;
+                        currentStep = 0;
                         if (!manifest.layers[currentLayer]) {
                             currentLayer = Object.keys(manifest.layers)[0] || 'temperature';
                             var dSel = document.getElementById('direct-layer-select');
                             if (dSel) dSel.value = currentLayer;
                         }
                         buildLegend();
-                        renderStep(currentStep);
+                        renderStep(0);
                     }
                 })
                 .catch(function(err) {
-                    console.warn('Erreur chargement modèle:', err);
-                    renderStep(currentStep);
+                    // Revert — don't render AROME images with a broken baseUrl
+                    baseUrl = prevBaseUrl;
+                    if (titleSpan) titleSpan.textContent = 'MODÈLE AROME HD';
+                    if (badge) badge.textContent = '1,3 KM';
+                    var modelSel = document.getElementById('select-model');
+                    if (modelSel) modelSel.value = 'arome';
+                    showError('Modèle ' + target.name + ' non encore disponible — génération en cours.');
+                    window.setTimeout(function() { clearError(); }, 4000);
                 });
         }
 
@@ -1208,29 +1223,10 @@
             });
         }
 
-        var regionSelect = document.getElementById('select-region');
-        if (regionSelect) {
-            regionSelect.addEventListener('change', function(e) {
-                var val = e.target.value;
-                var coords = {
-                    france: { scale: 1, u: 0.5, v: 0.5 },
-                    hdf: { scale: 2.8, u: 0.53, v: 0.28 },
-                    idf: { scale: 3.8, u: 0.52, v: 0.38 },
-                    ara: { scale: 2.6, u: 0.64, v: 0.58 },
-                    paca: { scale: 3.0, u: 0.68, v: 0.72 },
-                    occitanie: { scale: 2.6, u: 0.48, v: 0.70 },
-                    naq: { scale: 2.4, u: 0.38, v: 0.58 },
-                    bretagne: { scale: 3.0, u: 0.28, v: 0.38 },
-                    normandie: { scale: 3.0, u: 0.42, v: 0.32 },
-                    grandest: { scale: 2.6, u: 0.68, v: 0.35 },
-                    corse: { scale: 4.2, u: 0.78, v: 0.82 }
-                };
-                var target = coords[val] || coords.france;
-                focusLocation(target);
-            });
-        }
-function setLayer(layer) {
-            if (!manifest.layers[layer]) {
+        // ponytail: duplicate regionSelect removed (handled above via focusOnPoint)
+
+        function setLayer(layer) {
+            if (!manifest || !manifest.layers[layer]) {
                 return;
             }
             currentLayer = layer;

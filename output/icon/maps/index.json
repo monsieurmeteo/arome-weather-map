@@ -1,842 +1,95 @@
 {
   "schema_version": 6,
   "status": "ok",
-  "module_version": "1.0.0",
-  "generated_at": "2026-08-23T19:11:24.562364Z",
-  "run_time": "2026-08-23T15:00:00Z",
-  "projection": "EPSG:3857",
+  "model_name": "ICON-EU (7 km)",
+  "provider": "DWD Allemagne",
+  "resolution": "7 km (0.0625°)",
+  "generated_at": "2026-08-24T09:46:46.848401+00:00",
+  "run_time": "2026-08-24T06:00:00+00:00",
   "bounds": {
     "south": 29.5,
     "west": -23.5,
     "north": 65.0,
     "east": 45.0
   },
-  "width": 2200,
-  "height": 1640,
-  "background": "maps/fond.webp",
   "overlay": "maps/frontieres.svg",
+  "places": "maps/communes.json",
   "layers": {
     "temperature": {
       "label": "Température à 2 m",
       "unit": "°C",
-      "group": "Températures",
-      "decimals": 1,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": -25,
-          "color": "#482173"
-        },
-        {
-          "value": -15,
-          "color": "#303fa5"
-        },
-        {
-          "value": -5,
-          "color": "#3478c5"
-        },
-        {
-          "value": 0,
-          "color": "#55b7dd"
-        },
-        {
-          "value": 5,
-          "color": "#53c6a8"
-        },
-        {
-          "value": 10,
-          "color": "#70cf66"
-        },
-        {
-          "value": 15,
-          "color": "#cbd83f"
-        },
-        {
-          "value": 20,
-          "color": "#f2d43d"
-        },
-        {
-          "value": 25,
-          "color": "#f2a331"
-        },
-        {
-          "value": 30,
-          "color": "#ea652b"
-        },
-        {
-          "value": 35,
-          "color": "#d93435"
-        },
-        {
-          "value": 40,
-          "color": "#a71f57"
-        },
-        {
-          "value": 45,
-          "color": "#5b1037"
-        }
-      ]
+      "decimals": 1
     },
     "temperature_ressentie": {
-      "label": "Refroidissement éolien",
+      "label": "Température ressentie",
       "unit": "°C",
-      "group": "Températures",
-      "decimals": 1,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": -35,
-          "color": "#27145d"
-        },
-        {
-          "value": -25,
-          "color": "#482173"
-        },
-        {
-          "value": -15,
-          "color": "#303fa5"
-        },
-        {
-          "value": -5,
-          "color": "#3478c5"
-        },
-        {
-          "value": 0,
-          "color": "#55b7dd"
-        },
-        {
-          "value": 5,
-          "color": "#53c6a8"
-        },
-        {
-          "value": 10,
-          "color": "#70cf66"
-        },
-        {
-          "value": 15,
-          "color": "#cbd83f"
-        },
-        {
-          "value": 20,
-          "color": "#f2d43d"
-        }
-      ]
+      "decimals": 1
     },
     "point_rosee": {
-      "label": "Point de rosée à 2 m",
+      "label": "Point de rosée",
       "unit": "°C",
-      "group": "Températures",
-      "decimals": 1,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": -25,
-          "color": "#57336f"
-        },
-        {
-          "value": -15,
-          "color": "#3855a3"
-        },
-        {
-          "value": -5,
-          "color": "#398bca"
-        },
-        {
-          "value": 0,
-          "color": "#56b7d8"
-        },
-        {
-          "value": 5,
-          "color": "#58c8a2"
-        },
-        {
-          "value": 10,
-          "color": "#79cf68"
-        },
-        {
-          "value": 15,
-          "color": "#d5d64a"
-        },
-        {
-          "value": 20,
-          "color": "#f0a83b"
-        },
-        {
-          "value": 25,
-          "color": "#df5d3c"
-        },
-        {
-          "value": 30,
-          "color": "#9f2955"
-        }
-      ]
+      "decimals": 1
     },
     "humidex": {
-      "label": "Humidex",
+      "label": "Indice Humidex",
       "unit": "",
-      "group": "Températures",
-      "decimals": 1,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": -10,
-          "color": "#3478c5"
-        },
-        {
-          "value": 0,
-          "color": "#55b7dd"
-        },
-        {
-          "value": 10,
-          "color": "#53c6a8"
-        },
-        {
-          "value": 20,
-          "color": "#b9d84c"
-        },
-        {
-          "value": 25,
-          "color": "#f2d43d"
-        },
-        {
-          "value": 30,
-          "color": "#f2a331"
-        },
-        {
-          "value": 35,
-          "color": "#ea652b"
-        },
-        {
-          "value": 40,
-          "color": "#d93435"
-        },
-        {
-          "value": 45,
-          "color": "#a71f57"
-        },
-        {
-          "value": 50,
-          "color": "#5b1037"
-        }
-      ]
+      "decimals": 1
     },
     "pluie_1h": {
-      "label": "Précipitations sur 1 h",
+      "label": "Pluie horaire",
       "unit": "mm",
-      "group": "Précipitations",
-      "decimals": 1,
-      "transparent_below": 0.03,
-      "discrete": true,
-      "stops": [
-        {
-          "value": 0.1,
-          "color": "#f5f5f7"
-        },
-        {
-          "value": 1,
-          "color": "#c9e6ff"
-        },
-        {
-          "value": 2,
-          "color": "#7fbbff"
-        },
-        {
-          "value": 3,
-          "color": "#438fff"
-        },
-        {
-          "value": 5,
-          "color": "#1bd0ef"
-        },
-        {
-          "value": 7,
-          "color": "#00b8bd"
-        },
-        {
-          "value": 10,
-          "color": "#00ca76"
-        },
-        {
-          "value": 15,
-          "color": "#32e300"
-        },
-        {
-          "value": 20,
-          "color": "#86ed00"
-        },
-        {
-          "value": 25,
-          "color": "#d2ef00"
-        },
-        {
-          "value": 30,
-          "color": "#fff000"
-        },
-        {
-          "value": 40,
-          "color": "#ffd000"
-        },
-        {
-          "value": 50,
-          "color": "#ff9900"
-        },
-        {
-          "value": 60,
-          "color": "#ff6500"
-        },
-        {
-          "value": 70,
-          "color": "#ff2e00"
-        },
-        {
-          "value": 80,
-          "color": "#ef0054"
-        },
-        {
-          "value": 90,
-          "color": "#d000a7"
-        },
-        {
-          "value": 100,
-          "color": "#a000e8"
-        }
-      ]
+      "decimals": 1
     },
     "pluie_cumul": {
-      "label": "Précipitations totales",
+      "label": "Pluie cumulée",
       "unit": "mm",
-      "group": "Précipitations",
-      "decimals": 1,
-      "transparent_below": 0.03,
-      "discrete": true,
-      "stops": [
-        {
-          "value": 0.1,
-          "color": "#f5f5f7"
-        },
-        {
-          "value": 1,
-          "color": "#c9e6ff"
-        },
-        {
-          "value": 2,
-          "color": "#7fbbff"
-        },
-        {
-          "value": 3,
-          "color": "#438fff"
-        },
-        {
-          "value": 5,
-          "color": "#1bd0ef"
-        },
-        {
-          "value": 7,
-          "color": "#00b8bd"
-        },
-        {
-          "value": 10,
-          "color": "#00ca76"
-        },
-        {
-          "value": 15,
-          "color": "#32e300"
-        },
-        {
-          "value": 20,
-          "color": "#86ed00"
-        },
-        {
-          "value": 25,
-          "color": "#d2ef00"
-        },
-        {
-          "value": 30,
-          "color": "#fff000"
-        },
-        {
-          "value": 40,
-          "color": "#ffd000"
-        },
-        {
-          "value": 50,
-          "color": "#ff9900"
-        },
-        {
-          "value": 60,
-          "color": "#ff6500"
-        },
-        {
-          "value": 70,
-          "color": "#ff2e00"
-        },
-        {
-          "value": 80,
-          "color": "#ef0054"
-        },
-        {
-          "value": 90,
-          "color": "#d000a7"
-        },
-        {
-          "value": 100,
-          "color": "#a000e8"
-        },
-        {
-          "value": 125,
-          "color": "#6900dc"
-        },
-        {
-          "value": 150,
-          "color": "#4b00b4"
-        },
-        {
-          "value": 175,
-          "color": "#291078"
-        },
-        {
-          "value": 200,
-          "color": "#661070"
-        },
-        {
-          "value": 250,
-          "color": "#a548bd"
-        },
-        {
-          "value": 300,
-          "color": "#d487e1"
-        },
-        {
-          "value": 400,
-          "color": "#f0c8f2"
-        },
-        {
-          "value": 500,
-          "color": "#ffffff"
-        }
-      ]
+      "decimals": 1
     },
     "vent": {
-      "label": "Vent moyen à 10 m",
+      "label": "Vent moyen 10 m",
       "unit": "km/h",
-      "group": "Vent",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#eef7ea"
-        },
-        {
-          "value": 10,
-          "color": "#a7db8d"
-        },
-        {
-          "value": 20,
-          "color": "#5cc27d"
-        },
-        {
-          "value": 30,
-          "color": "#38aaa5"
-        },
-        {
-          "value": 40,
-          "color": "#347cc3"
-        },
-        {
-          "value": 50,
-          "color": "#6558b8"
-        },
-        {
-          "value": 60,
-          "color": "#a43e94"
-        },
-        {
-          "value": 80,
-          "color": "#d63c57"
-        },
-        {
-          "value": 100,
-          "color": "#7e1736"
-        }
-      ]
+      "decimals": 1
     },
     "rafales": {
-      "label": "Rafales à 10 m",
+      "label": "Rafales maximales",
       "unit": "km/h",
-      "group": "Vent",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#edf7e8"
-        },
-        {
-          "value": 20,
-          "color": "#a9d77d"
-        },
-        {
-          "value": 40,
-          "color": "#f0cf46"
-        },
-        {
-          "value": 60,
-          "color": "#ef8b2c"
-        },
-        {
-          "value": 80,
-          "color": "#db3d3d"
-        },
-        {
-          "value": 100,
-          "color": "#9e235d"
-        },
-        {
-          "value": 130,
-          "color": "#4d1647"
-        },
-        {
-          "value": 160,
-          "color": "#25152e"
-        }
-      ]
+      "decimals": 1
     },
     "mucape": {
-      "label": "MUCAPE instantanée",
+      "label": "MUCAPE (instabilité)",
       "unit": "J/kg",
-      "group": "Instabilité",
-      "decimals": 0,
-      "transparent_below": 25.0,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#f3f5f8"
-        },
-        {
-          "value": 100,
-          "color": "#d8ebff"
-        },
-        {
-          "value": 300,
-          "color": "#91c8ff"
-        },
-        {
-          "value": 500,
-          "color": "#41a8df"
-        },
-        {
-          "value": 800,
-          "color": "#31c878"
-        },
-        {
-          "value": 1200,
-          "color": "#d5e52f"
-        },
-        {
-          "value": 1800,
-          "color": "#ffc62d"
-        },
-        {
-          "value": 2500,
-          "color": "#ff7a22"
-        },
-        {
-          "value": 3500,
-          "color": "#e83028"
-        },
-        {
-          "value": 5000,
-          "color": "#8c1d74"
-        }
-      ]
+      "decimals": 1
     },
     "neige": {
-      "label": "Neige sur 1 h (équivalent eau)",
-      "unit": "mm",
-      "group": "Précipitations",
-      "decimals": 1,
-      "transparent_below": 0.03,
-      "discrete": true,
-      "stops": [
-        {
-          "value": 0.1,
-          "color": "#f5f5f7"
-        },
-        {
-          "value": 1,
-          "color": "#c9e6ff"
-        },
-        {
-          "value": 2,
-          "color": "#7fbbff"
-        },
-        {
-          "value": 3,
-          "color": "#438fff"
-        },
-        {
-          "value": 5,
-          "color": "#1bd0ef"
-        },
-        {
-          "value": 7,
-          "color": "#00b8bd"
-        },
-        {
-          "value": 10,
-          "color": "#00ca76"
-        },
-        {
-          "value": 15,
-          "color": "#32e300"
-        },
-        {
-          "value": 20,
-          "color": "#86ed00"
-        },
-        {
-          "value": 25,
-          "color": "#d2ef00"
-        },
-        {
-          "value": 30,
-          "color": "#fff000"
-        },
-        {
-          "value": 40,
-          "color": "#ffd000"
-        },
-        {
-          "value": 50,
-          "color": "#ff9900"
-        },
-        {
-          "value": 60,
-          "color": "#ff6500"
-        },
-        {
-          "value": 70,
-          "color": "#ff2e00"
-        },
-        {
-          "value": 80,
-          "color": "#ef0054"
-        },
-        {
-          "value": 90,
-          "color": "#d000a7"
-        },
-        {
-          "value": 100,
-          "color": "#a000e8"
-        }
-      ]
+      "label": "Neige fraîche",
+      "unit": "cm",
+      "decimals": 1
     },
     "neige_au_sol": {
-      "label": "Cumul de neige fraîche (estimé)",
+      "label": "Neige au sol",
       "unit": "cm",
-      "group": "Précipitations",
-      "decimals": 1,
-      "transparent_below": 0.05,
-      "discrete": true,
-      "stops": [
-        {
-          "value": 0.1,
-          "color": "#f4f7fb"
-        },
-        {
-          "value": 1,
-          "color": "#d7efff"
-        },
-        {
-          "value": 2,
-          "color": "#a9d9ff"
-        },
-        {
-          "value": 5,
-          "color": "#70b8ef"
-        },
-        {
-          "value": 10,
-          "color": "#3a91d5"
-        },
-        {
-          "value": 20,
-          "color": "#536bc1"
-        },
-        {
-          "value": 30,
-          "color": "#7048ac"
-        },
-        {
-          "value": 50,
-          "color": "#963b92"
-        },
-        {
-          "value": 75,
-          "color": "#c65382"
-        },
-        {
-          "value": 100,
-          "color": "#f0b5cf"
-        }
-      ]
+      "decimals": 1
     },
     "pression": {
-      "label": "Pression au niveau de la mer (estimée)",
+      "label": "Pression réduite mer",
       "unit": "hPa",
-      "group": "Pression et géopotentiel",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 960,
-          "color": "#562a7c"
-        },
-        {
-          "value": 975,
-          "color": "#315ab4"
-        },
-        {
-          "value": 990,
-          "color": "#2f98c5"
-        },
-        {
-          "value": 1000,
-          "color": "#48b983"
-        },
-        {
-          "value": 1010,
-          "color": "#c6d64f"
-        },
-        {
-          "value": 1020,
-          "color": "#f0c646"
-        },
-        {
-          "value": 1030,
-          "color": "#e57a34"
-        },
-        {
-          "value": 1045,
-          "color": "#b52f43"
-        }
-      ]
+      "decimals": 1
     },
     "humidite": {
-      "label": "Humidité relative à 2 m",
+      "label": "Humidité relative 2 m",
       "unit": "%",
-      "group": "Nuages et humidité",
-      "decimals": 0,
-      "transparent_below": null,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#9a5429"
-        },
-        {
-          "value": 20,
-          "color": "#d19a52"
-        },
-        {
-          "value": 40,
-          "color": "#e3d16b"
-        },
-        {
-          "value": 60,
-          "color": "#83ca82"
-        },
-        {
-          "value": 80,
-          "color": "#48a6b6"
-        },
-        {
-          "value": 100,
-          "color": "#28569f"
-        }
-      ]
+      "decimals": 1
     },
     "reflectivite": {
-      "label": "Réflectivité radar maximale",
+      "label": "Réflectivité radar",
       "unit": "dBZ",
-      "group": "Instabilité",
-      "decimals": 0,
-      "transparent_below": 5.0,
-      "discrete": false,
-      "stops": [
-        {
-          "value": 0,
-          "color": "#f5f5f7"
-        },
-        {
-          "value": 5,
-          "color": "#c9e6ff"
-        },
-        {
-          "value": 10,
-          "color": "#7fbbff"
-        },
-        {
-          "value": 15,
-          "color": "#25cbe0"
-        },
-        {
-          "value": 20,
-          "color": "#00bd75"
-        },
-        {
-          "value": 25,
-          "color": "#5be000"
-        },
-        {
-          "value": 30,
-          "color": "#d5eb00"
-        },
-        {
-          "value": 35,
-          "color": "#ffe500"
-        },
-        {
-          "value": 40,
-          "color": "#ffae00"
-        },
-        {
-          "value": 45,
-          "color": "#ff6500"
-        },
-        {
-          "value": 50,
-          "color": "#f32020"
-        },
-        {
-          "value": 55,
-          "color": "#d00076"
-        },
-        {
-          "value": 60,
-          "color": "#9300c6"
-        },
-        {
-          "value": 70,
-          "color": "#ffffff"
-        }
-      ]
+      "decimals": 1
     }
   },
   "steps": [
     {
       "lead_hour": 0,
-      "valid_time": "2026-08-23T15:00:00Z",
+      "valid_time": "2026-08-24T06:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/000.webp",
         "temperature_ressentie": "maps/temperature_ressentie/000.webp",
@@ -856,7 +109,7 @@
     },
     {
       "lead_hour": 1,
-      "valid_time": "2026-08-23T16:00:00Z",
+      "valid_time": "2026-08-24T07:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/001.webp",
         "temperature_ressentie": "maps/temperature_ressentie/001.webp",
@@ -876,7 +129,7 @@
     },
     {
       "lead_hour": 2,
-      "valid_time": "2026-08-23T17:00:00Z",
+      "valid_time": "2026-08-24T08:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/002.webp",
         "temperature_ressentie": "maps/temperature_ressentie/002.webp",
@@ -896,7 +149,7 @@
     },
     {
       "lead_hour": 3,
-      "valid_time": "2026-08-23T18:00:00Z",
+      "valid_time": "2026-08-24T09:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/003.webp",
         "temperature_ressentie": "maps/temperature_ressentie/003.webp",
@@ -916,7 +169,7 @@
     },
     {
       "lead_hour": 4,
-      "valid_time": "2026-08-23T19:00:00Z",
+      "valid_time": "2026-08-24T10:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/004.webp",
         "temperature_ressentie": "maps/temperature_ressentie/004.webp",
@@ -936,7 +189,7 @@
     },
     {
       "lead_hour": 5,
-      "valid_time": "2026-08-23T20:00:00Z",
+      "valid_time": "2026-08-24T11:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/005.webp",
         "temperature_ressentie": "maps/temperature_ressentie/005.webp",
@@ -956,7 +209,7 @@
     },
     {
       "lead_hour": 6,
-      "valid_time": "2026-08-23T21:00:00Z",
+      "valid_time": "2026-08-24T12:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/006.webp",
         "temperature_ressentie": "maps/temperature_ressentie/006.webp",
@@ -976,7 +229,7 @@
     },
     {
       "lead_hour": 7,
-      "valid_time": "2026-08-23T22:00:00Z",
+      "valid_time": "2026-08-24T13:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/007.webp",
         "temperature_ressentie": "maps/temperature_ressentie/007.webp",
@@ -996,7 +249,7 @@
     },
     {
       "lead_hour": 8,
-      "valid_time": "2026-08-23T23:00:00Z",
+      "valid_time": "2026-08-24T14:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/008.webp",
         "temperature_ressentie": "maps/temperature_ressentie/008.webp",
@@ -1016,7 +269,7 @@
     },
     {
       "lead_hour": 9,
-      "valid_time": "2026-08-24T00:00:00Z",
+      "valid_time": "2026-08-24T15:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/009.webp",
         "temperature_ressentie": "maps/temperature_ressentie/009.webp",
@@ -1036,7 +289,7 @@
     },
     {
       "lead_hour": 10,
-      "valid_time": "2026-08-24T01:00:00Z",
+      "valid_time": "2026-08-24T16:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/010.webp",
         "temperature_ressentie": "maps/temperature_ressentie/010.webp",
@@ -1056,7 +309,7 @@
     },
     {
       "lead_hour": 11,
-      "valid_time": "2026-08-24T02:00:00Z",
+      "valid_time": "2026-08-24T17:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/011.webp",
         "temperature_ressentie": "maps/temperature_ressentie/011.webp",
@@ -1076,7 +329,7 @@
     },
     {
       "lead_hour": 12,
-      "valid_time": "2026-08-24T03:00:00Z",
+      "valid_time": "2026-08-24T18:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/012.webp",
         "temperature_ressentie": "maps/temperature_ressentie/012.webp",
@@ -1096,7 +349,7 @@
     },
     {
       "lead_hour": 13,
-      "valid_time": "2026-08-24T04:00:00Z",
+      "valid_time": "2026-08-24T19:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/013.webp",
         "temperature_ressentie": "maps/temperature_ressentie/013.webp",
@@ -1116,7 +369,7 @@
     },
     {
       "lead_hour": 14,
-      "valid_time": "2026-08-24T05:00:00Z",
+      "valid_time": "2026-08-24T20:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/014.webp",
         "temperature_ressentie": "maps/temperature_ressentie/014.webp",
@@ -1136,7 +389,7 @@
     },
     {
       "lead_hour": 15,
-      "valid_time": "2026-08-24T06:00:00Z",
+      "valid_time": "2026-08-24T21:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/015.webp",
         "temperature_ressentie": "maps/temperature_ressentie/015.webp",
@@ -1156,7 +409,7 @@
     },
     {
       "lead_hour": 16,
-      "valid_time": "2026-08-24T07:00:00Z",
+      "valid_time": "2026-08-24T22:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/016.webp",
         "temperature_ressentie": "maps/temperature_ressentie/016.webp",
@@ -1176,7 +429,7 @@
     },
     {
       "lead_hour": 17,
-      "valid_time": "2026-08-24T08:00:00Z",
+      "valid_time": "2026-08-24T23:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/017.webp",
         "temperature_ressentie": "maps/temperature_ressentie/017.webp",
@@ -1196,7 +449,7 @@
     },
     {
       "lead_hour": 18,
-      "valid_time": "2026-08-24T09:00:00Z",
+      "valid_time": "2026-08-25T00:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/018.webp",
         "temperature_ressentie": "maps/temperature_ressentie/018.webp",
@@ -1216,7 +469,7 @@
     },
     {
       "lead_hour": 19,
-      "valid_time": "2026-08-24T10:00:00Z",
+      "valid_time": "2026-08-25T01:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/019.webp",
         "temperature_ressentie": "maps/temperature_ressentie/019.webp",
@@ -1236,7 +489,7 @@
     },
     {
       "lead_hour": 20,
-      "valid_time": "2026-08-24T11:00:00Z",
+      "valid_time": "2026-08-25T02:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/020.webp",
         "temperature_ressentie": "maps/temperature_ressentie/020.webp",
@@ -1256,7 +509,7 @@
     },
     {
       "lead_hour": 21,
-      "valid_time": "2026-08-24T12:00:00Z",
+      "valid_time": "2026-08-25T03:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/021.webp",
         "temperature_ressentie": "maps/temperature_ressentie/021.webp",
@@ -1276,7 +529,7 @@
     },
     {
       "lead_hour": 22,
-      "valid_time": "2026-08-24T13:00:00Z",
+      "valid_time": "2026-08-25T04:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/022.webp",
         "temperature_ressentie": "maps/temperature_ressentie/022.webp",
@@ -1296,7 +549,7 @@
     },
     {
       "lead_hour": 23,
-      "valid_time": "2026-08-24T14:00:00Z",
+      "valid_time": "2026-08-25T05:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/023.webp",
         "temperature_ressentie": "maps/temperature_ressentie/023.webp",
@@ -1316,7 +569,7 @@
     },
     {
       "lead_hour": 24,
-      "valid_time": "2026-08-24T15:00:00Z",
+      "valid_time": "2026-08-25T06:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/024.webp",
         "temperature_ressentie": "maps/temperature_ressentie/024.webp",
@@ -1334,9 +587,5 @@
         "reflectivite": "maps/reflectivite/024.webp"
       }
     }
-  ],
-  "places": "maps/communes.json",
-  "model_name": "ICON-EU (7 km)",
-  "provider": "DWD Allemagne",
-  "resolution": "7 km (0.06°)"
+  ]
 }
