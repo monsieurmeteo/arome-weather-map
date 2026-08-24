@@ -2503,6 +2503,7 @@
                 ' vec3 frame=vec3(0.043,0.055,0.086);\n' +
                 // Projection UNIQUE (identique aux vecteurs/probes/export) :
                 // le raster 2200×1640 occupe le rectangle uRect (px écran).
+                ' vec2 uv=(vUv*uViewport-uRect.xy)/uRect.zw;\n' +
                 ' if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){\n' +
                 '  gl_FragColor=vec4(frame,1.0);return;\n' +
                 ' }\n' +
@@ -2684,14 +2685,29 @@
                 fallbackContext.fillStyle = '#a5a6b0';
                 fallbackContext.fillRect(mrx, mry, mrw, mrh);
             }
-            // Dalle météo : maillage sur TOUT le domaine (mer et pays voisins
-            // inclus) → aucune zone vide, comme météo-npdc.
+            // Dalle météo : maillage AROME alpha-composité sur le fond
             var weatherLayer = document.createElement('canvas');
             weatherLayer.width = width;
             weatherLayer.height = height;
             var weatherLayerCtx = weatherLayer.getContext('2d');
             weatherLayerCtx.drawImage(currentWeatherImage, mrx, mry, mrw, mrh);
             fallbackContext.drawImage(weatherLayer, 0, 0);
+            // Masquage du coin hors-domaine AROME (Adriatique/Balkans) —
+            // même logique que le fragment shader WebGL pour cohérence.
+            // Le biseau démarre à u=0.955, v=0.70 dans le repère du raster.
+            var bx0 = mrx + mrw * 0.955;
+            var by0 = mry + mrh * 0.700;
+            var bx1 = mrx + mrw;           // bord droit
+            var by1 = mry + mrh;           // bord bas
+            fallbackContext.save();
+            fallbackContext.fillStyle = '#0b1220';
+            fallbackContext.beginPath();
+            fallbackContext.moveTo(bx0, by1);  // coin bas-gauche du triangle
+            fallbackContext.lineTo(bx1, by0);  // coin haut-droit du triangle
+            fallbackContext.lineTo(bx1, by1);  // coin bas-droit
+            fallbackContext.closePath();
+            fallbackContext.fill();
+            fallbackContext.restore();
         }
 
         function loadVectorOverlay(path) {
