@@ -766,29 +766,35 @@
             if (!vw || !vh) {
                 return null;
             }
-            // ── Cadrage intelligent : on exporte exactement la vue affichée
-            // (projection UNIQUE computeMapRect), convertie vers le canvas
-            // natif 2200×1640 — jamais de bandes vides, jamais de déformation.
+
+            // Dimensions HD format carré Météo-NPDC officiel (2000×2000)
+            var outW = 2000;
+            var outH = 2000;
+            var topBannerH = 130;
+            var bottomBannerH = 110;
+            var mapAreaH = outH - topBannerH - bottomBannerH; // 1760 px
+
             var hScale, vScale, offX, offY;
 
             if (transform.scale <= 1.15) {
-                // Vue France métropolitaine + Corse : inscrite dans le canvas officiel HD 2200×1640
-                var fx0 = 260;  // Ouest Bretagne / Atlantique
-                var fx1 = 1860; // Est Alsace / Corse
-                var fy0 = 110;  // Nord Dunkerque / Manche
-                var fy1 = 1530; // Sud Corse / Méditerranée
+                // Cadrage boîte Météo-NPDC France entière :
+                // (West: -5.8°, East: +10.2°, North: 51.6°, South: 41.1°)
+                // 100% de la surface est modélisée par AROME (zéro zone grise)
+                var fx0 = 270;  // Ouest Bretagne
+                var fx1 = 1870; // Est Corse
+                var fy0 = 125;  // Nord Mer du Nord / Sud Angleterre
+                var fy1 = 1460; // Sud Bonifacio (Corse complète)
                 var fw = fx1 - fx0; // 1600
-                var fh = fy1 - fy0; // 1420
-                var scale = Math.min(2200.0 / fw, 1640.0 / fh);
+                var fh = fy1 - fy0; // 1335
+                var scale = Math.min(outW / fw, mapAreaH / fh);
                 hScale = scale;
                 vScale = scale; // Échelle strictement isotrope 1:1
-                var cx = (fx0 + fx1) / 2;
-                var cy = (fy0 + fy1) / 2;
-                offX = 1100 - cx * scale;
-                offY = 820 - cy * scale;
+                var cx = (fx0 + fx1) / 2; // 1070
+                var cy = (fy0 + fy1) / 2; // 792.5
+                offX = outW / 2 - cx * scale;
+                offY = topBannerH + mapAreaH / 2 - cy * scale;
             } else {
-                // Vue zoomée (région/département) : reproduit la portion du
-                // raster visible à l'écran, cadrée dans le canvas officiel HD 2200×1640.
+                // Vue zoomée (région/département) : cadrée proprement dans la zone utile
                 var viewRect = computeMapRect(vw, vh);
                 var u0 = (0 - viewRect.x) / viewRect.w;
                 var u1 = (vw - viewRect.x) / viewRect.w;
@@ -796,43 +802,42 @@
                 var v1 = (vh - viewRect.y) / viewRect.h;
                 var vueW = Math.max(0.01, u1 - u0);
                 var vueH = Math.max(0.01, v1 - v0);
-                var k = Math.min(2200.0 / (vueW * 2200.0), 1640.0 / (vueH * 1640.0));
+                var k = Math.min(outW / (vueW * 2200.0), mapAreaH / (vueH * 1640.0));
                 hScale = k;
-                vScale = k; // Échelle strictement isotrope 1:1
+                vScale = k;
                 var uc = (u0 + u1) / 2;
                 var vc = (v0 + v1) / 2;
-                offX = 1100 - uc * 2200.0 * k;
-                offY = 820 - vc * 1640.0 * k;
+                offX = outW / 2 - uc * 2200.0 * k;
+                offY = topBannerH + mapAreaH / 2 - vc * 1640.0 * k;
             }
 
-            // Export à la résolution standard HD officielle de la carte (2200×1640)
             var output = document.createElement('canvas');
-            output.width = 2200;
-            output.height = 1640;
+            output.width = outW;
+            output.height = outH;
             var context = output.getContext('2d');
 
-            // Cadre sombre autour du domaine
-            context.fillStyle = '#0b1220';
+            // 1. Fond bleu nuit Météo-NPDC (#0b1626)
+            context.fillStyle = '#0b1626';
             context.fillRect(0, 0, output.width, output.height);
 
-            // Fond de carte (pays voisins inclus) dans le rectangle du domaine
-            // (effet « contour carré » : tout le reste reste sombre)
+            // 2. Zone cartographique avec clipping
             context.save();
             context.beginPath();
-            context.rect(offX, offY, 2200 * hScale, 1640 * vScale);
+            context.rect(0, topBannerH, outW, mapAreaH);
             context.clip();
+
+            // Fond de carte terres/mers
             if (fondImageElement && fondImageElement.complete && fondImageElement.naturalWidth) {
                 context.save();
                 context.transform(hScale, 0, 0, vScale, offX, offY);
                 context.drawImage(fondImageElement, 0, 0);
                 context.restore();
             } else {
-                context.fillStyle = '#a5a6b0';
-                context.fillRect(0, 0, output.width, output.height);
+                context.fillStyle = '#8fa3b8';
+                context.fillRect(0, topBannerH, outW, mapAreaH);
             }
 
-            // Dalle météo : le maillage couvre TOUT le domaine AROME (mer et
-            // pays voisins inclus, comme météo-npdc) → aucune zone vide.
+            // Dalle météo
             var weatherMasked = document.createElement('canvas');
             weatherMasked.width = output.width;
             weatherMasked.height = output.height;
@@ -843,73 +848,41 @@
             weatherCtx.restore();
             context.drawImage(weatherMasked, 0, 0);
 
-            // Frontières à la transformation courante (départements estompés en zoom)
+            // Frontières vectorielles haute définition
             if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
                 context.save();
                 context.transform(hScale, 0, 0, vScale, offX, offY);
                 vectorDefinition.paths.forEach(function (entry) {
-                    // Estompage progressif comme météociel : les contours restent
-                    // visibles mais s'atténuent quand on zoome (jamais disparition brutale).
                     var fade = 1;
                     if (entry.kind === 'department') {
-                        fade = transform.scale <= 3 ? 1 :
-                            Math.max(0.22, 1 - (transform.scale - 3) / 14);
+                        fade = transform.scale <= 3 ? 1 : Math.max(0.22, 1 - (transform.scale - 3) / 14);
                     } else if (entry.kind === 'region') {
-                        fade = transform.scale <= 8 ? 1 :
-                            Math.max(0.35, 1 - (transform.scale - 8) / 20);
+                        fade = transform.scale <= 8 ? 1 : Math.max(0.35, 1 - (transform.scale - 8) / 20);
                     }
-                    context.strokeStyle = entry.colour;
+                    context.strokeStyle = entry.colour || '#1a1f26';
                     context.globalAlpha = (entry.opacity || 1) * fade;
-                    context.lineCap = entry.lineCap;
-                    context.lineJoin = entry.lineJoin;
-                    context.lineWidth = entry.width / hScale;
+                    context.lineCap = entry.lineCap || 'round';
+                    context.lineJoin = entry.lineJoin || 'round';
+                    context.lineWidth = (entry.width || 1.0) / hScale;
                     context.stroke(entry.path);
                 });
                 context.restore();
                 context.globalAlpha = 1;
             }
-            // Fin du clip « contour carré » : le reste (logo, cartouche, légende)
-            // se dessine hors du cadre sombre.
-            context.restore();
+            context.restore(); // Fin clip carte
 
-            // Logo Météo-Climat Pro (en haut à droite de la carte)
-            if (logoImage && logoImage.complete && logoImage.naturalWidth) {
-                var logoW = 240;
-                var logoH = Math.round(logoW * logoImage.naturalHeight / logoImage.naturalWidth);
-                var pad = 24;
-                var lx = output.width - pad - logoW;
-                var ly = pad;
-                context.save();
-                context.fillStyle = 'rgba(7, 11, 20, 0.72)';
-                context.beginPath();
-                if (typeof context.roundRect === 'function') {
-                    context.roundRect(lx - 12, ly - 8, logoW + 24, logoH + 16, 12);
-                } else {
-                    context.rect(lx - 12, ly - 8, logoW + 24, logoH + 16);
-                }
-                context.fill();
-                context.drawImage(logoImage, lx, ly, logoW, logoH);
-                context.restore();
-            }
+            // ── 3. BANDEAU SUPÉRIEUR STYLE METEO-NPDC ──────────────────────────
+            context.fillStyle = '#0a192f';
+            context.fillRect(0, 0, outW, topBannerH);
+            context.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(0, topBannerH);
+            context.lineTo(outW, topBannerH);
+            context.stroke();
 
-            // Cartouche d'antenne (Modèle • Paramètre • Validité) — en haut à
-            // gauche comme météociel. Placé sous le header HTML (≈80 px).
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
             var step = availableSteps()[currentStep];
-            var dateStr = '';
-            if (step) {
-                try {
-                    dateStr = validityFormat.format(new Date(step.valid_time)).replace(':', 'h');
-                } catch (e) {
-                    dateStr = new Date(step.valid_time).toLocaleDateString('fr-FR');
-                }
-            }
-
-            var margin = 24;
-            var bannerH = 150;
-            var bannerY = 84;
-            // Libellé propre depuis les palettes (« Température à 2 m (°C) »
-            // et non « Temperature a 2 m (degC) » du manifeste brut).
             var prettyLabel = layer ? layer.label : '';
             var prettyUnit = layer && layer.unit ? layer.unit : '';
             if (typeof window.getLayerPalette === 'function') {
@@ -921,139 +894,130 @@
                     }
                 } catch (e) {}
             }
-            // Largeur du cartouche adaptée au contenu (titre + échéance)
-            context.font = '700 44px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
-            var titleText = modelTitle + ' • ' + prettyLabel +
-                (prettyUnit ? ' (' + prettyUnit + ')' : '');
-            var dateText = dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '') +
-                ' — Météo-Climat Pro';
-            var titleW = context.measureText(titleText).width;
-            var dateW = context.measureText(dateText).width;
-            var bannerW = Math.min(output.width - margin * 2,
-                Math.max(titleW, dateW) + 52);
-            context.fillStyle = 'rgba(7, 11, 20, 0.94)';
-            context.beginPath();
-            if (typeof context.roundRect === 'function') {
-                context.roundRect(margin, bannerY, bannerW, bannerH, 16);
-            } else {
-                context.rect(margin, bannerY, bannerW, bannerH);
-            }
-            context.fill();
-            context.strokeStyle = 'rgba(0, 210, 255, 0.8)';
-            context.lineWidth = 3;
-            context.stroke();
 
-            // Ligne 1 — TITRE PRINCIPAL (très grand, blanc) : modèle • paramètre
-            context.fillStyle = '#ffffff';
-            context.font = '700 44px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText(titleText, margin + 20, bannerY + 62);
-
-            // Ligne 2 — Échéance (grand, cyan) : date + H+xx
-            context.fillStyle = '#00d2ff';
-            context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText(
-                dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : ''),
-                margin + 20, bannerY + 106
-            );
-
-            // Ligne 3 — Run (moyen, gris clair) : run + Météo-Climat Pro
-            var runLabel = '';
-            if (manifest && manifest.run_time) {
+            var dateStr = '';
+            if (step) {
                 try {
-                    runLabel = 'Run ' + String(manifest.run_time).slice(11, 16) + 'Z';
-                } catch (e) {}
-            }
-            context.fillStyle = '#c9d6e8';
-            context.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText(
-                (runLabel ? runLabel + ' • ' : '') + 'Météo-Climat Pro',
-                margin + 20, bannerY + 138
-            );
-
-            // Légende colorimétrique centrée en bas (comme météociel),
-            // compacte, avec une vraie marge basse (24 px).
-            if (layer && typeof window.getLayerPalette === 'function' &&
-                    typeof window.paletteTicks === 'function') {
-                try {
-                    var legendW = 1100;
-                    var legendH = 96;
-                    var legendBottom = 24;
-                    var legendX = (output.width - legendW) / 2;
-                    var legendY = output.height - legendH - legendBottom;
-                    context.fillStyle = 'rgba(7, 11, 20, 0.95)';
-                    context.beginPath();
-                    if (typeof context.roundRect === 'function') {
-                        context.roundRect(legendX - 22, legendY - 10,
-                            legendW + 44, legendH + 30, 18);
-                    } else {
-                        context.rect(legendX - 22, legendY - 10,
-                            legendW + 44, legendH + 30);
-                    }
-                    context.fill();
-                    context.strokeStyle = 'rgba(0, 210, 255, 0.7)';
-                    context.lineWidth = 2.5;
-                    context.stroke();
-
-                    // Étiquette + unité (centrées au-dessus de la barre)
-                    context.fillStyle = '#ffffff';
-                    context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-                    context.textAlign = 'center';
-                    context.textBaseline = 'alphabetic';
-                    var legendLabel = prettyLabel +
-                        (prettyUnit ? ' (' + prettyUnit + ')' : '');
-                    context.fillText(legendLabel, output.width / 2, legendY + 30);
-
-                    // Barre dégradée depuis les stops structurés de la palette
-                    var pal = window.getLayerPalette(currentLayer);
-                    var stops = pal && pal.stops ? pal.stops : [];
-                    var low = (pal && pal.transparent_below !== null &&
-                        pal.transparent_below !== undefined) ?
-                        pal.transparent_below : (stops.length ? stops[0].value : 0);
-                    var max = stops.length ? stops[stops.length - 1].value : 1;
-                    var span = (max - low) || 1;
-                    var barY = legendY + 44;
-                    var gradient = context.createLinearGradient(legendX, 0,
-                        legendX + legendW, 0);
-                    var gradientBuilt = false;
-                    if (pal && pal.transparent_below !== null &&
-                            pal.transparent_below !== undefined) {
-                        gradient.addColorStop(0, 'rgba(0,0,0,0)');
-                        gradientBuilt = true;
-                    }
-                    stops.forEach(function (s) {
-                        var position = Math.max(0, Math.min(1,
-                            (Number(s.value) - low) / span));
-                        gradient.addColorStop(position, s.color);
-                        gradientBuilt = true;
-                    });
-                    context.fillStyle = gradientBuilt ? gradient : '#3478c5';
-                    context.beginPath();
-                    if (typeof context.roundRect === 'function') {
-                        context.roundRect(legendX, barY, legendW, 24, 12);
-                    } else {
-                        context.rect(legendX, barY, legendW, 24);
-                    }
-                    context.fill();
-                    context.strokeStyle = 'rgba(255,255,255,0.6)';
-                    context.lineWidth = 2;
-                    context.stroke();
-
-                    // Ticks de valeurs
-                    context.fillStyle = '#eaf1ff';
-                    context.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-                    var ticks = window.paletteTicks(currentLayer);
-                    ticks.forEach(function (tick, i) {
-                        var x = legendX + (ticks.length > 1 ? i / (ticks.length - 1) : 0.5) * legendW;
-                        context.fillText(String(tick), x, barY + 46);
-                    });
-                    context.textAlign = 'left';
-                } catch (legendError) {
-                    console.warn('Légende export ignorée :', legendError);
+                    dateStr = validityFormat.format(new Date(step.valid_time)).replace(':', 'h');
+                } catch (e) {
+                    dateStr = new Date(step.valid_time).toLocaleDateString('fr-FR');
                 }
             }
 
-            // Villes sur l'export (comme l'affichage écran)
+            // Titre du paramètre (grand, blanc gras)
+            context.fillStyle = '#ffffff';
+            context.font = '700 42px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.textAlign = 'left';
+            context.textBaseline = 'middle';
+            var mainTitle = prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : '');
+            context.fillText(mainTitle, 24, 38);
+
+            // Cartouche d'échéance arrondi bleu roi
+            var leadText = dateStr + (step ? ' (+' + String(step.lead_hour) + 'h)' : '');
+            context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var leadW = context.measureText(leadText).width;
+            var capH = 42;
+            var capY = 68;
+            context.fillStyle = '#15529a';
+            context.beginPath();
+            if (typeof context.roundRect === 'function') {
+                context.roundRect(24, capY, leadW + 28, capH, 8);
+            } else {
+                context.rect(24, capY, leadW + 28, capH);
+            }
+            context.fill();
+            context.strokeStyle = '#2b7fff';
+            context.lineWidth = 1.5;
+            context.stroke();
+
+            context.fillStyle = '#ffffff';
+            context.fillText(leadText, 38, capY + capH / 2 + 1);
+
+            // À droite : Run et Modèle
+            var runLabel = '';
+            if (manifest && manifest.run_time) {
+                try {
+                    var rD = new Date(manifest.run_time);
+                    var dayStr = String(rD.getUTCDate()).padStart(2, '0') + '/' + String(rD.getUTCMonth() + 1).padStart(2, '0');
+                    var hourStr = String(rD.getUTCHours()).padStart(2, '0') + 'z';
+                    runLabel = 'Run AROME ' + dayStr + ' ' + hourStr;
+                } catch (e) {}
+            }
+            if (!runLabel) runLabel = 'AROME HD • Météo-Climat Pro';
+
+            context.textAlign = 'right';
+            context.fillStyle = '#c5d8f0';
+            context.font = '600 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText(runLabel, outW - 24, 40);
+
+            context.fillStyle = '#8bb4e8';
+            context.font = '500 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText('Météo-Climat Pro', outW - 24, 88);
+
+            // ── 4. BANDEAU INFÉRIEUR STYLE METEO-NPDC ──────────────────────────
+            var botY = outH - bottomBannerH;
+            context.fillStyle = '#0a192f';
+            context.fillRect(0, botY, outW, bottomBannerH);
+            context.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(0, botY);
+            context.lineTo(outW, botY);
+            context.stroke();
+
+            // Signature au centre au-dessus de la barre
+            context.textAlign = 'center';
+            context.fillStyle = '#ffffff';
+            context.font = '700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText('Météo-France • meteo-climat.pro', outW / 2, botY + 24);
+
+            // Barre de légende colorimétrique Météo-NPDC
+            if (layer && typeof window.getLayerPalette === 'function') {
+                try {
+                    var pal = window.getLayerPalette(currentLayer);
+                    var stops = pal && pal.stops ? pal.stops : [];
+                    if (stops.length) {
+                        var legX = 24;
+                        var legW = outW - 48;
+                        var legBarY = botY + 42;
+                        var legBarH = 22;
+
+                        var low = (pal.transparent_below !== null && pal.transparent_below !== undefined) ?
+                            pal.transparent_below : stops[0].value;
+                        var max = stops[stops.length - 1].value;
+                        var span = (max - low) || 1;
+
+                        var grad = context.createLinearGradient(legX, 0, legX + legW, 0);
+                        if (pal.transparent_below !== null && pal.transparent_below !== undefined) {
+                            grad.addColorStop(0, 'rgba(0,0,0,0)');
+                        }
+                        stops.forEach(function (s) {
+                            var pos = Math.max(0, Math.min(1, (Number(s.value) - low) / span));
+                            grad.addColorStop(pos, s.color);
+                        });
+                        context.fillStyle = grad;
+                        context.fillRect(legX, legBarY, legW, legBarH);
+                        context.strokeStyle = '#000000';
+                        context.lineWidth = 1;
+                        context.strokeRect(legX, legBarY, legW, legBarH);
+
+                        // Graduations chiffrées sous la barre
+                        context.fillStyle = '#ffffff';
+                        context.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                        context.textBaseline = 'top';
+
+                        // Sélectionner 15 à 20 graduations bien réparties
+                        var stepCount = Math.min(stops.length, 25);
+                        var stepIdx = Math.max(1, Math.floor(stops.length / stepCount));
+                        for (var i = 0; i < stops.length; i += stepIdx) {
+                            var sVal = Number(stops[i].value);
+                            var sPos = legX + Math.max(0, Math.min(1, (sVal - low) / span)) * legW;
+                            var sText = Number.isInteger(sVal) ? String(sVal) : sVal.toFixed(1);
+                            context.fillText(sText, sPos, legBarY + legBarH + 5);
+                        }
+                    }
+                } catch (e) {}
+            // Villes sur la carte
             if (manifest && manifest.bounds && places.length) {
                 try {
                     var bounds = manifest.bounds;
@@ -1062,18 +1026,10 @@
                     var longitudeSpan = Number(bounds.east) - Number(bounds.west);
                     var mercatorSpan = northY - southY;
                     if (longitudeSpan && mercatorSpan) {
-                        var exportScale = hScale;   // échelle du cadrage export (vue ou auto)
-                        var popMin = exportScale < 1.35 ? 200000 :
-                            (exportScale < 2.25 ? 80000 :
-                            (exportScale < 3.75 ? 30000 :
-                            (exportScale < 6 ? 8000 :
-                            (exportScale < 8 ? 2000 : 300))));
-                        var maxLabels = exportScale < 1.35 ? 20 :
-                            (exportScale < 2.25 ? 30 :
-                            (exportScale < 3.75 ? 45 :
-                            (exportScale < 6 ? 70 :
-                            (exportScale < 8 ? 100 : 140))));
-                        context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                        var exportScale = hScale;
+                        var popMin = exportScale < 1.35 ? 180000 : (exportScale < 2.25 ? 70000 : (exportScale < 3.75 ? 25000 : 5000));
+                        var maxLabels = exportScale < 1.35 ? 25 : (exportScale < 2.25 ? 40 : 60);
+                        context.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                         context.textAlign = 'center';
                         context.textBaseline = 'middle';
                         context.lineJoin = 'round';
@@ -1082,111 +1038,24 @@
                         context.lineWidth = 4;
                         var occupied = [];
                         var drawn = 0;
-                        // ZONES RÉSERVÉES (safe zones) : aucune ville ne doit
-                        // s'écrire sous le cartouche, le logo ou la légende.
-                        if (typeof legendY === 'number' && legendY > 0) {
-                            occupied.push({
-                                left: legendX - 22,
-                                right: legendX + legendW + 22,
-                                top: legendY - 12,
-                                bottom: legendY + legendH + 38
-                            });
-                        }
-                        // Cartouche en haut à gauche (bannerW/bannerY connus ici).
-                        if (typeof bannerW === 'number' && bannerW > 0) {
-                            occupied.push({
-                                left: margin - 8,
-                                right: margin + bannerW + 8,
-                                top: bannerY - 8,
-                                bottom: bannerY + bannerH + 8
-                            });
-                        }
-                        // Logo en haut à droite.
-                        if (logoImage && logoImage.complete && logoImage.naturalWidth) {
-                            occupied.push({
-                                left: output.width - 24 - 240 - 8,
-                                right: output.width - 24 + 8,
-                                top: 24 - 8,
-                                bottom: 24 + Math.round(240 * logoImage.naturalHeight / logoImage.naturalWidth) + 8
-                            });
-                        }
-                        // PRIORITÉ INTELLIGENTE : les villes de la région
-                        // sélectionnée (liste officielle Europe1Regions) passent
-                        // devant les autres, puis tri par population.
-                        var prioritySet = null;
-                        try {
-                            var regionSelect = document.getElementById('select-region');
-                            var regionKey = regionSelect ? regionSelect.value : 'france';
-                            // Mapping ids du select → clés Europe1Regions
-                            // (idf → ile-de-france, grandest → grand-est…).
-                            var REGION_KEY_MAP = {
-                                france: 'france', hdf: 'hdf', normandie: 'normandie',
-                                idf: 'ile-de-france', grandest: 'grand-est',
-                                bretagne: 'bretagne', pdl: 'pdl', cvl: 'cvl',
-                                bfc: 'bfc', naq: 'naq', ara: 'ara',
-                                occitanie: 'occitanie', paca: 'paca', corse: 'corse'
-                            };
-                            var regDef = window.Europe1Regions &&
-                                window.Europe1Regions[REGION_KEY_MAP[regionKey] || regionKey];
-                            if (regDef && regDef.cities && regDef.cities.length) {
-                                prioritySet = new Set();
-                                regDef.cities.forEach(function (city) {
-                                    var name = String(city.name || '').toLowerCase()
-                                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                                    if (name) {
-                                        prioritySet.add(name);
-                                    }
-                                });
-                            }
-                        } catch (e) {}
-                        var orderedPlaces = places;
-                        if (prioritySet && prioritySet.size) {
-                            orderedPlaces = places.slice().sort(function (first, second) {
-                                var firstPrior = Array.isArray(first) &&
-                                    prioritySet.has(String(first[0]).toLowerCase()
-                                        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-                                var secondPrior = Array.isArray(second) &&
-                                    prioritySet.has(String(second[0]).toLowerCase()
-                                        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-                                if (firstPrior !== secondPrior) {
-                                    return firstPrior ? -1 : 1;
-                                }
-                                return Number(second[1]) - Number(first[1]);
-                            });
-                        }
-                        for (var pi = 0; pi < orderedPlaces.length; pi += 1) {
-                            var place = orderedPlaces[pi];
+                        for (var pi = 0; pi < places.length; pi += 1) {
+                            var place = places[pi];
                             if (!Array.isArray(place) || place.length < 4) { continue; }
-                            // Sous le seuil : on peut s'arrêter seulement si on a
-                            // déjà quitté le groupe prioritaire (l'ordre redevient
-                            // alors strictement décroissant par population) ;
-                            // sinon on continue pour ne pas rater les grandes
-                            // villes non listées qui suivent.
-                            if (Number(place[1]) < popMin) {
-                                var isPrior = prioritySet && prioritySet.size &&
-                                    prioritySet.has(String(place[0]).toLowerCase()
-                                        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-                                if (!isPrior) { break; }
-                                continue;
-                            }
+                            if (Number(place[1]) < popMin) { continue; }
                             var u = (Number(place[3]) - Number(bounds.west)) / longitudeSpan;
                             var v = (northY - mercator(Number(place[2]))) / mercatorSpan;
-                            // Transformation du CADRAGE EXPORT (pas de la vue) :
-                            // les villes suivent exactement le raster exporté.
                             var sx = u * 2200 * hScale + offX;
                             var sy = v * 1640 * vScale + offY;
-                            if (sx < -60 || sx > output.width + 60 || sy < -20 || sy > output.height + 20) {
+                            if (sx < 20 || sx > output.width - 20 || sy < topBannerH + 20 || sy > outH - bottomBannerH - 20) {
                                 continue;
                             }
                             var text = String(place[0]);
                             var tw = context.measureText(text).width;
-                            var rect = { left: sx - tw / 2 - 5, right: sx + tw / 2 + 5,
-                                         top: sy - 16, bottom: sy + 16 };
+                            var rect = { left: sx - tw / 2 - 5, right: sx + tw / 2 + 5, top: sy - 14, bottom: sy + 14 };
                             var clash = false;
                             for (var oi = 0; oi < occupied.length; oi += 1) {
                                 var other = occupied[oi];
-                                if (rect.left < other.right && rect.right > other.left &&
-                                        rect.top < other.bottom && rect.bottom > other.top) {
+                                if (rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top) {
                                     clash = true;
                                     break;
                                 }
@@ -1198,12 +1067,8 @@
                             drawn += 1;
                             if (drawn >= maxLabels) { break; }
                         }
-                        context.textAlign = 'left';
-                        context.textBaseline = 'alphabetic';
                     }
-                } catch (labelError) {
-                    console.warn('Villes export ignorées :', labelError);
-                }
+                } catch (e) {}
             }
 
             return output;
