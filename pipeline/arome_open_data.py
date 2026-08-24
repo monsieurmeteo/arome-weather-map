@@ -840,10 +840,10 @@ def run(max_hours=51):
                            [s["lead_hour"] for s in steps],
                            per_lead_values, communes)
 
-    # Fond de carte (pays voisins inclus, style Positron)
+    # Fond de carte (pays voisins inclus) + masque France (bornes correctes)
     try:
-        from generate_fond import generate_fond
-        generate_fond(os.path.join(out_dir, "fond.webp"))
+        from generate_fond import generate_all
+        generate_all()
     except Exception as e:
         print("WARNING: fond de carte non généré (%s)" % e)
 

@@ -14,6 +14,7 @@ import os
 import json
 import math
 import sys
+import urllib.request
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -23,6 +24,9 @@ sys.path.insert(0, os.path.join(BASE_DIR, "pipeline"))
 from fetch_and_render_all import BOUNDS, WIDTH, HEIGHT  # noqa: E402
 
 COUNTRIES_FILE = os.path.join(BASE_DIR, "config", "countries-50m.geojson")
+DEPARTEMENTS_URL = ("https://raw.githubusercontent.com/gregoiredavid/"
+                    "france-geojson/master/departements.geojson")
+MASK_FILE = os.path.join(BASE_DIR, "output", "arome", "maps", "mask_france.png")
 
 # Couleurs style Positron (cartes claires MapLibre, comme meteo-npdc)
 OCEAN = (143, 163, 184)        # #8FA3B8
@@ -105,5 +109,46 @@ def generate_fond(out_path):
     return out_path
 
 
+def generate_france_mask(out_path=None):
+    """Masque France précis (255 = France, 0 = extérieur) dans les bornes
+    EXACTES des tuiles (BOUNDS). Sans lui, la météo déborde sur les pays
+    voisins et la mer."""
+    out_path = out_path or MASK_FILE
+    try:
+        req = urllib.request.urlopen(DEPARTEMENTS_URL, timeout=60)
+        data = json.loads(req.read().decode("utf-8"))
+    except Exception as e:
+        print("WARNING: masque France non généré (%s)" % e)
+        return None
+
+    img = Image.new("L", (WIDTH, HEIGHT), 0)
+    draw = ImageDraw.Draw(img)
+    for feature in data.get("features", []):
+        geom = feature.get("geometry", {})
+        gtype = geom.get("type")
+        coords = geom.get("coordinates", [])
+        if gtype == "Polygon":
+            for ring in coords:
+                pts = [_project((pt[0], pt[1])) for pt in ring]
+                draw.polygon(pts, fill=255)
+        elif gtype == "MultiPolygon":
+            for poly in coords:
+                for ring in poly:
+                    pts = [_project((pt[0], pt[1])) for pt in ring]
+                    draw.polygon(pts, fill=255)
+
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    img.save(out_path, format="PNG")
+    print("Masque France généré : %s" % out_path)
+    return out_path
+
+
+def generate_all():
+    """Génère le fond de carte + le masque France (bornes correctes)."""
+    maps_dir = os.path.join(BASE_DIR, "output", "arome", "maps")
+    generate_fond(os.path.join(maps_dir, "fond.webp"))
+    generate_france_mask(os.path.join(maps_dir, "mask_france.png"))
+
+
 if __name__ == "__main__":
-    generate_fond(os.path.join(BASE_DIR, "output", "arome", "maps", "fond.webp"))
+    generate_all()
