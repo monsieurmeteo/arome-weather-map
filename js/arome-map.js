@@ -1089,11 +1089,11 @@
             var offX = gw / 2 + frameTransform.x / uScale - hScale * gw / 2;
             var offY = gh / 2 + frameTransform.y / uScale - vScale * gh / 2;
 
-            // Workers : désactivés si indisponibles (évite un échec silencieux)
-            var gifOptions = { quality: 10, width: gw, height: gh };
-            if (typeof Worker === 'function' && typeof Blob === 'function') {
-                gifOptions.workers = 2;
-            }
+            // Workers : DÉSACTIVÉS volontairement. gif.js 0.2.0 charge son
+            // worker depuis un Blob cross-origin (cdnjs) → échec silencieux
+            // sur GitHub Pages. Le mode synchrone (workers: 0) est fiable
+            // partout ; pour 52 frames de 550×410 l'encodage reste rapide.
+            var gifOptions = { quality: 10, width: gw, height: gh, workers: 0 };
             var gif = new window.GIF(gifOptions);
             var index = 0;
 
