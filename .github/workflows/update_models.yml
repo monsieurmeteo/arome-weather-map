@@ -49,7 +49,8 @@ jobs:
         run: |
           # Pour l'instant : uniquement AROME (rapide via WMS).
           # Les autres modèles (ARPEGE, ICON, GFS, ECMWF) seront réactivés plus tard.
-          python pipeline/fetch_and_render_all.py --model arome
+          # -u = sortie non bufferisée (progression visible en temps réel dans les logs)
+          python -u pipeline/fetch_and_render_all.py --model arome
 
       - name: Commit et Push des nouvelles cartes
         run: |
