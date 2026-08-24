@@ -668,21 +668,20 @@ ARPEGE_WMS = os.environ.get(
     "https://public-api.meteofrance.fr/public/arpege/1.0/wms/MF-NWP-GLOBAL-ARPEGE-001-EURAT5-WMS/GetMap"
 )
 
-# Limiteur de débit Météo-France (50 requêtes/minute) — évite les erreurs 429.
+# Limiteur de débit Météo-France (50 requêtes/minute, sans burst).
+# Espace uniformément les requêtes (≈48 req/min) pour éviter les 429/502
+# déclenchés par le burst initial des workers en parallèle.
 _mf_rate_lock = threading.Lock()
-_mf_rate_times = []
+_mf_rate_last = 0.0
 
 
 def _mf_rate_wait():
+    global _mf_rate_last
     with _mf_rate_lock:
         now = time.time()
-        _mf_rate_times[:] = [t for t in _mf_rate_times if now - t < 60]
-        if len(_mf_rate_times) >= 50:
-            wait = 60 - (now - _mf_rate_times[0]) + 0.3
-            time.sleep(wait)
-            now = time.time()
-            _mf_rate_times[:] = [t for t in _mf_rate_times if now - t < 60]
-        _mf_rate_times.append(time.time())
+        if _mf_rate_last and now - _mf_rate_last < 1.25:
+            time.sleep(1.25 - (now - _mf_rate_last))
+        _mf_rate_last = time.time()
 
 
 def _fetch_mf_tile(session, token, wms_url, wms_layer, style, time_str, ref_str, dst):
