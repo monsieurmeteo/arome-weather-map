@@ -2824,21 +2824,18 @@
             // Tous les calculs (pan, zoom roue, pinch, focusLocation) utilisent
             // cette même valeur pour rester cohérents.
             var s = Math.max(width / 2200.0, height / 1640.0);
-            var bbox = null;
             if (t.scale <= 1.15) {
-                bbox = computeVisibleBBox();
-            }
-            if (bbox) {
-                // Cadrage France entière : on adapte s pour que la France tienne
-                // entièrement dans la zone utile visible (header ~50px + timeline ~50px).
+                // Vue France entière : cadrage hardcodé sur la France continentale
+                // (X: 200→1700, Y: 100→1380) — fiable sans le masque, et garantit
+                // que le coin non-maillé AROME (bas-droite, X>2100) reste hors-cadre.
+                var FX0 = 200, FX1 = 1700, FY0 = 100, FY1 = 1380;
+                var fw = FX1 - FX0; // 1500
+                var fh = FY1 - FY0; // 1280
                 var availH = Math.max(180, height - 100);
                 var availW = Math.max(260, width - 24);
-                var bw = Math.max(100, bbox.x1 - bbox.x0);
-                var bh = Math.max(100, bbox.y1 - bbox.y0);
-                var sFrance = Math.min(availW / (bw * 1.05), availH / (bh * 1.05));
-
-                var cx = (bbox.x0 + bbox.x1) / 2 - (bbox.x1 - bbox.x0) * 0.15;
-                var cy = (bbox.y0 + bbox.y1) / 2;
+                var sFrance = Math.min(availW / (fw * 1.05), availH / (fh * 1.05));
+                var cx = (FX0 + FX1) / 2; // 950 — centre de la France continentale
+                var cy = (FY0 + FY1) / 2; // 740
                 var bboxRect = {
                     x: width / 2 - cx * sFrance,
                     y: height / 2 - cy * sFrance,
@@ -2848,7 +2845,7 @@
                 if (t.scale <= 1.001) {
                     return bboxRect;
                 }
-                // INTERPOLATION FLUIDE entre vue France et mode zoom libre
+                // Interpolation fluide entre vue France et zoom libre
                 var coverScale = s * t.scale;
                 var coverRect = {
                     x: width / 2 + t.x - 1100.0 * coverScale,
