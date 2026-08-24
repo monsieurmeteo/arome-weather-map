@@ -538,6 +538,62 @@ def quantize(values, scale, offset):
     return q.astype(np.int16)
 
 
+# ── Grilles de valeurs pour la sonde (format HKV1, comme le front l'attend) ──
+PROBE_W, PROBE_H = 440, 328  # grille réduite (facteur 5 vs 2200×1640)
+
+def export_probe(field, out_path):
+    """Exporte une grille 2D en format HKV1 gzip pour la sonde au survol.
+    Structure : 'HKV1' + width u16 + height u16 + min f32 + max f32 + u16[…]
+    (65535 = NaN)."""
+    import gzip
+    data = np.asarray(field, dtype=np.float64)
+    ny, nx = data.shape
+    fin = data[np.isfinite(data)]
+    if fin.size == 0:
+        min_val, max_val = 0.0, 1.0
+    else:
+        min_val = float(np.min(fin))
+        max_val = float(np.max(fin))
+    val_range = max_val - min_val if max_val > min_val else 1.0
+    normalized = np.full(data.shape, 65535, dtype=np.uint16)
+    ok = np.isfinite(data)
+    normalized[ok] = np.clip(
+        (data[ok] - min_val) / val_range * 65534.0, 0, 65534).astype(np.uint16)
+    header = bytearray(b'HKV1')
+    header.extend(np.uint16(nx).tobytes())
+    header.extend(np.uint16(ny).tobytes())
+    header.extend(np.float32(min_val).tobytes())
+    header.extend(np.float32(max_val).tobytes())
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with gzip.open(out_path, "wb") as f:
+        f.write(bytes(header) + normalized.tobytes())
+
+
+def save_probes(out_dir, lead, fields, step_files, regridded):
+    """Écrit maps/values/{layer}/{lead}.hkv.gz pour chaque paramètre tuilé.
+    step_files["probes"] = {layer: rel_path}."""
+    probes = {}
+    for tile_name, fname in TILE_FIELDS.items():
+        data = regridded.get(tile_name)
+        if data is None:
+            continue
+        # Sous-échantillonnage vers PROBE_W × PROBE_H (moyenne de blocs)
+        sy = data.shape[0] // PROBE_H
+        sx = data.shape[1] // PROBE_W
+        if sy >= 1 and sx >= 1:
+            small = np.nanmean(
+                data[:PROBE_H * sy, :PROBE_W * sx].reshape(
+                    PROBE_H, sy, PROBE_W, sx),
+                axis=(1, 3))
+        else:
+            small = data
+        rel = "maps/values/%s/%03d.hkv.gz" % (tile_name, lead)
+        export_probe(small, os.path.join(out_dir, "..", rel.replace("/", os.sep)))
+        probes[tile_name] = rel
+    if probes:
+        step_files["probes"] = probes
+
+
 # ── Écriture des fichiers par département ───────────────────────────────────
 def write_department_files(out_dir, run_str, leads, per_lead_values, communes):
     """per_lead_values : dict lead → dict champ → array (n_communes,).
@@ -647,7 +703,9 @@ def save_tile(name, arr, lat, lon, out_dir, lead, step_files, regridded):
     os.makedirs(ddir, exist_ok=True)
     dst = os.path.join(ddir, "%03d.webp" % lead)
     Image.fromarray(rgba, "RGBA").save(dst, format="WEBP", quality=85, method=4)
-    step_files[name] = "maps/%s/%03d.webp" % (name, lead)
+    if "files" not in step_files:
+        step_files["files"] = {}
+    step_files["files"][name] = "maps/%s/%03d.webp" % (name, lead)
 
 
 # Champs rendus en tuiles (compatibles palettes existantes)
@@ -738,8 +796,12 @@ def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
         sampled = bilinear_sample(fields, communes)
         per_lead_values[lead] = sampled
 
-        print("  H+%02d: %d champs, %d tuiles, %d communes échantillonnées"
-              % (lead, len(fields), len(step_files), len(communes)))
+        # ── Grilles de valeurs pour la sonde au survol ─────────────────
+        save_probes(out_dir, lead, fields, step_files, regridded)
+
+        print("  H+%02d: %d champs, %d tuiles, %d probes, %d communes échantillonnées"
+              % (lead, len(fields), len(step_files.get("files", {})),
+                 len(step_files.get("probes", {})), len(communes)))
         return True
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -770,7 +832,8 @@ def run(max_hours=51):
             vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
                 + datetime.timedelta(hours=lh)
             steps.append({"lead_hour": lh, "valid_time": vt.isoformat(),
-                          "files": step_files})
+                          "files": step_files.get("files", {}),
+                          "probes": step_files.get("probes", {})})
 
     # Fichiers par département + index
     write_department_files(out_dir, run_str,

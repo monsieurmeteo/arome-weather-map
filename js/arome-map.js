@@ -437,6 +437,7 @@
             }
             if (probe) {
                 probe.hidden = true;
+                probe.classList.remove('active');
             }
         }
 
@@ -498,6 +499,7 @@
                 (layer.unit ? ' ' + layer.unit : '');
             probeLabel.textContent = layer.label || currentLayer;
             probe.hidden = false;
+            probe.classList.add('active');
 
             var tooltipWidth = probe.offsetWidth || 170;
             var tooltipHeight = probe.offsetHeight || 54;
