@@ -105,7 +105,8 @@
         error: $('mcp-error'), loading: $('mcp-loading'), main: $('mcp-main'),
         city: $('mcp-city'), cityMeta: $('mcp-city-meta'),
         summary: $('mcp-summary'), charts: $('mcp-charts'),
-        tblGeneral: $('tbl-general'), tblStorms: $('tbl-storms'), tblSnow: $('tbl-snow')
+        tblDaily: $('tbl-daily'), tblGeneral: $('tbl-general'),
+        tblStorms: $('tbl-storms'), tblSnow: $('tbl-snow')
     };
 
     /* ── Helpers réseau ───────────────────────────────────────────────── */
@@ -355,6 +356,7 @@
         renderCharts(forecasts, cand);
 
         // Tableaux
+        renderDailyTable(forecasts);
         renderGeneralTable(forecasts, hourFmt, dayFmt);
         renderStormsTable(forecasts, hourFmt, dayFmt);
         renderSnowTable(forecasts, hourFmt, dayFmt);
@@ -364,25 +366,33 @@
 
     /* ── Synthèse (cartes de risques) ─────────────────────────────────── */
     function renderSummary(forecasts) {
-        var maxThunder = 0, maxSnow = 0, maxGust = 0, rainTotal = 0, tMin = null, tMax = null;
+        var maxThunder = 0, maxSnow = 0, maxGust = 0, rainTotal = 0, snowTotal = 0;
+        var tMin = null, tMax = null, gustAt = null, rainAt = null;
         forecasts.forEach(function (f) {
             var th = valueAt(f.lp, 'thunder_risk_code');
             if (finite(th)) maxThunder = Math.max(maxThunder, Number(th));
             var sn = valueAt(f.lp, 'snow_risk_code');
             if (finite(sn)) maxSnow = Math.max(maxSnow, Number(sn));
             var g = valueAt(f.lp, 'wind_gust_max_kmh');
-            if (finite(g)) maxGust = Math.max(maxGust, Number(g));
+            if (finite(g) && Number(g) > maxGust) {
+                maxGust = Number(g);
+                gustAt = f.valid;
+            }
             var r = valueAt(f.lp, 'precipitation_mm');
             if (finite(r)) rainTotal += Math.max(0, Number(r));
+            var sf = valueAt(f.lp, 'snow_fresh_cm');
+            if (finite(sf)) snowTotal += Math.max(0, Number(sf));
             var t = valueAt(f.lp, 'temperature_c');
             if (finite(t)) { tMin = tMin === null ? Number(t) : Math.min(tMin, Number(t)); tMax = tMax === null ? Number(t) : Math.max(tMax, Number(t)); }
         });
+        var gustDate = gustAt ? ' le ' + hourLabel(gustAt) : '';
         var cards = [
             { label: 'Risque orage max', html: riskPill(maxThunder, THUNDER_RISKS), sub: 'MUCAPE + réflectivité + cisaillement AROME' },
             { label: 'Risque neige max', html: riskPill(maxSnow, SNOW_RISKS), sub: 'Neige fraîche + température AROME' },
-            { label: 'Rafale max échéance', value: fmt(maxGust || null, 0, ' km/h'), sub: 'Maximum cumulé depuis le début du run', cls: maxGust >= 100 ? 'risk-4' : (maxGust >= 70 ? 'risk-3' : 'risk-0') },
+            { label: 'Rafale max du run', value: fmt(maxGust || null, 0, ' km/h') + (maxGust ? gustDate : ''), sub: 'Maximum cumulé depuis H+0 (toute la période)', cls: maxGust >= 100 ? 'risk-4' : (maxGust >= 70 ? 'risk-3' : 'risk-0') },
             { label: 'Températures', value: (tMin !== null ? Math.round(tMin) : '—') + '° / ' + (tMax !== null ? Math.round(tMax) : '—') + '°', sub: 'Min / Max sur la période' },
-            { label: 'Pluie cumulée', value: fmt(rainTotal || null, 1, ' mm'), sub: 'Somme horaire sur la période' }
+            { label: 'Pluie cumulée', value: fmt(rainTotal || null, 1, ' mm'), sub: 'Somme horaire sur la période' },
+            { label: 'Neige fraîche', value: fmt(snowTotal || null, 1, ' cm'), sub: 'Cumul sur la période' }
         ];
         ui.summary.replaceChildren();
         cards.forEach(function (c) {
@@ -406,7 +416,7 @@
 
     /* ── Graphiques SVG ───────────────────────────────────────────────── */
     function renderCharts(forecasts, cand) {
-        var temp = [], press = [], rain = [], cumul = 0, wind = [], gust = [];
+        var temp = [], press = [], rain = [], cumul = 0, wind = [], gust = [], gustMax = [];
         forecasts.forEach(function (f) {
             temp.push(valueAt(f.lp, 'temperature_c'));
             press.push(valueAt(f.lp, 'pressure_hpa'));
@@ -415,6 +425,7 @@
             cumul += finite(r) ? Math.max(0, Number(r)) : 0;
             wind.push(roundUp5(valueAt(f.lp, 'wind_speed_kmh')));
             gust.push(roundUp5(valueAt(f.lp, 'wind_gust_kmh')));
+            gustMax.push(roundUp5(valueAt(f.lp, 'wind_gust_max_kmh')));
         });
         var labels = forecasts.map(function (f) { return hourLabel(f.valid); });
 
@@ -422,7 +433,8 @@
         ui.charts.appendChild(chartCard('🌡️ Température (°C)', lineChart(labels, temp, { unit: '°C', color: '#ffb84d' })));
         ui.charts.appendChild(chartCard('🧭 Pression niveau mer (hPa)', lineChart(labels, press, { unit: 'hPa', color: '#35c7ff' })));
         ui.charts.appendChild(chartCard('🌧️ Pluie horaire (mm)', barsChart(labels, rain, { color: '#3f9dff' })));
-        ui.charts.appendChild(chartCard('💨 Vent moyen / rafales (km/h)', twoLinesChart(labels, wind, gust, { c1: '#2dd4a7', c2: '#ff5d5d' })));
+        ui.charts.appendChild(chartCard('💨 Vent moyen / rafales / rafale max éch. (km/h)',
+            threeLinesChart(labels, wind, gust, gustMax, { c1: '#2dd4a7', c2: '#ff5d5d', c3: '#ffc93c' })));
     }
 
     function chartCard(title, svg) {
@@ -520,10 +532,139 @@
         return svg;
     }
 
+    function threeLinesChart(labels, a, b, c, opt) {
+        var w = 600, h = 160, pad = 8;
+        var fin = a.concat(b).concat(c).filter(finite);
+        var max = fin.length ? Math.ceil(Math.max.apply(null, fin) / 10) * 10 : 20;
+        var min = 0;
+        var svg = makeSvg(w, h);
+        [[opt.c1, a, '2'], [opt.c2, b, '2'], [opt.c3, c, '2.5']].forEach(function (series) {
+            var pts = polyPoints(series[1], w, h, pad, min, max);
+            if (series[1].length > 1) {
+                var line = document.createElementNS(svgNS(), 'polyline');
+                line.setAttribute('points', pts);
+                line.setAttribute('fill', 'none');
+                line.setAttribute('stroke', series[0]);
+                line.setAttribute('stroke-width', series[2]);
+                line.setAttribute('opacity', '0.9');
+                svg.appendChild(line);
+            }
+        });
+        return svg;
+    }
+
+    /* ── Tableau journalier (extrêmes par jour, comme météociel) ──────── */
+    function renderDailyTable(forecasts) {
+        var head = ['Jour', 'Temps', 'T min', 'T max', 'Pluie cumul.', 'Rafale max',
+                    'Vent max', 'Risque orage', 'Risque neige', 'Neige fraîche'];
+        var thead = ui.tblDaily.tHead || ui.tblDaily.createTHead();
+        thead.replaceChildren();
+        var tr = thead.insertRow();
+        head.forEach(function (h) { tr.appendChild(el('th', null, h)); });
+        var tbody = ui.tblDaily.createTBody();
+        tbody.replaceChildren();
+
+        // Groupe les échéances par jour
+        var days = {};
+        forecasts.forEach(function (f) {
+            var k = localDayKey(f.valid);
+            if (!days[k]) days[k] = { date: f.valid, items: [] };
+            days[k].items.push(f);
+        });
+
+        var dayKeys = Object.keys(days);
+        dayKeys.forEach(function (k, di) {
+            var day = days[k];
+            var items = day.items;
+            var row = tbody.insertRow();
+            if (di > 0) row.classList.add('mcp-new-day');
+
+            // Jour
+            var d = day.date;
+            var tdDay = el('td', 'mcp-day-cell');
+            tdDay.textContent = dayLabel(d);
+            var wd = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][d.getDay()];
+            tdDay.title = wd + ' ' + d.getDate() + '/' + (d.getMonth() + 1);
+            row.appendChild(tdDay);
+
+            // Temps dominant : icône la plus fréquente (pluie > nuages > soleil)
+            var condCounts = {};
+            items.forEach(function (f) {
+                var cc = valueAt(f.lp, 'condition_code');
+                var key = finite(cc) ? Number(cc) : 0;
+                condCounts[key] = (condCounts[key] || 0) + 1;
+            });
+            var dominant = 0, dominantCount = 0;
+            Object.keys(condCounts).forEach(function (cc) {
+                if (condCounts[cc] > dominantCount) { dominant = Number(cc); dominantCount = condCounts[cc]; }
+            });
+            var cond = CONDITIONS[dominant] || CONDITIONS[0];
+            var tdCond = el('td', 'mcp-condition');
+            tdCond.textContent = cond.icon + ' ' + cond.label;
+            tdCond.title = 'Condition dominante sur la journée';
+            row.appendChild(tdCond);
+
+            // Extrêmes par jour
+            var tMin = null, tMax = null, rainDay = 0, gustMax = 0, windMax = 0;
+            var thMax = 0, snMax = 0, snowFresh = 0;
+            items.forEach(function (f) {
+                var t = valueAt(f.lp, 'temperature_c');
+                if (finite(t)) {
+                    tMin = tMin === null ? Number(t) : Math.min(tMin, Number(t));
+                    tMax = tMax === null ? Number(t) : Math.max(tMax, Number(t));
+                }
+                var r = valueAt(f.lp, 'precipitation_mm');
+                if (finite(r)) rainDay += Math.max(0, Number(r));
+                var g = valueAt(f.lp, 'wind_gust_max_kmh');
+                if (finite(g)) gustMax = Math.max(gustMax, Number(g));
+                var w = valueAt(f.lp, 'wind_speed_kmh');
+                if (finite(w)) windMax = Math.max(windMax, Number(w));
+                var th = valueAt(f.lp, 'thunder_risk_code');
+                if (finite(th)) thMax = Math.max(thMax, Number(th));
+                var sn = valueAt(f.lp, 'snow_risk_code');
+                if (finite(sn)) snMax = Math.max(snMax, Number(sn));
+                var sf = valueAt(f.lp, 'snow_fresh_cm');
+                if (finite(sf)) snowFresh += Math.max(0, Number(sf));
+            });
+
+            var tdTmin = el('td', tMin !== null ? tempClass(tMin) : '');
+            tdTmin.textContent = tMin !== null ? Math.round(tMin) + '°' : '—';
+            row.appendChild(tdTmin);
+            var tdTmax = el('td', tMax !== null ? tempClass(tMax) : '');
+            tdTmax.textContent = tMax !== null ? Math.round(tMax) + '°' : '—';
+            row.appendChild(tdTmax);
+
+            var tdRain = el('td', rainDay >= 10 ? 'num-strong' : '');
+            tdRain.textContent = fmt(rainDay || null, 1, ' mm');
+            row.appendChild(tdRain);
+
+            var tdGust = el('td', gustMax >= 100 ? 'num-strong' : (gustMax >= 70 ? 'temp-warm' : ''));
+            tdGust.textContent = fmt(gustMax || null, 0, ' km/h');
+            tdGust.title = 'Rafale max cumulée depuis le début du run';
+            row.appendChild(tdGust);
+
+            var tdWind = el('td');
+            tdWind.textContent = fmt(windMax || null, 0, ' km/h');
+            row.appendChild(tdWind);
+
+            var tdTh = el('td');
+            tdTh.appendChild(riskPill(thMax, THUNDER_RISKS));
+            row.appendChild(tdTh);
+
+            var tdSn = el('td');
+            tdSn.appendChild(riskPill(snMax, SNOW_RISKS));
+            row.appendChild(tdSn);
+
+            var tdSnow = el('td');
+            tdSnow.textContent = fmt(snowFresh || null, 1, ' cm');
+            row.appendChild(tdSnow);
+        });
+    }
+
     /* ── Tableau général ──────────────────────────────────────────────── */
     function renderGeneralTable(forecasts, hourFmt, dayFmt) {
         var head = ['Jour', 'Heure', 'Temps', 'Temp.', 'Ressenti', 'Rosée', 'Humidité', 'Pluie 1h', 'Nuages',
-                    'Vent', 'Rafales', 'Pression'];
+                    'Vent', 'Rafales', 'Rafale max éch.', 'Pression'];
         var thead = ui.tblGeneral.tHead || ui.tblGeneral.createTHead();
         var tr = thead.insertRow();
         head.forEach(function (h) { tr.appendChild(el('th', null, h)); });
@@ -580,6 +721,13 @@
             var tdG = el('td', finite(g) && g >= 80 ? 'num-strong' : '');
             tdG.textContent = fmt(g, 0, ' km/h');
             row.appendChild(tdG);
+
+            // Rafale max cumulée depuis le début du run (comme météociel)
+            var gm = valueAt(f.lp, 'wind_gust_max_kmh');
+            var tdGm = el('td', finite(gm) && gm >= 100 ? 'num-strong' : (finite(gm) && gm >= 70 ? 'temp-warm' : ''));
+            tdGm.textContent = fmt(gm, 0, ' km/h');
+            tdGm.title = 'Rafale maximale cumulée depuis le début du run';
+            row.appendChild(tdGm);
 
             appendNum(row, valueAt(f.lp, 'pressure_hpa'), 0, ' hPa');
         });

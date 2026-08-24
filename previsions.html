@@ -254,12 +254,16 @@
         <div class="mcp-charts" id="mcp-charts"></div>
 
         <div class="mcp-tabs" role="tablist">
-            <button class="mcp-tab active" data-panel="general" role="tab">🌡️ Général</button>
+            <button class="mcp-tab active" data-panel="daily" role="tab">📅 Journalier</button>
+            <button class="mcp-tab" data-panel="general" role="tab">🌡️ Général</button>
             <button class="mcp-tab" data-panel="storms" role="tab">⛈️ Orages</button>
             <button class="mcp-tab" data-panel="snow" role="tab">❄️ Neige</button>
         </div>
 
-        <div class="mcp-panel active" id="panel-general" role="tabpanel">
+        <div class="mcp-panel active" id="panel-daily" role="tabpanel">
+            <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-daily"><thead></thead><tbody></tbody></table></div>
+        </div>
+        <div class="mcp-panel" id="panel-general" role="tabpanel">
             <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-general"><thead></thead><tbody></tbody></table></div>
         </div>
         <div class="mcp-panel" id="panel-storms" role="tabpanel">
