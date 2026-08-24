@@ -91,19 +91,8 @@ def generate_fond(out_path):
             if len(pts) >= 3:
                 draw.polygon(pts, fill=fill)
 
-    # 2. Frontières internationales (traits fins) + France plus marquée
-    for feat in data.get("features", []):
-        props = feat.get("properties", {})
-        name = props.get("NAME") or props.get("ADMIN") or props.get("name") or ""
-        geom = feat.get("geometry")
-        if not geom:
-            continue
-        colour = FRANCE_BORDER if name in france_names else BORDER
-        width = 3 if name in france_names else 2
-        for ring in _iter_rings(geom):
-            pts = _ring_to_xy(ring)
-            if len(pts) >= 2:
-                draw.line(pts, fill=colour, width=width, joint="curve")
+    # 2. Les frontières et côtes sont tracées exclusivement par frontieres.svg
+    # (évite les dédoublements de contours entre le fond bitmap et le SVG).
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     img.save(out_path, format="WEBP", quality=90, method=6)
