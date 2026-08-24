@@ -413,11 +413,19 @@
                         <option value="pluie_1h">🌧️ Pluie horaire (mm/h)</option>
                         <option value="pluie_cumul">📊 Précipitations cumulées (mm)</option>
                         <option value="reflectivite">📡 Réflectivité Radar Doppler (dBZ)</option>
+                        <option value="graupel">🧊 Graupel / Grésil (mm)</option>
                     </optgroup>
                     <optgroup label="💨 Vent & Tempêtes">
                         <option value="vent">💨 Vent moyen à 10 m (km/h)</option>
                         <option value="rafales">⚡ Rafales maximales (km/h)</option>
                         <option value="rafales_cumul">🌪️ Rafales max cumulées (km/h)</option>
+                    </optgroup>
+                    <optgroup label="☁️ Nuages & Ciel">
+                        <option value="nebulosite">☁️ Nébulosité totale (%)</option>
+                        <option value="nuages_bas">🌫️ Nuages bas / Brouillard (%)</option>
+                        <option value="nuages_moyens">⛅ Nuages moyens (%)</option>
+                        <option value="nuages_eleves">🌤️ Nuages élevés / Voile (%)</option>
+                        <option value="humidite">🌫️ Humidité relative (%)</option>
                     </optgroup>
                     <optgroup label="⛈️ Orages & Convection">
                         <option value="mucape">⚡ Instabilité convective (MUCAPE J/kg)</option>
@@ -425,10 +433,11 @@
                     <optgroup label="❄️ Neige & Hiver">
                         <option value="neige">❄️ Chutes de neige (cm/h)</option>
                         <option value="neige_au_sol">🏔️ Épaisseur neige au sol (cm)</option>
+                        <option value="equivalent_eau_neige">💧 Cumul neigeux équiv. eau (mm)</option>
                     </optgroup>
-                    <optgroup label="☁️ Nuages & Pression">
-                        <option value="humidite">🌫️ Humidité relative (%)</option>
+                    <optgroup label="🧭 Pression & Atmosphère">
                         <option value="pression">🧭 Pression niveau mer (hPa)</option>
+                        <option value="pression_surface">⛰️ Pression au sol (hPa)</option>
                     </optgroup>
                 </select>
 
@@ -500,6 +509,6 @@
     </div>
 
     <!-- Script du Moteur Optimisé -->
-    <script src="js/arome-map.js?v=3.9.0"></script>
+    <script src="js/arome-map.js?v=4.0.0"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Pipeline Multi-Modèles Météo — GitHub Actions Production
-=========================================================
+Pipeline Multi-Modèles Météo — Production 21 Paramètres
+========================================================
 Génère les cartes WebP réelles pour tous les modèles :
  1. AROME HD (1.3 km)   → API WMS Météo-France (token secret GitHub)
  2. ICON-EU  (7 km)     → DWD Open Data GRIB2 (gratuit, sans clé)
@@ -24,7 +24,6 @@ WIDTH, HEIGHT = 2200, 1640
 N_STEPS = 25
 BOUNDS = {"south": 38.0, "west": -12.0, "north": 53.0, "east": 16.0}
 
-# Token AROME : en CI via $METEOFRANCE_TOKEN ; en local via dpclim_token.txt
 TOKEN_PATH = os.path.expanduser(
     r"~/.gemini/config/skills/dpclim/config/dpclim_token.txt"
 )
@@ -39,20 +38,35 @@ def get_mf_token():
     return ""
 
 LABELS = {
-    "temperature":           ("Temperature a 2 m",      "degC"),
-    "temperature_ressentie": ("Temperature ressentie",   "degC"),
-    "point_rosee":           ("Point de rosee",          "degC"),
-    "humidex":               ("Indice Humidex",          ""),
-    "pluie_1h":              ("Pluie horaire",           "mm"),
-    "pluie_cumul":           ("Pluie cumulee",           "mm"),
-    "vent":                  ("Vent moyen 10 m",         "km/h"),
-    "rafales":               ("Rafales maximales",       "km/h"),
-    "mucape":                ("MUCAPE (instabilite)",    "J/kg"),
-    "neige":                 ("Neige fraiche",           "cm"),
-    "neige_au_sol":          ("Neige au sol",            "cm"),
-    "pression":              ("Pression reduite mer",    "hPa"),
-    "humidite":              ("Humidite relative 2 m",  "%"),
-    "reflectivite":          ("Reflectivite radar",      "dBZ"),
+    # 🌡️ Températures
+    "temperature":           ("Temperature a 2 m",               "degC"),
+    "temperature_ressentie": ("Temperature ressentie",            "degC"),
+    "point_rosee":           ("Point de rosee a 2 m",            "degC"),
+    "humidex":               ("Indice Humidex",                   ""),
+    # 🌧️ Précipitations
+    "pluie_1h":              ("Pluie horaire",                    "mm"),
+    "pluie_cumul":           ("Precipitations cumulees",          "mm"),
+    "reflectivite":          ("Reflectivite radar Doppler",       "dBZ"),
+    "graupel":               ("Graupel / Gresil",                 "mm"),
+    # 💨 Vent & Tempêtes
+    "vent":                  ("Vent moyen a 10 m",                "km/h"),
+    "rafales":               ("Rafales maximales",                "km/h"),
+    "rafales_cumul":         ("Rafales maximales cumulees",       "km/h"),
+    # ☁️ Nuages & Ciel
+    "nebulosite":            ("Nebulosite totale",                "%"),
+    "nuages_bas":            ("Couverture nuages bas",            "%"),
+    "nuages_moyens":         ("Couverture nuages moyens",         "%"),
+    "nuages_eleves":         ("Couverture nuages eleves",         "%"),
+    "humidite":              ("Humidite relative a 2 m",          "%"),
+    # ⛈️ Instabilité
+    "mucape":                ("Instabilite convective (MUCAPE)",  "J/kg"),
+    # ❄️ Hiver & Neige
+    "neige":                 ("Chutes de neige",                  "cm/h"),
+    "neige_au_sol":          ("Epaisseur neige au sol",           "cm"),
+    "equivalent_eau_neige":  ("Cumul neigeux equiv. eau",         "mm"),
+    # 🧭 Pression & Atmosphère
+    "pression":              ("Pression niveau mer",              "hPa"),
+    "pression_surface":      ("Pression au sol",                  "hPa"),
 }
 LAYERS = list(LABELS.keys())
 
@@ -63,12 +77,20 @@ PALETTES = {
     "humidex":               [(0,(200,200,255,255)),(20,(100,255,100,255)),(25,(255,255,0,255)),(30,(255,165,0,255)),(35,(255,80,0,255)),(40,(200,0,0,255)),(54,(100,0,0,255))],
     "pluie_1h":              [(0,(0,0,0,0)),(0.1,(173,216,230,255)),(1,(0,100,255,255)),(3,(0,200,0,255)),(7,(255,255,0,255)),(15,(255,165,0,255)),(30,(255,0,0,255)),(50,(160,0,160,255))],
     "pluie_cumul":           [(0,(0,0,0,0)),(1,(173,216,230,255)),(5,(0,100,255,255)),(10,(0,200,0,255)),(25,(255,255,0,255)),(50,(255,165,0,255)),(100,(255,0,0,255)),(200,(160,0,160,255))],
+    "graupel":               [(0,(0,0,0,0)),(0.5,(200,230,255,255)),(2,(100,200,255,255)),(5,(255,165,0,255)),(15,(200,0,200,255))],
     "vent":                  [(0,(200,230,255,255)),(10,(0,200,255,255)),(20,(0,200,100,255)),(40,(255,255,0,255)),(60,(255,165,0,255)),(80,(255,60,0,255)),(100,(200,0,0,255)),(130,(100,0,100,255))],
     "rafales":               [(0,(200,230,255,255)),(20,(0,200,255,255)),(40,(0,200,100,255)),(60,(255,255,0,255)),(80,(255,165,0,255)),(100,(255,60,0,255)),(130,(200,0,0,255)),(160,(100,0,100,255))],
+    "rafales_cumul":         [(0,(200,230,255,255)),(20,(0,200,255,255)),(40,(0,200,100,255)),(60,(255,255,0,255)),(80,(255,165,0,255)),(100,(255,60,0,255)),(130,(200,0,0,255)),(160,(100,0,100,255))],
+    "nebulosite":            [(0,(255,255,255,0)),(10,(220,230,240,120)),(50,(160,180,200,200)),(80,(100,120,150,240)),(100,(60,70,90,255))],
+    "nuages_bas":            [(0,(255,255,255,0)),(20,(255,240,180,150)),(60,(255,180,80,220)),(100,(200,80,0,255))],
+    "nuages_moyens":         [(0,(255,255,255,0)),(20,(180,240,200,150)),(60,(80,200,120,220)),(100,(0,140,60,255))],
+    "nuages_eleves":         [(0,(255,255,255,0)),(20,(200,220,255,150)),(60,(120,160,240,220)),(100,(40,80,200,255))],
     "mucape":                [(0,(50,50,50,0)),(50,(100,100,255,255)),(200,(0,255,200,255)),(500,(0,200,0,255)),(1000,(255,255,0,255)),(2000,(255,165,0,255)),(3500,(255,0,0,255)),(5000,(160,0,160,255))],
     "neige":                 [(0,(0,0,0,0)),(0.1,(200,230,255,255)),(1,(100,180,255,255)),(3,(50,100,200,255)),(10,(0,0,180,255)),(20,(100,0,150,255))],
     "neige_au_sol":          [(0,(0,0,0,0)),(1,(200,230,255,255)),(5,(150,200,255,255)),(20,(100,150,255,255)),(50,(50,100,200,255)),(100,(0,0,180,255)),(200,(100,0,150,255))],
+    "equivalent_eau_neige":  [(0,(0,0,0,0)),(1,(200,230,255,255)),(5,(100,180,255,255)),(15,(50,100,200,255)),(30,(0,0,180,255))],
     "pression":              [(960,(130,0,130,255)),(975,(0,0,200,255)),(985,(0,150,255,255)),(995,(0,200,150,255)),(1005,(0,180,0,255)),(1013,(200,200,200,255)),(1020,(255,220,100,255)),(1030,(255,150,0,255)),(1040,(200,80,0,255))],
+    "pression_surface":      [(800,(130,0,130,255)),(900,(0,0,200,255)),(960,(0,180,0,255)),(1013,(200,200,200,255)),(1040,(200,80,0,255))],
     "humidite":              [(0,(200,150,100,255)),(20,(220,180,120,255)),(40,(255,255,200,255)),(60,(180,255,180,255)),(80,(0,200,200,255)),(90,(0,100,255,255)),(100,(0,0,200,255))],
     "reflectivite":          [(0,(0,0,0,0)),(5,(100,200,255,255)),(15,(0,0,255,255)),(25,(0,255,0,255)),(35,(255,255,0,255)),(45,(255,165,0,255)),(55,(255,0,0,255)),(65,(160,0,160,255))],
 }
@@ -120,7 +142,7 @@ def ensure_dir(p):
     os.makedirs(p, exist_ok=True)
     return p
 
-# AROME HD
+# ─── AROME HD ─────────────────────────────────────────────────────────────────
 AROME_WMS_MAP = {
     "temperature":           ("TEMPERATURE__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "T__HEIGHT__SHADING"),
     "temperature_ressentie": ("TEMPERATURE__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "T__HEIGHT__SHADING"),
@@ -128,14 +150,22 @@ AROME_WMS_MAP = {
     "humidex":               ("TEMPERATURE__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "T__HEIGHT__SHADING"),
     "pluie_1h":              ("TOTAL_WATER_PRECIPITATION__GROUND_OR_WATER_SURFACE", "EAU__GROUND__RADAR_SHADING"),
     "pluie_cumul":           ("TOTAL_PRECIPITATION__GROUND_OR_WATER_SURFACE", "PRECIP__GROUND__RADAR_SHADING"),
+    "reflectivite":          ("BRIGHTNESS_TEMPERATURE__GROUND_OR_WATER_SURFACE", "BT__CHANNELS_108__SHADING"),
+    "graupel":               ("TOTAL_GRAUPEL_PRECIPITATION__GROUND_OR_WATER_SURFACE", "GRAUPEL__GROUND__RADAR_SHADING"),
     "vent":                  ("WIND_SPEED__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "FF__HEIGHT__SHADING"),
     "rafales":               ("WIND_SPEED_GUST__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "FF__HEIGHT__SHADING"),
+    "rafales_cumul":         ("WIND_SPEED_GUST__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "FF__HEIGHT__SHADING"),
+    "nebulosite":            ("TOTAL_CLOUD_COVER__GROUND_OR_WATER_SURFACE", "NEBUL__GROUND__SHADING"),
+    "nuages_bas":            ("LOW_CLOUD_COVER__GROUND_OR_WATER_SURFACE", "NEBUL__GROUND__SHADING"),
+    "nuages_moyens":         ("MEDIUM_CLOUD_COVER__GROUND_OR_WATER_SURFACE", "NEBUL__GROUND__SHADING"),
+    "nuages_eleves":         ("HIGH_CLOUD_COVER__GROUND_OR_WATER_SURFACE", "NEBUL__GROUND__SHADING"),
+    "humidite":              ("RELATIVE_HUMIDITY__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "HU__HEIGHT__SHADING"),
     "mucape":                ("MEAN_LAYER_CAPE__GROUND_OR_WATER_SURFACE", "CAPE_INS__GROUND__SHADING"),
     "neige":                 ("TOTAL_SNOW_PRECIPITATION__GROUND_OR_WATER_SURFACE", "NEIGE__GROUND__RADAR_SHADING"),
     "neige_au_sol":          ("SNOW_DEPTH__GROUND_OR_WATER_SURFACE", "NEIGE__GROUND__RADAR_SHADING"),
+    "equivalent_eau_neige":  ("TOTAL_SNOW_PRECIPITATION__GROUND_OR_WATER_SURFACE", "NEIGE__GROUND__RADAR_SHADING"),
     "pression":              ("PRESSURE__MEAN_SEA_LEVEL", "P__LEVEL__SHADING"),
-    "humidite":              ("RELATIVE_HUMIDITY__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "HU__HEIGHT__SHADING"),
-    "reflectivite":          ("BRIGHTNESS_TEMPERATURE__GROUND_OR_WATER_SURFACE", "BT__CHANNELS_108__SHADING"),
+    "pression_surface":      ("PRESSURE__GROUND_OR_WATER_SURFACE", "P__LEVEL__SHADING"),
 }
 AROME_WMS = "https://public-api.meteofrance.fr/public/arome/1.0/wms/MF-NWP-HIGHRES-AROME-001-FRANCE-WMS/GetMap"
 
@@ -192,8 +222,18 @@ def run_arome():
             steps.append(step)
         total = len(futs)
         for i, _ in enumerate(as_completed(futs), 1):
-            if i % 28 == 0 or i == total:
+            if i % 35 == 0 or i == total:
                 print("  AROME %d/%d (%d%%)" % (i, total, i*100//total))
+
+    # Calcul rafales cumulées pour AROME
+    max_gust = None
+    for lh in range(N_STEPS):
+        rf_file = os.path.join(out_dir, "rafales", "%03d.webp" % lh)
+        if os.path.exists(rf_file):
+            arr = np.array(Image.open(rf_file).convert("RGBA"))
+            max_gust = arr.copy() if max_gust is None else np.maximum(max_gust, arr)
+            dst_c = os.path.join(out_dir, "rafales_cumul", "%03d.webp" % lh)
+            Image.fromarray(max_gust, "RGBA").save(dst_c, format="WEBP", quality=85)
 
     for layer in LAYERS:
         for lh in range(N_STEPS):
@@ -208,13 +248,16 @@ def run_arome():
     write_manifest(arome_dir, steps, meta)
     print("  OK AROME termine")
 
+# ─── ICON-EU ──────────────────────────────────────────────────────────────────
 ICON_VARS = {
     "temperature": "t_2m", "temperature_ressentie": "t_2m",
     "point_rosee": "td_2m", "humidex": "t_2m",
     "pluie_1h": "tot_prec", "pluie_cumul": "tot_prec",
-    "vent": "u_10m", "rafales": "vmax_10m",
-    "mucape": "cape_con", "neige": "snow_gsp", "neige_au_sol": "h_snow",
-    "pression": "pmsl", "humidite": "relhum_2m", "reflectivite": "tot_prec",
+    "reflectivite": "tot_prec", "graupel": "graupel_gsp",
+    "vent": "u_10m", "rafales": "vmax_10m", "rafales_cumul": "vmax_10m",
+    "nebulosite": "clct", "nuages_bas": "clcl", "nuages_moyens": "clcm", "nuages_eleves": "clch",
+    "mucape": "cape_con", "neige": "snow_gsp", "neige_au_sol": "h_snow", "equivalent_eau_neige": "snow_gsp",
+    "pression": "pmsl", "pression_surface": "ps", "humidite": "relhum_2m",
 }
 
 def run_icon():
@@ -235,6 +278,7 @@ def run_icon():
     print("  Run ICON-EU:", run_dt.strftime("%Y-%m-%d %H:00 UTC"))
 
     steps = []
+    max_gust_field = None
     for lh in range(N_STEPS):
         vt = run_dt + datetime.timedelta(hours=lh)
         step = {"lead_hour": lh, "valid_time": vt.isoformat(), "files": {}}
@@ -260,17 +304,22 @@ def run_icon():
                         os.remove(tmp)
                         if layer in ("temperature","temperature_ressentie","point_rosee","humidex") and d.max() > 100:
                             d = d - 273.15
-                        elif layer == "pression" and d.max() > 10000:
+                        elif layer in ("pression","pression_surface") and d.max() > 10000:
                             d = d / 100.0
-                        elif layer in ("vent","rafales") and d.max() < 200:
+                        elif layer in ("vent","rafales","rafales_cumul") and d.max() < 200:
                             d = d * 3.6
                         cached[var] = regrid(d, la, lo)
                     else:
                         cached[var] = None
                 except Exception:
                     cached[var] = None
-            if cached.get(var) is not None:
-                save_webp(cached[var], layer, dst)
+            f = cached.get(var)
+            if f is not None:
+                if layer == "rafales_cumul":
+                    max_gust_field = f.copy() if max_gust_field is None else np.maximum(max_gust_field, f)
+                    save_webp(max_gust_field, layer, dst)
+                else:
+                    save_webp(f, layer, dst)
         print(" OK")
         steps.append(step)
 
@@ -278,6 +327,7 @@ def run_icon():
                                      "resolution": "7 km (0.0625 deg)", "run_time": run_dt.isoformat()})
     print("  OK ICON-EU termine")
 
+# ─── GFS ──────────────────────────────────────────────────────────────────────
 def run_gfs():
     try:
         import cfgrib
@@ -295,13 +345,15 @@ def run_gfs():
     h_str = "%02d" % run_dt.hour
     print("  Run GFS:", run_dt.strftime("%Y-%m-%d %H:00 UTC"))
 
-    gfs_req_vars = ["TMP","DPT","UGRD","VGRD","GUST","APCP","CAPE","SNOD","PRMSL","RH"]
+    gfs_req_vars = ["TMP","DPT","UGRD","VGRD","GUST","APCP","CAPE","SNOD","PRMSL","PRES","RH","TCDC","LCDC","MCDC","HCDC"]
     gfs_layer_var = {"temperature":"TMP","temperature_ressentie":"TMP","point_rosee":"DPT",
-                     "humidex":"TMP","pluie_1h":"APCP","pluie_cumul":"APCP",
-                     "vent":"UGRD","rafales":"GUST","mucape":"CAPE",
-                     "neige":"SNOD","neige_au_sol":"SNOD","pression":"PRMSL",
-                     "humidite":"RH","reflectivite":"APCP"}
+                     "humidex":"TMP","pluie_1h":"APCP","pluie_cumul":"APCP","reflectivite":"APCP",
+                     "graupel":"APCP","vent":"UGRD","rafales":"GUST","rafales_cumul":"GUST",
+                     "nebulosite":"TCDC","nuages_bas":"LCDC","nuages_moyens":"MCDC","nuages_eleves":"HCDC",
+                     "mucape":"CAPE","neige":"SNOD","neige_au_sol":"SNOD","equivalent_eau_neige":"SNOD",
+                     "pression":"PRMSL","pression_surface":"PRES","humidite":"RH"}
     steps = []
+    max_gust_field = None
 
     for lh in range(N_STEPS):
         vt = run_dt + datetime.timedelta(hours=lh)
@@ -318,7 +370,7 @@ def run_gfs():
         for v in gfs_req_vars:
             params["var_" + v] = "on"
         params.update({"lev_2_m_above_ground": "on", "lev_10_m_above_ground": "on",
-                        "lev_surface": "on", "lev_mean_sea_level": "on"})
+                        "lev_surface": "on", "lev_mean_sea_level": "on", "lev_entire_atmosphere": "on"})
 
         grib_bytes = None
         try:
@@ -354,9 +406,14 @@ def run_gfs():
                 d, la, lo = cached[key]
                 if layer in ("temperature","temperature_ressentie","humidex") and d.max() > 200: d = d - 273.15
                 elif layer == "point_rosee" and d.max() > 200: d = d - 273.15
-                elif layer == "pression" and d.max() > 10000: d = d / 100.0
-                elif layer in ("vent","rafales") and d.max() < 200: d = d * 3.6
-                save_webp(regrid(d, la, lo), layer, dst)
+                elif layer in ("pression","pression_surface") and d.max() > 10000: d = d / 100.0
+                elif layer in ("vent","rafales","rafales_cumul") and d.max() < 200: d = d * 3.6
+                rf = regrid(d, la, lo)
+                if layer == "rafales_cumul":
+                    max_gust_field = rf.copy() if max_gust_field is None else np.maximum(max_gust_field, rf)
+                    save_webp(max_gust_field, layer, dst)
+                else:
+                    save_webp(rf, layer, dst)
 
         print(" OK")
         steps.append(step)
@@ -365,6 +422,7 @@ def run_gfs():
                                     "resolution": "25 km (0.25 deg)", "run_time": run_dt.isoformat()})
     print("  OK GFS termine")
 
+# ─── ECMWF ────────────────────────────────────────────────────────────────────
 def run_ecmwf():
     try:
         from ecmwf.opendata import Client
@@ -383,16 +441,19 @@ def run_ecmwf():
 
     client = Client("ecmwf", beta=True)
     ecmwf_param_map = {"temperature":"2t","temperature_ressentie":"2t","point_rosee":"2d",
-                       "humidex":"2t","pluie_1h":"tp","pluie_cumul":"tp","vent":"10u",
-                       "rafales":"10u","mucape":"cape","neige":"tp","neige_au_sol":"tp",
-                       "pression":"msl","humidite":"2d","reflectivite":"tp"}
+                       "humidex":"2t","pluie_1h":"tp","pluie_cumul":"tp","reflectivite":"tp",
+                       "graupel":"tp","vent":"10u","rafales":"10u","rafales_cumul":"10u",
+                       "nebulosite":"tcc","nuages_bas":"tcc","nuages_moyens":"tcc","nuages_eleves":"tcc",
+                       "mucape":"cape","neige":"tp","neige_au_sol":"tp","equivalent_eau_neige":"tp",
+                       "pression":"msl","pression_surface":"sp","humidite":"2d"}
     steps = []
+    max_gust_field = None
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_grib = os.path.join(tmp_dir, "ifs.grib2")
         try:
             client.retrieve(step=list(range(N_STEPS)),
-                            param=["2t","2d","10u","10v","msl","tp","cape"],
+                            param=["2t","2d","10u","10v","msl","sp","tp","cape","tcc"],
                             target=tmp_grib,
                             date=run_dt.strftime("%Y%m%d"), time=run_h)
         except Exception as e:
@@ -424,9 +485,15 @@ def run_ecmwf():
                     la, lo = ds.latitude.values, ds.longitude.values
                     if layer in ("temperature","temperature_ressentie","humidex") and d.max() > 200: d = d - 273.15
                     elif layer == "point_rosee" and d.max() > 200: d = d - 273.15
-                    elif layer == "pression" and d.max() > 10000: d = d / 100.0
-                    elif layer in ("vent","rafales"): d = d * 3.6
-                    save_webp(regrid(d, la, lo), layer, dst)
+                    elif layer in ("pression","pression_surface") and d.max() > 10000: d = d / 100.0
+                    elif layer in ("vent","rafales","rafales_cumul"): d = d * 3.6
+                    elif layer in ("nebulosite","nuages_bas","nuages_moyens","nuages_eleves") and d.max() <= 1.0: d = d * 100.0
+                    rf = regrid(d, la, lo)
+                    if layer == "rafales_cumul":
+                        max_gust_field = rf.copy() if max_gust_field is None else np.maximum(max_gust_field, rf)
+                        save_webp(max_gust_field, layer, dst)
+                    else:
+                        save_webp(rf, layer, dst)
                     break
             print(" OK")
             steps.append(step)

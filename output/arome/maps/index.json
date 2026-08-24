@@ -26,7 +26,7 @@
       "decimals": 1
     },
     "point_rosee": {
-      "label": "Point de rosée",
+      "label": "Point de rosée à 2 m",
       "unit": "°C",
       "decimals": 1
     },
@@ -41,12 +41,12 @@
       "decimals": 1
     },
     "pluie_cumul": {
-      "label": "Pluie cumulée",
+      "label": "Précipitations cumulées",
       "unit": "mm",
       "decimals": 1
     },
     "vent": {
-      "label": "Vent moyen 10 m",
+      "label": "Vent moyen à 10 m",
       "unit": "km/h",
       "decimals": 1
     },
@@ -56,33 +56,73 @@
       "decimals": 1
     },
     "mucape": {
-      "label": "MUCAPE (instabilité)",
+      "label": "Instabilité convective (MUCAPE)",
       "unit": "J/kg",
       "decimals": 1
     },
     "neige": {
-      "label": "Neige fraîche",
-      "unit": "cm",
+      "label": "Chutes de neige",
+      "unit": "cm/h",
       "decimals": 1
     },
     "neige_au_sol": {
-      "label": "Neige au sol",
+      "label": "Épaisseur neige au sol",
       "unit": "cm",
       "decimals": 1
     },
     "pression": {
-      "label": "Pression réduite mer",
+      "label": "Pression niveau mer",
       "unit": "hPa",
       "decimals": 1
     },
     "humidite": {
-      "label": "Humidité relative 2 m",
+      "label": "Humidité relative à 2 m",
       "unit": "%",
       "decimals": 1
     },
     "reflectivite": {
-      "label": "Réflectivité radar",
+      "label": "Réflectivité radar Doppler",
       "unit": "dBZ",
+      "decimals": 1
+    },
+    "rafales_cumul": {
+      "label": "Rafales maximales cumulées",
+      "unit": "km/h",
+      "decimals": 1
+    },
+    "graupel": {
+      "label": "Graupel / Grésil",
+      "unit": "mm",
+      "decimals": 1
+    },
+    "nebulosite": {
+      "label": "Nébulosité totale",
+      "unit": "%",
+      "decimals": 1
+    },
+    "nuages_bas": {
+      "label": "Couverture nuages bas",
+      "unit": "%",
+      "decimals": 1
+    },
+    "nuages_moyens": {
+      "label": "Couverture nuages moyens",
+      "unit": "%",
+      "decimals": 1
+    },
+    "nuages_eleves": {
+      "label": "Couverture nuages élevés",
+      "unit": "%",
+      "decimals": 1
+    },
+    "equivalent_eau_neige": {
+      "label": "Cumul neigeux équiv. eau",
+      "unit": "mm",
+      "decimals": 1
+    },
+    "pression_surface": {
+      "label": "Pression au sol",
+      "unit": "hPa",
       "decimals": 1
     }
   },
@@ -104,7 +144,15 @@
         "neige_au_sol": "maps/neige_au_sol/000.webp",
         "pression": "maps/pression/000.webp",
         "humidite": "maps/humidite/000.webp",
-        "reflectivite": "maps/reflectivite/000.webp"
+        "reflectivite": "maps/reflectivite/000.webp",
+        "rafales_cumul": "maps/rafales_cumul/000.webp",
+        "graupel": "maps/graupel/000.webp",
+        "nebulosite": "maps/nebulosite/000.webp",
+        "nuages_bas": "maps/nuages_bas/000.webp",
+        "nuages_moyens": "maps/nuages_moyens/000.webp",
+        "nuages_eleves": "maps/nuages_eleves/000.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/000.webp",
+        "pression_surface": "maps/pression_surface/000.webp"
       }
     },
     {
@@ -124,7 +172,15 @@
         "neige_au_sol": "maps/neige_au_sol/001.webp",
         "pression": "maps/pression/001.webp",
         "humidite": "maps/humidite/001.webp",
-        "reflectivite": "maps/reflectivite/001.webp"
+        "reflectivite": "maps/reflectivite/001.webp",
+        "rafales_cumul": "maps/rafales_cumul/001.webp",
+        "graupel": "maps/graupel/001.webp",
+        "nebulosite": "maps/nebulosite/001.webp",
+        "nuages_bas": "maps/nuages_bas/001.webp",
+        "nuages_moyens": "maps/nuages_moyens/001.webp",
+        "nuages_eleves": "maps/nuages_eleves/001.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/001.webp",
+        "pression_surface": "maps/pression_surface/001.webp"
       }
     },
     {
@@ -144,7 +200,15 @@
         "neige_au_sol": "maps/neige_au_sol/002.webp",
         "pression": "maps/pression/002.webp",
         "humidite": "maps/humidite/002.webp",
-        "reflectivite": "maps/reflectivite/002.webp"
+        "reflectivite": "maps/reflectivite/002.webp",
+        "rafales_cumul": "maps/rafales_cumul/002.webp",
+        "graupel": "maps/graupel/002.webp",
+        "nebulosite": "maps/nebulosite/002.webp",
+        "nuages_bas": "maps/nuages_bas/002.webp",
+        "nuages_moyens": "maps/nuages_moyens/002.webp",
+        "nuages_eleves": "maps/nuages_eleves/002.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/002.webp",
+        "pression_surface": "maps/pression_surface/002.webp"
       }
     },
     {
@@ -164,7 +228,15 @@
         "neige_au_sol": "maps/neige_au_sol/003.webp",
         "pression": "maps/pression/003.webp",
         "humidite": "maps/humidite/003.webp",
-        "reflectivite": "maps/reflectivite/003.webp"
+        "reflectivite": "maps/reflectivite/003.webp",
+        "rafales_cumul": "maps/rafales_cumul/003.webp",
+        "graupel": "maps/graupel/003.webp",
+        "nebulosite": "maps/nebulosite/003.webp",
+        "nuages_bas": "maps/nuages_bas/003.webp",
+        "nuages_moyens": "maps/nuages_moyens/003.webp",
+        "nuages_eleves": "maps/nuages_eleves/003.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/003.webp",
+        "pression_surface": "maps/pression_surface/003.webp"
       }
     },
     {
@@ -184,7 +256,15 @@
         "neige_au_sol": "maps/neige_au_sol/004.webp",
         "pression": "maps/pression/004.webp",
         "humidite": "maps/humidite/004.webp",
-        "reflectivite": "maps/reflectivite/004.webp"
+        "reflectivite": "maps/reflectivite/004.webp",
+        "rafales_cumul": "maps/rafales_cumul/004.webp",
+        "graupel": "maps/graupel/004.webp",
+        "nebulosite": "maps/nebulosite/004.webp",
+        "nuages_bas": "maps/nuages_bas/004.webp",
+        "nuages_moyens": "maps/nuages_moyens/004.webp",
+        "nuages_eleves": "maps/nuages_eleves/004.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/004.webp",
+        "pression_surface": "maps/pression_surface/004.webp"
       }
     },
     {
@@ -204,7 +284,15 @@
         "neige_au_sol": "maps/neige_au_sol/005.webp",
         "pression": "maps/pression/005.webp",
         "humidite": "maps/humidite/005.webp",
-        "reflectivite": "maps/reflectivite/005.webp"
+        "reflectivite": "maps/reflectivite/005.webp",
+        "rafales_cumul": "maps/rafales_cumul/005.webp",
+        "graupel": "maps/graupel/005.webp",
+        "nebulosite": "maps/nebulosite/005.webp",
+        "nuages_bas": "maps/nuages_bas/005.webp",
+        "nuages_moyens": "maps/nuages_moyens/005.webp",
+        "nuages_eleves": "maps/nuages_eleves/005.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/005.webp",
+        "pression_surface": "maps/pression_surface/005.webp"
       }
     },
     {
@@ -224,7 +312,15 @@
         "neige_au_sol": "maps/neige_au_sol/006.webp",
         "pression": "maps/pression/006.webp",
         "humidite": "maps/humidite/006.webp",
-        "reflectivite": "maps/reflectivite/006.webp"
+        "reflectivite": "maps/reflectivite/006.webp",
+        "rafales_cumul": "maps/rafales_cumul/006.webp",
+        "graupel": "maps/graupel/006.webp",
+        "nebulosite": "maps/nebulosite/006.webp",
+        "nuages_bas": "maps/nuages_bas/006.webp",
+        "nuages_moyens": "maps/nuages_moyens/006.webp",
+        "nuages_eleves": "maps/nuages_eleves/006.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/006.webp",
+        "pression_surface": "maps/pression_surface/006.webp"
       }
     },
     {
@@ -244,7 +340,15 @@
         "neige_au_sol": "maps/neige_au_sol/007.webp",
         "pression": "maps/pression/007.webp",
         "humidite": "maps/humidite/007.webp",
-        "reflectivite": "maps/reflectivite/007.webp"
+        "reflectivite": "maps/reflectivite/007.webp",
+        "rafales_cumul": "maps/rafales_cumul/007.webp",
+        "graupel": "maps/graupel/007.webp",
+        "nebulosite": "maps/nebulosite/007.webp",
+        "nuages_bas": "maps/nuages_bas/007.webp",
+        "nuages_moyens": "maps/nuages_moyens/007.webp",
+        "nuages_eleves": "maps/nuages_eleves/007.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/007.webp",
+        "pression_surface": "maps/pression_surface/007.webp"
       }
     },
     {
@@ -264,7 +368,15 @@
         "neige_au_sol": "maps/neige_au_sol/008.webp",
         "pression": "maps/pression/008.webp",
         "humidite": "maps/humidite/008.webp",
-        "reflectivite": "maps/reflectivite/008.webp"
+        "reflectivite": "maps/reflectivite/008.webp",
+        "rafales_cumul": "maps/rafales_cumul/008.webp",
+        "graupel": "maps/graupel/008.webp",
+        "nebulosite": "maps/nebulosite/008.webp",
+        "nuages_bas": "maps/nuages_bas/008.webp",
+        "nuages_moyens": "maps/nuages_moyens/008.webp",
+        "nuages_eleves": "maps/nuages_eleves/008.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/008.webp",
+        "pression_surface": "maps/pression_surface/008.webp"
       }
     },
     {
@@ -284,7 +396,15 @@
         "neige_au_sol": "maps/neige_au_sol/009.webp",
         "pression": "maps/pression/009.webp",
         "humidite": "maps/humidite/009.webp",
-        "reflectivite": "maps/reflectivite/009.webp"
+        "reflectivite": "maps/reflectivite/009.webp",
+        "rafales_cumul": "maps/rafales_cumul/009.webp",
+        "graupel": "maps/graupel/009.webp",
+        "nebulosite": "maps/nebulosite/009.webp",
+        "nuages_bas": "maps/nuages_bas/009.webp",
+        "nuages_moyens": "maps/nuages_moyens/009.webp",
+        "nuages_eleves": "maps/nuages_eleves/009.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/009.webp",
+        "pression_surface": "maps/pression_surface/009.webp"
       }
     },
     {
@@ -304,7 +424,15 @@
         "neige_au_sol": "maps/neige_au_sol/010.webp",
         "pression": "maps/pression/010.webp",
         "humidite": "maps/humidite/010.webp",
-        "reflectivite": "maps/reflectivite/010.webp"
+        "reflectivite": "maps/reflectivite/010.webp",
+        "rafales_cumul": "maps/rafales_cumul/010.webp",
+        "graupel": "maps/graupel/010.webp",
+        "nebulosite": "maps/nebulosite/010.webp",
+        "nuages_bas": "maps/nuages_bas/010.webp",
+        "nuages_moyens": "maps/nuages_moyens/010.webp",
+        "nuages_eleves": "maps/nuages_eleves/010.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/010.webp",
+        "pression_surface": "maps/pression_surface/010.webp"
       }
     },
     {
@@ -324,7 +452,15 @@
         "neige_au_sol": "maps/neige_au_sol/011.webp",
         "pression": "maps/pression/011.webp",
         "humidite": "maps/humidite/011.webp",
-        "reflectivite": "maps/reflectivite/011.webp"
+        "reflectivite": "maps/reflectivite/011.webp",
+        "rafales_cumul": "maps/rafales_cumul/011.webp",
+        "graupel": "maps/graupel/011.webp",
+        "nebulosite": "maps/nebulosite/011.webp",
+        "nuages_bas": "maps/nuages_bas/011.webp",
+        "nuages_moyens": "maps/nuages_moyens/011.webp",
+        "nuages_eleves": "maps/nuages_eleves/011.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/011.webp",
+        "pression_surface": "maps/pression_surface/011.webp"
       }
     },
     {
@@ -344,7 +480,15 @@
         "neige_au_sol": "maps/neige_au_sol/012.webp",
         "pression": "maps/pression/012.webp",
         "humidite": "maps/humidite/012.webp",
-        "reflectivite": "maps/reflectivite/012.webp"
+        "reflectivite": "maps/reflectivite/012.webp",
+        "rafales_cumul": "maps/rafales_cumul/012.webp",
+        "graupel": "maps/graupel/012.webp",
+        "nebulosite": "maps/nebulosite/012.webp",
+        "nuages_bas": "maps/nuages_bas/012.webp",
+        "nuages_moyens": "maps/nuages_moyens/012.webp",
+        "nuages_eleves": "maps/nuages_eleves/012.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/012.webp",
+        "pression_surface": "maps/pression_surface/012.webp"
       }
     },
     {
@@ -364,7 +508,15 @@
         "neige_au_sol": "maps/neige_au_sol/013.webp",
         "pression": "maps/pression/013.webp",
         "humidite": "maps/humidite/013.webp",
-        "reflectivite": "maps/reflectivite/013.webp"
+        "reflectivite": "maps/reflectivite/013.webp",
+        "rafales_cumul": "maps/rafales_cumul/013.webp",
+        "graupel": "maps/graupel/013.webp",
+        "nebulosite": "maps/nebulosite/013.webp",
+        "nuages_bas": "maps/nuages_bas/013.webp",
+        "nuages_moyens": "maps/nuages_moyens/013.webp",
+        "nuages_eleves": "maps/nuages_eleves/013.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/013.webp",
+        "pression_surface": "maps/pression_surface/013.webp"
       }
     },
     {
@@ -384,7 +536,15 @@
         "neige_au_sol": "maps/neige_au_sol/014.webp",
         "pression": "maps/pression/014.webp",
         "humidite": "maps/humidite/014.webp",
-        "reflectivite": "maps/reflectivite/014.webp"
+        "reflectivite": "maps/reflectivite/014.webp",
+        "rafales_cumul": "maps/rafales_cumul/014.webp",
+        "graupel": "maps/graupel/014.webp",
+        "nebulosite": "maps/nebulosite/014.webp",
+        "nuages_bas": "maps/nuages_bas/014.webp",
+        "nuages_moyens": "maps/nuages_moyens/014.webp",
+        "nuages_eleves": "maps/nuages_eleves/014.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/014.webp",
+        "pression_surface": "maps/pression_surface/014.webp"
       }
     },
     {
@@ -404,7 +564,15 @@
         "neige_au_sol": "maps/neige_au_sol/015.webp",
         "pression": "maps/pression/015.webp",
         "humidite": "maps/humidite/015.webp",
-        "reflectivite": "maps/reflectivite/015.webp"
+        "reflectivite": "maps/reflectivite/015.webp",
+        "rafales_cumul": "maps/rafales_cumul/015.webp",
+        "graupel": "maps/graupel/015.webp",
+        "nebulosite": "maps/nebulosite/015.webp",
+        "nuages_bas": "maps/nuages_bas/015.webp",
+        "nuages_moyens": "maps/nuages_moyens/015.webp",
+        "nuages_eleves": "maps/nuages_eleves/015.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/015.webp",
+        "pression_surface": "maps/pression_surface/015.webp"
       }
     },
     {
@@ -424,7 +592,15 @@
         "neige_au_sol": "maps/neige_au_sol/016.webp",
         "pression": "maps/pression/016.webp",
         "humidite": "maps/humidite/016.webp",
-        "reflectivite": "maps/reflectivite/016.webp"
+        "reflectivite": "maps/reflectivite/016.webp",
+        "rafales_cumul": "maps/rafales_cumul/016.webp",
+        "graupel": "maps/graupel/016.webp",
+        "nebulosite": "maps/nebulosite/016.webp",
+        "nuages_bas": "maps/nuages_bas/016.webp",
+        "nuages_moyens": "maps/nuages_moyens/016.webp",
+        "nuages_eleves": "maps/nuages_eleves/016.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/016.webp",
+        "pression_surface": "maps/pression_surface/016.webp"
       }
     },
     {
@@ -444,7 +620,15 @@
         "neige_au_sol": "maps/neige_au_sol/017.webp",
         "pression": "maps/pression/017.webp",
         "humidite": "maps/humidite/017.webp",
-        "reflectivite": "maps/reflectivite/017.webp"
+        "reflectivite": "maps/reflectivite/017.webp",
+        "rafales_cumul": "maps/rafales_cumul/017.webp",
+        "graupel": "maps/graupel/017.webp",
+        "nebulosite": "maps/nebulosite/017.webp",
+        "nuages_bas": "maps/nuages_bas/017.webp",
+        "nuages_moyens": "maps/nuages_moyens/017.webp",
+        "nuages_eleves": "maps/nuages_eleves/017.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/017.webp",
+        "pression_surface": "maps/pression_surface/017.webp"
       }
     },
     {
@@ -464,7 +648,15 @@
         "neige_au_sol": "maps/neige_au_sol/018.webp",
         "pression": "maps/pression/018.webp",
         "humidite": "maps/humidite/018.webp",
-        "reflectivite": "maps/reflectivite/018.webp"
+        "reflectivite": "maps/reflectivite/018.webp",
+        "rafales_cumul": "maps/rafales_cumul/018.webp",
+        "graupel": "maps/graupel/018.webp",
+        "nebulosite": "maps/nebulosite/018.webp",
+        "nuages_bas": "maps/nuages_bas/018.webp",
+        "nuages_moyens": "maps/nuages_moyens/018.webp",
+        "nuages_eleves": "maps/nuages_eleves/018.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/018.webp",
+        "pression_surface": "maps/pression_surface/018.webp"
       }
     },
     {
@@ -484,7 +676,15 @@
         "neige_au_sol": "maps/neige_au_sol/019.webp",
         "pression": "maps/pression/019.webp",
         "humidite": "maps/humidite/019.webp",
-        "reflectivite": "maps/reflectivite/019.webp"
+        "reflectivite": "maps/reflectivite/019.webp",
+        "rafales_cumul": "maps/rafales_cumul/019.webp",
+        "graupel": "maps/graupel/019.webp",
+        "nebulosite": "maps/nebulosite/019.webp",
+        "nuages_bas": "maps/nuages_bas/019.webp",
+        "nuages_moyens": "maps/nuages_moyens/019.webp",
+        "nuages_eleves": "maps/nuages_eleves/019.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/019.webp",
+        "pression_surface": "maps/pression_surface/019.webp"
       }
     },
     {
@@ -504,7 +704,15 @@
         "neige_au_sol": "maps/neige_au_sol/020.webp",
         "pression": "maps/pression/020.webp",
         "humidite": "maps/humidite/020.webp",
-        "reflectivite": "maps/reflectivite/020.webp"
+        "reflectivite": "maps/reflectivite/020.webp",
+        "rafales_cumul": "maps/rafales_cumul/020.webp",
+        "graupel": "maps/graupel/020.webp",
+        "nebulosite": "maps/nebulosite/020.webp",
+        "nuages_bas": "maps/nuages_bas/020.webp",
+        "nuages_moyens": "maps/nuages_moyens/020.webp",
+        "nuages_eleves": "maps/nuages_eleves/020.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/020.webp",
+        "pression_surface": "maps/pression_surface/020.webp"
       }
     },
     {
@@ -524,7 +732,15 @@
         "neige_au_sol": "maps/neige_au_sol/021.webp",
         "pression": "maps/pression/021.webp",
         "humidite": "maps/humidite/021.webp",
-        "reflectivite": "maps/reflectivite/021.webp"
+        "reflectivite": "maps/reflectivite/021.webp",
+        "rafales_cumul": "maps/rafales_cumul/021.webp",
+        "graupel": "maps/graupel/021.webp",
+        "nebulosite": "maps/nebulosite/021.webp",
+        "nuages_bas": "maps/nuages_bas/021.webp",
+        "nuages_moyens": "maps/nuages_moyens/021.webp",
+        "nuages_eleves": "maps/nuages_eleves/021.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/021.webp",
+        "pression_surface": "maps/pression_surface/021.webp"
       }
     },
     {
@@ -544,7 +760,15 @@
         "neige_au_sol": "maps/neige_au_sol/022.webp",
         "pression": "maps/pression/022.webp",
         "humidite": "maps/humidite/022.webp",
-        "reflectivite": "maps/reflectivite/022.webp"
+        "reflectivite": "maps/reflectivite/022.webp",
+        "rafales_cumul": "maps/rafales_cumul/022.webp",
+        "graupel": "maps/graupel/022.webp",
+        "nebulosite": "maps/nebulosite/022.webp",
+        "nuages_bas": "maps/nuages_bas/022.webp",
+        "nuages_moyens": "maps/nuages_moyens/022.webp",
+        "nuages_eleves": "maps/nuages_eleves/022.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/022.webp",
+        "pression_surface": "maps/pression_surface/022.webp"
       }
     },
     {
@@ -564,7 +788,15 @@
         "neige_au_sol": "maps/neige_au_sol/023.webp",
         "pression": "maps/pression/023.webp",
         "humidite": "maps/humidite/023.webp",
-        "reflectivite": "maps/reflectivite/023.webp"
+        "reflectivite": "maps/reflectivite/023.webp",
+        "rafales_cumul": "maps/rafales_cumul/023.webp",
+        "graupel": "maps/graupel/023.webp",
+        "nebulosite": "maps/nebulosite/023.webp",
+        "nuages_bas": "maps/nuages_bas/023.webp",
+        "nuages_moyens": "maps/nuages_moyens/023.webp",
+        "nuages_eleves": "maps/nuages_eleves/023.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/023.webp",
+        "pression_surface": "maps/pression_surface/023.webp"
       }
     },
     {
@@ -584,7 +816,15 @@
         "neige_au_sol": "maps/neige_au_sol/024.webp",
         "pression": "maps/pression/024.webp",
         "humidite": "maps/humidite/024.webp",
-        "reflectivite": "maps/reflectivite/024.webp"
+        "reflectivite": "maps/reflectivite/024.webp",
+        "rafales_cumul": "maps/rafales_cumul/024.webp",
+        "graupel": "maps/graupel/024.webp",
+        "nebulosite": "maps/nebulosite/024.webp",
+        "nuages_bas": "maps/nuages_bas/024.webp",
+        "nuages_moyens": "maps/nuages_moyens/024.webp",
+        "nuages_eleves": "maps/nuages_eleves/024.webp",
+        "equivalent_eau_neige": "maps/equivalent_eau_neige/024.webp",
+        "pression_surface": "maps/pression_surface/024.webp"
       }
     }
   ]
