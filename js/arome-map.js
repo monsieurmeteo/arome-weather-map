@@ -2518,9 +2518,6 @@
                 '  gl_FragColor=vec4(base,1.0);return;\n' +
                 ' }\n' +
                 ' vec4 weather=texture2D(uWeather,uv);\n' +
-                // Le maillage couvre TOUT le domaine AROME (mer et pays
-                // voisins inclus, comme météo-npdc) : plus aucune zone
-                // « vide de maillage » — l'image est entièrement remplie.
                 ' float alpha=weather.a;\n' +
                 ' gl_FragColor=vec4(mix(base,weather.rgb,alpha),1.0);\n' +
                 '}'
@@ -2684,8 +2681,7 @@
                 fallbackContext.fillStyle = '#a5a6b0';
                 fallbackContext.fillRect(mrx, mry, mrw, mrh);
             }
-            // Dalle météo : maillage sur TOUT le domaine (mer et pays voisins
-            // inclus) → aucune zone vide, comme météo-npdc.
+            // Dalle météo : maillage AROME alpha-composité sur le fond
             var weatherLayer = document.createElement('canvas');
             weatherLayer.width = width;
             weatherLayer.height = height;
@@ -2841,7 +2837,7 @@
                 var bh = Math.max(100, bbox.y1 - bbox.y0);
                 var sFrance = Math.min(availW / (bw * 1.05), availH / (bh * 1.05));
 
-                var cx = (bbox.x0 + bbox.x1) / 2;
+                var cx = (bbox.x0 + bbox.x1) / 2 - (bbox.x1 - bbox.x0) * 0.15;
                 var cy = (bbox.y0 + bbox.y1) / 2;
                 var bboxRect = {
                     x: width / 2 - cx * sFrance,
