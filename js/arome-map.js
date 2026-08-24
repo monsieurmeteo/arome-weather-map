@@ -129,6 +129,9 @@
         var placeBuckets = new Map();
         var vectorDefinition = null;
         var currentWeatherImage = null;
+        var logoImage = new Image();
+        logoImage.crossOrigin = 'anonymous';
+        logoImage.src = app.dataset.logo || 'logo.png';
         var currentProbe = null;
         var probeLoadToken = 0;
         var samplerCanvas = document.createElement('canvas');
@@ -710,6 +713,26 @@
                 });
                 context.restore();
                 context.globalAlpha = 1;
+            }
+
+            // Logo Météo-Climat Pro (en haut à droite de la carte)
+            if (logoImage && logoImage.complete && logoImage.naturalWidth) {
+                var logoW = 240;
+                var logoH = Math.round(logoW * logoImage.naturalHeight / logoImage.naturalWidth);
+                var pad = 24;
+                var lx = output.width - pad - logoW;
+                var ly = pad;
+                context.save();
+                context.fillStyle = 'rgba(7, 11, 20, 0.72)';
+                context.beginPath();
+                if (typeof context.roundRect === 'function') {
+                    context.roundRect(lx - 12, ly - 8, logoW + 24, logoH + 16, 12);
+                } else {
+                    context.rect(lx - 12, ly - 8, logoW + 24, logoH + 16);
+                }
+                context.fill();
+                context.drawImage(logoImage, lx, ly, logoW, logoH);
+                context.restore();
             }
 
             // 4. Cartouche d'antenne Météo-Climat Pro (Modèle • Paramètre • Validité)

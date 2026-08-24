@@ -118,15 +118,45 @@ def save_webp(data, layer, dst):
     rgba = apply_palette(data, PALETTES.get(layer, PALETTES["temperature"]))
     Image.fromarray(rgba, "RGBA").save(dst, format="WEBP", quality=85, method=4)
 
+def _cleanup_orphans(out_dir, steps):
+    """Supprime les dalles .webp non référencées par le manifeste
+    (restes d'un pas horaire précédent → évite doublons et trous)."""
+    keep = {layer: set() for layer in LAYERS}
+    for step in steps:
+        for layer, rel in (step.get("files") or {}).items():
+            keep.setdefault(layer, set()).add(os.path.basename(rel))
+    for layer in LAYERS:
+        layer_dir = os.path.join(out_dir, layer)
+        if not os.path.isdir(layer_dir):
+            continue
+        for fn in os.listdir(layer_dir):
+            if fn.endswith(".webp") and fn not in keep.get(layer, set()):
+                try:
+                    os.remove(os.path.join(layer_dir, fn))
+                except OSError:
+                    pass
+
+
 def write_manifest(out_dir, steps, meta):
     layers_info = {l: {"label": LABELS[l][0], "unit": LABELS[l][1], "decimals": 1} for l in LAYERS}
+    # Ne référencer que les tuiles réellement présentes sur disque
+    # (sinon le front-end affiche des images cassées).
+    model_root = os.path.dirname(out_dir)
+    clean_steps = []
+    for step in steps:
+        files = {}
+        for layer, rel in (step.get("files") or {}).items():
+            if os.path.exists(os.path.join(model_root, rel.replace("/", os.sep))):
+                files[layer] = rel
+        clean_steps.append(dict(step, files=files))
+    _cleanup_orphans(out_dir, clean_steps)
     m = {"schema_version": 6, "status": "ok",
          "model_name": meta["name"], "provider": meta["provider"],
          "resolution": meta["resolution"],
          "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
          "run_time": meta["run_time"], "bounds": BOUNDS,
          "overlay": "maps/frontieres.svg", "places": "maps/communes.json",
-         "layers": layers_info, "steps": steps}
+         "layers": layers_info, "steps": clean_steps}
     with open(os.path.join(out_dir, "index.json"), "w", encoding="utf-8") as f:
         json.dump(m, f, indent=2, ensure_ascii=False)
 
