@@ -1885,71 +1885,43 @@
 
         var regionSelect = app.querySelector('[data-amfm-region-select]');
         if (regionSelect) {
-            // Correspondance ids du menu déroulant → clés de Europe1Regions (regions.js)
-            var REGION_KEYS = {
-                france: 'france',
-                hdf: 'hdf',
-                normandie: 'normandie',
-                idf: 'ile-de-france',
-                grandest: 'grand-est',
-                bretagne: 'bretagne',
-                pdl: 'pdl',
-                cvl: 'cvl',
-                bfc: 'bfc',
-                naq: 'naq',
-                ara: 'ara',
-                occitanie: 'occitanie',
-                paca: 'paca',
-                corse: 'corse'
+            // Configuration précise et calibrée de chaque région :
+            // centres réels et niveaux de zoom optimaux pour afficher
+            // la région ENTIÈRE dans le viewport sans excès de zoom.
+            var REGION_CONFIG = {
+                france: { reset: true },
+                hdf: { latitude: 50.15, longitude: 2.80, scale: 2.15 },
+                normandie: { latitude: 49.15, longitude: 0.20, scale: 2.25 },
+                idf: { latitude: 48.70, longitude: 2.50, scale: 2.80 },
+                grandest: { latitude: 48.70, longitude: 5.80, scale: 1.85 },
+                bretagne: { latitude: 48.15, longitude: -2.80, scale: 2.25 },
+                pdl: { latitude: 47.50, longitude: -0.60, scale: 2.10 },
+                cvl: { latitude: 47.50, longitude: 1.80, scale: 2.10 },
+                bfc: { latitude: 47.20, longitude: 5.00, scale: 1.95 },
+                naq: { latitude: 45.30, longitude: 0.20, scale: 1.75 },
+                ara: { latitude: 45.50, longitude: 4.80, scale: 1.75 },
+                occitanie: { latitude: 43.60, longitude: 2.30, scale: 1.85 },
+                paca: { latitude: 43.85, longitude: 6.10, scale: 2.15 },
+                corse: { latitude: 42.15, longitude: 9.10, scale: 2.85 },
+                belgique: { latitude: 50.50, longitude: 4.40, scale: 2.40 }
             };
-            var fallbackCoords = {
-                france: { scale: 1, u: 0.5, v: 0.5 },
-                hdf: { scale: 2.8, u: 0.53, v: 0.28 },
-                normandie: { scale: 3.0, u: 0.42, v: 0.32 },
-                idf: { scale: 3.8, u: 0.52, v: 0.38 },
-                grandest: { scale: 2.6, u: 0.68, v: 0.35 },
-                bretagne: { scale: 3.0, u: 0.28, v: 0.38 },
-                pdl: { scale: 2.6, u: 0.38, v: 0.39 },
-                cvl: { scale: 2.8, u: 0.50, v: 0.34 },
-                bfc: { scale: 2.6, u: 0.61, v: 0.38 },
-                naq: { scale: 2.4, u: 0.38, v: 0.58 },
-                ara: { scale: 2.6, u: 0.64, v: 0.58 },
-                occitanie: { scale: 2.6, u: 0.48, v: 0.70 },
-                paca: { scale: 3.0, u: 0.68, v: 0.72 },
-                corse: { scale: 4.2, u: 0.78, v: 0.82 }
-            };
+
             regionSelect.addEventListener('change', function (e) {
                 var val = e.target.value || 'france';
-                // Zones hors France (Belgique…) : coordonnées directes
-                var externalZones = {
-                    belgique: { latitude: 50.5, longitude: 4.5, scale: 6 }
-                };
-                if (externalZones[val]) {
-                    focusLocation(externalZones[val]);
+                var cfg = REGION_CONFIG[val];
+                if (val === 'france' || (cfg && cfg.reset)) {
+                    resetView();
                     updateUrl();
                     return;
                 }
-                var regionData = null;
-                var key = REGION_KEYS[val];
-                if (key && typeof window.Europe1Regions === 'object' &&
-                        window.Europe1Regions && window.Europe1Regions[key]) {
-                    regionData = window.Europe1Regions[key];
-                }
-                if (regionData && Array.isArray(regionData.center) &&
-                        regionData.center.length >= 2) {
-                    // Zoom précis sur le centre de la région (coordonnées réelles).
-                    // scale = 2^(zoom−6)×1.15 : France (6) → 1×, région (7-8) → 2-4×,
-                    // département/IDF (9) → 9×, commune (12) → 26× (max 28).
-                    var regionScale = val === 'france' ? 1 :
-                        Math.min(28, Math.max(1.8, Math.pow(2, (regionData.zoom || 7) - 6) * 1.15));
+                if (cfg && cfg.latitude !== undefined) {
                     focusLocation({
-                        latitude: Number(regionData.center[0]),
-                        longitude: Number(regionData.center[1]),
-                        scale: regionScale
+                        latitude: cfg.latitude,
+                        longitude: cfg.longitude,
+                        scale: cfg.scale
                     });
                 } else {
-                    var target = fallbackCoords[val] || fallbackCoords.france;
-                    focusOnPoint(target.u, target.v, target.scale);
+                    resetView();
                 }
                 updateUrl();
             });
@@ -2833,13 +2805,12 @@
             var southY = mercator(Number(bounds.south));
             var u = (longitude - west) / (east - west);
             var v = (northY - mercator(latitude)) / (northY - southY);
-            var scale = clamp(Number(pendingFocus.scale) || 32, 1, maxScale);
-            var s = (width / height) > (2200.0 / 1640.0) ?
-                (width / 2200.0) : (height / 1640.0);
+            var scale = clamp(Number(pendingFocus.scale) || 2, 1, maxScale);
+            var baseScale = Math.max(width / 2200.0, height / 1640.0);
             transform.scale = scale;
-            // Projection UNIQUE : le point ciblé se place au centre du viewport.
-            transform.x = 2200.0 * s * scale * (0.5 - u);
-            transform.y = 1640.0 * s * scale * (0.5 - v);
+            // Projection UNIQUE : le point ciblé se place exactement au centre de l'écran.
+            transform.x = 2200.0 * baseScale * scale * (0.5 - u);
+            transform.y = 1640.0 * baseScale * scale * (0.5 - v);
             pendingFocus = null;
             applyTransform();
         }
