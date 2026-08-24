@@ -875,32 +875,32 @@
             if (layer && typeof window.getLayerPalette === 'function' &&
                     typeof window.paletteTicks === 'function') {
                 try {
-                    var legendW = 900;
-                    var legendH = 92;
+                    var legendW = 1100;
+                    var legendH = 110;
                     var legendX = (output.width - legendW) / 2;
-                    var legendY = output.height - legendH - 20;
-                    context.fillStyle = 'rgba(7, 11, 20, 0.94)';
+                    var legendY = output.height - legendH - 16;
+                    context.fillStyle = 'rgba(7, 11, 20, 0.95)';
                     context.beginPath();
                     if (typeof context.roundRect === 'function') {
-                        context.roundRect(legendX - 20, legendY - 10,
-                            legendW + 40, legendH + 32, 16);
+                        context.roundRect(legendX - 22, legendY - 12,
+                            legendW + 44, legendH + 38, 18);
                     } else {
-                        context.rect(legendX - 20, legendY - 10,
-                            legendW + 40, legendH + 32);
+                        context.rect(legendX - 22, legendY - 12,
+                            legendW + 44, legendH + 38);
                     }
                     context.fill();
-                    context.strokeStyle = 'rgba(0, 210, 255, 0.6)';
-                    context.lineWidth = 2;
+                    context.strokeStyle = 'rgba(0, 210, 255, 0.7)';
+                    context.lineWidth = 2.5;
                     context.stroke();
 
                     // Étiquette + unité (centrées au-dessus de la barre)
                     context.fillStyle = '#ffffff';
-                    context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    context.font = '700 32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     context.textAlign = 'center';
                     context.textBaseline = 'alphabetic';
                     var legendLabel = (layer.label || 'Échelle') +
                         (layer.unit ? ' (' + layer.unit + ')' : '');
-                    context.fillText(legendLabel, output.width / 2, legendY + 26);
+                    context.fillText(legendLabel, output.width / 2, legendY + 32);
 
                     // Barre dégradée depuis les stops structurés de la palette
                     var pal = window.getLayerPalette(currentLayer);
@@ -910,7 +910,7 @@
                         pal.transparent_below : (stops.length ? stops[0].value : 0);
                     var max = stops.length ? stops[stops.length - 1].value : 1;
                     var span = (max - low) || 1;
-                    var barY = legendY + 44;
+                    var barY = legendY + 52;
                     var gradient = context.createLinearGradient(legendX, 0,
                         legendX + legendW, 0);
                     var gradientBuilt = false;
@@ -928,22 +928,22 @@
                     context.fillStyle = gradientBuilt ? gradient : '#3478c5';
                     context.beginPath();
                     if (typeof context.roundRect === 'function') {
-                        context.roundRect(legendX, barY, legendW, 22, 10);
+                        context.roundRect(legendX, barY, legendW, 26, 12);
                     } else {
-                        context.rect(legendX, barY, legendW, 22);
+                        context.rect(legendX, barY, legendW, 26);
                     }
                     context.fill();
-                    context.strokeStyle = 'rgba(255,255,255,0.5)';
-                    context.lineWidth = 1.5;
+                    context.strokeStyle = 'rgba(255,255,255,0.6)';
+                    context.lineWidth = 2;
                     context.stroke();
 
                     // Ticks de valeurs
-                    context.fillStyle = '#e6eeff';
-                    context.font = '700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    context.fillStyle = '#eaf1ff';
+                    context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     var ticks = window.paletteTicks(currentLayer);
                     ticks.forEach(function (tick, i) {
                         var x = legendX + (ticks.length > 1 ? i / (ticks.length - 1) : 0.5) * legendW;
-                        context.fillText(String(tick), x, barY + 46);
+                        context.fillText(String(tick), x, barY + 52);
                     });
                     context.textAlign = 'left';
                 } catch (legendError) {
@@ -980,6 +980,16 @@
                         context.lineWidth = 4;
                         var occupied = [];
                         var drawn = 0;
+                        // La zone de la légende (bas, centrée) est réservée :
+                        // aucune ville ne doit s'y écrire.
+                        if (typeof legendY === 'number' && legendY > 0) {
+                            occupied.push({
+                                left: legendX - 22,
+                                right: legendX + legendW + 22,
+                                top: legendY - 12,
+                                bottom: legendY + legendH + 38
+                            });
+                        }
                         for (var pi = 0; pi < places.length; pi += 1) {
                             var place = places[pi];
                             if (!Array.isArray(place) || place.length < 4) { continue; }
@@ -2505,7 +2515,9 @@
         }
 
         function resetView() {
-            transform = { scale: 1, x: 0, y: 0 };
+            // Vue initiale : la carte est légèrement décalée vers le bas pour
+            // que le header (menus) ne cache pas le nord de la France.
+            transform = { scale: 1, x: 0, y: 84 };
             var regSel = document.getElementById('select-region');
             if (regSel) regSel.value = 'france';
             applyTransform();
