@@ -819,10 +819,10 @@
             }
 
             var margin = 24;
-            var bannerH = 130;
+            var bannerH = 150;
             var bannerY = 84;
             // Largeur du cartouche adaptée au contenu (titre + échéance)
-            context.font = '700 34px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '700 44px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
             var titleText = modelTitle + ' • ' + (layer ? layer.label : '') +
                 (layer && layer.unit ? ' (' + layer.unit + ')' : '');
@@ -831,7 +831,7 @@
             var titleW = context.measureText(titleText).width;
             var dateW = context.measureText(dateText).width;
             var bannerW = Math.min(output.width - margin * 2,
-                Math.max(titleW, dateW) + 44);
+                Math.max(titleW, dateW) + 52);
             context.fillStyle = 'rgba(7, 11, 20, 0.94)';
             context.beginPath();
             if (typeof context.roundRect === 'function') {
@@ -840,28 +840,35 @@
                 context.rect(margin, bannerY, bannerW, bannerH);
             }
             context.fill();
-            context.strokeStyle = 'rgba(0, 210, 255, 0.75)';
+            context.strokeStyle = 'rgba(0, 210, 255, 0.8)';
             context.lineWidth = 3;
             context.stroke();
 
-            // Ligne 1 : modèle + paramètre (gros, blanc)
+            // Ligne 1 — TITRE PRINCIPAL (très grand, blanc) : modèle • paramètre
             context.fillStyle = '#ffffff';
-            context.font = '700 34px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText(titleText, margin + 18, bannerY + 52);
+            context.font = '700 44px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText(titleText, margin + 20, bannerY + 62);
 
-            // Ligne 2 : échéance (gros, cyan) + run
+            // Ligne 2 — Échéance (grand, cyan) : date + H+xx
             context.fillStyle = '#00d2ff';
-            context.font = '700 27px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText(
+                dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : ''),
+                margin + 20, bannerY + 106
+            );
+
+            // Ligne 3 — Run (moyen, gris clair) : run + Météo-Climat Pro
             var runLabel = '';
             if (manifest && manifest.run_time) {
                 try {
-                    runLabel = ' • run ' + String(manifest.run_time).slice(11, 16) + 'Z';
+                    runLabel = 'Run ' + String(manifest.run_time).slice(11, 16) + 'Z';
                 } catch (e) {}
             }
+            context.fillStyle = '#c9d6e8';
+            context.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             context.fillText(
-                dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '') +
-                runLabel + ' — Météo-Climat Pro',
-                margin + 18, bannerY + 92
+                (runLabel ? runLabel + ' • ' : '') + 'Météo-Climat Pro',
+                margin + 20, bannerY + 138
             );
 
             // Légende colorimétrique centrée en bas (comme météociel)
