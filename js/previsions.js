@@ -1,14 +1,16 @@
 /* =========================================================================
- * Météo-Climat Pro — Prévisions AROME HD par commune
+ * Météo-Climat Pro — Prévisions AROME HD par commune (refonte UI v2)
  * -------------------------------------------------------------------------
- *  - Recherche par nom de commune ou code postal (geo.api.gouv.fr)
- *  - Données : output/arome/maps/communes/{dept}.bin.gz (format MCV2, zlib)
- *  - Décodage : DecompressionStream('deflate') natif + DataView
- *  - 3 tableaux (général / orages / neige) + graphiques SVG + synthèse
+ *  LOGIQUE DE DONNÉES CONSERVÉE À L'IDENTIQUE :
+ *   - Recherche geo.api.gouv.fr, décodage binaire MCV2, interpolations,
+ *     calculs météo, seuils orage/neige, échéances : AUCUNE MODIFICATION.
+ *  REFONTE UI/UX : hero ville, cartes de synthèse premium, graphiques avec
+ *   axes/tooltips/états vides, tableaux sticky, responsive complet.
  * ========================================================================= */
 (function () {
     'use strict';
 
+    /* ── Constantes (données — inchangées) ───────────────────────────── */
     var BASE = 'output/arome/maps';
     var COMMUNES_API = 'https://geo.api.gouv.fr/communes';
     var NAN_I16 = -32768;
@@ -47,6 +49,29 @@
     var SNOW_PHASE = { 0: '—', 1: 'Pluie', 2: 'Pluie/neige', 3: 'Neige' };
     var HAZARD_RISKS = { 0: 'Faible', 1: 'Faible', 2: 'Modéré', 3: 'Fort' };
 
+    /* ── Aide utilisateur (tooltips ⓘ) ───────────────────────────────── */
+    var HELP = {
+        mucape: 'MUCAPE : énergie potentielle de convection disponible. Plus la valeur est élevée, plus l’air est instable et propice aux orages.',
+        reflectivite: 'Réflectivité : intensité des précipitations estimée par le modèle (en dBZ), comme un radar. Au-delà de 45 dBZ, pluie forte ou grêle possible.',
+        cisaillement: 'Cisaillement : variation du vent entre le sol et 100 m. Un cisaillement fort favorise les orages organisés (lignes, supercellulaires).',
+        rafale_max: 'Rafale max échéance : plus forte rafale de vent atteinte depuis le début du run jusqu’à cette échéance (maximum cumulé).',
+        interpolation: 'Interpolation bilinéaire : la valeur affichée est calculée à la position exacte de la commune à partir des 4 points de grille AROME les plus proches (grille 0,01° ≈ 1,3 km).',
+        arome: 'AROME 0,01° : modèle haute résolution de Météo-France, maille d’environ 1,3 km sur la France.',
+        lcl: 'LCL : niveau de condensation par soulèvement. Altitude à laquelle une parcelle d’air devient saturée (base des nuages convectifs).',
+        foudre: 'Score d’activité foudre estimé (0 à 100) à partir de la MUCAPE et de la réflectivité.',
+        grele: 'Risque de grêle estimé à partir de la MUCAPE, de la réflectivité et du graupel.',
+        cape: 'CAPE (MUCAPE) : énergie convective disponible. 0-500 J/kg : faible ; 500-1500 : modérée ; >1500 : forte.',
+        tenue: 'Tenue de la neige au sol : capacité de la neige fraîche à se maintenir (dépend de la température du sol et de l’air).'
+    };
+    function helpIcon(key, text) {
+        var span = el('span', 'help-ic', 'ⓘ');
+        span.title = text || HELP[key] || '';
+        span.setAttribute('role', 'img');
+        span.setAttribute('aria-label', span.title);
+        return span;
+    }
+
+    /* ── Helpers (inchangés) ─────────────────────────────────────────── */
     var $ = function (id) { return document.getElementById(id); };
     var el = function (tag, cls, text) {
         var e = document.createElement(tag);
@@ -54,7 +79,6 @@
         if (text !== undefined) e.textContent = text;
         return e;
     };
-
     function finite(v) { return typeof v === 'number' && Number.isFinite(v); }
     function fmt(v, d, suffix) {
         if (!finite(v)) return '—';
@@ -66,10 +90,12 @@
     }
     function tempClass(v) {
         if (!finite(v)) return '';
+        if (v >= 35) return 'temp-hot';
         if (v >= 30) return 'temp-hot';
-        if (v >= 22) return 'temp-warm';
-        if (v >= 12) return 'temp-mild';
-        if (v >= 4) return 'temp-cool';
+        if (v >= 25) return 'temp-warm';
+        if (v >= 20) return 'temp-warm';
+        if (v >= 10) return 'temp-mild';
+        if (v >= 0) return 'temp-cool';
         return 'temp-cold';
     }
     function roundUp5(v) { return finite(v) ? Math.ceil(Math.max(0, Number(v)) / 5) * 5 : null; }
@@ -77,23 +103,26 @@
         var k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         return k;
     }
-    function weekdayToken(d) { return ['dim','lun','mar','mer','jeu','ven','sam'][d.getDay()]; }
     function dayLabel(d) {
         var wd = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][d.getDay()];
+        return wd + ' ' + d.getDate() + '/' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+    function shortDayLabel(d) {
+        var wd = ['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'][d.getDay()];
         return wd + ' ' + d.getDate() + '/' + String(d.getMonth() + 1).padStart(2, '0');
     }
     function hourLabel(d) { return String(d.getHours()).padStart(2, '0') + 'h'; }
 
     /* ── État global ─────────────────────────────────────────────────── */
     var state = {
-        index: null,           // index.json
-        deptCache: {},         // code dépt → {header, data}
-        communes: [],          // communes du département courant
-        colIndex: {},          // nom colonne → index
+        index: null,
+        deptCache: {},
+        communes: [],
+        colIndex: {},
         colScale: [], colOffset: [],
-        leads: [],             // heures d'échéance
+        leads: [],
         runTime: null,
-        pointIdx: -1,          // index de la commune dans le fichier dépt
+        pointIdx: -1,
         city: null,
         debounce: null,
         searchCtrl: null
@@ -101,15 +130,15 @@
 
     var ui = {
         input: $('mcp-input'), results: $('mcp-results'), locate: $('mcp-locate'),
-        meta: $('mcp-meta'), run: $('mcp-run'), generated: $('mcp-generated'),
+        runbar: $('mcp-runbar'), run: $('mcp-run'), generated: $('mcp-generated'),
         error: $('mcp-error'), loading: $('mcp-loading'), main: $('mcp-main'),
         city: $('mcp-city'), cityMeta: $('mcp-city-meta'),
-        summary: $('mcp-summary'), charts: $('mcp-charts'),
+        summary: $('mcp-summary'),
         tblDaily: $('tbl-daily'), tblGeneral: $('tbl-general'),
         tblStorms: $('tbl-storms'), tblSnow: $('tbl-snow')
     };
 
-    /* ── Helpers réseau ───────────────────────────────────────────────── */
+    /* ── Réseau + décodage (INCHANGÉ) ────────────────────────────────── */
     function fetchJson(url, opts) {
         return fetch(url, opts).then(function (r) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -127,7 +156,6 @@
         if (!on) clearError();
     }
 
-    /* ── Chargement de l'index ────────────────────────────────────────── */
     function loadIndex() {
         return fetchJson(BASE + '/communes/index.json', { cache: 'no-cache' })
             .then(function (payload) {
@@ -137,19 +165,23 @@
                 state.index = payload;
                 state.runTime = payload.run_time;
                 state.leads = payload.leads || [];
-                ui.run.textContent = new Date(payload.run_time).toLocaleString('fr-FR', {
+                var runDate = new Date(payload.run_time);
+                var runStr = runDate.toLocaleString('fr-FR', {
                     timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit',
                     hour: '2-digit', minute: '2-digit'
-                }).replace(',', ' à') + ' (run ' + (payload.run_time || '').slice(11, 16) + 'Z)';
-                ui.generated.textContent = 'maj ' + new Date(payload.generated_at).toLocaleString('fr-FR', {
-                    timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-                });
-                ui.meta.style.display = 'flex';
+                }).replace(',', ' à');
+                ui.run.textContent = 'Run du ' + runStr +
+                    ' (' + (payload.run_time || '').slice(11, 16) + 'Z)';
+                ui.generated.textContent = 'Mise à jour : ' +
+                    new Date(payload.generated_at).toLocaleString('fr-FR', {
+                        timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                ui.runbar.style.display = 'flex';
                 return payload;
             });
     }
 
-    /* ── Décompression + décodage binaire MCV2 ────────────────────────── */
     function gunzip(buf) {
         if (typeof DecompressionStream !== 'undefined') {
             return new Response(new Blob([buf]).stream()
@@ -223,16 +255,11 @@
         }
         var leads = [];
         for (var j5 = 0; j5 < nleads; j5++) { leads.push(dv.getUint16(off, true)); off += 2; }
-        // Alignement 2 octets (padding ajouté côté pipeline)
         if (off % 2 !== 0) off += 1;
-
         var colIndex = {};
         colNames.forEach(function (nm, idx) { colIndex[nm] = idx; });
-
-        // Données : [commune][lead][col] int16
         var data = new Int16Array(buf, off, n * nleads * ncols);
         var shape = { n: n, nleads: nleads, ncols: ncols };
-
         return { communes: communes, leads: leads, colIndex: colIndex,
                  colScale: colScale, colOffset: colOffset, data: data, shape: shape, run: run };
     }
@@ -246,7 +273,11 @@
         return q * deptData.colScale[ci] - deptData.colOffset[ci];
     }
 
-    /* ── Recherche de communes ────────────────────────────────────────── */
+    function valueAt(leadPos, colName) {
+        return getValue(state.dept, state.pointIdx, leadPos, colName);
+    }
+
+    /* ── Recherche (inchangée) ───────────────────────────────────────── */
     function displayResults(candidates) {
         ui.results.replaceChildren();
         if (!candidates.length) { ui.results.classList.remove('open'); return; }
@@ -254,11 +285,12 @@
             var btn = el('button', 'mcp-result');
             btn.type = 'button';
             var left = el('span');
-            left.appendChild(el('span', 'r-name', cand.nom));
-            left.appendChild(el('span', 'r-detail', ' ' + (cand.codesPostaux || []).join(', ') +
-                ' • dépt ' + cand.codeDepartement + (cand.population ? ' • ' + Number(cand.population).toLocaleString('fr-FR') + ' hab.' : '')));
             left.style.display = 'flex';
             left.style.flexDirection = 'column';
+            left.appendChild(el('span', 'r-name', cand.nom));
+            left.appendChild(el('span', 'r-detail', ' ' + (cand.codesPostaux || []).join(', ') +
+                ' • dépt ' + cand.codeDepartement +
+                (cand.population ? ' • ' + Number(cand.population).toLocaleString('fr-FR') + ' hab.' : '')));
             btn.appendChild(left);
             btn.appendChild(el('span', 'r-detail', '📍'));
             btn.addEventListener('click', function () { selectCommune(cand); });
@@ -281,7 +313,6 @@
             .catch(function (err) { if (err.name !== 'AbortError') displayResults([]); });
     }
 
-    /* ── Sélection d'une commune → chargement + rendu ─────────────────── */
     function selectCommune(cand) {
         ui.results.classList.remove('open');
         ui.input.value = cand.nom;
@@ -292,7 +323,7 @@
             return;
         }
         setLoading(true);
-        showError('');
+        clearError();
         loadDepartment(dept)
             .then(function (deptData) {
                 var idx = -1;
@@ -311,18 +342,7 @@
             });
     }
 
-    /* ── Rendu ────────────────────────────────────────────────────────── */
-    function valueAt(leadPos, colName) {
-        return getValue(state.dept, state.pointIdx, leadPos, colName);
-    }
-
-    function makeDayCell(d, count) {
-        var td = el('td', 'mcp-day-cell');
-        td.colSpan = 1;
-        td.textContent = dayLabel(d) + (count > 1 ? ' (' + count + ')' : '');
-        return td;
-    }
-
+    /* ── Rendu principal ─────────────────────────────────────────────── */
     function renderForecast(deptData, idx, cand) {
         var nleads = deptData.shape.nleads;
         var forecasts = [];
@@ -334,28 +354,12 @@
             forecasts.push({ lp: lp, lh: lh, valid: valid });
         }
 
-        var runDate = new Date(state.runTime);
         var tz = 'Europe/Paris';
         var hourFmt = new Intl.DateTimeFormat('fr-FR', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
         var dayFmt = new Intl.DateTimeFormat('fr-FR', { timeZone: tz, weekday: 'long', day: '2-digit', month: '2-digit' });
 
-        // Titre
-        var postal = (cand.codesPostaux && cand.codesPostaux.length) ? cand.codesPostaux[0] : '';
-        ui.city.replaceChildren();
-        ui.city.appendChild(el('span', null, cand.nom));
-        if (postal) ui.city.appendChild(el('span', 'postal', postal));
-        var alt = valueAt(0, 'altitude_m');
-        ui.cityMeta.textContent = 'Altitude ≈ ' + (finite(alt) ? Math.round(alt) + ' m' : '—') +
-            ' • Département ' + cand.codeDepartement +
-            ' • Interpolation bilinéaire sur la grille AROME 0,01° (≈1,3 km) • ' + forecasts.length + ' échéances';
-
-        // Synthèse
+        renderHero(cand, forecasts);
         renderSummary(forecasts);
-
-        // Graphiques
-        renderCharts(forecasts, cand);
-
-        // Tableaux
         renderDailyTable(forecasts);
         renderGeneralTable(forecasts, hourFmt, dayFmt);
         renderStormsTable(forecasts, hourFmt, dayFmt);
@@ -364,20 +368,49 @@
         setLoading(false);
     }
 
-    /* ── Synthèse (cartes de risques) ─────────────────────────────────── */
+    /* ── Hero ville ──────────────────────────────────────────────────── */
+    function renderHero(cand, forecasts) {
+        var postal = (cand.codesPostaux && cand.codesPostaux.length) ? cand.codesPostaux[0] : '';
+        ui.city.replaceChildren();
+        ui.city.appendChild(el('span', null, cand.nom));
+        if (postal) ui.city.appendChild(el('span', 'postal', postal));
+
+        var alt = valueAt(0, 'altitude_m');
+        var items = [
+            { icon: 'fa-solid fa-location-dot', label: '📍', text: cand.nom + (postal ? ' — ' + postal : '') + ' · Département ' + cand.codeDepartement },
+            { icon: 'fa-solid fa-mountain-sun', label: 'Altitude', text: finite(alt) ? Math.round(alt) + ' m' : '—' },
+            { icon: 'fa-solid fa-microchip', label: 'Modèle', text: 'AROME 0,01°' + helpIcon('arome') },
+            { icon: 'fa-solid fa-border-all', label: 'Résolution', text: '≈ 1,3 km' },
+            { icon: 'fa-solid fa-clock', label: 'Échéances', text: forecasts.length + ' heures' },
+            { icon: 'fa-solid fa-location-crosshairs', label: 'Précision', text: 'Interpolation bilinéaire' + helpIcon('interpolation') }
+        ];
+        ui.cityMeta.replaceChildren();
+        items.forEach(function (it) {
+            var item = el('div', 'mcp-hero-item');
+            var ic = el('i', it.icon);
+            ic.setAttribute('aria-hidden', 'true');
+            item.appendChild(ic);
+            var label = el('span', null, it.label + ' : ');
+            var val = el('b', null);
+            if (typeof it.text === 'string') val.textContent = it.text;
+            else val.appendChild(it.text);
+            item.appendChild(label);
+            item.appendChild(val);
+            ui.cityMeta.appendChild(item);
+        });
+    }
+
+    /* ── Cartes de synthèse (Aperçu de la période) ───────────────────── */
     function renderSummary(forecasts) {
         var maxThunder = 0, maxSnow = 0, maxGust = 0, rainTotal = 0, snowTotal = 0;
-        var tMin = null, tMax = null, gustAt = null, rainAt = null;
+        var tMin = null, tMax = null, gustAt = null, rainAt = null, snowAt = null;
         forecasts.forEach(function (f) {
             var th = valueAt(f.lp, 'thunder_risk_code');
             if (finite(th)) maxThunder = Math.max(maxThunder, Number(th));
             var sn = valueAt(f.lp, 'snow_risk_code');
             if (finite(sn)) maxSnow = Math.max(maxSnow, Number(sn));
             var g = valueAt(f.lp, 'wind_gust_max_kmh');
-            if (finite(g) && Number(g) > maxGust) {
-                maxGust = Number(g);
-                gustAt = f.valid;
-            }
+            if (finite(g) && Number(g) > maxGust) { maxGust = Number(g); gustAt = f.valid; }
             var r = valueAt(f.lp, 'precipitation_mm');
             if (finite(r)) rainTotal += Math.max(0, Number(r));
             var sf = valueAt(f.lp, 'snow_fresh_cm');
@@ -385,178 +418,119 @@
             var t = valueAt(f.lp, 'temperature_c');
             if (finite(t)) { tMin = tMin === null ? Number(t) : Math.min(tMin, Number(t)); tMax = tMax === null ? Number(t) : Math.max(tMax, Number(t)); }
         });
-        var gustDate = gustAt ? ' le ' + hourLabel(gustAt) : '';
-        var cards = [
-            { label: 'Risque orage max', html: riskPill(maxThunder, THUNDER_RISKS), sub: 'MUCAPE + réflectivité + cisaillement AROME' },
-            { label: 'Risque neige max', html: riskPill(maxSnow, SNOW_RISKS), sub: 'Neige fraîche + température AROME' },
-            { label: 'Rafale max du run', value: fmt(maxGust || null, 0, ' km/h') + (maxGust ? gustDate : ''), sub: 'Maximum cumulé depuis H+0 (toute la période)', cls: maxGust >= 100 ? 'risk-4' : (maxGust >= 70 ? 'risk-3' : 'risk-0') },
-            { label: 'Températures', value: (tMin !== null ? Math.round(tMin) : '—') + '° / ' + (tMax !== null ? Math.round(tMax) : '—') + '°', sub: 'Min / Max sur la période' },
-            { label: 'Pluie cumulée', value: fmt(rainTotal || null, 1, ' mm'), sub: 'Somme horaire sur la période' },
-            { label: 'Neige fraîche', value: fmt(snowTotal || null, 1, ' cm'), sub: 'Cumul sur la période' }
-        ];
+
         ui.summary.replaceChildren();
-        cards.forEach(function (c) {
-            var card = el('div', 'mcp-sum-card');
-            card.appendChild(el('div', 's-label', c.label));
-            var val = el('div', 's-value' + (c.cls ? ' ' + c.cls : ''));
-            if (c.html) val.appendChild(c.html);
-            else val.appendChild(el('span', null, c.value));
-            card.appendChild(val);
-            card.appendChild(el('div', 's-sub', c.sub));
-            ui.summary.appendChild(card);
-        });
+
+        // Carte 1 — Risque orage
+        ui.summary.appendChild(summaryCard({
+            icon: '⛈️', label: 'Risque orage',
+            html: riskPill(maxThunder, THUNDER_RISKS),
+            sub: maxThunder === 0 ? 'Aucun signal orageux significatif' :
+                'Maximum sur la période — MUCAPE + réflectivité' + helpIcon('mucape')
+        }));
+
+        // Carte 2 — Risque neige
+        ui.summary.appendChild(summaryCard({
+            icon: '❄️', label: 'Risque neige',
+            html: riskPill(maxSnow, SNOW_RISKS),
+            sub: maxSnow === 0 ? 'Aucune neige attendue' : 'Maximum sur la période'
+        }));
+
+        // Carte 3 — Rafale max
+        ui.summary.appendChild(summaryCard({
+            icon: '💨', label: 'Rafale maximale',
+            value: maxGust > 0 ? String(Math.round(maxGust)) : null,
+            unit: maxGust > 0 ? 'km/h' : '',
+            sub: maxGust > 0
+                ? (gustAt ? 'vers ' + hourLabel(gustAt) + ' · ' : '') + 'Maximum prévu sur la période' + helpIcon('rafale_max')
+                : 'Donnée indisponible',
+            valueClass: maxGust >= 100 ? 'temp-hot' : (maxGust >= 70 ? 'temp-warm' : '')
+        }));
+
+        // Carte 4 — Températures
+        var amplitude = (tMin !== null && tMax !== null) ? Math.round(tMax - tMin) : null;
+        ui.summary.appendChild(summaryCard({
+            icon: '🌡️', label: 'Température',
+            value: (tMin !== null ? Math.round(tMin) : '—') + '° → ' + (tMax !== null ? Math.round(tMax) : '—') + '°',
+            sub: 'Min ' + (tMin !== null ? Math.round(tMin) + '°' : '—') +
+                 ' · Max ' + (tMax !== null ? Math.round(tMax) + '°' : '—') +
+                 (amplitude !== null ? ' · Amplitude ' + amplitude + '°' : '')
+        }));
+
+        // Carte 5 — Pluie cumulée
+        ui.summary.appendChild(summaryCard({
+            icon: '🌧️', label: 'Pluie cumulée',
+            value: rainTotal > 0 ? fmt(rainTotal, 1) : (forecasts.length ? '0' : null),
+            unit: rainTotal >= 0 ? 'mm' : '',
+            sub: rainTotal === 0 ? 'Aucune pluie prévue sur la période' : 'Cumul sur la période'
+        }));
+
+        // Carte 6 — Neige fraîche
+        ui.summary.appendChild(summaryCard({
+            icon: '🌨️', label: 'Neige fraîche',
+            value: snowTotal > 0 ? fmt(snowTotal, 1) : (forecasts.length ? '0' : null),
+            unit: snowTotal >= 0 ? 'cm' : '',
+            sub: snowTotal === 0 ? 'Aucune neige prévue' : 'Cumul sur la période'
+        }));
+    }
+
+    function summaryCard(opt) {
+        var card = el('div', 'mcp-sum-card');
+        card.appendChild(el('span', 's-icon', opt.icon));
+        card.appendChild(el('div', 's-label', opt.label));
+        var val = el('div', 's-value' + (opt.valueClass ? ' ' + opt.valueClass : ''));
+        if (opt.html) {
+            val.style.fontSize = '16px';
+            val.style.display = 'flex';
+            val.style.alignItems = 'center';
+            val.style.marginTop = '10px';
+            val.appendChild(opt.html);
+        } else if (opt.value !== null && opt.value !== undefined) {
+            val.appendChild(document.createTextNode(opt.value));
+            if (opt.unit) val.appendChild(el('span', 's-unit', opt.unit));
+        } else {
+            val.textContent = 'Donnée indisponible';
+            val.style.fontSize = '18px';
+            val.style.color = 'var(--text-3)';
+        }
+        card.appendChild(val);
+        if (opt.sub) {
+            var sub = el('div', 's-sub');
+            if (typeof opt.sub === 'string') sub.textContent = opt.sub;
+            else sub.appendChild(opt.sub);
+            card.appendChild(sub);
+        }
+        return card;
     }
 
     function riskPill(code, table) {
         var r = table[Number(code)] || table[0];
         var pill = el('span', 'risk-pill risk-' + Number(code));
-        pill.appendChild(el('span', null, r.icon + ' ' + r.label));
+        pill.appendChild(el('span', null, r.label));
         return pill;
     }
 
-    /* ── Graphiques SVG ───────────────────────────────────────────────── */
-    function renderCharts(forecasts, cand) {
-        var temp = [], press = [], rain = [], cumul = 0, wind = [], gust = [], gustMax = [];
-        forecasts.forEach(function (f) {
-            temp.push(valueAt(f.lp, 'temperature_c'));
-            press.push(valueAt(f.lp, 'pressure_hpa'));
-            var r = valueAt(f.lp, 'precipitation_mm');
-            rain.push(finite(r) ? Math.max(0, Number(r)) : null);
-            cumul += finite(r) ? Math.max(0, Number(r)) : 0;
-            wind.push(roundUp5(valueAt(f.lp, 'wind_speed_kmh')));
-            gust.push(roundUp5(valueAt(f.lp, 'wind_gust_kmh')));
-            gustMax.push(roundUp5(valueAt(f.lp, 'wind_gust_max_kmh')));
-        });
-        var labels = forecasts.map(function (f) { return hourLabel(f.valid); });
 
-        ui.charts.replaceChildren();
-        ui.charts.appendChild(chartCard('🌡️ Température (°C)', lineChart(labels, temp, { unit: '°C', color: '#ffb84d' })));
-        ui.charts.appendChild(chartCard('🧭 Pression niveau mer (hPa)', lineChart(labels, press, { unit: 'hPa', color: '#35c7ff' })));
-        ui.charts.appendChild(chartCard('🌧️ Pluie horaire (mm)', barsChart(labels, rain, { color: '#3f9dff' })));
-        ui.charts.appendChild(chartCard('💨 Vent moyen / rafales / rafale max éch. (km/h)',
-            threeLinesChart(labels, wind, gust, gustMax, { c1: '#2dd4a7', c2: '#ff5d5d', c3: '#ffc93c' })));
-    }
+    /* ══════════════════════════════════════════════════════════════════
+       TABLEAUX
+       ══════════════════════════════════════════════════════════════════ */
 
-    function chartCard(title, svg) {
-        var card = el('div', 'mcp-chart-card');
-        card.appendChild(el('h3', null, title));
-        card.appendChild(svg);
-        return card;
-    }
-
-    function svgNS() { return 'http://www.w3.org/2000/svg'; }
-    function makeSvg(w, h) {
-        var s = document.createElementNS(svgNS(), 'svg');
-        s.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-        s.setAttribute('preserveAspectRatio', 'none');
-        return s;
-    }
-    function polyPoints(values, w, h, pad, min, max) {
-        var pts = '';
-        var span = (max - min) || 1;
-        values.forEach(function (v, i) {
-            var x = pad + (i / (values.length - 1 || 1)) * (w - 2 * pad);
-            var y = h - pad - ((finite(v) ? v : min) - min) / span * (h - 2 * pad);
-            pts += x.toFixed(1) + ',' + y.toFixed(1) + ' ';
-        });
-        return pts;
-    }
-
-    function lineChart(labels, values, opt) {
-        var w = 600, h = 160, pad = 8;
-        var fin = values.filter(finite);
-        var min = fin.length ? Math.min.apply(null, fin) : 0;
-        var max = fin.length ? Math.max.apply(null, fin) : 1;
-        if (opt.unit === '°C') { min = Math.floor(min / 5) * 5; max = Math.ceil(max / 5) * 5; }
-        if (max - min < 4) max = min + 4;
-        var svg = makeSvg(w, h);
-        var pts = polyPoints(values, w, h, pad, min, max);
-        if (values.length > 1) {
-            var poly = document.createElementNS(svgNS(), 'polygon');
-            poly.setAttribute('points', pad + ',' + (h - pad) + ' ' + pts + ' ' + (w - pad) + ',' + (h - pad));
-            poly.setAttribute('fill', opt.color);
-            poly.setAttribute('opacity', '0.12');
-            svg.appendChild(poly);
-            var line = document.createElementNS(svgNS(), 'polyline');
-            line.setAttribute('points', pts);
-            line.setAttribute('fill', 'none');
-            line.setAttribute('stroke', opt.color);
-            line.setAttribute('stroke-width', '2.5');
-            line.setAttribute('stroke-linejoin', 'round');
-            svg.appendChild(line);
+    /* Helper : cellule jour avec séparation propre et compteur explicite */
+    function makeDayCell(d, count) {
+        var td = el('td', 'mcp-day-cell');
+        td.appendChild(document.createTextNode(dayLabel(d)));
+        if (count > 1) {
+            var cnt = el('span', 'day-count', '· ' + count + ' éch.');
+            cnt.title = count + ' échéances horaires ce jour';
+            td.appendChild(cnt);
         }
-        return svg;
+        return td;
     }
 
-    function barsChart(labels, values, opt) {
-        var w = 600, h = 160, pad = 8;
-        var max = Math.max.apply(null, values.map(function (v) { return finite(v) ? v : 0; }));
-        if (max <= 0) max = 1;
-        var svg = makeSvg(w, h);
-        var n = values.length;
-        var bw = (w - 2 * pad) / n;
-        values.forEach(function (v, i) {
-            var bh = finite(v) ? (v / max) * (h - 2 * pad) : 0;
-            var x = pad + i * bw + bw * 0.25;
-            var rect = document.createElementNS(svgNS(), 'rect');
-            rect.setAttribute('x', x.toFixed(1));
-            rect.setAttribute('y', (h - pad - bh).toFixed(1));
-            rect.setAttribute('width', (bw * 0.5).toFixed(1));
-            rect.setAttribute('height', bh.toFixed(1));
-            rect.setAttribute('fill', opt.color);
-            rect.setAttribute('rx', '2');
-            rect.setAttribute('opacity', finite(v) && v > 0 ? '0.85' : '0.15');
-            svg.appendChild(rect);
-        });
-        return svg;
-    }
-
-    function twoLinesChart(labels, a, b, opt) {
-        var w = 600, h = 160, pad = 8;
-        var fin = a.concat(b).filter(finite);
-        var max = fin.length ? Math.ceil(Math.max.apply(null, fin) / 10) * 10 : 20;
-        var min = 0;
-        var svg = makeSvg(w, h);
-        [['#2dd4a7', a], ['#ff5d5d', b]].forEach(function (pair) {
-            var pts = polyPoints(pair[1], w, h, pad, min, max);
-            if (pair[1].length > 1) {
-                var line = document.createElementNS(svgNS(), 'polyline');
-                line.setAttribute('points', pts);
-                line.setAttribute('fill', 'none');
-                line.setAttribute('stroke', pair[0]);
-                line.setAttribute('stroke-width', '2');
-                line.setAttribute('opacity', '0.9');
-                svg.appendChild(line);
-            }
-        });
-        return svg;
-    }
-
-    function threeLinesChart(labels, a, b, c, opt) {
-        var w = 600, h = 160, pad = 8;
-        var fin = a.concat(b).concat(c).filter(finite);
-        var max = fin.length ? Math.ceil(Math.max.apply(null, fin) / 10) * 10 : 20;
-        var min = 0;
-        var svg = makeSvg(w, h);
-        [[opt.c1, a, '2'], [opt.c2, b, '2'], [opt.c3, c, '2.5']].forEach(function (series) {
-            var pts = polyPoints(series[1], w, h, pad, min, max);
-            if (series[1].length > 1) {
-                var line = document.createElementNS(svgNS(), 'polyline');
-                line.setAttribute('points', pts);
-                line.setAttribute('fill', 'none');
-                line.setAttribute('stroke', series[0]);
-                line.setAttribute('stroke-width', series[2]);
-                line.setAttribute('opacity', '0.9');
-                svg.appendChild(line);
-            }
-        });
-        return svg;
-    }
-
-    /* ── Tableau journalier (extrêmes par jour, comme météociel) ──────── */
+    /* ── Tableau journalier ──────────────────────────────────────────── */
     function renderDailyTable(forecasts) {
-        var head = ['Jour', 'Temps', 'T min', 'T max', 'Pluie cumul.', 'Rafale max',
-                    'Vent max', 'Risque orage', 'Risque neige', 'Neige fraîche'];
+        var head = ['Jour', 'Temps', 'T min', 'T max', 'Pluie cumul.', 'Rafale max', 'Vent max',
+                    'Risque orage', 'Risque neige', 'Neige fraîche'];
         var thead = ui.tblDaily.tHead || ui.tblDaily.createTHead();
         thead.replaceChildren();
         var tr = thead.insertRow();
@@ -564,7 +538,6 @@
         var tbody = ui.tblDaily.createTBody();
         tbody.replaceChildren();
 
-        // Groupe les échéances par jour
         var days = {};
         forecasts.forEach(function (f) {
             var k = localDayKey(f.valid);
@@ -572,22 +545,15 @@
             days[k].items.push(f);
         });
 
-        var dayKeys = Object.keys(days);
-        dayKeys.forEach(function (k, di) {
+        Object.keys(days).forEach(function (k, di) {
             var day = days[k];
             var items = day.items;
             var row = tbody.insertRow();
             if (di > 0) row.classList.add('mcp-new-day');
 
-            // Jour
-            var d = day.date;
-            var tdDay = el('td', 'mcp-day-cell');
-            tdDay.textContent = dayLabel(d);
-            var wd = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][d.getDay()];
-            tdDay.title = wd + ' ' + d.getDate() + '/' + (d.getMonth() + 1);
-            row.appendChild(tdDay);
+            row.appendChild(makeDayCell(day.date, items.length));
 
-            // Temps dominant : icône la plus fréquente (pluie > nuages > soleil)
+            // Temps dominant
             var condCounts = {};
             items.forEach(function (f) {
                 var cc = valueAt(f.lp, 'condition_code');
@@ -604,7 +570,6 @@
             tdCond.title = 'Condition dominante sur la journée';
             row.appendChild(tdCond);
 
-            // Extrêmes par jour
             var tMin = null, tMax = null, rainDay = 0, gustMax = 0, windMax = 0;
             var thMax = 0, snMax = 0, snowFresh = 0;
             items.forEach(function (f) {
@@ -635,7 +600,7 @@
             row.appendChild(tdTmax);
 
             var tdRain = el('td', rainDay >= 10 ? 'num-strong' : '');
-            tdRain.textContent = fmt(rainDay || null, 1, ' mm');
+            tdRain.textContent = rainDay > 0 ? fmt(rainDay, 1, ' mm') : (rainDay === 0 ? '0 mm' : '—');
             row.appendChild(tdRain);
 
             var tdGust = el('td', gustMax >= 100 ? 'num-strong' : (gustMax >= 70 ? 'temp-warm' : ''));
@@ -656,16 +621,17 @@
             row.appendChild(tdSn);
 
             var tdSnow = el('td');
-            tdSnow.textContent = fmt(snowFresh || null, 1, ' cm');
+            tdSnow.textContent = snowFresh > 0 ? fmt(snowFresh, 1, ' cm') : (snowFresh === 0 ? '0 cm' : '—');
             row.appendChild(tdSnow);
         });
     }
 
-    /* ── Tableau général ──────────────────────────────────────────────── */
+    /* ── Tableau général ─────────────────────────────────────────────── */
     function renderGeneralTable(forecasts, hourFmt, dayFmt) {
-        var head = ['Jour', 'Heure', 'Temps', 'Temp.', 'Ressenti', 'Rosée', 'Humidité', 'Pluie 1h', 'Nuages',
-                    'Vent', 'Rafales', 'Rafale max éch.', 'Pression'];
+        var head = ['Jour', 'Heure', 'Temps', 'Temp.', 'Ressenti', 'Rosée', 'Humidité', 'Pluie 1h',
+                    'Nuages', 'Vent', 'Rafales', 'Rafale max éch.', 'Pression'];
         var thead = ui.tblGeneral.tHead || ui.tblGeneral.createTHead();
+        thead.replaceChildren();
         var tr = thead.insertRow();
         head.forEach(function (h) { tr.appendChild(el('th', null, h)); });
         var tbody = ui.tblGeneral.createTBody();
@@ -680,7 +646,7 @@
             var row = tbody.insertRow();
             var k = localDayKey(f.valid);
             if (k !== prevDay) { row.classList.add('mcp-new-day'); prevDay = k; }
-            row.appendChild(el('td', 'mcp-day-cell', dayLabel(f.valid) + (dayCounts[k] > 1 ? ' · ' + dayCounts[k] : '')));
+            row.appendChild(makeDayCell(f.valid, dayCounts[k]));
             row.appendChild(el('td', 'mcp-hour', hourFmt.format(f.valid)));
 
             var condCode = valueAt(f.lp, 'condition_code');
@@ -691,7 +657,7 @@
             row.appendChild(tdCond);
 
             var t = valueAt(f.lp, 'temperature_c');
-            var tdT = el('td', 'tempClass' in {} ? 'temp-' + tempClass(t) : '');
+            var tdT = el('td');
             tdT.textContent = fmt(t, 0, '°');
             tdT.className = tempClass(t);
             row.appendChild(tdT);
@@ -703,18 +669,22 @@
             appendNum(row, r, 1, ' mm', finite(r) && r >= 5 ? 'num-strong' : '');
             appendNum(row, valueAt(f.lp, 'cloud_cover_pct'), 0, '%');
 
+            // Vent : direction + valeur typographiée
             var w = roundUp5(valueAt(f.lp, 'wind_speed_kmh'));
             var tdW = el('td');
+            var windBox = el('span', 'wind-cell');
             var dirDeg = valueAt(f.lp, 'wind_direction_deg');
             var dir = windDirection(dirDeg);
             if (dir) {
-                tdW.appendChild(el('span', 'wind-arrow', '➜'));
-                tdW.lastChild.style.display = 'inline-block';
-                tdW.lastChild.style.transform = 'rotate(' + ((Number(dirDeg) + 180) % 360) + 'deg)';
-                tdW.appendChild(el('span', null, ' ' + dir + ' '));
+                var arrow = el('span', 'wind-arrow', '➜');
+                arrow.style.transform = 'rotate(' + ((Number(dirDeg) + 180) % 360) + 'deg)';
+                windBox.appendChild(arrow);
+                windBox.appendChild(el('span', 'wind-dir', dir));
             }
-            tdW.appendChild(el('strong', null, fmt(w, 0, '')));
-            tdW.appendChild(el('span', 'muted', ' km/h'));
+            var strong = el('span', 'wind-speed', fmt(w, 0, ''));
+            windBox.appendChild(strong);
+            windBox.appendChild(el('span', 'wind-unit', 'km/h'));
+            tdW.appendChild(windBox);
             row.appendChild(tdW);
 
             var g = roundUp5(valueAt(f.lp, 'wind_gust_kmh'));
@@ -722,7 +692,6 @@
             tdG.textContent = fmt(g, 0, ' km/h');
             row.appendChild(tdG);
 
-            // Rafale max cumulée depuis le début du run (comme météociel)
             var gm = valueAt(f.lp, 'wind_gust_max_kmh');
             var tdGm = el('td', finite(gm) && gm >= 100 ? 'num-strong' : (finite(gm) && gm >= 70 ? 'temp-warm' : ''));
             tdGm.textContent = fmt(gm, 0, ' km/h');
@@ -739,7 +708,7 @@
         row.appendChild(td);
     }
 
-    /* ── Tableau orages ───────────────────────────────────────────────── */
+    /* ── Tableau orages ──────────────────────────────────────────────── */
     function renderStormsTable(forecasts, hourFmt, dayFmt) {
         var head = ['Jour', 'Heure', 'Risque orage', 'CAPE', 'LCL', 'Foudre', 'Grêle', 'Pluie conv.',
                     'Graupel', 'Pluie 1h', 'Rafales', 'Type d’orage'];
@@ -759,7 +728,7 @@
             var row = tbody.insertRow();
             var k = localDayKey(f.valid);
             if (k !== prevDay) { row.classList.add('mcp-new-day'); prevDay = k; }
-            row.appendChild(el('td', 'mcp-day-cell', dayLabel(f.valid) + (dayCounts[k] > 1 ? ' · ' + dayCounts[k] : '')));
+            row.appendChild(makeDayCell(f.valid, dayCounts[k]));
             row.appendChild(el('td', 'mcp-hour', hourFmt.format(f.valid)));
 
             var th = valueAt(f.lp, 'thunder_risk_code');
@@ -770,7 +739,7 @@
             var cape = valueAt(f.lp, 'cape_jkg');
             var tdCape = el('td', finite(cape) && cape >= 1500 ? 'num-strong' : (finite(cape) && cape >= 500 ? 'temp-warm' : ''));
             tdCape.textContent = finite(cape) && cape >= 25 ? fmt(cape, 0, ' J/kg') : '—';
-            tdCape.title = 'MUCAPE instantanée AROME';
+            tdCape.appendChild(helpIcon('cape'));
             row.appendChild(tdCape);
 
             appendNum(row, valueAt(f.lp, 'lcl_m'), 0, ' m');
@@ -797,7 +766,7 @@
         row.appendChild(td);
     }
 
-    /* ── Tableau neige ────────────────────────────────────────────────── */
+    /* ── Tableau neige ───────────────────────────────────────────────── */
     function renderSnowTable(forecasts, hourFmt, dayFmt) {
         var head = ['Jour', 'Heure', 'Risque neige', 'Phase', 'Neige 1h', 'Neige 3h', 'Neige 6h',
                     'Tenue', 'Cumul fraîche', 'Pression', 'Humidité', 'Vent moyen / rafales'];
@@ -817,7 +786,7 @@
             var row = tbody.insertRow();
             var k = localDayKey(f.valid);
             if (k !== prevDay) { row.classList.add('mcp-new-day'); prevDay = k; }
-            row.appendChild(el('td', 'mcp-day-cell', dayLabel(f.valid) + (dayCounts[k] > 1 ? ' · ' + dayCounts[k] : '')));
+            row.appendChild(makeDayCell(f.valid, dayCounts[k]));
             row.appendChild(el('td', 'mcp-hour', hourFmt.format(f.valid)));
 
             var sn = valueAt(f.lp, 'snow_risk_code');
@@ -837,6 +806,7 @@
             tdStick.style.padding = '2px 8px';
             tdStick.style.fontSize = '11px';
             tdStick.textContent = finite(stick) ? (SNOW_STICK[Number(stick)] || '—') : '—';
+            tdStick.title = HELP.tenue;
             row.appendChild(tdStick);
 
             appendNum(row, valueAt(f.lp, 'snow_depth_cm'), 1, ' cm');
@@ -860,7 +830,7 @@
         }
     }
 
-    /* ── Géolocalisation ──────────────────────────────────────────────── */
+    /* ── Géolocalisation (inchangée) ─────────────────────────────────── */
     function detectCurrentCommune() {
         if (!navigator.geolocation) { showError('La géolocalisation n’est pas disponible.'); return; }
         ui.locate.disabled = true;
@@ -894,19 +864,24 @@
         }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
     }
 
-    /* ── Onglets ──────────────────────────────────────────────────────── */
+    /* ── Onglets (avec aria + scroll horizontal) ─────────────────────── */
     function bindTabs() {
         document.querySelectorAll('.mcp-tab').forEach(function (tab) {
             tab.addEventListener('click', function () {
-                document.querySelectorAll('.mcp-tab').forEach(function (t) { t.classList.remove('active'); });
+                document.querySelectorAll('.mcp-tab').forEach(function (t) {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                });
                 document.querySelectorAll('.mcp-panel').forEach(function (p) { p.classList.remove('active'); });
                 tab.classList.add('active');
-                $('panel-' + tab.dataset.panel).classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+                var panel = $('panel-' + tab.dataset.panel);
+                if (panel) panel.classList.add('active');
             });
         });
     }
 
-    /* ── Init ─────────────────────────────────────────────────────────── */
+    /* ── Init (inchangé) ─────────────────────────────────────────────── */
     function init() {
         bindTabs();
         ui.locate.addEventListener('click', detectCurrentCommune);
@@ -927,7 +902,6 @@
         setLoading(true);
         loadIndex()
             .then(function () {
-                // Commune par défaut ou via URL ?commune=
                 var params = new URLSearchParams(location.search);
                 var code = params.get('commune');
                 if (code) {
@@ -947,7 +921,6 @@
                         renderForecast(deptData, idx, { nom: c.nom, codesPostaux: [], codeDepartement: dept, population: c.pop });
                     });
                 }
-                // Commune par défaut : Paris
                 return loadDepartment('75').then(function (deptData) {
                     var idx = 0;
                     for (var i = 0; i < deptData.communes.length; i++) {

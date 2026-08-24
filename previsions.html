@@ -5,280 +5,470 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Prévisions par commune — AROME HD 1,3 km | Météo-Climat Pro</title>
     <meta name="description" content="Prévisions météo horaires AROME HD (1,3 km) pour toutes les communes de France : température, pluie, vent, orages (MUCAPE, LCL, foudre, grêle), neige. Recherche par commune ou code postal.">
-    <meta name="theme-color" content="#0b1220">
+    <meta name="theme-color" content="#0a0f1c">
     <link rel="icon" type="image/png" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     <style>
+        /* ══════════════════════════════════════════════════════════════
+           Météo-Climat Pro — Dashboard prévisions par commune
+           Thème : bleu nuit premium, grille 12 colonnes, Inter
+           ══════════════════════════════════════════════════════════════ */
         :root {
-            --bg: #0b1220;
-            --bg2: #101a2e;
-            --card: rgba(20, 30, 50, 0.85);
-            --card-solid: #141f36;
-            --border: rgba(148, 180, 255, 0.14);
-            --text: #eaf1fb;
-            --muted: #8fa3c0;
-            --accent: #35c7ff;
-            --accent2: #7b6cff;
-            --ok: #2dd4a7;
-            --warn: #ffc93c;
-            --danger: #ff5d5d;
-            --severe: #ff2e97;
-            --radius: 16px;
+            --bg: #0a0f1c;
+            --bg-grad-1: rgba(56, 189, 248, 0.05);
+            --bg-grad-2: rgba(99, 102, 241, 0.04);
+            --card: #101a2e;
+            --card-hover: #131f38;
+            --card-border: #1c2942;
+            --card-border-strong: #27395c;
+            --text: #e8eef7;
+            --text-2: #a7b8d2;
+            --text-3: #6f83a3;
+            --accent: #38bdf8;
+            --accent-2: #818cf8;
+            --cyan-glow: rgba(56, 189, 248, 0.35);
+            --ok: #34d399;
+            --warn: #fbbf24;
+            --orange: #fb923c;
+            --danger: #f87171;
+            --severe: #c084fc;
+            --radius: 14px;
+            --radius-sm: 10px;
+            --space-1: 8px;
+            --space-2: 12px;
+            --space-3: 16px;
+            --space-4: 24px;
+            --space-5: 32px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+            --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.45);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body {
-            background: radial-gradient(1200px 600px at 80% -10%, rgba(123,108,255,0.16), transparent 60%),
-                        radial-gradient(900px 500px at -10% 10%, rgba(53,199,255,0.12), transparent 55%),
-                        var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            min-height: 100dvh;
-        }
-        body { padding: 18px 16px 60px; max-width: 1200px; margin: 0 auto; }
 
-        /* ── Header ─────────────────────────────── */
-        .mcp-header {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 14px; flex-wrap: wrap; margin-bottom: 18px;
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background:
+                radial-gradient(1100px 500px at 85% -10%, var(--bg-grad-1), transparent 60%),
+                radial-gradient(900px 500px at -10% 5%, var(--bg-grad-2), transparent 55%),
+                var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 15px;
+            line-height: 1.5;
+            min-height: 100dvh;
+            -webkit-font-smoothing: antialiased;
         }
-        .mcp-brand { display: flex; align-items: center; gap: 12px; }
-        .mcp-brand img { height: 34px; width: auto; border-radius: 8px; }
-        .mcp-brand h1 { font-size: 19px; font-weight: 800; letter-spacing: 0.2px; }
-        .mcp-brand .sub { font-size: 12px; color: var(--muted); font-weight: 600; }
-        .mcp-badge {
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff; font-size: 11px; font-weight: 900; padding: 3px 10px;
-            border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;
+
+        /* ── Conteneur principal : grille large centrée ─────────────── */
+        .mcp-shell {
+            max-width: 1720px;
+            margin: 0 auto;
+            padding: var(--space-3) var(--space-4) 64px;
+        }
+
+        /* ── Header supérieur ─────────────────────────────────────────── */
+        .mcp-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-4);
+        }
+        .mcp-brand { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+        .mcp-brand img { height: 36px; width: auto; border-radius: 9px; flex-shrink: 0; }
+        .mcp-brand-titles { min-width: 0; }
+        .mcp-brand h1 {
+            font-size: 17px; font-weight: 800; letter-spacing: 0.2px;
+            display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+        }
+        .mcp-brand .sub { font-size: 12px; color: var(--text-3); font-weight: 600; }
+        .mcp-pill {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #06121f; font-size: 11px; font-weight: 800; padding: 3px 10px;
+            border-radius: 999px; letter-spacing: 0.4px; text-transform: uppercase;
+            white-space: nowrap;
         }
         .mcp-back a {
-            color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 700;
-            display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px;
-            border: 1px solid var(--border); border-radius: 10px; background: var(--card);
-            transition: all .2s;
+            color: var(--text-2); text-decoration: none; font-size: 13px; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px;
+            border: 1px solid var(--card-border); border-radius: var(--radius-sm);
+            background: var(--card); transition: all .2s;
         }
         .mcp-back a:hover { color: var(--accent); border-color: var(--accent); }
 
-        /* ── Recherche ──────────────────────────── */
-        .mcp-search-wrap { position: relative; margin-bottom: 20px; }
+        /* ── Recherche ────────────────────────────────────────────────── */
+        .mcp-search-wrap { position: relative; margin-bottom: var(--space-4); }
         .mcp-search {
-            display: flex; gap: 10px; align-items: center;
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 8px; backdrop-filter: blur(14px);
+            display: flex; gap: var(--space-2); align-items: center;
+            background: var(--card); border: 1px solid var(--card-border);
+            border-radius: var(--radius); padding: 6px;
+            box-shadow: var(--shadow);
         }
+        .mcp-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--cyan-glow); }
+        .mcp-search .mcp-search-icon { color: var(--text-3); padding-left: 10px; font-size: 15px; }
         .mcp-search input {
             flex: 1; background: transparent; border: none; outline: none;
-            color: var(--text); font-size: 16px; font-weight: 700; padding: 10px 12px;
-            min-width: 0;
+            color: var(--text); font-size: 16px; font-weight: 600; padding: 11px 8px;
+            min-width: 0; font-family: inherit;
         }
-        .mcp-search input::placeholder { color: var(--muted); font-weight: 600; }
+        .mcp-search input::placeholder { color: var(--text-3); font-weight: 500; }
         .mcp-search .mcp-locate {
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            border: none; color: #fff; font-weight: 800; font-size: 13px;
-            padding: 12px 16px; border-radius: 12px; cursor: pointer; white-space: nowrap;
-            display: inline-flex; align-items: center; gap: 7px; transition: transform .15s, filter .2s;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border: none; color: #06121f; font-weight: 700; font-size: 13px;
+            padding: 12px 18px; border-radius: var(--radius-sm); cursor: pointer;
+            white-space: nowrap; display: inline-flex; align-items: center; gap: 8px;
+            transition: transform .15s, filter .2s;
         }
-        .mcp-search .mcp-locate:hover { filter: brightness(1.15); }
+        .mcp-search .mcp-locate:hover { filter: brightness(1.12); }
         .mcp-search .mcp-locate:active { transform: scale(0.97); }
         .mcp-search .mcp-locate.is-loading { opacity: .7; pointer-events: none; }
 
         .mcp-results {
-            position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 50;
-            background: var(--card-solid); border: 1px solid var(--border);
-            border-radius: 14px; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.5);
-            display: none; max-height: 340px; overflow-y: auto;
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 60;
+            background: var(--card); border: 1px solid var(--card-border-strong);
+            border-radius: var(--radius); overflow: hidden;
+            box-shadow: 0 18px 50px rgba(0,0,0,.6); display: none;
+            max-height: 360px; overflow-y: auto;
         }
         .mcp-results.open { display: block; }
         .mcp-result {
             display: flex; justify-content: space-between; align-items: center; gap: 10px;
-            width: 100%; padding: 11px 16px; background: none; border: none; cursor: pointer;
-            color: var(--text); text-align: left; font-size: 14px; border-bottom: 1px solid var(--border);
+            width: 100%; padding: 12px 16px; background: none; border: none; cursor: pointer;
+            color: var(--text); text-align: left; font-size: 14px; font-family: inherit;
+            border-bottom: 1px solid var(--card-border);
         }
         .mcp-result:last-child { border-bottom: none; }
-        .mcp-result:hover, .mcp-result.is-active { background: rgba(53,199,255,0.12); }
-        .mcp-result .r-name { font-weight: 800; }
-        .mcp-result .r-detail { color: var(--muted); font-size: 12px; font-weight: 600; }
+        .mcp-result:hover, .mcp-result.is-active { background: rgba(56, 189, 248, 0.08); }
+        .mcp-result .r-name { font-weight: 700; }
+        .mcp-result .r-detail { color: var(--text-3); font-size: 12px; font-weight: 500; }
 
-        /* ── Statut / infos run ─────────────────── */
-        .mcp-meta {
-            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-            font-size: 12.5px; color: var(--muted); font-weight: 600; margin-bottom: 18px;
+        /* ── Badge run + statut ───────────────────────────────────────── */
+        .mcp-runbar {
+            display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+            margin-bottom: var(--space-4);
         }
-        .mcp-meta .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; }
-        .mcp-meta .run-name { color: var(--accent); font-weight: 800; }
+        .mcp-runbadge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3);
+            color: var(--ok); font-size: 13px; font-weight: 700;
+            padding: 7px 14px; border-radius: 999px;
+        }
+        .mcp-runbadge .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--ok); box-shadow: 0 0 8px var(--ok); display: inline-block;
+        }
+        .mcp-runmeta { font-size: 13px; color: var(--text-3); font-weight: 500; }
 
-        /* ── Cartes de synthèse ─────────────────── */
+        /* ── En-tête ville (hero) ─────────────────────────────────────── */
+        .mcp-hero {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: var(--space-3); flex-wrap: wrap;
+            background: linear-gradient(135deg, rgba(56,189,248,.06), rgba(129,140,248,.04)), var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius); padding: var(--space-3) var(--space-4);
+            margin-bottom: var(--space-3); box-shadow: var(--shadow);
+        }
+        .mcp-hero-city { min-width: 0; }
+        .mcp-hero-city h2 {
+            font-size: 26px; font-weight: 900; letter-spacing: -0.4px;
+            display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+        }
+        .mcp-hero-city .postal {
+            color: var(--text-3); font-size: 14px; font-weight: 600;
+            background: rgba(255,255,255,.05); border: 1px solid var(--card-border);
+            padding: 2px 10px; border-radius: 999px;
+        }
+        .mcp-hero-meta {
+            display: flex; align-items: center; flex-wrap: wrap;
+            gap: 6px 20px; margin-top: var(--space-2);
+        }
+        .mcp-hero-item {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12.5px; color: var(--text-2); font-weight: 500;
+        }
+        .mcp-hero-item i { color: var(--accent); width: 14px; text-align: center; font-size: 12px; }
+        .mcp-hero-item b { color: var(--text); font-weight: 700; }
+
+        /* ── Titres de section ────────────────────────────────────────── */
+        .mcp-section-title {
+            font-size: 18px; font-weight: 800; letter-spacing: -0.2px;
+            margin: var(--space-4) 0 var(--space-2);
+            display: flex; align-items: center; gap: var(--space-2);
+        }
+        .mcp-section-title::before {
+            content: ''; width: 4px; height: 20px; border-radius: 4px;
+            background: linear-gradient(180deg, var(--accent), var(--accent-2));
+        }
+
+        /* ── Cartes de synthèse (« Aperçu de la période ») ────────────── */
         .mcp-summary {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 12px; margin-bottom: 18px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--space-3);
         }
         .mcp-sum-card {
-            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 14px 16px; backdrop-filter: blur(10px);
+            background: var(--card); border: 1px solid var(--card-border);
+            border-radius: var(--radius); padding: var(--space-3) var(--space-3);
+            box-shadow: var(--shadow); position: relative; overflow: hidden;
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
         }
-        .mcp-sum-card .s-label { font-size: 11px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .6px; }
-        .mcp-sum-card .s-value { font-size: 22px; font-weight: 900; margin-top: 5px; display: flex; align-items: center; gap: 8px; }
-        .mcp-sum-card .s-sub { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 600; }
+        .mcp-sum-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--card-border-strong);
+            box-shadow: var(--shadow-hover);
+        }
+        .mcp-sum-card .s-icon {
+            position: absolute; top: var(--space-3); right: var(--space-3);
+            font-size: 22px; opacity: .9;
+        }
+        .mcp-sum-card .s-label {
+            font-size: 12px; color: var(--text-3); font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.7px;
+        }
+        .mcp-sum-card .s-value {
+            font-size: 30px; font-weight: 900; letter-spacing: -0.5px;
+            margin-top: 6px; line-height: 1.15; font-variant-numeric: tabular-nums;
+        }
+        .mcp-sum-card .s-value .s-unit { font-size: 17px; font-weight: 700; color: var(--text-2); margin-left: 3px; }
+        .mcp-sum-card .s-sub { font-size: 12.5px; color: var(--text-3); margin-top: 6px; font-weight: 500; }
+        .mcp-sum-card .s-range { font-size: 13px; color: var(--text-2); font-weight: 600; margin-top: 4px; }
+
+        /* ── Badges de risque (pastilles cohérentes) ──────────────────── */
         .risk-pill {
-            display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px;
-            border-radius: 999px; font-size: 13px; font-weight: 800; color: #fff;
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 5px 13px; border-radius: 999px;
+            font-size: 13px; font-weight: 700; color: #fff;
+            border: 1px solid transparent;
         }
-        .risk-0 { background: rgba(140,160,190,.35); color: var(--muted); }
-        .risk-1 { background: linear-gradient(135deg,#2dd4a7,#1fa97f); }
-        .risk-2 { background: linear-gradient(135deg,#ffc93c,#f5a623); color: #1d1500; }
-        .risk-3 { background: linear-gradient(135deg,#ff8a3c,#ff5d5d); }
-        .risk-4 { background: linear-gradient(135deg,#ff2e97,#b3125f); }
+        .risk-pill::before { content: '●'; font-size: 10px; }
+        .risk-0 { background: rgba(140, 160, 190, 0.14); color: var(--text-2); border-color: rgba(140,160,190,.25); }
+        .risk-0::before { color: #8ca0be; }
+        .risk-1 { background: rgba(52, 211, 153, 0.14); color: #6ee7b7; border-color: rgba(52,211,153,.3); }
+        .risk-1::before { color: var(--ok); }
+        .risk-2 { background: rgba(251, 191, 36, 0.13); color: #fcd34d; border-color: rgba(251,191,36,.3); }
+        .risk-2::before { color: var(--warn); }
+        .risk-3 { background: rgba(251, 146, 60, 0.14); color: #fdba74; border-color: rgba(251,146,60,.32); }
+        .risk-3::before { color: var(--orange); }
+        .risk-4 { background: rgba(248, 113, 113, 0.15); color: #fca5a5; border-color: rgba(248,113,113,.35); }
+        .risk-4::before { color: var(--danger); }
+        .risk-5 { background: rgba(192, 132, 252, 0.16); color: #d8b4fe; border-color: rgba(192,132,252,.35); }
+        .risk-5::before { color: var(--severe); }
 
-        /* ── Onglets ────────────────────────────── */
-        .mcp-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        /* ── Onglets ──────────────────────────────────────────────────── */
+        .mcp-tabs {
+            display: flex; gap: var(--space-1); margin: var(--space-4) 0 var(--space-3);
+            overflow-x: auto; scrollbar-width: none; padding-bottom: 2px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .mcp-tabs::-webkit-scrollbar { display: none; }
         .mcp-tab {
-            background: var(--card); border: 1px solid var(--border); color: var(--muted);
-            padding: 10px 18px; border-radius: 12px; font-size: 14px; font-weight: 800;
-            cursor: pointer; transition: all .2s; display: inline-flex; gap: 8px; align-items: center;
+            background: var(--card); border: 1px solid var(--card-border);
+            color: var(--text-2); padding: 11px 20px; border-radius: var(--radius-sm);
+            font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+            display: inline-flex; gap: 8px; align-items: center; white-space: nowrap;
+            transition: all .2s ease; flex-shrink: 0;
         }
-        .mcp-tab:hover { color: var(--text); border-color: var(--accent); }
+        .mcp-tab:hover { color: var(--text); border-color: var(--card-border-strong); }
         .mcp-tab.active {
-            background: linear-gradient(135deg, rgba(53,199,255,.18), rgba(123,108,255,.18));
-            color: var(--accent); border-color: rgba(53,199,255,.5);
+            background: linear-gradient(135deg, rgba(56,189,248,.18), rgba(129,140,248,.14));
+            color: #fff; border-color: var(--accent);
+            box-shadow: 0 0 16px rgba(56,189,248,.2);
         }
-        .mcp-panel { display: none; }
+        .mcp-panel { display: none; animation: mcp-fade .25s ease; }
         .mcp-panel.active { display: block; }
+        @keyframes mcp-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
-        /* ── Tableaux ───────────────────────────── */
+        /* ── Tableaux ─────────────────────────────────────────────────── */
         .mcp-table-wrap {
-            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-            overflow: auto; max-height: 560px; backdrop-filter: blur(10px);
+            background: var(--card); border: 1px solid var(--card-border);
+            border-radius: var(--radius); overflow: auto;
+            max-height: 620px; box-shadow: var(--shadow);
         }
-        table.mcp-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+        table.mcp-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; min-width: 1080px; }
         .mcp-table thead th {
-            position: sticky; top: 0; background: #182546;
-            padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
-            color: var(--muted); font-weight: 800; text-align: right; white-space: nowrap;
-            border-bottom: 1px solid var(--border); z-index: 2;
+            position: sticky; top: 0; z-index: 5; background: #16233d;
+            padding: 11px 12px; font-size: 11px; text-transform: uppercase;
+            letter-spacing: .6px; color: var(--text-2); font-weight: 700;
+            text-align: right; white-space: nowrap;
+            border-bottom: 1px solid var(--card-border-strong);
         }
-        .mcp-table thead th:first-child, .mcp-table tbody td:first-child { text-align: left; position: sticky; left: 0; }
-        .mcp-table thead th:first-child { background: #182546; z-index: 3; }
+        .mcp-table thead th:first-child { text-align: left; z-index: 7; }
         .mcp-table tbody td {
-            padding: 9px 12px; text-align: right; white-space: nowrap;
-            border-bottom: 1px solid rgba(148,180,255,.07); font-variant-numeric: tabular-nums;
+            padding: 10px 12px; text-align: right; white-space: nowrap;
+            border-bottom: 1px solid rgba(28, 41, 66, 0.45);
+            font-variant-numeric: tabular-nums;
         }
-        .mcp-table tbody tr:hover { background: rgba(53,199,255,.06); }
-        .mcp-table tbody td:first-child { background: rgba(16,26,46,.9); font-weight: 800; }
-        .mcp-table tr.mcp-new-day td { border-top: 2px solid rgba(53,199,255,.35); }
-        .mcp-day-cell { color: var(--accent); font-weight: 800; font-size: 12px; }
+        .mcp-table tbody tr:nth-child(even) td { background: rgba(255, 255, 255, 0.015); }
+        .mcp-table tbody tr:hover td { background: rgba(56, 189, 248, 0.05); }
+        .mcp-table tbody td:first-child {
+            position: sticky; left: 0; z-index: 3;
+            background: #0f1830; font-weight: 700; text-align: left;
+        }
+        .mcp-table tbody tr:nth-child(even) td:first-child { background: #101b34; }
+        .mcp-table tr.mcp-new-day td { border-top: 2px solid rgba(56, 189, 248, 0.35); }
+        .mcp-day-cell { color: var(--accent); font-weight: 700; font-size: 12.5px; white-space: nowrap; }
+        .mcp-day-cell .day-count { color: var(--text-3); font-weight: 600; font-size: 11px; margin-left: 4px; }
         .mcp-hour { font-weight: 800; color: var(--text); }
-        .temp-hot { color: #ff6b5d; font-weight: 800; }
-        .temp-warm { color: #ffb84d; font-weight: 800; }
-        .temp-mild { color: #7bff9b; }
-        .temp-cool { color: #4dc3ff; }
-        .temp-cold { color: #9b7bff; }
+        .mcp-condition { white-space: nowrap; }
+
+        /* Couleurs températures (échelle lisible sur fond sombre) */
+        .temp-hot { color: #fb7185; font-weight: 800; }
+        .temp-warm { color: #fbbf24; font-weight: 800; }
+        .temp-mild { color: #6ee7b7; font-weight: 700; }
+        .temp-cool { color: #7dd3fc; font-weight: 700; }
+        .temp-cold { color: #a5b4fc; font-weight: 700; }
+
         .num-strong { font-weight: 800; color: var(--text); }
-        .badge-cell { display: inline-flex; align-items: center; gap: 5px; }
-        .mcp-condition { font-size: 15px; }
-        .wind-arrow { display: inline-block; transition: none; }
-        .muted { color: var(--muted); }
+        .muted { color: var(--text-3); }
 
-        /* ── Graphiques ─────────────────────────── */
-        .mcp-charts {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 12px; margin-bottom: 18px;
+        /* Vent : direction + valeur */
+        .wind-cell { display: inline-flex; align-items: center; gap: 7px; }
+        .wind-arrow { display: inline-block; font-size: 13px; color: var(--accent); }
+        .wind-dir { font-weight: 800; }
+        .wind-speed { font-weight: 700; color: var(--text); }
+        .wind-unit { color: var(--text-3); font-size: 11px; margin-left: 2px; }
+
+        /* ⓘ tooltip d'aide */
+        .help-ic {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: rgba(56,189,248,.15); color: var(--accent);
+            font-size: 10px; font-weight: 800; cursor: help;
+            border: 1px solid rgba(56,189,248,.3); vertical-align: middle; margin-left: 5px;
         }
-        .mcp-chart-card {
-            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 14px 16px; backdrop-filter: blur(10px);
-        }
-        .mcp-chart-card h3 { font-size: 13px; color: var(--muted); font-weight: 800; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
-        .mcp-chart-card svg { width: 100%; height: 150px; display: block; }
 
-        /* ── Pied ───────────────────────────────── */
-        .mcp-footer { margin-top: 26px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.7; }
-        .mcp-footer a { color: var(--accent); text-decoration: none; }
-
+        /* ── États / erreurs / chargement ─────────────────────────────── */
         .mcp-error {
-            background: rgba(255,93,93,.1); border: 1px solid rgba(255,93,93,.4); color: #ffb3b3;
-            padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 14px; margin-bottom: 14px;
-            display: none;
+            background: rgba(248, 113, 113, 0.08); border: 1px solid rgba(248,113,113,.35);
+            color: #fca5a5; padding: 14px 18px; border-radius: var(--radius);
+            font-weight: 600; font-size: 14px; margin-bottom: var(--space-3); display: none;
         }
         .mcp-loading {
-            text-align: center; padding: 40px; color: var(--muted); font-weight: 700; display: none;
+            text-align: center; padding: 70px 20px; color: var(--text-3);
+            font-weight: 600; display: none;
         }
-        .mcp-loading .spin { display: inline-block; width: 26px; height: 26px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: mcp-spin .8s linear infinite; margin-bottom: 10px; }
+        .mcp-loading .spin {
+            display: inline-block; width: 34px; height: 34px;
+            border: 3px solid var(--card-border); border-top-color: var(--accent);
+            border-radius: 50%; animation: mcp-spin .8s linear infinite; margin-bottom: 14px;
+        }
         @keyframes mcp-spin { to { transform: rotate(360deg); } }
 
-        .mcp-city-title { font-size: 24px; font-weight: 900; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .mcp-city-title .postal { color: var(--muted); font-size: 14px; font-weight: 700; }
-        .mcp-city-meta { font-size: 12.5px; color: var(--muted); margin-bottom: 16px; font-weight: 600; }
+        .mcp-footer {
+            margin-top: var(--space-5); font-size: 12px; color: var(--text-3);
+            text-align: center; line-height: 1.8;
+        }
+        .mcp-footer a { color: var(--accent); text-decoration: none; }
 
-        @media (max-width: 640px) {
-            body { padding: 12px 10px 40px; }
-            .mcp-search { flex-direction: column; }
-            .mcp-search .mcp-locate { width: 100%; justify-content: center; }
-            .mcp-summary { grid-template-columns: 1fr 1fr; }
+        /* ── Responsive ───────────────────────────────────────────────── */
+        @media (max-width: 1180px) {
+            .mcp-hero-city h2 { font-size: 30px; }
+        }
+        @media (max-width: 820px) {
+            .mcp-shell { padding: var(--space-2) var(--space-3) 48px; }
+            .mcp-summary { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--space-2); }
+            .mcp-hero { padding: var(--space-3); }
+            .mcp-hero-city h2 { font-size: 24px; }
+        }
+        @media (max-width: 520px) {
+            .mcp-summary { grid-template-columns: repeat(2, 1fr); }
+            .mcp-search { flex-direction: column; align-items: stretch; }
+            .mcp-search .mcp-locate { justify-content: center; }
+            .mcp-hero-city h2 { font-size: 22px; }
+            .mcp-tab { padding: 10px 15px; font-size: 13px; }
         }
     </style>
 </head>
 <body>
-    <header class="mcp-header">
-        <div class="mcp-brand">
-            <img src="logo.png" alt="Météo-Climat Pro">
-            <div>
-                <h1>Prévisions par commune <span class="mcp-badge">AROME 1,3 km</span></h1>
-                <div class="sub">Modèle AROME HD de Météo-France — open data</div>
+    <div class="mcp-shell">
+
+        <!-- ── Header ─────────────────────────────────────────────────── -->
+        <header class="mcp-topbar">
+            <div class="mcp-brand">
+                <img src="logo.png" alt="Météo-Climat Pro">
+                <div class="mcp-brand-titles">
+                    <h1>Prévisions par commune <span class="mcp-pill">AROME 0,01°</span></h1>
+                    <div class="sub">Modèle AROME HD de Météo-France — données open data</div>
+                </div>
             </div>
-        </div>
-        <div class="mcp-back"><a href="index.html"><i class="fa-solid fa-map-location-dot"></i> Cartes AROME</a></div>
-    </header>
+            <div class="mcp-back"><a href="index.html"><i class="fa-solid fa-map-location-dot"></i> Cartes AROME</a></div>
+        </header>
 
-    <div class="mcp-search-wrap">
-        <div class="mcp-search">
-            <i class="fa-solid fa-magnifying-glass" style="color:var(--muted);padding-left:10px;"></i>
-            <input type="text" id="mcp-input" placeholder="Commune ou code postal (ex : Lyon, 75015, 59800…)" autocomplete="off" aria-label="Rechercher une commune ou un code postal">
-            <button type="button" class="mcp-locate" id="mcp-locate"><i class="fa-solid fa-location-crosshairs"></i> Me localiser</button>
+        <!-- ── Recherche ───────────────────────────────────────────────── -->
+        <div class="mcp-search-wrap">
+            <div class="mcp-search">
+                <i class="fa-solid fa-magnifying-glass mcp-search-icon" aria-hidden="true"></i>
+                <input type="text" id="mcp-input" placeholder="Commune ou code postal (ex : Lyon, 75015, 59800…)"
+                       autocomplete="off" aria-label="Rechercher une commune ou un code postal">
+                <button type="button" class="mcp-locate" id="mcp-locate">
+                    <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i> Me localiser
+                </button>
+            </div>
+            <div class="mcp-results" id="mcp-results" role="listbox"></div>
         </div>
-        <div class="mcp-results" id="mcp-results" role="listbox"></div>
+
+        <!-- ── Run / mise à jour ──────────────────────────────────────── -->
+        <div class="mcp-runbar" id="mcp-runbar" style="display:none;">
+            <span class="mcp-runbadge"><span class="dot"></span><span id="mcp-run">Run…</span></span>
+            <span class="mcp-runmeta" id="mcp-generated"></span>
+        </div>
+
+        <div class="mcp-error" id="mcp-error" role="alert"></div>
+        <div class="mcp-loading" id="mcp-loading">
+            <div class="spin"></div>
+            <div>Chargement des prévisions…</div>
+        </div>
+
+        <main id="mcp-main" style="display:none;">
+
+            <!-- ── Hero ville ─────────────────────────────────────────── -->
+            <section class="mcp-hero" aria-label="Informations sur la commune">
+                <div class="mcp-hero-city">
+                    <h2 id="mcp-city">—</h2>
+                    <div class="mcp-hero-meta" id="mcp-city-meta"></div>
+                </div>
+            </section>
+
+            <!-- ── Aperçu de la période ───────────────────────────────── -->
+            <h3 class="mcp-section-title">Aperçu de la période</h3>
+            <div class="mcp-summary" id="mcp-summary"></div>
+
+            <!-- ── Détails (onglets + tableaux) ───────────────────────── -->
+            <h3 class="mcp-section-title">Détails horaires</h3>
+            <div class="mcp-tabs" role="tablist">
+                <button class="mcp-tab active" data-panel="daily" role="tab" aria-selected="true">📅 Journalier</button>
+                <button class="mcp-tab" data-panel="general" role="tab" aria-selected="false">🌡️ Général</button>
+                <button class="mcp-tab" data-panel="storms" role="tab" aria-selected="false">⛈️ Orages</button>
+                <button class="mcp-tab" data-panel="snow" role="tab" aria-selected="false">❄️ Neige</button>
+            </div>
+
+            <div class="mcp-panel active" id="panel-daily" role="tabpanel">
+                <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-daily"><thead></thead><tbody></tbody></table></div>
+            </div>
+            <div class="mcp-panel" id="panel-general" role="tabpanel">
+                <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-general"><thead></thead><tbody></tbody></table></div>
+            </div>
+            <div class="mcp-panel" id="panel-storms" role="tabpanel">
+                <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-storms"><thead></thead><tbody></tbody></table></div>
+            </div>
+            <div class="mcp-panel" id="panel-snow" role="tabpanel">
+                <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-snow"><thead></thead><tbody></tbody></table></div>
+            </div>
+
+        </main>
+
+        <footer class="mcp-footer">
+            Prévisions AROME HD 0,01° (≈1,3 km) — données Météo-France en open data (data.gouv.fr).<br>
+            Valeurs extraites par interpolation bilinéaire à la position exacte de la commune.
+            Rafales max = maximum cumulé depuis le début du run.
+        </footer>
     </div>
 
-    <div class="mcp-meta" id="mcp-meta" style="display:none;">
-        <span class="dot"></span>
-        <span>Run du <span class="run-name" id="mcp-run">…</span> • <span id="mcp-generated">…</span></span>
-    </div>
-
-    <div class="mcp-error" id="mcp-error"></div>
-    <div class="mcp-loading" id="mcp-loading"><div class="spin"></div><div>Chargement des prévisions…</div></div>
-
-    <main id="mcp-main" style="display:none;">
-        <div class="mcp-city-title" id="mcp-city">—</div>
-        <div class="mcp-city-meta" id="mcp-city-meta"></div>
-
-        <div class="mcp-summary" id="mcp-summary"></div>
-
-        <div class="mcp-charts" id="mcp-charts"></div>
-
-        <div class="mcp-tabs" role="tablist">
-            <button class="mcp-tab active" data-panel="daily" role="tab">📅 Journalier</button>
-            <button class="mcp-tab" data-panel="general" role="tab">🌡️ Général</button>
-            <button class="mcp-tab" data-panel="storms" role="tab">⛈️ Orages</button>
-            <button class="mcp-tab" data-panel="snow" role="tab">❄️ Neige</button>
-        </div>
-
-        <div class="mcp-panel active" id="panel-daily" role="tabpanel">
-            <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-daily"><thead></thead><tbody></tbody></table></div>
-        </div>
-        <div class="mcp-panel" id="panel-general" role="tabpanel">
-            <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-general"><thead></thead><tbody></tbody></table></div>
-        </div>
-        <div class="mcp-panel" id="panel-storms" role="tabpanel">
-            <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-storms"><thead></thead><tbody></tbody></table></div>
-        </div>
-        <div class="mcp-panel" id="panel-snow" role="tabpanel">
-            <div class="mcp-table-wrap"><table class="mcp-table" id="tbl-snow"><thead></thead><tbody></tbody></table></div>
-        </div>
-    </main>
-
-    <footer class="mcp-footer">
-        Prévisions AROME HD 0,01° (≈1,3 km) — données Météo-France en open data (data.gouv.fr), palettes météociel.<br>
-        Les valeurs sont extraites par interpolation bilinéaire à la position exacte de la commune. Rafales max = maximum cumulé depuis le début du run.
-    </footer>
-
-    <script src="js/previsions.js?v=1.0.0"></script>
+    <script src="js/previsions.js?v=2.0.0"></script>
 </body>
 </html>
