@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    
+    <!-- SEO & Métadonnées Générales -->
+    <title>Météo AROME HD 1,3 km & Multi-Modèles — Météo-Climat Pro</title>
+    <meta name="description" content="Visualisation cartographique haute résolution des prévisions météo AROME HD (1,3 km) de Météo-France et multi-modèles (ARPEGE, ICON, GFS, ECMWF) : températures, rafales, pluie radar, orages MUCAPE et neige.">
+    <meta name="author" content="Météo-Climat Pro">
+    <meta name="theme-color" content="#070b14">
+    <link rel="icon" type="image/png" href="assets/logo_meteo_climat_pro.png">
+
+    <!-- Open Graph (LinkedIn, Facebook, WhatsApp) -->
+    <meta property="og:site_name" content="Météo-Climat Pro">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Cartographie Haute Résolution AROME HD 1,3 km — Météo-Climat Pro">
+    <meta property="og:description" content="Cartes météo 2D haute définition des modèles AROME HD, ARPEGE, ICON-EU, GFS et ECMWF en direct.">
+    <meta property="og:image" content="assets/logo_meteo_climat_pro.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Météo AROME HD 1,3 km — Météo-Climat Pro">
+    <meta name="twitter:description" content="Explorez les sorties du modèle météo AROME HD 1,3 km et des modèles mondiaux en ultra-haute résolution.">
+    <meta name="twitter:image" content="assets/logo_meteo_climat_pro.png">
+
+    <!-- FontAwesome Vector Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+
+    <style>
+        :root {
+            --amfm-bg: #070b14;
+            --amfm-surface: rgba(13, 19, 33, 0.92);
+            --amfm-border: rgba(255, 255, 255, 0.16);
+            --amfm-border-focus: #00d2ff;
+            --amfm-accent: #00d2ff;
+            --amfm-accent-hover: #38bdf8;
+            --amfm-text: #f8fafc;
+            --amfm-muted: #94a3b8;
+            --touch-target-min: 44px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--amfm-bg);
+            color: var(--amfm-text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        [data-amfm-app] {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Viewport Cartographique Multi-Canvas */
+        .amfm-viewport {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #070b14;
+            cursor: grab;
+            touch-action: none;
+        }
+        .amfm-viewport:active { cursor: grabbing; }
+
+        .amfm-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Header Supérieur */
+        .amfm-header {
+            position: absolute;
+            top: max(14px, env(safe-area-inset-top));
+            left: max(14px, env(safe-area-inset-left));
+            right: max(14px, env(safe-area-inset-right));
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            gap: 12px;
+        }
+
+        .amfm-card {
+            pointer-events: auto;
+            background: var(--amfm-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--amfm-border);
+            border-radius: 12px;
+            padding: 6px 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: var(--touch-target-min);
+        }
+
+        .amfm-title {
+            font-size: 15px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .amfm-badge {
+            background: linear-gradient(135deg, #0284c7, #00d2ff);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .amfm-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+        }
+
+        select {
+            background: rgba(8, 12, 20, 0.95);
+            border: 1px solid var(--amfm-border);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 12px;
+            border-radius: 8px;
+            min-height: var(--touch-target-min);
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        select:hover, select:focus-visible {
+            border-color: var(--amfm-accent);
+            outline: 2px solid var(--amfm-border-focus);
+            outline-offset: 1px;
+        }
+
+        .amfm-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--amfm-border);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            min-height: var(--touch-target-min);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .amfm-btn:hover, .amfm-btn:focus-visible {
+            background: rgba(0, 210, 255, 0.25);
+            border-color: var(--amfm-accent);
+            outline: 2px solid var(--amfm-border-focus);
+            outline-offset: 1px;
+        }
+        .amfm-btn:active { transform: scale(0.97); }
+
+        .btn-download {
+            background: linear-gradient(135deg, #0284c7, #00d2ff) !important;
+            color: #fff !important;
+            font-weight: 800 !important;
+            box-shadow: 0 4px 14px rgba(0, 210, 255, 0.35);
+        }
+        .btn-download:hover {
+            box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
+            transform: translateY(-1px);
+        }
+
+        /* Légende Météorologique Compacte Pro */
+        .amfm-legend {
+            position: absolute;
+            left: max(16px, env(safe-area-inset-left));
+            bottom: 84px;
+            z-index: 100;
+            background: var(--amfm-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--amfm-border);
+            border-radius: 10px;
+            padding: 6px 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            width: 220px;
+            pointer-events: none;
+        }
+        .amfm-legend-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            color: #fff;
+        }
+        .amfm-legend-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, #482173, #3478c5, #55b7dd, #70cf66, #f2d43d, #ea652b, #d93435, #5b1037);
+        }
+
+        /* Timeline Inférieure */
+        .amfm-timeline {
+            position: absolute;
+            bottom: max(14px, env(safe-area-inset-bottom));
+            left: max(14px, env(safe-area-inset-left));
+            right: max(14px, env(safe-area-inset-right));
+            z-index: 100;
+            background: var(--amfm-surface);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--amfm-border);
+            border-radius: 16px;
+            padding: 10px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-height: var(--touch-target-min);
+        }
+
+        .amfm-player {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .amfm-player button {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--amfm-border);
+            color: #fff;
+            width: var(--touch-target-min);
+            height: var(--touch-target-min);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .amfm-player button:hover, .amfm-player button:focus-visible {
+            background: #0284c7;
+            border-color: var(--amfm-accent);
+            outline: 2px solid var(--amfm-border-focus);
+            outline-offset: 2px;
+        }
+        .amfm-player button:active { transform: scale(0.94); }
+
+        .amfm-slider-track {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .amfm-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .amfm-validity { color: var(--amfm-accent); }
+        .amfm-lead {
+            background: rgba(0, 210, 255, 0.18);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        /* Style Slider Multi-Navigateurs (Chrome, Safari, Firefox, Edge) */
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            accent-color: var(--amfm-accent);
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--amfm-accent);
+            box-shadow: 0 0 10px #00d2ff;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-track {
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Sonde de Pixel */
+        .amfm-probe {
+            position: fixed;
+            z-index: 1500;
+            pointer-events: none;
+            background: rgba(8, 12, 20, 0.95);
+            border: 1px solid var(--amfm-accent);
+            border-radius: 8px;
+            padding: 6px 12px;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+        }
+        .amfm-probe.active { display: block; }
+        .amfm-probe-val { font-size: 16px; font-weight: 800; color: var(--amfm-accent); }
+        .amfm-probe-label { font-size: 11px; color: var(--amfm-muted); }
+
+        /* 📱 RESPONSIVE MOBILE & TABLETTE (< 900px) */
+        @media (max-width: 900px) {
+            .amfm-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .amfm-card {
+                justify-content: space-between;
+                padding: 6px 10px;
+            }
+            .amfm-controls {
+                flex-wrap: wrap;
+                width: 100%;
+                gap: 6px;
+            }
+            .amfm-controls select {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 130px;
+            }
+            .amfm-controls .amfm-btn {
+                flex: 1 1 calc(50% - 4px);
+            }
+            .amfm-legend {
+                bottom: 86px;
+                left: 10px;
+                right: 10px;
+                min-width: unset;
+            }
+            .amfm-timeline {
+                gap: 12px;
+                padding: 8px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div data-amfm-app
+         data-base-url="output"
+         data-variable="temperature"
+         data-timezone="Europe/Paris"
+         data-animation="1">
+        
+        <!-- Header Supérieur -->
+        <header class="amfm-header" role="banner">
+            <div class="amfm-card">
+                <div class="amfm-title">
+                    <i class="fa-solid fa-bolt" style="color:#00d2ff;" aria-hidden="true"></i>
+                    <span>MODÈLE AROME HD</span>
+                    <span class="amfm-badge">1,3 km</span>
+                </div>
+            </div>
+
+            <div class="amfm-card amfm-controls" role="region" aria-label="Contrôles de la carte">
+                <!-- Sélecteur de Modèle -->
+                <select id="select-model" aria-label="Sélection du modèle de prévision">
+                    <option value="arome" selected>🇫🇷 AROME HD (1,3 km)</option>
+                    <option value="arpege">🇫🇷 ARPEGE (5 km)</option>
+                    <option value="icon">🇩🇪 ICON-EU (7 km)</option>
+                    <option value="gfs">🇺🇸 GFS (13 km)</option>
+                    <option value="ecmwf">🇪🇺 ECMWF IFS (9 km)</option>
+                </select>
+
+                <!-- Sélecteur direct de Calque Météo 100% Opérationnel -->
+                <select id="direct-layer-select" aria-label="Sélection du paramètre météorologique">
+                    <optgroup label="🌡️ Températures">
+                        <option value="temperature" selected>🌡️ Température à 2 m (°C)</option>
+                        <option value="temperature_ressentie">❄️ Température ressentie (°C)</option>
+                        <option value="point_rosee">💧 Point de rosée (°C)</option>
+                        <option value="humidex">🔥 Indice Humidex</option>
+                    </optgroup>
+                    <optgroup label="🌧️ Précipitations & Pluie">
+                        <option value="pluie_1h">🌧️ Pluie horaire (mm/h)</option>
+                        <option value="pluie_cumul">📊 Précipitations cumulées (mm)</option>
+                        <option value="reflectivite">📡 Réflectivité Radar Doppler (dBZ)</option>
+                    </optgroup>
+                    <optgroup label="💨 Vent & Tempêtes">
+                        <option value="vent">💨 Vent moyen à 10 m (km/h)</option>
+                        <option value="rafales">⚡ Rafales maximales (km/h)</option>
+                    </optgroup>
+                    <optgroup label="⛈️ Orages & Convection">
+                        <option value="mucape">⚡ Instabilité convective (MUCAPE J/kg)</option>
+                    </optgroup>
+                    <optgroup label="❄️ Neige & Hiver">
+                        <option value="neige">❄️ Chutes de neige (cm/h)</option>
+                        <option value="neige_au_sol">🏔️ Épaisseur neige au sol (cm)</option>
+                    </optgroup>
+                    <optgroup label="☁️ Nuages & Pression">
+                        <option value="humidite">🌫️ Humidité relative (%)</option>
+                        <option value="pression">🧭 Pression niveau mer (hPa)</option>
+                    </optgroup>
+                </select>
+
+                <!-- Sélecteur de Région -->
+                <select id="select-region" data-amfm-region-select aria-label="Zoomer sur une région de France">
+                    <option value="france">🇫🇷 France Entière</option>
+                    <option value="hdf">🏘️ Hauts-de-France</option>
+                    <option value="idf">🗼 Île-de-France</option>
+                    <option value="ara">⛰️ Auvergne-Rhône-Alpes</option>
+                    <option value="paca">☀️ PACA</option>
+                    <option value="occitanie">🌞 Occitanie</option>
+                    <option value="naq">🌊 Nouvelle-Aquitaine</option>
+                    <option value="bretagne">⛵ Bretagne</option>
+                    <option value="normandie">🍏 Normandie</option>
+                    <option value="grandest">🥨 Grand Est</option>
+                    <option value="corse">🏝️ Corse</option>
+                </select>
+
+                <!-- Bouton Télécharger Carte HD -->
+                <button type="button" class="amfm-btn btn-download" data-amfm-capture aria-label="Télécharger la carte météo en haute définition PNG">
+                    <i class="fa-solid fa-download" aria-hidden="true"></i> Télécharger
+                </button>
+
+                <!-- Recadrer -->
+                <button type="button" class="amfm-btn" data-amfm-reset aria-label="Recentrer la carte météo">
+                    <i class="fa-solid fa-compress" aria-hidden="true"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Viewport Cartographique Multi-Canvas -->
+        <main class="amfm-viewport" data-amfm-viewport role="main" aria-label="Carte interactive de prévisions météo AROME HD">
+            <canvas class="amfm-canvas" data-amfm-weather aria-hidden="true"></canvas>
+            <canvas class="amfm-canvas" data-amfm-vectors aria-hidden="true"></canvas>
+            <canvas class="amfm-canvas" data-amfm-labels aria-hidden="true"></canvas>
+        </main>
+
+        <!-- Sonde de Pixel -->
+        <div class="amfm-probe" data-amfm-probe role="status" aria-live="polite">
+            <div class="amfm-probe-val" data-amfm-probe-value>—</div>
+            <div class="amfm-probe-label" data-amfm-probe-label>Température</div>
+        </div>
+
+        <!-- Légende -->
+        <aside class="amfm-legend" data-amfm-legend role="complementary" aria-label="Échelle colorimétrique de la carte">
+            <div class="amfm-legend-header">
+                <span data-amfm-legend-label>Échelle</span>
+                <span data-amfm-legend-unit>°C</span>
+            </div>
+            <div class="amfm-legend-bar" data-amfm-legend-bar></div>
+        </aside>
+
+        <!-- Timeline Inférieure -->
+        <footer class="amfm-timeline" role="region" aria-label="Contrôle de la timeline et des échéances de prévision">
+            <div class="amfm-player">
+                <button type="button" data-amfm-previous aria-label="Échéance horaire précédente">◀</button>
+                <button type="button" data-amfm-play aria-label="Lancer la lecture automatique de l'animation">▶</button>
+                <button type="button" data-amfm-next aria-label="Échéance horaire suivante">▶</button>
+            </div>
+
+            <div class="amfm-slider-track">
+                <div class="amfm-info-row">
+                    <span class="amfm-validity" data-amfm-validity aria-live="polite">Chargement…</span>
+                    <span class="amfm-lead" data-amfm-lead>H+00</span>
+                </div>
+                <input type="range" data-amfm-slider min="0" max="24" value="0" step="1" aria-label="Curseur d'échéance temporelle" aria-valuetext="H+00">
+            </div>
+        </footer>
+    </div>
+
+    <!-- Script du Moteur Optimisé -->
+    <script src="js/arome-map.js?v=3.8.0"></script>
+</body>
+</html>
