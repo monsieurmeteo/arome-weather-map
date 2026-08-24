@@ -32,8 +32,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Installation des dependances meteorologiques
+      - name: Installation des dependances systeme et Python
         run: |
+          sudo apt-get update
+          sudo apt-get install -y libeccodes-dev libeccodes-tools
           python -m pip install --upgrade pip
           pip install numpy pillow requests eccodes cfgrib xarray scipy ecmwf-opendata
 
@@ -61,6 +63,12 @@ jobs:
             git pull --rebase origin main
             git push origin main
           fi
+
+      - name: Televersement de l'artefact GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+        if: success()
 
       - name: Deploiement sur GitHub Pages
         uses: actions/deploy-pages@v4

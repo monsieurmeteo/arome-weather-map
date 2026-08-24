@@ -515,14 +515,17 @@
         }
 
         function positionPinned() {
-            if (!pinnedElement || !pinnedPoint) {
+            if (!pinnedElement || !pinnedPoint || !viewport) {
                 return;
             }
             var box = viewport.getBoundingClientRect();
-            var mapX = pinnedPoint.u * box.width;
-            var mapY = pinnedPoint.v * box.height;
-            var screenX = (mapX - box.width / 2) * transform.scale + transform.x + box.width / 2;
-            var screenY = (mapY - box.height / 2) * transform.scale + transform.y + box.height / 2;
+            var mapAspect = 2200.0 / 1640.0;
+            var viewAspect = box.width / (box.height || 1);
+            var uScale = viewAspect > mapAspect ? (box.height / 1640.0) : (box.width / 2200.0);
+            var mapW = 2200.0 * uScale * transform.scale;
+            var mapH = 1640.0 * uScale * transform.scale;
+            var screenX = (pinnedPoint.u - 0.5) * mapW + box.width / 2 + transform.x;
+            var screenY = (pinnedPoint.v - 0.5) * mapH + box.height / 2 + transform.y;
             if (screenX < -40 || screenX > box.width + 40 || screenY < -40 || screenY > box.height + 40) {
                 pinnedElement.style.display = 'none';
                 return;
@@ -680,11 +683,67 @@
             output.width = weatherCanvas.width;
             output.height = weatherCanvas.height;
             var context = output.getContext('2d');
-            [weatherCanvas, vectorCanvas, labelsCanvas].forEach(function (source) {
-                if (source && source.width === output.width && source.height === output.height) {
-                    context.drawImage(source, 0, 0);
+            
+            // 1. Fond sombre
+            context.fillStyle = '#070b14';
+            context.fillRect(0, 0, output.width, output.height);
+            
+            // 2. Dalle météo décodée
+            if (currentWeatherImage) {
+                var mapAspect = 2200.0 / 1640.0;
+                var viewAspect = output.width / output.height;
+                var uScale = viewAspect > mapAspect ? (output.height / 1640.0) : (output.width / 2200.0);
+                var mapW = 2200.0 * uScale * transform.scale;
+                var mapH = 1640.0 * uScale * transform.scale;
+                var mapX = (output.width - mapW) / 2 + transform.x;
+                var mapY = (output.height - mapH) / 2 + transform.y;
+                context.drawImage(currentWeatherImage, mapX, mapY, mapW, mapH);
+            } else if (weatherCanvas) {
+                context.drawImage(weatherCanvas, 0, 0);
+            }
+            
+            // 3. Frontières et villes
+            if (vectorCanvas) context.drawImage(vectorCanvas, 0, 0);
+            if (labelsCanvas) context.drawImage(labelsCanvas, 0, 0);
+            
+            // 4. Cartouche d'antenne Météo-Climat Pro HD
+            var layer = manifest && manifest.layers && manifest.layers[currentLayer];
+            var step = availableSteps()[currentStep];
+            var dateStr = '';
+            if (step) {
+                try {
+                    dateStr = validityFormat.format(new Date(step.valid_time)).replace(':', 'h');
+                } catch(e) {
+                    dateStr = new Date(step.valid_time).toLocaleDateString('fr-FR');
                 }
-            });
+            }
+            
+            var bannerH = 68;
+            var bannerY = output.height - bannerH - 20;
+            context.fillStyle = 'rgba(7, 11, 20, 0.90)';
+            context.beginPath();
+            if (typeof context.roundRect === 'function') {
+                context.roundRect(20, bannerY, output.width - 40, bannerH, 12);
+            } else {
+                context.rect(20, bannerY, output.width - 40, bannerH);
+            }
+            context.fill();
+            context.strokeStyle = 'rgba(0, 210, 255, 0.4)';
+            context.lineWidth = 1.5;
+            context.stroke();
+            
+            // Titre & Paramètre
+            context.fillStyle = '#ffffff';
+            context.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var modelTitle = (manifest ? manifest.model_name : 'AROME HD');
+            context.fillText(modelTitle + ' • ' + (layer ? layer.label : '') + (layer && layer.unit ? ' (' + layer.unit + ')' : ''), 36, bannerY + 30);
+            
+            // Date & Branding
+            context.fillStyle = '#00d2ff';
+            context.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var leadText = step ? ' (H+' + String(step.lead_hour).padStart(2,'0') + ')' : '';
+            context.fillText(dateStr + leadText + ' — Météo-Climat Pro (meteo-climat-pro.fr)', 36, bannerY + 54);
+            
             return output;
         }
 
@@ -707,7 +766,7 @@
                     .normalize('NFD').replace(/[̀-ͯ]/g, '')
                     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
                 link.href = url;
-                link.download = 'arome-' + (slug || 'carte') + '-' + Date.now() + '.png';
+                link.download = 'MeteoClimatPro_' + (manifest ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME') + '_' + (slug || 'carte') + '_' + Date.now() + '.png';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -1029,38 +1088,56 @@
             refreshLayerMenu();
         }
 
+        var PALETTE_GRADIENTS = {
+            temperature: { css: 'linear-gradient(to right, #4900ff, #0080ff, #00ffe6, #ffffff, #78ff78, #00c800, #ffff00, #ffa500, #ff5000, #c80000, #8c0000, #640050)', ticks: ['-15°', '0°', '15°', '30°', '45°'] },
+            temperature_ressentie: { css: 'linear-gradient(to right, #4900ff, #00c8ff, #ffffff, #78ff78, #ffff00, #ff5000, #8c0000)', ticks: ['-20°', '-5°', '10°', '25°', '40°'] },
+            point_rosee: { css: 'linear-gradient(to right, #c8c8ff, #64c8ff, #32c864, #00c800, #c8c800, #ff6400)', ticks: ['-10°', '0°', '10°', '20°', '25°'] },
+            humidex: { css: 'linear-gradient(to right, #c8c8ff, #64ff64, #ffff00, #ffa500, #ff5000, #c80000, #640000)', ticks: ['20', '25', '30', '35', '45+'] },
+            pluie_1h: { css: 'linear-gradient(to right, rgba(0,0,0,0), #add8e6, #0064ff, #00c800, #ffff00, #ffa500, #ff0000, #a000a0)', ticks: ['0', '1', '5', '15', '30+ mm'] },
+            pluie_cumul: { css: 'linear-gradient(to right, rgba(0,0,0,0), #add8e6, #0064ff, #00c800, #ffff00, #ffa500, #ff0000, #a000a0)', ticks: ['0', '5', '25', '50', '100+ mm'] },
+            reflectivite: { css: 'linear-gradient(to right, rgba(0,0,0,0), #64c8ff, #0000ff, #00ff00, #ffff00, #ffa500, #ff0000, #a000a0)', ticks: ['5', '20', '35', '50', '65 dBZ'] },
+            graupel: { css: 'linear-gradient(to right, rgba(0,0,0,0), #c8e6ff, #64c8ff, #ffa500, #c800c8)', ticks: ['0', '1', '5', '10', '15+ mm'] },
+            vent: { css: 'linear-gradient(to right, #c8e6ff, #00c8ff, #00c864, #ffff00, #ffa500, #ff3c00, #c80000, #640064)', ticks: ['0', '20', '50', '80', '120+ km/h'] },
+            rafales: { css: 'linear-gradient(to right, #c8e6ff, #00c8ff, #00c864, #ffff00, #ffa500, #ff3c00, #c80000, #640064)', ticks: ['0', '30', '60', '90', '140+ km/h'] },
+            rafales_cumul: { css: 'linear-gradient(to right, #c8e6ff, #00c8ff, #00c864, #ffff00, #ffa500, #ff3c00, #c80000, #640064)', ticks: ['0', '30', '60', '90', '140+ km/h'] },
+            nebulosite: { css: 'linear-gradient(to right, rgba(255,255,255,0), #dce6f0, #a0b4c8, #647896, #3c465a)', ticks: ['0%', '25%', '50%', '75%', '100%'] },
+            nuages_bas: { css: 'linear-gradient(to right, rgba(255,255,255,0), #fff0b4, #ffb450, #c85000)', ticks: ['0%', '30%', '60%', '100%'] },
+            nuages_moyens: { css: 'linear-gradient(to right, rgba(255,255,255,0), #b4f0c8, #50c878, #008c3c)', ticks: ['0%', '30%', '60%', '100%'] },
+            nuages_eleves: { css: 'linear-gradient(to right, rgba(255,255,255,0), #c8dcff, #78a0f0, #2850c8)', ticks: ['0%', '30%', '60%', '100%'] },
+            humidite: { css: 'linear-gradient(to right, #c89664, #dcb478, #ffffc8, #b4ffb4, #00c8c8, #0064ff, #0000c8)', ticks: ['20%', '40%', '60%', '80%', '100%'] },
+            mucape: { css: 'linear-gradient(to right, rgba(50,50,50,0), #6464ff, #00ffc8, #00c800, #ffff00, #ffa500, #ff0000, #a000a0)', ticks: ['0', '250', '1000', '2500', '4000+ J/kg'] },
+            neige: { css: 'linear-gradient(to right, rgba(0,0,0,0), #c8e6ff, #64b4ff, #3264c8, #0000b4, #640096)', ticks: ['0', '1', '5', '10', '20+ cm/h'] },
+            neige_au_sol: { css: 'linear-gradient(to right, rgba(0,0,0,0), #c8e6ff, #96c8ff, #6496ff, #3264c8, #0000b4, #640096)', ticks: ['0', '5', '20', '50', '150+ cm'] },
+            equivalent_eau_neige: { css: 'linear-gradient(to right, rgba(0,0,0,0), #c8e6ff, #64b4ff, #3264c8, #0000b4)', ticks: ['0', '2', '5', '15', '30+ mm'] },
+            pression: { css: 'linear-gradient(to right, #820082, #0000c8, #0096ff, #00c896, #00b400, #c8c8c8, #ffdc64, #ff9600, #c85000)', ticks: ['970', '990', '1013', '1025', '1035 hPa'] },
+            pression_surface: { css: 'linear-gradient(to right, #820082, #0000c8, #00b400, #c8c8c8, #c85000)', ticks: ['850', '920', '980', '1013', '1035 hPa'] }
+        };
+
         function buildLegend() {
             if (!legend || !manifest || !manifest.layers) return;
             var layer = manifest.layers[currentLayer];
             var labelEl = app.querySelector('[data-amfm-legend-label]');
             var unitEl = app.querySelector('[data-amfm-legend-unit]');
+            var barEl = app.querySelector('[data-amfm-legend-bar]');
+            var ticksEl = app.querySelector('[data-amfm-legend-ticks]');
+            
             if (labelEl && layer) labelEl.textContent = layer.label || 'Échelle';
             if (unitEl && layer) unitEl.textContent = layer.unit || '';
-            if (Array.isArray(layer && layer.stops) && layer.stops.length) {
-                legend.classList.toggle('is-dense', layer.stops.length > 16);
-                var strip = document.createElement('div');
-                strip.className = 'amfm-legend-strip';
-                layer.stops.forEach(function (stop) {
-                    var item = document.createElement('div');
-                    item.className = 'amfm-legend-stop';
-                    item.style.backgroundColor = stop.color;
-                    var label = document.createElement('span');
-                    label.textContent = stop.value;
-                    item.appendChild(label);
-                    strip.appendChild(item);
-                });
-                var existingStrip = legend.querySelector('.amfm-legend-strip');
-                if (existingStrip) {
-                    existingStrip.replaceWith(strip);
-                } else {
-                    legend.appendChild(strip);
-                }
+            
+            var pal = PALETTE_GRADIENTS[currentLayer] || PALETTE_GRADIENTS.temperature;
+            if (barEl) barEl.style.background = pal.css;
+            if (ticksEl && pal.ticks) {
+                ticksEl.innerHTML = pal.ticks.map(function(t) { return '<span>' + t + '</span>'; }).join('');
             }
         }
 
         function preloadNeighbour(steps, index) {
-            [-1, 1].forEach(function (offset) {
-                var neighbour = steps[index + offset];
+            var offsets = [-1, 1];
+            if (index === steps.length - 1) offsets.push(-(steps.length - 1));
+            if (index === 0) offsets.push(steps.length - 1);
+            offsets.forEach(function (offset) {
+                var targetIdx = (index + offset + steps.length) % steps.length;
+                var neighbour = steps[targetIdx];
                 if (!neighbour || !neighbour.files[currentLayer]) {
                     return;
                 }
@@ -1263,7 +1340,7 @@
                 window.clearInterval(timer);
                 timer = null;
             }
-            playButton.textContent = '▶';
+            playButton.innerHTML = '<i class="fa-solid fa-play" aria-hidden="true"></i>';
             playButton.setAttribute('aria-label', 'Lancer l’animation');
             playButton.title = 'Lancer l’animation';
             playButton.classList.remove('is-playing');
@@ -1278,7 +1355,7 @@
             if (steps.length < 2) {
                 return;
             }
-            playButton.textContent = '❚❚';
+            playButton.innerHTML = '<i class="fa-solid fa-pause" aria-hidden="true"></i>';
             playButton.setAttribute('aria-label', 'Arrêter l’animation');
             playButton.title = 'Arrêter l’animation';
             playButton.classList.add('is-playing');
@@ -1806,7 +1883,44 @@
 
         function resetView() {
             transform = { scale: 1, x: 0, y: 0 };
+            var regSel = document.getElementById('select-region');
+            if (regSel) regSel.value = 'france';
             applyTransform();
+        }
+
+        if (viewport) {
+            viewport.addEventListener('keydown', function (e) {
+                var panStep = 60;
+                if (e.key === '+' || e.key === '=') {
+                    e.preventDefault();
+                    changeZoom(transform.scale * 1.3);
+                } else if (e.key === '-' || e.key === '_') {
+                    e.preventDefault();
+                    changeZoom(transform.scale / 1.3);
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    transform.x += panStep;
+                    applyTransform();
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    transform.x -= panStep;
+                    applyTransform();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    transform.y += panStep;
+                    applyTransform();
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    transform.y -= panStep;
+                    applyTransform();
+                } else if (e.key === 'Home' || e.key === '0') {
+                    e.preventDefault();
+                    resetView();
+                } else if (e.key === ' ' || e.key === 'k') {
+                    e.preventDefault();
+                    toggleAnimation();
+                }
+            });
         }
 
         function focusLocation(detail) {
@@ -2074,10 +2188,10 @@
                 var dy = event.clientY - tapStart.y;
                 var dt = Date.now() - tapStart.time;
                 tapStart = null;
-                if (!wasMultiTouch && Math.hypot(dx, dy) < 6 && dt < 600) {
+                if (!wasMultiTouch && Math.hypot(dx, dy) < 8 && dt < 600) {
                     if (toolMode === 'diagram') {
                         openDiagramAt(event.clientX, event.clientY);
-                    } else if (pinnedEnabled) {
+                    } else {
                         pinProbeAt(event.clientX, event.clientY);
                     }
                 }
