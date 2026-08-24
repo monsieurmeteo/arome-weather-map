@@ -686,7 +686,10 @@ def _mf_rate_wait():
 
 
 def _fetch_mf_tile(session, token, wms_url, wms_layer, style, time_str, ref_str, dst):
-    headers = {"apikey": token, "Authorization": "Bearer " + token, "User-Agent": "Mozilla/5.0"}
+    headers = {"apikey": token, "Authorization": "Bearer " + token,
+               "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+               "Accept": "image/png,image/*;q=0.8,*/*;q=0.5",
+               "Accept-Language": "fr-FR,fr;q=0.9"}
     params = {"service": "WMS", "version": "1.3.0", "request": "GetMap",
               "layers": wms_layer, "styles": style,
               "crs": "EPSG:4326", "bbox": "38.0,-12.0,53.0,16.0",
