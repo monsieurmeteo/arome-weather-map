@@ -1858,7 +1858,7 @@
                 return [];
             }
             return manifest.steps.filter(function (step) {
-                return step && step.files && step.files[currentLayer];
+                return step && step.files && step.files[currentLayer] && Number(step.lead_hour) >= 1;
             });
         }
 
