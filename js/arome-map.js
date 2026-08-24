@@ -110,6 +110,8 @@
         var toolHint = app.querySelector('[data-amfm-tool-hint]');
         var advancedTools = app.querySelector('[data-amfm-advanced-tools]');
         var captureButton = app.querySelector('[data-amfm-capture]');
+        var captureJpegButton = app.querySelector('[data-amfm-capture-jpeg]');
+        var captureGifButton = app.querySelector('[data-amfm-capture-gif]');
         var pinButton = app.querySelector('[data-amfm-pin]');
         var diagramPopup = app.querySelector('[data-amfm-diagram-popup]');
         var diagramTitle = app.querySelector('[data-amfm-diagram-title]');
@@ -784,12 +786,15 @@
             return output;
         }
 
-        function captureImage() {
+        function captureImage(format) {
+            format = format || 'png';
             var canvas = composeCaptureCanvas();
             if (!canvas || !canvas.toBlob) {
                 setToolHint('Capture indisponible pour ce navigateur.');
                 return;
             }
+            var mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+            var ext = format === 'jpeg' ? 'jpg' : 'png';
             canvas.toBlob(function (blob) {
                 if (!blob) {
                     return;
@@ -803,12 +808,97 @@
                     .normalize('NFD').replace(/[̀-ͯ]/g, '')
                     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
                 link.href = url;
-                link.download = 'MeteoClimatPro_' + (manifest ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME') + '_' + (slug || 'carte') + '_' + Date.now() + '.png';
+                link.download = 'MeteoClimatPro_' + (manifest ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME') + '_' + (slug || 'carte') + '_' + Date.now() + '.' + ext;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 window.setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-            }, 'image/png');
+            }, mimeType, format === 'jpeg' ? 0.92 : undefined);
+        }
+
+        function captureGif() {
+            var steps = availableSteps();
+            if (!steps.length) {
+                setToolHint('Aucune carte disponible pour générer le GIF.');
+                return;
+            }
+            if (typeof window.GIF !== 'function') {
+                setToolHint('Encodage GIF indisponible (bibliothèque non chargée).');
+                return;
+            }
+            var gw = 550;
+            var gh = Math.round(gw * 1640 / 2200);
+            var layer = manifest && manifest.layers && manifest.layers[currentLayer];
+            var gif = new window.GIF({ workers: 2, quality: 10, width: gw, height: gh });
+            var index = 0;
+
+            function drawFrame(canvas, img, leadHour) {
+                var ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#070b14';
+                ctx.fillRect(0, 0, gw, gh);
+                ctx.drawImage(img, 0, 0, gw, gh);
+                if (vectorDefinition && vectorDefinition.paths) {
+                    ctx.save();
+                    ctx.scale(gw / vectorDefinition.width, gh / vectorDefinition.height);
+                    vectorDefinition.paths.forEach(function (entry) {
+                        ctx.strokeStyle = entry.colour;
+                        ctx.globalAlpha = entry.opacity;
+                        ctx.lineWidth = entry.width;
+                        ctx.stroke(entry.path);
+                    });
+                    ctx.restore();
+                }
+                ctx.fillStyle = 'rgba(7, 11, 20, 0.85)';
+                ctx.fillRect(0, gh - 26, gw, 26);
+                ctx.fillStyle = '#00d2ff';
+                ctx.font = 'bold 15px sans-serif';
+                ctx.fillText((layer ? layer.label : '') + '  H+' + String(leadHour).padStart(2, '0'), 8, gh - 8);
+            }
+
+            function next() {
+                if (index >= steps.length) {
+                    setToolHint('Génération du GIF… finalisation');
+                    gif.render();
+                    return;
+                }
+                var step = steps[index];
+                var img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = function () {
+                    var canvas = document.createElement('canvas');
+                    canvas.width = gw;
+                    canvas.height = gh;
+                    drawFrame(canvas, img, step.lead_hour);
+                    gif.addFrame(canvas, { copy: true, delay: 350 });
+                    index += 1;
+                    next();
+                };
+                img.onerror = function () {
+                    index += 1;
+                    next();
+                };
+                img.src = versioned(step.files[currentLayer]);
+            }
+
+            setToolHint('Génération du GIF…');
+            gif.on('progress', function (p) {
+                setToolHint('Génération du GIF… ' + Math.round(p * 100) + ' %');
+            });
+            gif.on('finished', function (blob) {
+                var url = URL.createObjectURL(blob);
+                var link = document.createElement('a');
+                var slug = String(layer ? layer.label : 'animation').toLowerCase()
+                    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                link.href = url;
+                link.download = 'MeteoClimatPro_' + (manifest ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME') + '_' + (slug || 'animation') + '.gif';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+                setToolHint('');
+            });
+            next();
         }
 
         function closeDiagram() {
@@ -2076,7 +2166,13 @@
             });
         });
         if (captureButton) {
-            captureButton.addEventListener('click', captureImage);
+            captureButton.addEventListener('click', function () { captureImage('png'); });
+        }
+        if (captureJpegButton) {
+            captureJpegButton.addEventListener('click', function () { captureImage('jpeg'); });
+        }
+        if (captureGifButton) {
+            captureGifButton.addEventListener('click', captureGif);
         }
         if (pinButton) {
             pinButton.addEventListener('click', function () {
