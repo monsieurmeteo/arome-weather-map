@@ -2,10 +2,10 @@
   "schema_version": 6,
   "status": "ok",
   "model_name": "AROME HD (1,3 km)",
-  "provider": "Météo-France",
-  "resolution": "1,3 km (0.01°)",
-  "generated_at": "2026-08-24T10:31:38.425996+00:00",
-  "run_time": "2026-08-24T09:00:00+00:00",
+  "provider": "Meteo-France",
+  "resolution": "1,3 km (0.01 deg)",
+  "generated_at": "2026-08-24T12:56:05.010362+00:00",
+  "run_time": "2026-08-24T06:00:00+00:00",
   "bounds": {
     "south": 38.0,
     "west": -12.0,
@@ -16,18 +16,18 @@
   "places": "maps/communes.json",
   "layers": {
     "temperature": {
-      "label": "Température à 2 m",
-      "unit": "°C",
+      "label": "Temperature a 2 m",
+      "unit": "degC",
       "decimals": 1
     },
     "temperature_ressentie": {
-      "label": "Température ressentie",
-      "unit": "°C",
+      "label": "Temperature ressentie",
+      "unit": "degC",
       "decimals": 1
     },
     "point_rosee": {
-      "label": "Point de rosée à 2 m",
-      "unit": "°C",
+      "label": "Point de rosee a 2 m",
+      "unit": "degC",
       "decimals": 1
     },
     "humidex": {
@@ -41,12 +41,22 @@
       "decimals": 1
     },
     "pluie_cumul": {
-      "label": "Précipitations cumulées",
+      "label": "Precipitations cumulees",
+      "unit": "mm",
+      "decimals": 1
+    },
+    "reflectivite": {
+      "label": "Reflectivite radar Doppler",
+      "unit": "dBZ",
+      "decimals": 1
+    },
+    "graupel": {
+      "label": "Graupel / Gresil",
       "unit": "mm",
       "decimals": 1
     },
     "vent": {
-      "label": "Vent moyen à 10 m",
+      "label": "Vent moyen a 10 m",
       "unit": "km/h",
       "decimals": 1
     },
@@ -55,48 +65,13 @@
       "unit": "km/h",
       "decimals": 1
     },
-    "mucape": {
-      "label": "Instabilité convective (MUCAPE)",
-      "unit": "J/kg",
-      "decimals": 1
-    },
-    "neige": {
-      "label": "Chutes de neige",
-      "unit": "cm/h",
-      "decimals": 1
-    },
-    "neige_au_sol": {
-      "label": "Épaisseur neige au sol",
-      "unit": "cm",
-      "decimals": 1
-    },
-    "pression": {
-      "label": "Pression niveau mer",
-      "unit": "hPa",
-      "decimals": 1
-    },
-    "humidite": {
-      "label": "Humidité relative à 2 m",
-      "unit": "%",
-      "decimals": 1
-    },
-    "reflectivite": {
-      "label": "Réflectivité radar Doppler",
-      "unit": "dBZ",
-      "decimals": 1
-    },
     "rafales_cumul": {
-      "label": "Rafales maximales cumulées",
+      "label": "Rafales maximales cumulees",
       "unit": "km/h",
       "decimals": 1
     },
-    "graupel": {
-      "label": "Graupel / Grésil",
-      "unit": "mm",
-      "decimals": 1
-    },
     "nebulosite": {
-      "label": "Nébulosité totale",
+      "label": "Nebulosite totale",
       "unit": "%",
       "decimals": 1
     },
@@ -111,13 +86,38 @@
       "decimals": 1
     },
     "nuages_eleves": {
-      "label": "Couverture nuages élevés",
+      "label": "Couverture nuages eleves",
       "unit": "%",
       "decimals": 1
     },
+    "humidite": {
+      "label": "Humidite relative a 2 m",
+      "unit": "%",
+      "decimals": 1
+    },
+    "mucape": {
+      "label": "Instabilite convective (MUCAPE)",
+      "unit": "J/kg",
+      "decimals": 1
+    },
+    "neige": {
+      "label": "Chutes de neige",
+      "unit": "cm/h",
+      "decimals": 1
+    },
+    "neige_au_sol": {
+      "label": "Epaisseur neige au sol",
+      "unit": "cm",
+      "decimals": 1
+    },
     "equivalent_eau_neige": {
-      "label": "Cumul neigeux équiv. eau",
+      "label": "Cumul neigeux equiv. eau",
       "unit": "mm",
+      "decimals": 1
+    },
+    "pression": {
+      "label": "Pression niveau mer",
+      "unit": "hPa",
       "decimals": 1
     },
     "pression_surface": {
@@ -129,7 +129,7 @@
   "steps": [
     {
       "lead_hour": 0,
-      "valid_time": "2026-08-24T09:00:00+00:00",
+      "valid_time": "2026-08-24T06:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/000.webp",
         "temperature_ressentie": "maps/temperature_ressentie/000.webp",
@@ -137,27 +137,27 @@
         "humidex": "maps/humidex/000.webp",
         "pluie_1h": "maps/pluie_1h/000.webp",
         "pluie_cumul": "maps/pluie_cumul/000.webp",
+        "reflectivite": "maps/reflectivite/000.webp",
+        "graupel": "maps/graupel/000.webp",
         "vent": "maps/vent/000.webp",
         "rafales": "maps/rafales/000.webp",
-        "mucape": "maps/mucape/000.webp",
-        "neige": "maps/neige/000.webp",
-        "neige_au_sol": "maps/neige_au_sol/000.webp",
-        "pression": "maps/pression/000.webp",
-        "humidite": "maps/humidite/000.webp",
-        "reflectivite": "maps/reflectivite/000.webp",
         "rafales_cumul": "maps/rafales_cumul/000.webp",
-        "graupel": "maps/graupel/000.webp",
         "nebulosite": "maps/nebulosite/000.webp",
         "nuages_bas": "maps/nuages_bas/000.webp",
         "nuages_moyens": "maps/nuages_moyens/000.webp",
         "nuages_eleves": "maps/nuages_eleves/000.webp",
+        "humidite": "maps/humidite/000.webp",
+        "mucape": "maps/mucape/000.webp",
+        "neige": "maps/neige/000.webp",
+        "neige_au_sol": "maps/neige_au_sol/000.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/000.webp",
+        "pression": "maps/pression/000.webp",
         "pression_surface": "maps/pression_surface/000.webp"
       }
     },
     {
       "lead_hour": 1,
-      "valid_time": "2026-08-24T10:00:00+00:00",
+      "valid_time": "2026-08-24T07:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/001.webp",
         "temperature_ressentie": "maps/temperature_ressentie/001.webp",
@@ -165,27 +165,27 @@
         "humidex": "maps/humidex/001.webp",
         "pluie_1h": "maps/pluie_1h/001.webp",
         "pluie_cumul": "maps/pluie_cumul/001.webp",
+        "reflectivite": "maps/reflectivite/001.webp",
+        "graupel": "maps/graupel/001.webp",
         "vent": "maps/vent/001.webp",
         "rafales": "maps/rafales/001.webp",
-        "mucape": "maps/mucape/001.webp",
-        "neige": "maps/neige/001.webp",
-        "neige_au_sol": "maps/neige_au_sol/001.webp",
-        "pression": "maps/pression/001.webp",
-        "humidite": "maps/humidite/001.webp",
-        "reflectivite": "maps/reflectivite/001.webp",
         "rafales_cumul": "maps/rafales_cumul/001.webp",
-        "graupel": "maps/graupel/001.webp",
         "nebulosite": "maps/nebulosite/001.webp",
         "nuages_bas": "maps/nuages_bas/001.webp",
         "nuages_moyens": "maps/nuages_moyens/001.webp",
         "nuages_eleves": "maps/nuages_eleves/001.webp",
+        "humidite": "maps/humidite/001.webp",
+        "mucape": "maps/mucape/001.webp",
+        "neige": "maps/neige/001.webp",
+        "neige_au_sol": "maps/neige_au_sol/001.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/001.webp",
+        "pression": "maps/pression/001.webp",
         "pression_surface": "maps/pression_surface/001.webp"
       }
     },
     {
       "lead_hour": 2,
-      "valid_time": "2026-08-24T11:00:00+00:00",
+      "valid_time": "2026-08-24T08:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/002.webp",
         "temperature_ressentie": "maps/temperature_ressentie/002.webp",
@@ -193,27 +193,27 @@
         "humidex": "maps/humidex/002.webp",
         "pluie_1h": "maps/pluie_1h/002.webp",
         "pluie_cumul": "maps/pluie_cumul/002.webp",
+        "reflectivite": "maps/reflectivite/002.webp",
+        "graupel": "maps/graupel/002.webp",
         "vent": "maps/vent/002.webp",
         "rafales": "maps/rafales/002.webp",
-        "mucape": "maps/mucape/002.webp",
-        "neige": "maps/neige/002.webp",
-        "neige_au_sol": "maps/neige_au_sol/002.webp",
-        "pression": "maps/pression/002.webp",
-        "humidite": "maps/humidite/002.webp",
-        "reflectivite": "maps/reflectivite/002.webp",
         "rafales_cumul": "maps/rafales_cumul/002.webp",
-        "graupel": "maps/graupel/002.webp",
         "nebulosite": "maps/nebulosite/002.webp",
         "nuages_bas": "maps/nuages_bas/002.webp",
         "nuages_moyens": "maps/nuages_moyens/002.webp",
         "nuages_eleves": "maps/nuages_eleves/002.webp",
+        "humidite": "maps/humidite/002.webp",
+        "mucape": "maps/mucape/002.webp",
+        "neige": "maps/neige/002.webp",
+        "neige_au_sol": "maps/neige_au_sol/002.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/002.webp",
+        "pression": "maps/pression/002.webp",
         "pression_surface": "maps/pression_surface/002.webp"
       }
     },
     {
       "lead_hour": 3,
-      "valid_time": "2026-08-24T12:00:00+00:00",
+      "valid_time": "2026-08-24T09:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/003.webp",
         "temperature_ressentie": "maps/temperature_ressentie/003.webp",
@@ -221,27 +221,27 @@
         "humidex": "maps/humidex/003.webp",
         "pluie_1h": "maps/pluie_1h/003.webp",
         "pluie_cumul": "maps/pluie_cumul/003.webp",
+        "reflectivite": "maps/reflectivite/003.webp",
+        "graupel": "maps/graupel/003.webp",
         "vent": "maps/vent/003.webp",
         "rafales": "maps/rafales/003.webp",
-        "mucape": "maps/mucape/003.webp",
-        "neige": "maps/neige/003.webp",
-        "neige_au_sol": "maps/neige_au_sol/003.webp",
-        "pression": "maps/pression/003.webp",
-        "humidite": "maps/humidite/003.webp",
-        "reflectivite": "maps/reflectivite/003.webp",
         "rafales_cumul": "maps/rafales_cumul/003.webp",
-        "graupel": "maps/graupel/003.webp",
         "nebulosite": "maps/nebulosite/003.webp",
         "nuages_bas": "maps/nuages_bas/003.webp",
         "nuages_moyens": "maps/nuages_moyens/003.webp",
         "nuages_eleves": "maps/nuages_eleves/003.webp",
+        "humidite": "maps/humidite/003.webp",
+        "mucape": "maps/mucape/003.webp",
+        "neige": "maps/neige/003.webp",
+        "neige_au_sol": "maps/neige_au_sol/003.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/003.webp",
+        "pression": "maps/pression/003.webp",
         "pression_surface": "maps/pression_surface/003.webp"
       }
     },
     {
       "lead_hour": 4,
-      "valid_time": "2026-08-24T13:00:00+00:00",
+      "valid_time": "2026-08-24T10:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/004.webp",
         "temperature_ressentie": "maps/temperature_ressentie/004.webp",
@@ -249,27 +249,27 @@
         "humidex": "maps/humidex/004.webp",
         "pluie_1h": "maps/pluie_1h/004.webp",
         "pluie_cumul": "maps/pluie_cumul/004.webp",
+        "reflectivite": "maps/reflectivite/004.webp",
+        "graupel": "maps/graupel/004.webp",
         "vent": "maps/vent/004.webp",
         "rafales": "maps/rafales/004.webp",
-        "mucape": "maps/mucape/004.webp",
-        "neige": "maps/neige/004.webp",
-        "neige_au_sol": "maps/neige_au_sol/004.webp",
-        "pression": "maps/pression/004.webp",
-        "humidite": "maps/humidite/004.webp",
-        "reflectivite": "maps/reflectivite/004.webp",
         "rafales_cumul": "maps/rafales_cumul/004.webp",
-        "graupel": "maps/graupel/004.webp",
         "nebulosite": "maps/nebulosite/004.webp",
         "nuages_bas": "maps/nuages_bas/004.webp",
         "nuages_moyens": "maps/nuages_moyens/004.webp",
         "nuages_eleves": "maps/nuages_eleves/004.webp",
+        "humidite": "maps/humidite/004.webp",
+        "mucape": "maps/mucape/004.webp",
+        "neige": "maps/neige/004.webp",
+        "neige_au_sol": "maps/neige_au_sol/004.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/004.webp",
+        "pression": "maps/pression/004.webp",
         "pression_surface": "maps/pression_surface/004.webp"
       }
     },
     {
       "lead_hour": 5,
-      "valid_time": "2026-08-24T14:00:00+00:00",
+      "valid_time": "2026-08-24T11:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/005.webp",
         "temperature_ressentie": "maps/temperature_ressentie/005.webp",
@@ -277,27 +277,27 @@
         "humidex": "maps/humidex/005.webp",
         "pluie_1h": "maps/pluie_1h/005.webp",
         "pluie_cumul": "maps/pluie_cumul/005.webp",
+        "reflectivite": "maps/reflectivite/005.webp",
+        "graupel": "maps/graupel/005.webp",
         "vent": "maps/vent/005.webp",
         "rafales": "maps/rafales/005.webp",
-        "mucape": "maps/mucape/005.webp",
-        "neige": "maps/neige/005.webp",
-        "neige_au_sol": "maps/neige_au_sol/005.webp",
-        "pression": "maps/pression/005.webp",
-        "humidite": "maps/humidite/005.webp",
-        "reflectivite": "maps/reflectivite/005.webp",
         "rafales_cumul": "maps/rafales_cumul/005.webp",
-        "graupel": "maps/graupel/005.webp",
         "nebulosite": "maps/nebulosite/005.webp",
         "nuages_bas": "maps/nuages_bas/005.webp",
         "nuages_moyens": "maps/nuages_moyens/005.webp",
         "nuages_eleves": "maps/nuages_eleves/005.webp",
+        "humidite": "maps/humidite/005.webp",
+        "mucape": "maps/mucape/005.webp",
+        "neige": "maps/neige/005.webp",
+        "neige_au_sol": "maps/neige_au_sol/005.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/005.webp",
+        "pression": "maps/pression/005.webp",
         "pression_surface": "maps/pression_surface/005.webp"
       }
     },
     {
       "lead_hour": 6,
-      "valid_time": "2026-08-24T15:00:00+00:00",
+      "valid_time": "2026-08-24T12:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/006.webp",
         "temperature_ressentie": "maps/temperature_ressentie/006.webp",
@@ -305,27 +305,27 @@
         "humidex": "maps/humidex/006.webp",
         "pluie_1h": "maps/pluie_1h/006.webp",
         "pluie_cumul": "maps/pluie_cumul/006.webp",
+        "reflectivite": "maps/reflectivite/006.webp",
+        "graupel": "maps/graupel/006.webp",
         "vent": "maps/vent/006.webp",
         "rafales": "maps/rafales/006.webp",
-        "mucape": "maps/mucape/006.webp",
-        "neige": "maps/neige/006.webp",
-        "neige_au_sol": "maps/neige_au_sol/006.webp",
-        "pression": "maps/pression/006.webp",
-        "humidite": "maps/humidite/006.webp",
-        "reflectivite": "maps/reflectivite/006.webp",
         "rafales_cumul": "maps/rafales_cumul/006.webp",
-        "graupel": "maps/graupel/006.webp",
         "nebulosite": "maps/nebulosite/006.webp",
         "nuages_bas": "maps/nuages_bas/006.webp",
         "nuages_moyens": "maps/nuages_moyens/006.webp",
         "nuages_eleves": "maps/nuages_eleves/006.webp",
+        "humidite": "maps/humidite/006.webp",
+        "mucape": "maps/mucape/006.webp",
+        "neige": "maps/neige/006.webp",
+        "neige_au_sol": "maps/neige_au_sol/006.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/006.webp",
+        "pression": "maps/pression/006.webp",
         "pression_surface": "maps/pression_surface/006.webp"
       }
     },
     {
       "lead_hour": 7,
-      "valid_time": "2026-08-24T16:00:00+00:00",
+      "valid_time": "2026-08-24T13:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/007.webp",
         "temperature_ressentie": "maps/temperature_ressentie/007.webp",
@@ -333,27 +333,27 @@
         "humidex": "maps/humidex/007.webp",
         "pluie_1h": "maps/pluie_1h/007.webp",
         "pluie_cumul": "maps/pluie_cumul/007.webp",
+        "reflectivite": "maps/reflectivite/007.webp",
+        "graupel": "maps/graupel/007.webp",
         "vent": "maps/vent/007.webp",
         "rafales": "maps/rafales/007.webp",
-        "mucape": "maps/mucape/007.webp",
-        "neige": "maps/neige/007.webp",
-        "neige_au_sol": "maps/neige_au_sol/007.webp",
-        "pression": "maps/pression/007.webp",
-        "humidite": "maps/humidite/007.webp",
-        "reflectivite": "maps/reflectivite/007.webp",
         "rafales_cumul": "maps/rafales_cumul/007.webp",
-        "graupel": "maps/graupel/007.webp",
         "nebulosite": "maps/nebulosite/007.webp",
         "nuages_bas": "maps/nuages_bas/007.webp",
         "nuages_moyens": "maps/nuages_moyens/007.webp",
         "nuages_eleves": "maps/nuages_eleves/007.webp",
+        "humidite": "maps/humidite/007.webp",
+        "mucape": "maps/mucape/007.webp",
+        "neige": "maps/neige/007.webp",
+        "neige_au_sol": "maps/neige_au_sol/007.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/007.webp",
+        "pression": "maps/pression/007.webp",
         "pression_surface": "maps/pression_surface/007.webp"
       }
     },
     {
       "lead_hour": 8,
-      "valid_time": "2026-08-24T17:00:00+00:00",
+      "valid_time": "2026-08-24T14:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/008.webp",
         "temperature_ressentie": "maps/temperature_ressentie/008.webp",
@@ -361,27 +361,27 @@
         "humidex": "maps/humidex/008.webp",
         "pluie_1h": "maps/pluie_1h/008.webp",
         "pluie_cumul": "maps/pluie_cumul/008.webp",
+        "reflectivite": "maps/reflectivite/008.webp",
+        "graupel": "maps/graupel/008.webp",
         "vent": "maps/vent/008.webp",
         "rafales": "maps/rafales/008.webp",
-        "mucape": "maps/mucape/008.webp",
-        "neige": "maps/neige/008.webp",
-        "neige_au_sol": "maps/neige_au_sol/008.webp",
-        "pression": "maps/pression/008.webp",
-        "humidite": "maps/humidite/008.webp",
-        "reflectivite": "maps/reflectivite/008.webp",
         "rafales_cumul": "maps/rafales_cumul/008.webp",
-        "graupel": "maps/graupel/008.webp",
         "nebulosite": "maps/nebulosite/008.webp",
         "nuages_bas": "maps/nuages_bas/008.webp",
         "nuages_moyens": "maps/nuages_moyens/008.webp",
         "nuages_eleves": "maps/nuages_eleves/008.webp",
+        "humidite": "maps/humidite/008.webp",
+        "mucape": "maps/mucape/008.webp",
+        "neige": "maps/neige/008.webp",
+        "neige_au_sol": "maps/neige_au_sol/008.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/008.webp",
+        "pression": "maps/pression/008.webp",
         "pression_surface": "maps/pression_surface/008.webp"
       }
     },
     {
       "lead_hour": 9,
-      "valid_time": "2026-08-24T18:00:00+00:00",
+      "valid_time": "2026-08-24T15:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/009.webp",
         "temperature_ressentie": "maps/temperature_ressentie/009.webp",
@@ -389,27 +389,27 @@
         "humidex": "maps/humidex/009.webp",
         "pluie_1h": "maps/pluie_1h/009.webp",
         "pluie_cumul": "maps/pluie_cumul/009.webp",
+        "reflectivite": "maps/reflectivite/009.webp",
+        "graupel": "maps/graupel/009.webp",
         "vent": "maps/vent/009.webp",
         "rafales": "maps/rafales/009.webp",
-        "mucape": "maps/mucape/009.webp",
-        "neige": "maps/neige/009.webp",
-        "neige_au_sol": "maps/neige_au_sol/009.webp",
-        "pression": "maps/pression/009.webp",
-        "humidite": "maps/humidite/009.webp",
-        "reflectivite": "maps/reflectivite/009.webp",
         "rafales_cumul": "maps/rafales_cumul/009.webp",
-        "graupel": "maps/graupel/009.webp",
         "nebulosite": "maps/nebulosite/009.webp",
         "nuages_bas": "maps/nuages_bas/009.webp",
         "nuages_moyens": "maps/nuages_moyens/009.webp",
         "nuages_eleves": "maps/nuages_eleves/009.webp",
+        "humidite": "maps/humidite/009.webp",
+        "mucape": "maps/mucape/009.webp",
+        "neige": "maps/neige/009.webp",
+        "neige_au_sol": "maps/neige_au_sol/009.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/009.webp",
+        "pression": "maps/pression/009.webp",
         "pression_surface": "maps/pression_surface/009.webp"
       }
     },
     {
       "lead_hour": 10,
-      "valid_time": "2026-08-24T19:00:00+00:00",
+      "valid_time": "2026-08-24T16:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/010.webp",
         "temperature_ressentie": "maps/temperature_ressentie/010.webp",
@@ -417,27 +417,27 @@
         "humidex": "maps/humidex/010.webp",
         "pluie_1h": "maps/pluie_1h/010.webp",
         "pluie_cumul": "maps/pluie_cumul/010.webp",
+        "reflectivite": "maps/reflectivite/010.webp",
+        "graupel": "maps/graupel/010.webp",
         "vent": "maps/vent/010.webp",
         "rafales": "maps/rafales/010.webp",
-        "mucape": "maps/mucape/010.webp",
-        "neige": "maps/neige/010.webp",
-        "neige_au_sol": "maps/neige_au_sol/010.webp",
-        "pression": "maps/pression/010.webp",
-        "humidite": "maps/humidite/010.webp",
-        "reflectivite": "maps/reflectivite/010.webp",
         "rafales_cumul": "maps/rafales_cumul/010.webp",
-        "graupel": "maps/graupel/010.webp",
         "nebulosite": "maps/nebulosite/010.webp",
         "nuages_bas": "maps/nuages_bas/010.webp",
         "nuages_moyens": "maps/nuages_moyens/010.webp",
         "nuages_eleves": "maps/nuages_eleves/010.webp",
+        "humidite": "maps/humidite/010.webp",
+        "mucape": "maps/mucape/010.webp",
+        "neige": "maps/neige/010.webp",
+        "neige_au_sol": "maps/neige_au_sol/010.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/010.webp",
+        "pression": "maps/pression/010.webp",
         "pression_surface": "maps/pression_surface/010.webp"
       }
     },
     {
       "lead_hour": 11,
-      "valid_time": "2026-08-24T20:00:00+00:00",
+      "valid_time": "2026-08-24T17:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/011.webp",
         "temperature_ressentie": "maps/temperature_ressentie/011.webp",
@@ -445,27 +445,27 @@
         "humidex": "maps/humidex/011.webp",
         "pluie_1h": "maps/pluie_1h/011.webp",
         "pluie_cumul": "maps/pluie_cumul/011.webp",
+        "reflectivite": "maps/reflectivite/011.webp",
+        "graupel": "maps/graupel/011.webp",
         "vent": "maps/vent/011.webp",
         "rafales": "maps/rafales/011.webp",
-        "mucape": "maps/mucape/011.webp",
-        "neige": "maps/neige/011.webp",
-        "neige_au_sol": "maps/neige_au_sol/011.webp",
-        "pression": "maps/pression/011.webp",
-        "humidite": "maps/humidite/011.webp",
-        "reflectivite": "maps/reflectivite/011.webp",
         "rafales_cumul": "maps/rafales_cumul/011.webp",
-        "graupel": "maps/graupel/011.webp",
         "nebulosite": "maps/nebulosite/011.webp",
         "nuages_bas": "maps/nuages_bas/011.webp",
         "nuages_moyens": "maps/nuages_moyens/011.webp",
         "nuages_eleves": "maps/nuages_eleves/011.webp",
+        "humidite": "maps/humidite/011.webp",
+        "mucape": "maps/mucape/011.webp",
+        "neige": "maps/neige/011.webp",
+        "neige_au_sol": "maps/neige_au_sol/011.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/011.webp",
+        "pression": "maps/pression/011.webp",
         "pression_surface": "maps/pression_surface/011.webp"
       }
     },
     {
       "lead_hour": 12,
-      "valid_time": "2026-08-24T21:00:00+00:00",
+      "valid_time": "2026-08-24T18:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/012.webp",
         "temperature_ressentie": "maps/temperature_ressentie/012.webp",
@@ -473,27 +473,27 @@
         "humidex": "maps/humidex/012.webp",
         "pluie_1h": "maps/pluie_1h/012.webp",
         "pluie_cumul": "maps/pluie_cumul/012.webp",
+        "reflectivite": "maps/reflectivite/012.webp",
+        "graupel": "maps/graupel/012.webp",
         "vent": "maps/vent/012.webp",
         "rafales": "maps/rafales/012.webp",
-        "mucape": "maps/mucape/012.webp",
-        "neige": "maps/neige/012.webp",
-        "neige_au_sol": "maps/neige_au_sol/012.webp",
-        "pression": "maps/pression/012.webp",
-        "humidite": "maps/humidite/012.webp",
-        "reflectivite": "maps/reflectivite/012.webp",
         "rafales_cumul": "maps/rafales_cumul/012.webp",
-        "graupel": "maps/graupel/012.webp",
         "nebulosite": "maps/nebulosite/012.webp",
         "nuages_bas": "maps/nuages_bas/012.webp",
         "nuages_moyens": "maps/nuages_moyens/012.webp",
         "nuages_eleves": "maps/nuages_eleves/012.webp",
+        "humidite": "maps/humidite/012.webp",
+        "mucape": "maps/mucape/012.webp",
+        "neige": "maps/neige/012.webp",
+        "neige_au_sol": "maps/neige_au_sol/012.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/012.webp",
+        "pression": "maps/pression/012.webp",
         "pression_surface": "maps/pression_surface/012.webp"
       }
     },
     {
       "lead_hour": 13,
-      "valid_time": "2026-08-24T22:00:00+00:00",
+      "valid_time": "2026-08-24T19:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/013.webp",
         "temperature_ressentie": "maps/temperature_ressentie/013.webp",
@@ -501,27 +501,27 @@
         "humidex": "maps/humidex/013.webp",
         "pluie_1h": "maps/pluie_1h/013.webp",
         "pluie_cumul": "maps/pluie_cumul/013.webp",
+        "reflectivite": "maps/reflectivite/013.webp",
+        "graupel": "maps/graupel/013.webp",
         "vent": "maps/vent/013.webp",
         "rafales": "maps/rafales/013.webp",
-        "mucape": "maps/mucape/013.webp",
-        "neige": "maps/neige/013.webp",
-        "neige_au_sol": "maps/neige_au_sol/013.webp",
-        "pression": "maps/pression/013.webp",
-        "humidite": "maps/humidite/013.webp",
-        "reflectivite": "maps/reflectivite/013.webp",
         "rafales_cumul": "maps/rafales_cumul/013.webp",
-        "graupel": "maps/graupel/013.webp",
         "nebulosite": "maps/nebulosite/013.webp",
         "nuages_bas": "maps/nuages_bas/013.webp",
         "nuages_moyens": "maps/nuages_moyens/013.webp",
         "nuages_eleves": "maps/nuages_eleves/013.webp",
+        "humidite": "maps/humidite/013.webp",
+        "mucape": "maps/mucape/013.webp",
+        "neige": "maps/neige/013.webp",
+        "neige_au_sol": "maps/neige_au_sol/013.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/013.webp",
+        "pression": "maps/pression/013.webp",
         "pression_surface": "maps/pression_surface/013.webp"
       }
     },
     {
       "lead_hour": 14,
-      "valid_time": "2026-08-24T23:00:00+00:00",
+      "valid_time": "2026-08-24T20:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/014.webp",
         "temperature_ressentie": "maps/temperature_ressentie/014.webp",
@@ -529,27 +529,27 @@
         "humidex": "maps/humidex/014.webp",
         "pluie_1h": "maps/pluie_1h/014.webp",
         "pluie_cumul": "maps/pluie_cumul/014.webp",
+        "reflectivite": "maps/reflectivite/014.webp",
+        "graupel": "maps/graupel/014.webp",
         "vent": "maps/vent/014.webp",
         "rafales": "maps/rafales/014.webp",
-        "mucape": "maps/mucape/014.webp",
-        "neige": "maps/neige/014.webp",
-        "neige_au_sol": "maps/neige_au_sol/014.webp",
-        "pression": "maps/pression/014.webp",
-        "humidite": "maps/humidite/014.webp",
-        "reflectivite": "maps/reflectivite/014.webp",
         "rafales_cumul": "maps/rafales_cumul/014.webp",
-        "graupel": "maps/graupel/014.webp",
         "nebulosite": "maps/nebulosite/014.webp",
         "nuages_bas": "maps/nuages_bas/014.webp",
         "nuages_moyens": "maps/nuages_moyens/014.webp",
         "nuages_eleves": "maps/nuages_eleves/014.webp",
+        "humidite": "maps/humidite/014.webp",
+        "mucape": "maps/mucape/014.webp",
+        "neige": "maps/neige/014.webp",
+        "neige_au_sol": "maps/neige_au_sol/014.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/014.webp",
+        "pression": "maps/pression/014.webp",
         "pression_surface": "maps/pression_surface/014.webp"
       }
     },
     {
       "lead_hour": 15,
-      "valid_time": "2026-08-25T00:00:00+00:00",
+      "valid_time": "2026-08-24T21:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/015.webp",
         "temperature_ressentie": "maps/temperature_ressentie/015.webp",
@@ -557,27 +557,27 @@
         "humidex": "maps/humidex/015.webp",
         "pluie_1h": "maps/pluie_1h/015.webp",
         "pluie_cumul": "maps/pluie_cumul/015.webp",
+        "reflectivite": "maps/reflectivite/015.webp",
+        "graupel": "maps/graupel/015.webp",
         "vent": "maps/vent/015.webp",
         "rafales": "maps/rafales/015.webp",
-        "mucape": "maps/mucape/015.webp",
-        "neige": "maps/neige/015.webp",
-        "neige_au_sol": "maps/neige_au_sol/015.webp",
-        "pression": "maps/pression/015.webp",
-        "humidite": "maps/humidite/015.webp",
-        "reflectivite": "maps/reflectivite/015.webp",
         "rafales_cumul": "maps/rafales_cumul/015.webp",
-        "graupel": "maps/graupel/015.webp",
         "nebulosite": "maps/nebulosite/015.webp",
         "nuages_bas": "maps/nuages_bas/015.webp",
         "nuages_moyens": "maps/nuages_moyens/015.webp",
         "nuages_eleves": "maps/nuages_eleves/015.webp",
+        "humidite": "maps/humidite/015.webp",
+        "mucape": "maps/mucape/015.webp",
+        "neige": "maps/neige/015.webp",
+        "neige_au_sol": "maps/neige_au_sol/015.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/015.webp",
+        "pression": "maps/pression/015.webp",
         "pression_surface": "maps/pression_surface/015.webp"
       }
     },
     {
       "lead_hour": 16,
-      "valid_time": "2026-08-25T01:00:00+00:00",
+      "valid_time": "2026-08-24T22:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/016.webp",
         "temperature_ressentie": "maps/temperature_ressentie/016.webp",
@@ -585,27 +585,27 @@
         "humidex": "maps/humidex/016.webp",
         "pluie_1h": "maps/pluie_1h/016.webp",
         "pluie_cumul": "maps/pluie_cumul/016.webp",
+        "reflectivite": "maps/reflectivite/016.webp",
+        "graupel": "maps/graupel/016.webp",
         "vent": "maps/vent/016.webp",
         "rafales": "maps/rafales/016.webp",
-        "mucape": "maps/mucape/016.webp",
-        "neige": "maps/neige/016.webp",
-        "neige_au_sol": "maps/neige_au_sol/016.webp",
-        "pression": "maps/pression/016.webp",
-        "humidite": "maps/humidite/016.webp",
-        "reflectivite": "maps/reflectivite/016.webp",
         "rafales_cumul": "maps/rafales_cumul/016.webp",
-        "graupel": "maps/graupel/016.webp",
         "nebulosite": "maps/nebulosite/016.webp",
         "nuages_bas": "maps/nuages_bas/016.webp",
         "nuages_moyens": "maps/nuages_moyens/016.webp",
         "nuages_eleves": "maps/nuages_eleves/016.webp",
+        "humidite": "maps/humidite/016.webp",
+        "mucape": "maps/mucape/016.webp",
+        "neige": "maps/neige/016.webp",
+        "neige_au_sol": "maps/neige_au_sol/016.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/016.webp",
+        "pression": "maps/pression/016.webp",
         "pression_surface": "maps/pression_surface/016.webp"
       }
     },
     {
       "lead_hour": 17,
-      "valid_time": "2026-08-25T02:00:00+00:00",
+      "valid_time": "2026-08-24T23:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/017.webp",
         "temperature_ressentie": "maps/temperature_ressentie/017.webp",
@@ -613,27 +613,27 @@
         "humidex": "maps/humidex/017.webp",
         "pluie_1h": "maps/pluie_1h/017.webp",
         "pluie_cumul": "maps/pluie_cumul/017.webp",
+        "reflectivite": "maps/reflectivite/017.webp",
+        "graupel": "maps/graupel/017.webp",
         "vent": "maps/vent/017.webp",
         "rafales": "maps/rafales/017.webp",
-        "mucape": "maps/mucape/017.webp",
-        "neige": "maps/neige/017.webp",
-        "neige_au_sol": "maps/neige_au_sol/017.webp",
-        "pression": "maps/pression/017.webp",
-        "humidite": "maps/humidite/017.webp",
-        "reflectivite": "maps/reflectivite/017.webp",
         "rafales_cumul": "maps/rafales_cumul/017.webp",
-        "graupel": "maps/graupel/017.webp",
         "nebulosite": "maps/nebulosite/017.webp",
         "nuages_bas": "maps/nuages_bas/017.webp",
         "nuages_moyens": "maps/nuages_moyens/017.webp",
         "nuages_eleves": "maps/nuages_eleves/017.webp",
+        "humidite": "maps/humidite/017.webp",
+        "mucape": "maps/mucape/017.webp",
+        "neige": "maps/neige/017.webp",
+        "neige_au_sol": "maps/neige_au_sol/017.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/017.webp",
+        "pression": "maps/pression/017.webp",
         "pression_surface": "maps/pression_surface/017.webp"
       }
     },
     {
       "lead_hour": 18,
-      "valid_time": "2026-08-25T03:00:00+00:00",
+      "valid_time": "2026-08-25T00:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/018.webp",
         "temperature_ressentie": "maps/temperature_ressentie/018.webp",
@@ -641,27 +641,27 @@
         "humidex": "maps/humidex/018.webp",
         "pluie_1h": "maps/pluie_1h/018.webp",
         "pluie_cumul": "maps/pluie_cumul/018.webp",
+        "reflectivite": "maps/reflectivite/018.webp",
+        "graupel": "maps/graupel/018.webp",
         "vent": "maps/vent/018.webp",
         "rafales": "maps/rafales/018.webp",
-        "mucape": "maps/mucape/018.webp",
-        "neige": "maps/neige/018.webp",
-        "neige_au_sol": "maps/neige_au_sol/018.webp",
-        "pression": "maps/pression/018.webp",
-        "humidite": "maps/humidite/018.webp",
-        "reflectivite": "maps/reflectivite/018.webp",
         "rafales_cumul": "maps/rafales_cumul/018.webp",
-        "graupel": "maps/graupel/018.webp",
         "nebulosite": "maps/nebulosite/018.webp",
         "nuages_bas": "maps/nuages_bas/018.webp",
         "nuages_moyens": "maps/nuages_moyens/018.webp",
         "nuages_eleves": "maps/nuages_eleves/018.webp",
+        "humidite": "maps/humidite/018.webp",
+        "mucape": "maps/mucape/018.webp",
+        "neige": "maps/neige/018.webp",
+        "neige_au_sol": "maps/neige_au_sol/018.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/018.webp",
+        "pression": "maps/pression/018.webp",
         "pression_surface": "maps/pression_surface/018.webp"
       }
     },
     {
       "lead_hour": 19,
-      "valid_time": "2026-08-25T04:00:00+00:00",
+      "valid_time": "2026-08-25T01:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/019.webp",
         "temperature_ressentie": "maps/temperature_ressentie/019.webp",
@@ -669,27 +669,27 @@
         "humidex": "maps/humidex/019.webp",
         "pluie_1h": "maps/pluie_1h/019.webp",
         "pluie_cumul": "maps/pluie_cumul/019.webp",
+        "reflectivite": "maps/reflectivite/019.webp",
+        "graupel": "maps/graupel/019.webp",
         "vent": "maps/vent/019.webp",
         "rafales": "maps/rafales/019.webp",
-        "mucape": "maps/mucape/019.webp",
-        "neige": "maps/neige/019.webp",
-        "neige_au_sol": "maps/neige_au_sol/019.webp",
-        "pression": "maps/pression/019.webp",
-        "humidite": "maps/humidite/019.webp",
-        "reflectivite": "maps/reflectivite/019.webp",
         "rafales_cumul": "maps/rafales_cumul/019.webp",
-        "graupel": "maps/graupel/019.webp",
         "nebulosite": "maps/nebulosite/019.webp",
         "nuages_bas": "maps/nuages_bas/019.webp",
         "nuages_moyens": "maps/nuages_moyens/019.webp",
         "nuages_eleves": "maps/nuages_eleves/019.webp",
+        "humidite": "maps/humidite/019.webp",
+        "mucape": "maps/mucape/019.webp",
+        "neige": "maps/neige/019.webp",
+        "neige_au_sol": "maps/neige_au_sol/019.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/019.webp",
+        "pression": "maps/pression/019.webp",
         "pression_surface": "maps/pression_surface/019.webp"
       }
     },
     {
       "lead_hour": 20,
-      "valid_time": "2026-08-25T05:00:00+00:00",
+      "valid_time": "2026-08-25T02:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/020.webp",
         "temperature_ressentie": "maps/temperature_ressentie/020.webp",
@@ -697,27 +697,27 @@
         "humidex": "maps/humidex/020.webp",
         "pluie_1h": "maps/pluie_1h/020.webp",
         "pluie_cumul": "maps/pluie_cumul/020.webp",
+        "reflectivite": "maps/reflectivite/020.webp",
+        "graupel": "maps/graupel/020.webp",
         "vent": "maps/vent/020.webp",
         "rafales": "maps/rafales/020.webp",
-        "mucape": "maps/mucape/020.webp",
-        "neige": "maps/neige/020.webp",
-        "neige_au_sol": "maps/neige_au_sol/020.webp",
-        "pression": "maps/pression/020.webp",
-        "humidite": "maps/humidite/020.webp",
-        "reflectivite": "maps/reflectivite/020.webp",
         "rafales_cumul": "maps/rafales_cumul/020.webp",
-        "graupel": "maps/graupel/020.webp",
         "nebulosite": "maps/nebulosite/020.webp",
         "nuages_bas": "maps/nuages_bas/020.webp",
         "nuages_moyens": "maps/nuages_moyens/020.webp",
         "nuages_eleves": "maps/nuages_eleves/020.webp",
+        "humidite": "maps/humidite/020.webp",
+        "mucape": "maps/mucape/020.webp",
+        "neige": "maps/neige/020.webp",
+        "neige_au_sol": "maps/neige_au_sol/020.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/020.webp",
+        "pression": "maps/pression/020.webp",
         "pression_surface": "maps/pression_surface/020.webp"
       }
     },
     {
       "lead_hour": 21,
-      "valid_time": "2026-08-25T06:00:00+00:00",
+      "valid_time": "2026-08-25T03:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/021.webp",
         "temperature_ressentie": "maps/temperature_ressentie/021.webp",
@@ -725,27 +725,27 @@
         "humidex": "maps/humidex/021.webp",
         "pluie_1h": "maps/pluie_1h/021.webp",
         "pluie_cumul": "maps/pluie_cumul/021.webp",
+        "reflectivite": "maps/reflectivite/021.webp",
+        "graupel": "maps/graupel/021.webp",
         "vent": "maps/vent/021.webp",
         "rafales": "maps/rafales/021.webp",
-        "mucape": "maps/mucape/021.webp",
-        "neige": "maps/neige/021.webp",
-        "neige_au_sol": "maps/neige_au_sol/021.webp",
-        "pression": "maps/pression/021.webp",
-        "humidite": "maps/humidite/021.webp",
-        "reflectivite": "maps/reflectivite/021.webp",
         "rafales_cumul": "maps/rafales_cumul/021.webp",
-        "graupel": "maps/graupel/021.webp",
         "nebulosite": "maps/nebulosite/021.webp",
         "nuages_bas": "maps/nuages_bas/021.webp",
         "nuages_moyens": "maps/nuages_moyens/021.webp",
         "nuages_eleves": "maps/nuages_eleves/021.webp",
+        "humidite": "maps/humidite/021.webp",
+        "mucape": "maps/mucape/021.webp",
+        "neige": "maps/neige/021.webp",
+        "neige_au_sol": "maps/neige_au_sol/021.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/021.webp",
+        "pression": "maps/pression/021.webp",
         "pression_surface": "maps/pression_surface/021.webp"
       }
     },
     {
       "lead_hour": 22,
-      "valid_time": "2026-08-25T07:00:00+00:00",
+      "valid_time": "2026-08-25T04:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/022.webp",
         "temperature_ressentie": "maps/temperature_ressentie/022.webp",
@@ -753,27 +753,27 @@
         "humidex": "maps/humidex/022.webp",
         "pluie_1h": "maps/pluie_1h/022.webp",
         "pluie_cumul": "maps/pluie_cumul/022.webp",
+        "reflectivite": "maps/reflectivite/022.webp",
+        "graupel": "maps/graupel/022.webp",
         "vent": "maps/vent/022.webp",
         "rafales": "maps/rafales/022.webp",
-        "mucape": "maps/mucape/022.webp",
-        "neige": "maps/neige/022.webp",
-        "neige_au_sol": "maps/neige_au_sol/022.webp",
-        "pression": "maps/pression/022.webp",
-        "humidite": "maps/humidite/022.webp",
-        "reflectivite": "maps/reflectivite/022.webp",
         "rafales_cumul": "maps/rafales_cumul/022.webp",
-        "graupel": "maps/graupel/022.webp",
         "nebulosite": "maps/nebulosite/022.webp",
         "nuages_bas": "maps/nuages_bas/022.webp",
         "nuages_moyens": "maps/nuages_moyens/022.webp",
         "nuages_eleves": "maps/nuages_eleves/022.webp",
+        "humidite": "maps/humidite/022.webp",
+        "mucape": "maps/mucape/022.webp",
+        "neige": "maps/neige/022.webp",
+        "neige_au_sol": "maps/neige_au_sol/022.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/022.webp",
+        "pression": "maps/pression/022.webp",
         "pression_surface": "maps/pression_surface/022.webp"
       }
     },
     {
       "lead_hour": 23,
-      "valid_time": "2026-08-25T08:00:00+00:00",
+      "valid_time": "2026-08-25T05:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/023.webp",
         "temperature_ressentie": "maps/temperature_ressentie/023.webp",
@@ -781,27 +781,27 @@
         "humidex": "maps/humidex/023.webp",
         "pluie_1h": "maps/pluie_1h/023.webp",
         "pluie_cumul": "maps/pluie_cumul/023.webp",
+        "reflectivite": "maps/reflectivite/023.webp",
+        "graupel": "maps/graupel/023.webp",
         "vent": "maps/vent/023.webp",
         "rafales": "maps/rafales/023.webp",
-        "mucape": "maps/mucape/023.webp",
-        "neige": "maps/neige/023.webp",
-        "neige_au_sol": "maps/neige_au_sol/023.webp",
-        "pression": "maps/pression/023.webp",
-        "humidite": "maps/humidite/023.webp",
-        "reflectivite": "maps/reflectivite/023.webp",
         "rafales_cumul": "maps/rafales_cumul/023.webp",
-        "graupel": "maps/graupel/023.webp",
         "nebulosite": "maps/nebulosite/023.webp",
         "nuages_bas": "maps/nuages_bas/023.webp",
         "nuages_moyens": "maps/nuages_moyens/023.webp",
         "nuages_eleves": "maps/nuages_eleves/023.webp",
+        "humidite": "maps/humidite/023.webp",
+        "mucape": "maps/mucape/023.webp",
+        "neige": "maps/neige/023.webp",
+        "neige_au_sol": "maps/neige_au_sol/023.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/023.webp",
+        "pression": "maps/pression/023.webp",
         "pression_surface": "maps/pression_surface/023.webp"
       }
     },
     {
       "lead_hour": 24,
-      "valid_time": "2026-08-25T09:00:00+00:00",
+      "valid_time": "2026-08-25T06:00:00+00:00",
       "files": {
         "temperature": "maps/temperature/024.webp",
         "temperature_ressentie": "maps/temperature_ressentie/024.webp",
@@ -809,23 +809,158 @@
         "humidex": "maps/humidex/024.webp",
         "pluie_1h": "maps/pluie_1h/024.webp",
         "pluie_cumul": "maps/pluie_cumul/024.webp",
+        "reflectivite": "maps/reflectivite/024.webp",
+        "graupel": "maps/graupel/024.webp",
         "vent": "maps/vent/024.webp",
         "rafales": "maps/rafales/024.webp",
-        "mucape": "maps/mucape/024.webp",
-        "neige": "maps/neige/024.webp",
-        "neige_au_sol": "maps/neige_au_sol/024.webp",
-        "pression": "maps/pression/024.webp",
-        "humidite": "maps/humidite/024.webp",
-        "reflectivite": "maps/reflectivite/024.webp",
         "rafales_cumul": "maps/rafales_cumul/024.webp",
-        "graupel": "maps/graupel/024.webp",
         "nebulosite": "maps/nebulosite/024.webp",
         "nuages_bas": "maps/nuages_bas/024.webp",
         "nuages_moyens": "maps/nuages_moyens/024.webp",
         "nuages_eleves": "maps/nuages_eleves/024.webp",
+        "humidite": "maps/humidite/024.webp",
+        "mucape": "maps/mucape/024.webp",
+        "neige": "maps/neige/024.webp",
+        "neige_au_sol": "maps/neige_au_sol/024.webp",
         "equivalent_eau_neige": "maps/equivalent_eau_neige/024.webp",
+        "pression": "maps/pression/024.webp",
         "pression_surface": "maps/pression_surface/024.webp"
       }
+    },
+    {
+      "lead_hour": 25,
+      "valid_time": "2026-08-25T07:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 26,
+      "valid_time": "2026-08-25T08:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 27,
+      "valid_time": "2026-08-25T09:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 28,
+      "valid_time": "2026-08-25T10:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 29,
+      "valid_time": "2026-08-25T11:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 30,
+      "valid_time": "2026-08-25T12:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 31,
+      "valid_time": "2026-08-25T13:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 32,
+      "valid_time": "2026-08-25T14:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 33,
+      "valid_time": "2026-08-25T15:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 34,
+      "valid_time": "2026-08-25T16:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 35,
+      "valid_time": "2026-08-25T17:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 36,
+      "valid_time": "2026-08-25T18:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 37,
+      "valid_time": "2026-08-25T19:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 38,
+      "valid_time": "2026-08-25T20:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 39,
+      "valid_time": "2026-08-25T21:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 40,
+      "valid_time": "2026-08-25T22:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 41,
+      "valid_time": "2026-08-25T23:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 42,
+      "valid_time": "2026-08-26T00:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 43,
+      "valid_time": "2026-08-26T01:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 44,
+      "valid_time": "2026-08-26T02:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 45,
+      "valid_time": "2026-08-26T03:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 46,
+      "valid_time": "2026-08-26T04:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 47,
+      "valid_time": "2026-08-26T05:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 48,
+      "valid_time": "2026-08-26T06:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 49,
+      "valid_time": "2026-08-26T07:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 50,
+      "valid_time": "2026-08-26T08:00:00+00:00",
+      "files": {}
+    },
+    {
+      "lead_hour": 51,
+      "valid_time": "2026-08-26T09:00:00+00:00",
+      "files": {}
     }
   ]
 }
