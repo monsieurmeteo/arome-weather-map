@@ -700,7 +700,7 @@
             output.height = 1640;
             var context = output.getContext('2d');
 
-            context.fillStyle = '#080c18';
+            context.fillStyle = '#a5a6b0';
             context.fillRect(0, 0, output.width, output.height);
 
             // Transformation courante, en coordonnées carte (même logique que drawVectors)
@@ -1636,12 +1636,12 @@
                 'uniform float uHasWeather;\n' +
                 'uniform float uHasMask;\n' +
                 'void main(){\n' +
-                ' vec3 dark=vec3(0.031,0.047,0.094);\n' +
-                ' vec3 land=vec3(0.42,0.46,0.52);\n' +
+                ' vec3 sea=vec3(0.6471,0.6510,0.6902);\n' +
+                ' vec3 land=vec3(0.76,0.78,0.81);\n' +
                 ' vec2 uv=((vUv-vec2(0.5))*uAspect-uTranslation)/uScale+vec2(0.5);\n' +
-                ' vec3 base=dark;\n' +
+                ' vec3 base=sea;\n' +
                 ' if(uHasMask>0.5 && uv.x>=0.0 && uv.x<=1.0 && uv.y>=0.0 && uv.y<=1.0){\n' +
-                '  base=mix(dark,land,texture2D(uMask,uv).r);\n' +
+                '  base=mix(sea,land,texture2D(uMask,uv).r);\n' +
                 ' }\n' +
                 ' if(uHasWeather<0.5||uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){\n' +
                 '  gl_FragColor=vec4(base,1.0);return;\n' +
