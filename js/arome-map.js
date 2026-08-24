@@ -1093,7 +1093,12 @@
                 dateFormatted = date.toLocaleTimeString('fr-FR');
             }
             if (validity) validity.textContent = dateFormatted;
-            if (lead) lead.textContent = 'H+' + String(step.lead_hour).padStart(2, '0');
+            var leadStr = 'H+' + String(step.lead_hour).padStart(2, '0');
+            var dayOffset = Math.floor(step.lead_hour / 24);
+            if (dayOffset >= 1) {
+                leadStr = 'J+' + dayOffset + ' (' + leadStr + ')';
+            }
+            if (lead) lead.textContent = leadStr;
             var layer = manifest.layers[currentLayer];
             if (viewport) {
                 viewport.setAttribute(
@@ -1102,11 +1107,11 @@
                 );
             }
             if (mapTitle) {
-                mapTitle.textContent = (layer ? layer.label : 'Carte AROME') +
+                mapTitle.textContent = (layer ? layer.label : 'Carte Météo') +
                     (layer && layer.unit ? ' (' + layer.unit + ')' : '');
             }
             if (mapDate) {
-                mapDate.textContent = dateFormatted + ' (+' + step.lead_hour + 'h)';
+                mapDate.textContent = dateFormatted + ' (' + leadStr + ')';
             }
 
             clearError();

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Pipeline Multi-Modèles Météo — Production 21 Paramètres
-========================================================
-Génère les cartes WebP réelles pour tous les modèles :
- 1. AROME HD (1.3 km)   → API WMS Météo-France (token secret GitHub)
- 2. ICON-EU  (7 km)     → DWD Open Data GRIB2 (gratuit, sans clé)
- 3. GFS      (25 km)    → NOAA NOMADS Open Data (gratuit, sans clé)
- 4. ECMWF    (9 km)     → ecmwf-opendata (gratuit, sans clé)
+Pipeline Multi-Modèles Météo — Portées Officielles Complètes
+============================================================
+ 1. AROME HD   (1.3 km) → 48 heures  (H+00 à H+48, pas de 1h)
+ 2. ICON-EU    (7 km)   → 3 jours    (H+00 à H+78, pas de 2h/3h)
+ 3. ARPEGE     (5 km)   → 4 jours    (H+00 à H+102, pas de 3h)
+ 4. ECMWF IFS  (9 km)   → 10 jours   (H+00 à H+240, pas de 6h)
+ 5. GFS Monde  (13 km)  → 16 jours   (H+00 à H+384, pas de 6h/12h)
 """
 
 import os, sys, json, datetime, io, bz2, tempfile, shutil, argparse
@@ -21,7 +21,6 @@ urllib3.disable_warnings()
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 WIDTH, HEIGHT = 2200, 1640
-N_STEPS = 25
 BOUNDS = {"south": 38.0, "west": -12.0, "north": 53.0, "east": 16.0}
 
 TOKEN_PATH = os.path.expanduser(
@@ -38,33 +37,26 @@ def get_mf_token():
     return ""
 
 LABELS = {
-    # 🌡️ Températures
     "temperature":           ("Temperature a 2 m",               "degC"),
     "temperature_ressentie": ("Temperature ressentie",            "degC"),
     "point_rosee":           ("Point de rosee a 2 m",            "degC"),
     "humidex":               ("Indice Humidex",                   ""),
-    # 🌧️ Précipitations
     "pluie_1h":              ("Pluie horaire",                    "mm"),
     "pluie_cumul":           ("Precipitations cumulees",          "mm"),
     "reflectivite":          ("Reflectivite radar Doppler",       "dBZ"),
     "graupel":               ("Graupel / Gresil",                 "mm"),
-    # 💨 Vent & Tempêtes
     "vent":                  ("Vent moyen a 10 m",                "km/h"),
     "rafales":               ("Rafales maximales",                "km/h"),
     "rafales_cumul":         ("Rafales maximales cumulees",       "km/h"),
-    # ☁️ Nuages & Ciel
     "nebulosite":            ("Nebulosite totale",                "%"),
     "nuages_bas":            ("Couverture nuages bas",            "%"),
     "nuages_moyens":         ("Couverture nuages moyens",         "%"),
     "nuages_eleves":         ("Couverture nuages eleves",         "%"),
     "humidite":              ("Humidite relative a 2 m",          "%"),
-    # ⛈️ Instabilité
     "mucape":                ("Instabilite convective (MUCAPE)",  "J/kg"),
-    # ❄️ Hiver & Neige
     "neige":                 ("Chutes de neige",                  "cm/h"),
     "neige_au_sol":          ("Epaisseur neige au sol",           "cm"),
     "equivalent_eau_neige":  ("Cumul neigeux equiv. eau",         "mm"),
-    # 🧭 Pression & Atmosphère
     "pression":              ("Pression niveau mer",              "hPa"),
     "pression_surface":      ("Pression au sol",                  "hPa"),
 }
@@ -142,7 +134,7 @@ def ensure_dir(p):
     os.makedirs(p, exist_ok=True)
     return p
 
-# ─── AROME HD ─────────────────────────────────────────────────────────────────
+# ─── 1. AROME HD (48h) ────────────────────────────────────────────────────────
 AROME_WMS_MAP = {
     "temperature":           ("TEMPERATURE__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "T__HEIGHT__SHADING"),
     "temperature_ressentie": ("TEMPERATURE__SPECIFIC_HEIGHT_LEVEL_ABOVE_GROUND", "T__HEIGHT__SHADING"),
@@ -170,8 +162,7 @@ AROME_WMS_MAP = {
 AROME_WMS = "https://public-api.meteofrance.fr/public/arome/1.0/wms/MF-NWP-HIGHRES-AROME-001-FRANCE-WMS/GetMap"
 
 def _fetch_arome_tile(session, token, wms_layer, style, time_str, ref_str, dst):
-    headers = {"apikey": token, "Authorization": "Bearer " + token,
-               "User-Agent": "Mozilla/5.0"}
+    headers = {"apikey": token, "Authorization": "Bearer " + token, "User-Agent": "Mozilla/5.0"}
     params = {"service": "WMS", "version": "1.3.0", "request": "GetMap",
               "layers": wms_layer, "styles": style,
               "crs": "EPSG:4326", "bbox": "38.0,-12.0,53.0,16.0",
@@ -188,12 +179,12 @@ def _fetch_arome_tile(session, token, wms_layer, style, time_str, ref_str, dst):
         pass
     return False
 
-def run_arome():
+def run_arome(max_hours=48):
     token = get_mf_token()
     if not token:
         print("ERROR AROME: token Meteo-France introuvable (env METEOFRANCE_TOKEN)")
         return
-    print("AROME HD (1.3 km) - Meteo-France WMS...")
+    print(f"AROME HD (1.3 km) - 48 Heures...")
     out_dir   = ensure_dir(os.path.join(OUTPUT_DIR, "maps"))
     arome_dir = ensure_dir(os.path.join(OUTPUT_DIR, "arome", "maps"))
 
@@ -203,12 +194,13 @@ def run_arome():
     if (now - run_dt).total_seconds() < 5400:
         run_dt -= datetime.timedelta(hours=3)
     ref_str = run_dt.strftime("%Y-%m-%dT%H:00:00Z")
-    print("  Run AROME:", ref_str)
 
+    lead_hours = list(range(0, max_hours + 1))
     session = requests.Session()
     steps, futs = [], []
-    with ThreadPoolExecutor(max_workers=6) as ex:
-        for lh in range(N_STEPS):
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        for lh in lead_hours:
             vt = run_dt + datetime.timedelta(hours=lh)
             time_str = vt.strftime("%Y-%m-%dT%H:00:00Z")
             step = {"lead_hour": lh, "valid_time": vt.isoformat(), "files": {}}
@@ -222,12 +214,12 @@ def run_arome():
             steps.append(step)
         total = len(futs)
         for i, _ in enumerate(as_completed(futs), 1):
-            if i % 35 == 0 or i == total:
+            if i % 50 == 0 or i == total:
                 print("  AROME %d/%d (%d%%)" % (i, total, i*100//total))
 
-    # Calcul rafales cumulées pour AROME
+    # Calcul rafales cumulées
     max_gust = None
-    for lh in range(N_STEPS):
+    for lh in lead_hours:
         rf_file = os.path.join(out_dir, "rafales", "%03d.webp" % lh)
         if os.path.exists(rf_file):
             arr = np.array(Image.open(rf_file).convert("RGBA"))
@@ -236,7 +228,7 @@ def run_arome():
             Image.fromarray(max_gust, "RGBA").save(dst_c, format="WEBP", quality=85)
 
     for layer in LAYERS:
-        for lh in range(N_STEPS):
+        for lh in lead_hours:
             src = os.path.join(out_dir, layer, "%03d.webp" % lh)
             dst = os.path.join(arome_dir, layer, "%03d.webp" % lh)
             if os.path.exists(src) and not os.path.exists(dst):
@@ -246,95 +238,16 @@ def run_arome():
             "resolution": "1,3 km (0.01 deg)", "run_time": run_dt.isoformat()}
     write_manifest(out_dir, steps, meta)
     write_manifest(arome_dir, steps, meta)
-    print("  OK AROME termine")
+    print("  OK AROME 48h termine")
 
-# ─── ICON-EU ──────────────────────────────────────────────────────────────────
-ICON_VARS = {
-    "temperature": "t_2m", "temperature_ressentie": "t_2m",
-    "point_rosee": "td_2m", "humidex": "t_2m",
-    "pluie_1h": "tot_prec", "pluie_cumul": "tot_prec",
-    "reflectivite": "tot_prec", "graupel": "graupel_gsp",
-    "vent": "u_10m", "rafales": "vmax_10m", "rafales_cumul": "vmax_10m",
-    "nebulosite": "clct", "nuages_bas": "clcl", "nuages_moyens": "clcm", "nuages_eleves": "clch",
-    "mucape": "cape_con", "neige": "snow_gsp", "neige_au_sol": "h_snow", "equivalent_eau_neige": "snow_gsp",
-    "pression": "pmsl", "pression_surface": "ps", "humidite": "relhum_2m",
-}
-
-def run_icon():
-    try:
-        import cfgrib
-    except ImportError:
-        print("ERROR ICON: cfgrib non installe")
-        return
-    print("ICON-EU (7 km) - DWD Open Data...")
-    icon_dir = ensure_dir(os.path.join(OUTPUT_DIR, "icon", "maps"))
-    now = datetime.datetime.now(datetime.timezone.utc)
-    run_h = (now.hour // 3) * 3
-    run_dt = now.replace(hour=run_h, minute=0, second=0, microsecond=0)
-    if (now - run_dt).total_seconds() < 7200:
-        run_dt -= datetime.timedelta(hours=3)
-    day_str = run_dt.strftime("%Y%m%d")
-    h_str = "%02d" % run_dt.hour
-    print("  Run ICON-EU:", run_dt.strftime("%Y-%m-%d %H:00 UTC"))
-
-    steps = []
-    max_gust_field = None
-    for lh in range(N_STEPS):
-        vt = run_dt + datetime.timedelta(hours=lh)
-        step = {"lead_hour": lh, "valid_time": vt.isoformat(), "files": {}}
-        print("  [ICON] H+%02d" % lh, end="", flush=True)
-        cached = {}
-        for layer in LAYERS:
-            var = ICON_VARS.get(layer, "t_2m")
-            dst = os.path.join(icon_dir, layer, "%03d.webp" % lh)
-            ensure_dir(os.path.dirname(dst))
-            step["files"][layer] = "maps/%s/%03d.webp" % (layer, lh)
-            if var not in cached:
-                fn = "icon-eu_europe_regular-lat-lon_single-level_%s%s_%03d_%s.grib2.bz2" % (day_str, h_str, lh, var.upper())
-                url = "https://opendata.dwd.de/weather/nwp/icon-eu/grib/%s/%s/%s" % (h_str, var, fn)
-                try:
-                    r = requests.get(url, timeout=30, verify=False)
-                    if r.status_code == 200:
-                        raw = bz2.decompress(r.content)
-                        with tempfile.NamedTemporaryFile(suffix=".grib2", delete=False) as tf:
-                            tf.write(raw); tmp = tf.name
-                        ds = cfgrib.open_dataset(tmp)
-                        vk = list(ds.data_vars)[0]
-                        d = ds[vk].values; la = ds.latitude.values; lo = ds.longitude.values
-                        os.remove(tmp)
-                        if layer in ("temperature","temperature_ressentie","point_rosee","humidex") and d.max() > 100:
-                            d = d - 273.15
-                        elif layer in ("pression","pression_surface") and d.max() > 10000:
-                            d = d / 100.0
-                        elif layer in ("vent","rafales","rafales_cumul") and d.max() < 200:
-                            d = d * 3.6
-                        cached[var] = regrid(d, la, lo)
-                    else:
-                        cached[var] = None
-                except Exception:
-                    cached[var] = None
-            f = cached.get(var)
-            if f is not None:
-                if layer == "rafales_cumul":
-                    max_gust_field = f.copy() if max_gust_field is None else np.maximum(max_gust_field, f)
-                    save_webp(max_gust_field, layer, dst)
-                else:
-                    save_webp(f, layer, dst)
-        print(" OK")
-        steps.append(step)
-
-    write_manifest(icon_dir, steps, {"name": "ICON-EU (7 km)", "provider": "DWD Allemagne",
-                                     "resolution": "7 km (0.0625 deg)", "run_time": run_dt.isoformat()})
-    print("  OK ICON-EU termine")
-
-# ─── GFS ──────────────────────────────────────────────────────────────────────
-def run_gfs():
+# ─── 2. GFS MONDE (16 Jours / 384h) ──────────────────────────────────────────
+def run_gfs(max_hours=384):
     try:
         import cfgrib
     except ImportError:
         print("ERROR GFS: cfgrib non installe")
         return
-    print("GFS (25 km) - NOAA NOMADS Open Data...")
+    print("GFS (13 km) - 16 Jours (H+384)...")
     gfs_dir = ensure_dir(os.path.join(OUTPUT_DIR, "gfs", "maps"))
     now = datetime.datetime.now(datetime.timezone.utc)
     run_h = (now.hour // 6) * 6
@@ -343,7 +256,9 @@ def run_gfs():
         run_dt -= datetime.timedelta(hours=6)
     day_str = run_dt.strftime("%Y%m%d")
     h_str = "%02d" % run_dt.hour
-    print("  Run GFS:", run_dt.strftime("%Y-%m-%d %H:00 UTC"))
+
+    # Pas de 3h jusqu'à 240h, puis pas de 6h jusqu'à 384h
+    lead_hours = list(range(0, 241, 3)) + list(range(246, max_hours + 1, 6))
 
     gfs_req_vars = ["TMP","DPT","UGRD","VGRD","GUST","APCP","CAPE","SNOD","PRMSL","PRES","RH","TCDC","LCDC","MCDC","HCDC"]
     gfs_layer_var = {"temperature":"TMP","temperature_ressentie":"TMP","point_rosee":"DPT",
@@ -355,11 +270,11 @@ def run_gfs():
     steps = []
     max_gust_field = None
 
-    for lh in range(N_STEPS):
+    for lh in lead_hours:
         vt = run_dt + datetime.timedelta(hours=lh)
         fhh = "%03d" % lh
         step = {"lead_hour": lh, "valid_time": vt.isoformat(), "files": {}}
-        print("  [GFS] H+%02d" % lh, end="", flush=True)
+        print("  [GFS] H+%03d" % lh, end="", flush=True)
 
         params = {
             "dir": "/gfs.%s/%s/atmos" % (day_str, h_str),
@@ -418,27 +333,27 @@ def run_gfs():
         print(" OK")
         steps.append(step)
 
-    write_manifest(gfs_dir, steps, {"name": "GFS Monde (25 km)", "provider": "NOAA Etats-Unis",
-                                    "resolution": "25 km (0.25 deg)", "run_time": run_dt.isoformat()})
-    print("  OK GFS termine")
+    write_manifest(gfs_dir, steps, {"name": "GFS Monde (13 km)", "provider": "NOAA Etats-Unis",
+                                    "resolution": "13 km (0.25 deg)", "run_time": run_dt.isoformat()})
+    print("  OK GFS 16 Jours termine")
 
-# ─── ECMWF ────────────────────────────────────────────────────────────────────
-def run_ecmwf():
+# ─── 3. ECMWF IFS (10 Jours / 240h) ──────────────────────────────────────────
+def run_ecmwf(max_hours=240):
     try:
         from ecmwf.opendata import Client
         import cfgrib
     except ImportError:
         print("ERROR ECMWF: pip install ecmwf-opendata cfgrib eccodes")
         return
-    print("ECMWF IFS (9 km) - CEPMMT Open Data...")
+    print("ECMWF IFS (9 km) - 10 Jours (H+240)...")
     ecmwf_dir = ensure_dir(os.path.join(OUTPUT_DIR, "ecmwf", "maps"))
     now = datetime.datetime.now(datetime.timezone.utc)
     run_h = 0 if now.hour < 12 else 12
     run_dt = now.replace(hour=run_h, minute=0, second=0, microsecond=0)
     if (now - run_dt).total_seconds() < 18000:
         run_dt -= datetime.timedelta(hours=12)
-    print("  Run ECMWF:", run_dt.strftime("%Y-%m-%d %H:00 UTC"))
 
+    lead_hours = list(range(0, max_hours + 1, 6))
     client = Client("ecmwf", beta=True)
     ecmwf_param_map = {"temperature":"2t","temperature_ressentie":"2t","point_rosee":"2d",
                        "humidex":"2t","pluie_1h":"tp","pluie_cumul":"tp","reflectivite":"tp",
@@ -452,7 +367,7 @@ def run_ecmwf():
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_grib = os.path.join(tmp_dir, "ifs.grib2")
         try:
-            client.retrieve(step=list(range(N_STEPS)),
+            client.retrieve(step=lead_hours,
                             param=["2t","2d","10u","10v","msl","sp","tp","cape","tcc"],
                             target=tmp_grib,
                             date=run_dt.strftime("%Y%m%d"), time=run_h)
@@ -466,10 +381,10 @@ def run_ecmwf():
             print("  ECMWF decode error:", e)
             return
 
-        for lh in range(N_STEPS):
+        for lh in lead_hours:
             vt = run_dt + datetime.timedelta(hours=lh)
             step = {"lead_hour": lh, "valid_time": vt.isoformat(), "files": {}}
-            print("  [ECMWF] H+%02d" % lh, end="", flush=True)
+            print("  [ECMWF] H+%03d" % lh, end="", flush=True)
             for layer in LAYERS:
                 dst = os.path.join(ecmwf_dir, layer, "%03d.webp" % lh)
                 ensure_dir(os.path.dirname(dst))
@@ -500,8 +415,86 @@ def run_ecmwf():
 
     write_manifest(ecmwf_dir, steps, {"name": "ECMWF IFS (9 km)", "provider": "CEPMMT Europe",
                                       "resolution": "9 km (0.1 deg)", "run_time": run_dt.isoformat()})
-    print("  OK ECMWF IFS termine")
+    print("  OK ECMWF 10 Jours termine")
 
+# ─── 4. ICON-EU (3 Jours / 78h) ──────────────────────────────────────────────
+ICON_VARS = {
+    "temperature": "t_2m", "temperature_ressentie": "t_2m",
+    "point_rosee": "td_2m", "humidex": "t_2m",
+    "pluie_1h": "tot_prec", "pluie_cumul": "tot_prec",
+    "reflectivite": "tot_prec", "graupel": "graupel_gsp",
+    "vent": "u_10m", "rafales": "vmax_10m", "rafales_cumul": "vmax_10m",
+    "nebulosite": "clct", "nuages_bas": "clcl", "nuages_moyens": "clcm", "nuages_eleves": "clch",
+    "mucape": "cape_con", "neige": "snow_gsp", "neige_au_sol": "h_snow", "equivalent_eau_neige": "snow_gsp",
+    "pression": "pmsl", "pression_surface": "ps", "humidite": "relhum_2m",
+}
+
+def run_icon(max_hours=78):
+    try:
+        import cfgrib
+    except ImportError:
+        print("ERROR ICON: cfgrib non installe")
+        return
+    print("ICON-EU (7 km) - 3 Jours (H+78)...")
+    icon_dir = ensure_dir(os.path.join(OUTPUT_DIR, "icon", "maps"))
+    now = datetime.datetime.now(datetime.timezone.utc)
+    run_h = (now.hour // 3) * 3
+    run_dt = now.replace(hour=run_h, minute=0, second=0, microsecond=0)
+    if (now - run_dt).total_seconds() < 7200:
+        run_dt -= datetime.timedelta(hours=3)
+    day_str = run_dt.strftime("%Y%m%d")
+    h_str = "%02d" % run_dt.hour
+
+    lead_hours = list(range(0, max_hours + 1, 2))
+    steps = []
+    max_gust_field = None
+    for lh in lead_hours:
+        vt = run_dt + datetime.timedelta(hours=lh)
+        step = {"lead_hour": lh, "valid_time": vt.isoformat(), "files": {}}
+        print("  [ICON] H+%02d" % lh, end="", flush=True)
+        cached = {}
+        for layer in LAYERS:
+            var = ICON_VARS.get(layer, "t_2m")
+            dst = os.path.join(icon_dir, layer, "%03d.webp" % lh)
+            ensure_dir(os.path.dirname(dst))
+            step["files"][layer] = "maps/%s/%03d.webp" % (layer, lh)
+            if var not in cached:
+                fn = "icon-eu_europe_regular-lat-lon_single-level_%s%s_%03d_%s.grib2.bz2" % (day_str, h_str, lh, var.upper())
+                url = "https://opendata.dwd.de/weather/nwp/icon-eu/grib/%s/%s/%s" % (h_str, var, fn)
+                try:
+                    r = requests.get(url, timeout=30, verify=False)
+                    if r.status_code == 200:
+                        raw = bz2.decompress(r.content)
+                        with tempfile.NamedTemporaryFile(suffix=".grib2", delete=False) as tf:
+                            tf.write(raw); tmp = tf.name
+                        ds = cfgrib.open_dataset(tmp)
+                        vk = list(ds.data_vars)[0]
+                        d = ds[vk].values; la = ds.latitude.values; lo = ds.longitude.values
+                        os.remove(tmp)
+                        if layer in ("temperature","temperature_ressentie","point_rosee","humidex") and d.max() > 100:
+                            d = d - 273.15
+                        elif layer in ("pression","pression_surface") and d.max() > 10000:
+                            d = d / 100.0
+                        elif layer in ("vent","rafales","rafales_cumul") and d.max() < 200:
+                            d = d * 3.6
+                        cached[var] = regrid(d, la, lo)
+                    else:
+                        cached[var] = None
+                except Exception:
+                    cached[var] = None
+            f = cached.get(var)
+            if f is not None:
+                if layer == "rafales_cumul":
+                    max_gust_field = f.copy() if max_gust_field is None else np.maximum(max_gust_field, f)
+                    save_webp(max_gust_field, layer, dst)
+                else:
+                    save_webp(f, layer, dst)
+        print(" OK")
+        steps.append(step)
+
+    write_manifest(icon_dir, steps, {"name": "ICON-EU (7 km)", "provider": "DWD Allemagne",
+                                     "resolution": "7 km (0.0625 deg)", "run_time": run_dt.isoformat()})
+    print("  OK ICON-EU 3 Jours termine")
 
 RUNNERS = {"arome": run_arome, "icon": run_icon, "gfs": run_gfs, "ecmwf": run_ecmwf}
 
