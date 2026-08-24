@@ -2510,6 +2510,10 @@
                 ' if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){\n' +
                 '  gl_FragColor=vec4(frame,1.0);return;\n' +
                 ' }\n' +
+                // Masquage net du coin hors-domaine AROME (sud-est Adriatique / Balkans)
+                ' if(uv.x>0.94 && uv.y>0.63 && (uv.x + 0.096*uv.y >= 1.052)){\n' +
+                '  gl_FragColor=vec4(frame,1.0);return;\n' +
+                ' }\n' +
                 // Fond : carte des pays (fond.webp) si dispo, sinon gris neutre
                 ' vec3 base=vec3(0.6471,0.6510,0.6902);\n' +
                 ' if(uHasFond>0.5){\n' +
@@ -2828,17 +2832,19 @@
             // cette même valeur pour rester cohérents.
             var s = Math.max(width / 2200.0, height / 1640.0);
             if (t.scale <= 1.15) {
-                // Vue France entière : cadrage hardcodé sur la France continentale
-                // (X: 200→1700, Y: 100→1380) — fiable sans le masque, et garantit
-                // que le coin non-maillé AROME (bas-droite, X>2100) reste hors-cadre.
-                var FX0 = 200, FX1 = 1700, FY0 = 100, FY1 = 1380;
-                var fw = FX1 - FX0; // 1500
-                var fh = FY1 - FY0; // 1280
-                var availH = Math.max(180, height - 100);
-                var availW = Math.max(260, width - 24);
-                var sFrance = Math.min(availW / (fw * 1.05), availH / (fh * 1.05));
-                var cx = (FX0 + FX1) / 2; // 950 — centre de la France continentale
-                var cy = (FY0 + FY1) / 2; // 740
+                // Vue France entière : englobe TOUTE la France métropolitaine ET la Corse
+                // avec marge de respiration en haut (header) et en bas (timeline d'échéances)
+                var FX0 = 260;  // Ouest Bretagne
+                var FX1 = 1860; // Est Corse / Alsace
+                var FY0 = 110;  // Nord Dunkerque
+                var FY1 = 1530; // Sud Bonifacio (Corse entièrement dégagée)
+                var fw = FX1 - FX0; // 1600
+                var fh = FY1 - FY0; // 1420
+                var availH = Math.max(180, height - 150); // 70px timeline + 60px header + 20px marge
+                var availW = Math.max(260, width - 40);
+                var sFrance = Math.min(availW / (fw * 1.04), availH / (fh * 1.04));
+                var cx = (FX0 + FX1) / 2; // 1060
+                var cy = (FY0 + FY1) / 2; // 820
                 var bboxRect = {
                     x: width / 2 - cx * sFrance,
                     y: height / 2 - cy * sFrance,
