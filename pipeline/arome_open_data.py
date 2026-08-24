@@ -840,6 +840,13 @@ def run(max_hours=51):
                            [s["lead_hour"] for s in steps],
                            per_lead_values, communes)
 
+    # Fond de carte (pays voisins inclus, style Positron)
+    try:
+        from generate_fond import generate_fond
+        generate_fond(os.path.join(out_dir, "fond.webp"))
+    except Exception as e:
+        print("WARNING: fond de carte non généré (%s)" % e)
+
     from fetch_and_render_all import write_manifest
     meta = {"name": "AROME HD (1,3 km)", "provider": "Meteo-France",
             "resolution": "1,3 km (0.01°)", "run_time": run_str}

@@ -138,6 +138,10 @@
         var franceMaskImage = new Image();
         franceMaskImage.crossOrigin = 'anonymous';
         franceMaskImage.src = resolvePath('maps/mask_france.png');
+        // Fond de carte (pays voisins inclus, style Positron)
+        var fondImageElement = new Image();
+        fondImageElement.crossOrigin = 'anonymous';
+        fondImageElement.src = resolvePath('maps/fond.webp');
         var currentProbe = null;
         var probeLoadToken = 0;
         var samplerCanvas = document.createElement('canvas');
@@ -702,7 +706,7 @@
             output.height = 1640;
             var context = output.getContext('2d');
 
-            // Fond sombre (thème du site) — plus de gris autour de la France
+            // Cadre sombre autour du domaine (masque carré : on ne voit que la carte)
             context.fillStyle = '#0b1220';
             context.fillRect(0, 0, output.width, output.height);
 
@@ -715,21 +719,40 @@
             var offX = 1100 + transform.x / uScale - hScale * 1100.0;
             var offY = 820 + transform.y / uScale - vScale * 820.0;
 
-            // Fond de carte : silhouette de la France (masque) légèrement plus claire
-            if (franceMaskImage && franceMaskImage.complete && franceMaskImage.naturalWidth) {
+            // Fond de carte (pays voisins inclus) dans le rectangle du domaine
+            // (effet « contour carré » : tout le reste reste sombre)
+            context.save();
+            context.beginPath();
+            context.rect(offX, offY, 2200 * hScale, 1640 * vScale);
+            context.clip();
+            if (fondImageElement && fondImageElement.complete && fondImageElement.naturalWidth) {
                 context.save();
                 context.transform(hScale, 0, 0, vScale, offX, offY);
-                context.globalAlpha = 0.55;
-                context.drawImage(franceMaskImage, 0, 0);
+                context.drawImage(fondImageElement, 0, 0);
                 context.restore();
-                context.globalAlpha = 1;
+            } else {
+                context.fillStyle = '#a5a6b0';
+                context.fillRect(0, 0, output.width, output.height);
             }
 
-            // Dalle météo (pleine résolution native)
-            context.save();
-            context.transform(hScale, 0, 0, vScale, offX, offY);
-            context.drawImage(currentWeatherImage, 0, 0);
-            context.restore();
+            // Dalle météo masquée à la France (contour propre, pas de maillage dehors)
+            // → rendu sur un canvas temporaire pour ne pas effacer le fond.
+            var weatherMasked = document.createElement('canvas');
+            weatherMasked.width = output.width;
+            weatherMasked.height = output.height;
+            var weatherCtx = weatherMasked.getContext('2d');
+            weatherCtx.save();
+            weatherCtx.transform(hScale, 0, 0, vScale, offX, offY);
+            weatherCtx.drawImage(currentWeatherImage, 0, 0);
+            weatherCtx.restore();
+            if (franceMaskImage && franceMaskImage.complete && franceMaskImage.naturalWidth) {
+                weatherCtx.save();
+                weatherCtx.globalCompositeOperation = 'destination-in';
+                weatherCtx.transform(hScale, 0, 0, vScale, offX, offY);
+                weatherCtx.drawImage(franceMaskImage, 0, 0);
+                weatherCtx.restore();
+            }
+            context.drawImage(weatherMasked, 0, 0);
 
             // Frontières à la transformation courante (départements estompés en zoom)
             if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
@@ -756,6 +779,9 @@
                 context.restore();
                 context.globalAlpha = 1;
             }
+            // Fin du clip « contour carré » : le reste (logo, cartouche, légende)
+            // se dessine hors du cadre sombre.
+            context.restore();
 
             // Logo Météo-Climat Pro (en haut à droite de la carte)
             if (logoImage && logoImage.complete && logoImage.naturalWidth) {
@@ -943,31 +969,91 @@
                 return;
             }
             if (typeof window.GIF !== 'function') {
-                setToolHint('Encodage GIF indisponible (bibliothèque non chargée).');
+                setToolHint('Encodage GIF indisponible (bibliothèque gif.js non chargée — vérifiez le CDN).');
                 return;
             }
             var gw = 550;
             var gh = Math.round(gw * 1640 / 2200);
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
-            var gif = new window.GIF({ workers: 2, quality: 10, width: gw, height: gh });
+            // Vue courante (zoom/pan/région) appliquée à chaque frame
+            var frameTransform = {
+                scale: transform.scale,
+                x: transform.x,
+                y: transform.y
+            };
+            var mapAspect = 2200.0 / 1640.0;
+            var viewAspect = gw / gh;
+            var uScale = viewAspect > mapAspect ? (gh / 1640.0) : (gw / 2200.0);
+            var hScale = frameTransform.scale;
+            var vScale = frameTransform.scale;
+            var offX = gw / 2 + frameTransform.x / uScale - hScale * gw / 2;
+            var offY = gh / 2 + frameTransform.y / uScale - vScale * gh / 2;
+
+            // Workers : désactivés si indisponibles (évite un échec silencieux)
+            var gifOptions = { quality: 10, width: gw, height: gh };
+            if (typeof Worker === 'function' && typeof Blob === 'function') {
+                gifOptions.workers = 2;
+            }
+            var gif = new window.GIF(gifOptions);
             var index = 0;
 
             function drawFrame(canvas, img, leadHour) {
                 var ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#070b14';
+                // Cadre sombre (contour carré) puis fond de carte dans le domaine
+                ctx.fillStyle = '#0b1220';
                 ctx.fillRect(0, 0, gw, gh);
-                ctx.drawImage(img, 0, 0, gw, gh);
-                if (vectorDefinition && vectorDefinition.paths) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(offX, offY, 2200 * hScale, 1640 * vScale);
+                ctx.clip();
+                if (fondImageElement && fondImageElement.complete && fondImageElement.naturalWidth) {
                     ctx.save();
-                    ctx.scale(gw / vectorDefinition.width, gh / vectorDefinition.height);
+                    ctx.transform(hScale, 0, 0, vScale, offX, offY);
+                    ctx.drawImage(fondImageElement, 0, 0);
+                    ctx.restore();
+                } else {
+                    ctx.fillStyle = '#a5a6b0';
+                    ctx.fillRect(0, 0, gw, gh);
+                }
+                // Dalle météo masquée à la France (canvas temporaire)
+                var weatherLayer = document.createElement('canvas');
+                weatherLayer.width = gw;
+                weatherLayer.height = gh;
+                var wctx = weatherLayer.getContext('2d');
+                wctx.save();
+                wctx.transform(hScale, 0, 0, vScale, offX, offY);
+                wctx.drawImage(img, 0, 0);
+                wctx.restore();
+                if (franceMaskImage && franceMaskImage.complete && franceMaskImage.naturalWidth) {
+                    wctx.save();
+                    wctx.globalCompositeOperation = 'destination-in';
+                    wctx.transform(hScale, 0, 0, vScale, offX, offY);
+                    wctx.drawImage(franceMaskImage, 0, 0);
+                    wctx.restore();
+                }
+                ctx.drawImage(weatherLayer, 0, 0);
+                // Frontières (avec estompage progressif)
+                if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
+                    ctx.save();
+                    ctx.transform(hScale, 0, 0, vScale, offX, offY);
                     vectorDefinition.paths.forEach(function (entry) {
+                        var fade = 1;
+                        if (entry.kind === 'department') {
+                            fade = frameTransform.scale <= 3 ? 1 :
+                                Math.max(0.22, 1 - (frameTransform.scale - 3) / 14);
+                        } else if (entry.kind === 'region') {
+                            fade = frameTransform.scale <= 8 ? 1 :
+                                Math.max(0.35, 1 - (frameTransform.scale - 8) / 20);
+                        }
                         ctx.strokeStyle = entry.colour;
-                        ctx.globalAlpha = entry.opacity;
-                        ctx.lineWidth = entry.width;
+                        ctx.globalAlpha = (entry.opacity || 1) * fade;
+                        ctx.lineWidth = entry.width / hScale;
                         ctx.stroke(entry.path);
                     });
                     ctx.restore();
                 }
+                ctx.restore(); // fin du clip
+                // Cartouche bas : paramètre + échéance
                 ctx.fillStyle = 'rgba(7, 11, 20, 0.85)';
                 ctx.fillRect(0, gh - 26, gw, 26);
                 ctx.fillStyle = '#00d2ff';
@@ -1018,6 +1104,11 @@
                 window.setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
                 setToolHint('');
             });
+            if (typeof gif.on === 'function') {
+                gif.on('abort', function () {
+                    setToolHint('Génération du GIF interrompue.');
+                });
+            }
             next();
         }
 
@@ -1539,6 +1630,15 @@
             };
             regionSelect.addEventListener('change', function (e) {
                 var val = e.target.value || 'france';
+                // Zones hors France (Belgique…) : coordonnées directes
+                var externalZones = {
+                    belgique: { latitude: 50.5, longitude: 4.5, scale: 6 }
+                };
+                if (externalZones[val]) {
+                    focusLocation(externalZones[val]);
+                    updateUrl();
+                    return;
+                }
                 var regionData = null;
                 var key = REGION_KEYS[val];
                 if (key && typeof window.Europe1Regions === 'object' &&
@@ -1547,11 +1647,15 @@
                 }
                 if (regionData && Array.isArray(regionData.center) &&
                         regionData.center.length >= 2) {
-                    // Zoom précis sur le centre de la région (coordonnées réelles)
+                    // Zoom précis sur le centre de la région (coordonnées réelles).
+                    // scale = 2^(zoom−6) : France (6) → 1×, région (7-8) → 2-4×,
+                    // département/IDF (9) → 8×, commune (12) → 32× (max 24).
+                    var regionScale = val === 'france' ? 1 :
+                        Math.min(24, Math.max(1.5, Math.pow(2, (regionData.zoom || 7) - 6)));
                     focusLocation({
                         latitude: Number(regionData.center[0]),
                         longitude: Number(regionData.center[1]),
-                        scale: Math.max(4, Math.round((regionData.zoom || 7) * 4.2))
+                        scale: regionScale
                     });
                 } else {
                     var target = fallbackCoords[val] || fallbackCoords.france;
@@ -1770,24 +1874,35 @@
                 'varying vec2 vUv;\n' +
                 'uniform sampler2D uWeather;\n' +
                 'uniform sampler2D uMask;\n' +
+                'uniform sampler2D uFond;\n' +
                 'uniform float uScale;\n' +
                 'uniform vec2 uTranslation;\n' +
                 'uniform vec2 uAspect;\n' +
                 'uniform float uHasWeather;\n' +
                 'uniform float uHasMask;\n' +
+                'uniform float uHasFond;\n' +
                 'void main(){\n' +
-                ' vec3 sea=vec3(0.043,0.055,0.086);\n' +
-                ' vec3 land=vec3(0.075,0.090,0.125);\n' +
+                ' vec3 frame=vec3(0.043,0.055,0.086);\n' +
                 ' vec2 uv=((vUv-vec2(0.5))*uAspect-uTranslation)/uScale+vec2(0.5);\n' +
-                ' vec3 base=sea;\n' +
-                ' if(uHasMask>0.5 && uv.x>=0.0 && uv.x<=1.0 && uv.y>=0.0 && uv.y<=1.0){\n' +
-                '  base=mix(sea,land,texture2D(uMask,uv).r);\n' +
+                ' if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){\n' +
+                '  gl_FragColor=vec4(frame,1.0);return;\n' +
                 ' }\n' +
-                ' if(uHasWeather<0.5||uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){\n' +
+                // Fond : carte des pays (fond.webp) si dispo, sinon gris neutre
+                ' vec3 base=vec3(0.6471,0.6510,0.6902);\n' +
+                ' if(uHasFond>0.5){\n' +
+                '  base=texture2D(uFond,uv).rgb;\n' +
+                ' } else if(uHasMask>0.5){\n' +
+                '  base=mix(vec3(0.6471,0.6510,0.6902),vec3(0.76,0.78,0.81),texture2D(uMask,uv).r);\n' +
+                ' }\n' +
+                ' if(uHasWeather<0.5){\n' +
                 '  gl_FragColor=vec4(base,1.0);return;\n' +
                 ' }\n' +
                 ' vec4 weather=texture2D(uWeather,uv);\n' +
-                ' gl_FragColor=vec4(mix(base,weather.rgb,weather.a),1.0);\n' +
+                // Données météo masquées à la France : alpha × masque France
+                ' float france=1.0;\n' +
+                ' if(uHasMask>0.5){france=texture2D(uMask,uv).r;}\n' +
+                ' float alpha=weather.a*france;\n' +
+                ' gl_FragColor=vec4(mix(base,weather.rgb,alpha),1.0);\n' +
                 '}'
             );
             if (!vertexShader || !fragmentShader) {
@@ -1840,19 +1955,40 @@
                 scheduleRender();
             };
 
+            // Fond de carte (pays voisins inclus) — fond.webp
+            var fondTexture = gl.createTexture();
+            var fondImage = new Image();
+            fondImage.crossOrigin = 'anonymous';
+            fondImage.src = resolvePath('maps/fond.webp');
+            fondImage.onload = function() {
+                gl.activeTexture(gl.TEXTURE2);
+                gl.bindTexture(gl.TEXTURE_2D, fondTexture);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, fondImage);
+                webgl.fondReady = true;
+                scheduleRender();
+            };
+
             return {
                 gl: gl,
                 program: program,
                 texture: texture,
                 maskTexture: maskTexture,
+                fondTexture: fondTexture,
                 scale: gl.getUniformLocation(program, 'uScale'),
                 translation: gl.getUniformLocation(program, 'uTranslation'),
                 aspect: gl.getUniformLocation(program, 'uAspect'),
                 hasWeather: gl.getUniformLocation(program, 'uHasWeather'),
                 maskSampler: gl.getUniformLocation(program, 'uMask'),
                 useMask: gl.getUniformLocation(program, 'uUseMask'),
+                fondSampler: gl.getUniformLocation(program, 'uFond'),
+                useFond: gl.getUniformLocation(program, 'uHasFond'),
                 ready: false,
-                maskReady: false
+                maskReady: false,
+                fondReady: false
             };
         }
 
@@ -1901,6 +2037,8 @@
                 gl.uniform1f(webgl.hasWeather, webgl.ready ? 1 : 0);
                 gl.uniform1i(webgl.maskSampler, 1);
                 gl.uniform1f(webgl.useMask, webgl.maskReady ? 1 : 0);
+                gl.uniform1i(webgl.fondSampler, 2);
+                gl.uniform1f(webgl.useFond, webgl.fondReady ? 1 : 0);
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
                 return;
             }
@@ -1911,6 +2049,7 @@
                 return;
             }
             fallbackContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+            // Cadre sombre autour du domaine (le fond clair n'existe que dans la carte)
             fallbackContext.fillStyle = '#0b1220';
             fallbackContext.fillRect(0, 0, width, height);
             if (!currentWeatherImage) {
@@ -1925,7 +2064,27 @@
             fallbackContext.translate(-width / 2, -height / 2);
             fallbackContext.imageSmoothingEnabled = true;
             fallbackContext.imageSmoothingQuality = 'high';
-            fallbackContext.drawImage(currentWeatherImage, 0, 0, width, height);
+            // Fond de carte (pays voisins inclus) si chargé, sinon gris neutre
+            if (fondImageElement && fondImageElement.complete && fondImageElement.naturalWidth) {
+                fallbackContext.drawImage(fondImageElement, 0, 0, width, height);
+            } else {
+                fallbackContext.fillStyle = '#a5a6b0';
+                fallbackContext.fillRect(0, 0, width, height);
+            }
+            // Données météo masquées à la France (contour propre, pas de maillage dehors)
+            // → canvas temporaire pour ne pas effacer le fond déjà dessiné.
+            var weatherLayer = document.createElement('canvas');
+            weatherLayer.width = width;
+            weatherLayer.height = height;
+            var weatherLayerCtx = weatherLayer.getContext('2d');
+            weatherLayerCtx.drawImage(currentWeatherImage, 0, 0, width, height);
+            if (franceMaskImage && franceMaskImage.complete && franceMaskImage.naturalWidth) {
+                weatherLayerCtx.save();
+                weatherLayerCtx.globalCompositeOperation = 'destination-in';
+                weatherLayerCtx.drawImage(franceMaskImage, 0, 0, width, height);
+                weatherLayerCtx.restore();
+            }
+            fallbackContext.drawImage(weatherLayer, 0, 0);
             fallbackContext.restore();
         }
 
