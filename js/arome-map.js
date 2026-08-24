@@ -140,6 +140,12 @@
         var franceMaskImage = new Image();
         franceMaskImage.crossOrigin = 'anonymous';
         franceMaskImage.src = resolvePath('maps/mask_france.png');
+        franceMaskImage.onload = function () {
+            // Le bbox du masque pilote le cadrage France : dès qu'il est
+            // connu, on re-rend pour appliquer le cadrage intelligent.
+            visibleBBoxCache = null;
+            scheduleRender();
+        };
         // Fond de carte (pays voisins inclus, style Positron)
         var fondImageElement = new Image();
         fondImageElement.crossOrigin = 'anonymous';
@@ -451,15 +457,11 @@
             var box = viewport.getBoundingClientRect();
             var screenX = clientX - box.left;
             var screenY = clientY - box.top;
-            var mapAspect = 2200.0 / 1640.0;
-            var viewAspect = box.width / (box.height || 1);
-            var ax = viewAspect > mapAspect ? viewAspect / mapAspect : 1.0;
-            var ay = viewAspect < mapAspect ? mapAspect / viewAspect : 1.0;
-            var uScale = viewAspect > mapAspect ? (box.height / 1640.0) : (box.width / 2200.0);
-            var mapW = 2200.0 * uScale * transform.scale;
-            var mapH = 1640.0 * uScale * transform.scale;
-            var u = (screenX - (box.width / 2 + transform.x)) / mapW + 0.5;
-            var v = (screenY - (box.height / 2 + transform.y)) / mapH + 0.5;
+            // Projection UNIQUE (computeMapRect) : identique au raster et aux
+            // vecteurs → la sonde lit exactement ce qui est affiché.
+            var mapRect = computeMapRect(box.width, box.height);
+            var u = (screenX - mapRect.x) / mapRect.w;
+            var v = (screenY - mapRect.y) / mapRect.h;
             if (u < 0 || u > 1 || v < 0 || v > 1) {
                 return null;
             }
@@ -536,13 +538,11 @@
                 return;
             }
             var box = viewport.getBoundingClientRect();
-            var mapAspect = 2200.0 / 1640.0;
-            var viewAspect = box.width / (box.height || 1);
-            var uScale = viewAspect > mapAspect ? (box.height / 1640.0) : (box.width / 2200.0);
-            var mapW = 2200.0 * uScale * transform.scale;
-            var mapH = 1640.0 * uScale * transform.scale;
-            var screenX = (pinnedPoint.u - 0.5) * mapW + box.width / 2 + transform.x;
-            var screenY = (pinnedPoint.v - 0.5) * mapH + box.height / 2 + transform.y;
+            // Projection UNIQUE (computeMapRect) : l'épingle reste collée au
+            // point exact du raster, cohérente avec la sonde et l'affichage.
+            var mapRect = computeMapRect(box.width, box.height);
+            var screenX = mapRect.x + pinnedPoint.u * mapRect.w;
+            var screenY = mapRect.y + pinnedPoint.v * mapRect.h;
             if (screenX < -40 || screenX > box.width + 40 || screenY < -40 || screenY > box.height + 40) {
                 pinnedElement.style.display = 'none';
                 return;
@@ -692,6 +692,71 @@
             }
         }
 
+        // Scanne le masque France (2200×1640) et retourne le rectangle englobant
+        // des pixels effectivement couverts (valeur > 0). Permet un cadrage
+        // d'export qui ne montre JAMAIS de zone vide (coins du trapèze AROME,
+        // mer, pays voisins non maillés) : le cadre suit la donnée réelle.
+        var visibleBBoxCache = null;
+        function computeVisibleBBox() {
+            if (visibleBBoxCache) {
+                return visibleBBoxCache;
+            }
+            if (!franceMaskImage || !franceMaskImage.complete || !franceMaskImage.naturalWidth) {
+                return null;
+            }
+            var mw = franceMaskImage.naturalWidth;
+            var mh = franceMaskImage.naturalHeight;
+            if (mw < 2 || mh < 2) {
+                return null;
+            }
+            try {
+                var mc = document.createElement('canvas');
+                mc.width = mw;
+                mc.height = mh;
+                var mctx = mc.getContext('2d', { willReadFrequently: true });
+                if (!mctx) {
+                    return null;
+                }
+                mctx.drawImage(franceMaskImage, 0, 0);
+                var data = mctx.getImageData(0, 0, mw, mh).data;
+                var x0 = mw, y0 = mh, x1 = -1, y1 = -1;
+                // Balayage par pas de 2 puis affinage : 2200×1640 pixels = 3,6 M
+                // de lectures, quelques dizaines de ms suffisent en pas de 2.
+                for (var y = 0; y < mh; y += 2) {
+                    var row = y * mw * 4;
+                    for (var x = 0; x < mw; x += 2) {
+                        if (data[row + x * 4 + 3] > 8) {
+                            if (x < x0) x0 = x;
+                            if (x > x1) x1 = x;
+                            if (y < y0) y0 = y;
+                            if (y > y1) y1 = y;
+                        }
+                    }
+                }
+                if (x1 < 0) {
+                    return null;
+                }
+                // Affinage sur la bande de 1 px autour du bbox grossier.
+                var xa = Math.max(0, x0 - 2), xb = Math.min(mw - 1, x1 + 2);
+                var ya = Math.max(0, y0 - 2), yb = Math.min(mh - 1, y1 + 2);
+                for (var yy = ya; yy <= yb; yy++) {
+                    var rr = yy * mw * 4;
+                    for (var xx = xa; xx <= xb; xx++) {
+                        if (data[rr + xx * 4 + 3] > 8) {
+                            if (xx < x0) x0 = xx;
+                            if (xx > x1) x1 = xx;
+                            if (yy < y0) y0 = yy;
+                            if (yy > y1) y1 = yy;
+                        }
+                    }
+                }
+                visibleBBoxCache = { x0: x0, y0: y0, x1: x1, y1: y1 };
+                return visibleBBoxCache;
+            } catch (e) {
+                return null;
+            }
+        }
+
         function composeCaptureCanvas() {
             if (!currentWeatherImage) {
                 return null;
@@ -701,8 +766,54 @@
             if (!vw || !vh) {
                 return null;
             }
+            // ── Cadrage intelligent : on exporte exactement la vue affichée
+            // (projection UNIQUE computeMapRect), convertie vers le canvas
+            // natif 2200×1640 — jamais de bandes vides, jamais de déformation.
+            var hScale, vScale, offX, offY;
+            if (transform.scale <= 1.15) {
+                // Vue France entière : cover du rectangle couvert par le
+                // maillage (masque France) + marge, dans le canvas natif.
+                // La France remplit le cadre, pays voisins en contexte —
+                // aucune bande, aucun coin vide.
+                var exportBBox = computeVisibleBBox();
+                if (exportBBox) {
+                    var pad = 0.045;
+                    var ebw = (exportBBox.x1 - exportBBox.x0) * (1 + 2 * pad);
+                    var ebh = (exportBBox.y1 - exportBBox.y0) * (1 + 2 * pad);
+                    var mapAspect = 2200.0 / 1640.0;
+                    if (ebw / ebh > mapAspect) { ebh = ebw / mapAspect; }
+                    else { ebw = ebh * mapAspect; }
+                    hScale = 2200.0 / ebw;
+                    vScale = hScale;
+                    offX = 1100 - ((exportBBox.x0 + exportBBox.x1) / 2) * hScale;
+                    offY = 820 - ((exportBBox.y0 + exportBBox.y1) / 2) * vScale;
+                } else {
+                    hScale = 1;
+                    vScale = 1;
+                    offX = 0;
+                    offY = 0;
+                }
+            } else {
+                // Vue zoomée (région/département) : reproduit la portion du
+                // raster visible à l'écran, en cover sur le canvas natif.
+                var viewRect = computeMapRect(vw, vh);
+                var u0 = (0 - viewRect.x) / viewRect.w;
+                var u1 = (vw - viewRect.x) / viewRect.w;
+                var v0 = (0 - viewRect.y) / viewRect.h;
+                var v1 = (vh - viewRect.y) / viewRect.h;
+                var vueW = u1 - u0;
+                var vueH = v1 - v0;
+                var k = Math.max(1 / vueW, 1 / vueH);
+                hScale = k;
+                vScale = k;
+                var uc = (u0 + u1) / 2;
+                var vc = (v0 + v1) / 2;
+                offX = 1100 - uc * 2200 * k;
+                offY = 820 - vc * 1640 * k;
+            }
+
             // Export à la résolution NATIVE de la carte (2200×1640), en capturant
-            // la vue courante (zoom/pan/région) sans sous-échantillonnage.
+            // la vue (zoom/pan/région ou cadrage automatique) sans sous-échantillonnage.
             var output = document.createElement('canvas');
             output.width = 2200;
             output.height = 1640;
@@ -711,15 +822,6 @@
             // Cadre sombre autour du domaine (masque carré : on ne voit que la carte)
             context.fillStyle = '#0b1220';
             context.fillRect(0, 0, output.width, output.height);
-
-            // Transformation courante, en coordonnées carte (même logique que drawVectors)
-            var mapAspect = 2200.0 / 1640.0;
-            var viewAspect = vw / vh;
-            var uScale = viewAspect > mapAspect ? (vh / 1640.0) : (vw / 2200.0);
-            var hScale = transform.scale;
-            var vScale = transform.scale;
-            var offX = 1100 + transform.x / uScale - hScale * 1100.0;
-            var offY = 820 + transform.y / uScale - vScale * 820.0;
 
             // Fond de carte (pays voisins inclus) dans le rectangle du domaine
             // (effet « contour carré » : tout le reste reste sombre)
@@ -737,8 +839,8 @@
                 context.fillRect(0, 0, output.width, output.height);
             }
 
-            // Dalle météo masquée à la France (contour propre, pas de maillage dehors)
-            // → rendu sur un canvas temporaire pour ne pas effacer le fond.
+            // Dalle météo : le maillage couvre TOUT le domaine AROME (mer et
+            // pays voisins inclus, comme météo-npdc) → aucune zone vide.
             var weatherMasked = document.createElement('canvas');
             weatherMasked.width = output.width;
             weatherMasked.height = output.height;
@@ -747,13 +849,6 @@
             weatherCtx.transform(hScale, 0, 0, vScale, offX, offY);
             weatherCtx.drawImage(currentWeatherImage, 0, 0);
             weatherCtx.restore();
-            if (franceMaskImage && franceMaskImage.complete && franceMaskImage.naturalWidth) {
-                weatherCtx.save();
-                weatherCtx.globalCompositeOperation = 'destination-in';
-                weatherCtx.transform(hScale, 0, 0, vScale, offX, offY);
-                weatherCtx.drawImage(franceMaskImage, 0, 0);
-                weatherCtx.restore();
-            }
             context.drawImage(weatherMasked, 0, 0);
 
             // Frontières à la transformation courante (départements estompés en zoom)
@@ -821,11 +916,24 @@
             var margin = 24;
             var bannerH = 150;
             var bannerY = 84;
+            // Libellé propre depuis les palettes (« Température à 2 m (°C) »
+            // et non « Temperature a 2 m (degC) » du manifeste brut).
+            var prettyLabel = layer ? layer.label : '';
+            var prettyUnit = layer && layer.unit ? layer.unit : '';
+            if (typeof window.getLayerPalette === 'function') {
+                try {
+                    var prettyPal = window.getLayerPalette(currentLayer);
+                    if (prettyPal) {
+                        prettyLabel = prettyPal.label || prettyLabel;
+                        prettyUnit = prettyPal.unit !== undefined ? prettyPal.unit : prettyUnit;
+                    }
+                } catch (e) {}
+            }
             // Largeur du cartouche adaptée au contenu (titre + échéance)
             context.font = '700 44px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
-            var titleText = modelTitle + ' • ' + (layer ? layer.label : '') +
-                (layer && layer.unit ? ' (' + layer.unit + ')' : '');
+            var titleText = modelTitle + ' • ' + prettyLabel +
+                (prettyUnit ? ' (' + prettyUnit + ')' : '');
             var dateText = dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '') +
                 ' — Météo-Climat Pro';
             var titleW = context.measureText(titleText).width;
@@ -871,22 +979,24 @@
                 margin + 20, bannerY + 138
             );
 
-            // Légende colorimétrique centrée en bas (comme météociel)
+            // Légende colorimétrique centrée en bas (comme météociel),
+            // compacte, avec une vraie marge basse (24 px).
             if (layer && typeof window.getLayerPalette === 'function' &&
                     typeof window.paletteTicks === 'function') {
                 try {
                     var legendW = 1100;
-                    var legendH = 110;
+                    var legendH = 96;
+                    var legendBottom = 24;
                     var legendX = (output.width - legendW) / 2;
-                    var legendY = output.height - legendH - 16;
+                    var legendY = output.height - legendH - legendBottom;
                     context.fillStyle = 'rgba(7, 11, 20, 0.95)';
                     context.beginPath();
                     if (typeof context.roundRect === 'function') {
-                        context.roundRect(legendX - 22, legendY - 12,
-                            legendW + 44, legendH + 38, 18);
+                        context.roundRect(legendX - 22, legendY - 10,
+                            legendW + 44, legendH + 30, 18);
                     } else {
-                        context.rect(legendX - 22, legendY - 12,
-                            legendW + 44, legendH + 38);
+                        context.rect(legendX - 22, legendY - 10,
+                            legendW + 44, legendH + 30);
                     }
                     context.fill();
                     context.strokeStyle = 'rgba(0, 210, 255, 0.7)';
@@ -895,12 +1005,12 @@
 
                     // Étiquette + unité (centrées au-dessus de la barre)
                     context.fillStyle = '#ffffff';
-                    context.font = '700 32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     context.textAlign = 'center';
                     context.textBaseline = 'alphabetic';
-                    var legendLabel = (layer.label || 'Échelle') +
-                        (layer.unit ? ' (' + layer.unit + ')' : '');
-                    context.fillText(legendLabel, output.width / 2, legendY + 32);
+                    var legendLabel = prettyLabel +
+                        (prettyUnit ? ' (' + prettyUnit + ')' : '');
+                    context.fillText(legendLabel, output.width / 2, legendY + 30);
 
                     // Barre dégradée depuis les stops structurés de la palette
                     var pal = window.getLayerPalette(currentLayer);
@@ -910,7 +1020,7 @@
                         pal.transparent_below : (stops.length ? stops[0].value : 0);
                     var max = stops.length ? stops[stops.length - 1].value : 1;
                     var span = (max - low) || 1;
-                    var barY = legendY + 52;
+                    var barY = legendY + 44;
                     var gradient = context.createLinearGradient(legendX, 0,
                         legendX + legendW, 0);
                     var gradientBuilt = false;
@@ -928,9 +1038,9 @@
                     context.fillStyle = gradientBuilt ? gradient : '#3478c5';
                     context.beginPath();
                     if (typeof context.roundRect === 'function') {
-                        context.roundRect(legendX, barY, legendW, 26, 12);
+                        context.roundRect(legendX, barY, legendW, 24, 12);
                     } else {
-                        context.rect(legendX, barY, legendW, 26);
+                        context.rect(legendX, barY, legendW, 24);
                     }
                     context.fill();
                     context.strokeStyle = 'rgba(255,255,255,0.6)';
@@ -939,11 +1049,11 @@
 
                     // Ticks de valeurs
                     context.fillStyle = '#eaf1ff';
-                    context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    context.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     var ticks = window.paletteTicks(currentLayer);
                     ticks.forEach(function (tick, i) {
                         var x = legendX + (ticks.length > 1 ? i / (ticks.length - 1) : 0.5) * legendW;
-                        context.fillText(String(tick), x, barY + 52);
+                        context.fillText(String(tick), x, barY + 46);
                     });
                     context.textAlign = 'left';
                 } catch (legendError) {
@@ -960,7 +1070,7 @@
                     var longitudeSpan = Number(bounds.east) - Number(bounds.west);
                     var mercatorSpan = northY - southY;
                     if (longitudeSpan && mercatorSpan) {
-                        var exportScale = hScale;   // zoom courant
+                        var exportScale = hScale;   // échelle du cadrage export (vue ou auto)
                         var popMin = exportScale < 1.35 ? 200000 :
                             (exportScale < 2.25 ? 80000 :
                             (exportScale < 3.75 ? 30000 :
@@ -980,8 +1090,8 @@
                         context.lineWidth = 4;
                         var occupied = [];
                         var drawn = 0;
-                        // La zone de la légende (bas, centrée) est réservée :
-                        // aucune ville ne doit s'y écrire.
+                        // ZONES RÉSERVÉES (safe zones) : aucune ville ne doit
+                        // s'écrire sous le cartouche, le logo ou la légende.
                         if (typeof legendY === 'number' && legendY > 0) {
                             occupied.push({
                                 left: legendX - 22,
@@ -990,14 +1100,89 @@
                                 bottom: legendY + legendH + 38
                             });
                         }
-                        for (var pi = 0; pi < places.length; pi += 1) {
-                            var place = places[pi];
+                        // Cartouche en haut à gauche (bannerW/bannerY connus ici).
+                        if (typeof bannerW === 'number' && bannerW > 0) {
+                            occupied.push({
+                                left: margin - 8,
+                                right: margin + bannerW + 8,
+                                top: bannerY - 8,
+                                bottom: bannerY + bannerH + 8
+                            });
+                        }
+                        // Logo en haut à droite.
+                        if (logoImage && logoImage.complete && logoImage.naturalWidth) {
+                            occupied.push({
+                                left: output.width - 24 - 240 - 8,
+                                right: output.width - 24 + 8,
+                                top: 24 - 8,
+                                bottom: 24 + Math.round(240 * logoImage.naturalHeight / logoImage.naturalWidth) + 8
+                            });
+                        }
+                        // PRIORITÉ INTELLIGENTE : les villes de la région
+                        // sélectionnée (liste officielle Europe1Regions) passent
+                        // devant les autres, puis tri par population.
+                        var prioritySet = null;
+                        try {
+                            var regionSelect = document.getElementById('select-region');
+                            var regionKey = regionSelect ? regionSelect.value : 'france';
+                            // Mapping ids du select → clés Europe1Regions
+                            // (idf → ile-de-france, grandest → grand-est…).
+                            var REGION_KEY_MAP = {
+                                france: 'france', hdf: 'hdf', normandie: 'normandie',
+                                idf: 'ile-de-france', grandest: 'grand-est',
+                                bretagne: 'bretagne', pdl: 'pdl', cvl: 'cvl',
+                                bfc: 'bfc', naq: 'naq', ara: 'ara',
+                                occitanie: 'occitanie', paca: 'paca', corse: 'corse'
+                            };
+                            var regDef = window.Europe1Regions &&
+                                window.Europe1Regions[REGION_KEY_MAP[regionKey] || regionKey];
+                            if (regDef && regDef.cities && regDef.cities.length) {
+                                prioritySet = new Set();
+                                regDef.cities.forEach(function (city) {
+                                    var name = String(city.name || '').toLowerCase()
+                                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                                    if (name) {
+                                        prioritySet.add(name);
+                                    }
+                                });
+                            }
+                        } catch (e) {}
+                        var orderedPlaces = places;
+                        if (prioritySet && prioritySet.size) {
+                            orderedPlaces = places.slice().sort(function (first, second) {
+                                var firstPrior = Array.isArray(first) &&
+                                    prioritySet.has(String(first[0]).toLowerCase()
+                                        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+                                var secondPrior = Array.isArray(second) &&
+                                    prioritySet.has(String(second[0]).toLowerCase()
+                                        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+                                if (firstPrior !== secondPrior) {
+                                    return firstPrior ? -1 : 1;
+                                }
+                                return Number(second[1]) - Number(first[1]);
+                            });
+                        }
+                        for (var pi = 0; pi < orderedPlaces.length; pi += 1) {
+                            var place = orderedPlaces[pi];
                             if (!Array.isArray(place) || place.length < 4) { continue; }
-                            if (Number(place[1]) < popMin) { break; }
+                            // Sous le seuil : on peut s'arrêter seulement si on a
+                            // déjà quitté le groupe prioritaire (l'ordre redevient
+                            // alors strictement décroissant par population) ;
+                            // sinon on continue pour ne pas rater les grandes
+                            // villes non listées qui suivent.
+                            if (Number(place[1]) < popMin) {
+                                var isPrior = prioritySet && prioritySet.size &&
+                                    prioritySet.has(String(place[0]).toLowerCase()
+                                        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+                                if (!isPrior) { break; }
+                                continue;
+                            }
                             var u = (Number(place[3]) - Number(bounds.west)) / longitudeSpan;
                             var v = (northY - mercator(Number(place[2]))) / mercatorSpan;
-                            var sx = (u - 0.5) * (2200 * exportScale) + 1100 + transform.x / uScale;
-                            var sy = (v - 0.5) * (1640 * exportScale) + 820 + transform.y / uScale;
+                            // Transformation du CADRAGE EXPORT (pas de la vue) :
+                            // les villes suivent exactement le raster exporté.
+                            var sx = u * 2200 * hScale + offX;
+                            var sy = v * 1640 * vScale + offY;
                             if (sx < -60 || sx > output.width + 60 || sy < -20 || sy > output.height + 20) {
                                 continue;
                             }
@@ -1075,19 +1260,19 @@
             var gw = 550;
             var gh = Math.round(gw * 1640 / 2200);
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
-            // Vue courante (zoom/pan/région) appliquée à chaque frame
+            // Vue courante (zoom/pan/région) figée pour toutes les frames
             var frameTransform = {
                 scale: transform.scale,
                 x: transform.x,
                 y: transform.y
             };
-            var mapAspect = 2200.0 / 1640.0;
-            var viewAspect = gw / gh;
-            var uScale = viewAspect > mapAspect ? (gh / 1640.0) : (gw / 2200.0);
-            var hScale = frameTransform.scale;
-            var vScale = frameTransform.scale;
-            var offX = gw / 2 + frameTransform.x / uScale - hScale * gw / 2;
-            var offY = gh / 2 + frameTransform.y / uScale - vScale * gh / 2;
+            // Projection UNIQUE (computeMapRect) : identique à l'écran,
+            // au WebGL/fallback, aux vecteurs et à l'export.
+            var gifRect = computeMapRect(gw, gh, frameTransform);
+            var hScale = gifRect.w / 2200.0;
+            var vScale = gifRect.h / 1640.0;
+            var offX = gifRect.x;
+            var offY = gifRect.y;
 
             // Workers : DÉSACTIVÉS volontairement. gif.js 0.2.0 charge son
             // worker depuis un Blob cross-origin (cdnjs) → échec silencieux
@@ -1115,7 +1300,7 @@
                     ctx.fillStyle = '#a5a6b0';
                     ctx.fillRect(0, 0, gw, gh);
                 }
-                // Dalle météo masquée à la France (canvas temporaire)
+                // Dalle météo : maillage sur tout le domaine (comme l'écran)
                 var weatherLayer = document.createElement('canvas');
                 weatherLayer.width = gw;
                 weatherLayer.height = gh;
@@ -1124,13 +1309,6 @@
                 wctx.transform(hScale, 0, 0, vScale, offX, offY);
                 wctx.drawImage(img, 0, 0);
                 wctx.restore();
-                if (franceMaskImage && franceMaskImage.complete && franceMaskImage.naturalWidth) {
-                    wctx.save();
-                    wctx.globalCompositeOperation = 'destination-in';
-                    wctx.transform(hScale, 0, 0, vScale, offX, offY);
-                    wctx.drawImage(franceMaskImage, 0, 0);
-                    wctx.restore();
-                }
                 ctx.drawImage(weatherLayer, 0, 0);
                 // Frontières (avec estompage progressif)
                 if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
@@ -1684,12 +1862,24 @@
             }
         });
 
+        // Centre vertical du viewport — le header flotte par-dessus la carte
+        // (translucide), donc tous les zooms/pans/focus s'expriment par
+        // rapport au centre de l'écran.
+        function mapCenterY(height) {
+            return (height || viewport.clientHeight) / 2;
+        }
+
         function focusOnPoint(u, v, scale) {
             var w = viewport.clientWidth;
             var h = viewport.clientHeight;
-            transform.scale = clamp(scale || 1, 1, maxScale);
-            transform.x = w * transform.scale * (0.5 - u);
-            transform.y = h * transform.scale * (0.5 - v);
+            var s = (w / h) > (2200.0 / 1640.0) ?
+                (w / 2200.0) : (h / 1640.0);
+            var targetScale = clamp(scale || 1, 1, maxScale);
+            transform.scale = targetScale;
+            // Projection UNIQUE (même base que computeMapRect) : le point
+            // (u,v) du raster se retrouve au centre du viewport.
+            transform.x = 2200.0 * s * targetScale * (0.5 - u);
+            transform.y = 1640.0 * s * targetScale * (0.5 - v);
             applyTransform();
         }
 
@@ -1975,15 +2165,16 @@
                 'uniform sampler2D uWeather;\n' +
                 'uniform sampler2D uMask;\n' +
                 'uniform sampler2D uFond;\n' +
-                'uniform float uScale;\n' +
-                'uniform vec2 uTranslation;\n' +
-                'uniform vec2 uAspect;\n' +
+                'uniform vec2 uViewport;\n' +
+                'uniform vec4 uRect;\n' +
                 'uniform float uHasWeather;\n' +
                 'uniform float uHasMask;\n' +
                 'uniform float uHasFond;\n' +
                 'void main(){\n' +
                 ' vec3 frame=vec3(0.043,0.055,0.086);\n' +
-                ' vec2 uv=((vUv-vec2(0.5))*uAspect-uTranslation)/uScale+vec2(0.5);\n' +
+                // Projection UNIQUE (identique aux vecteurs/probes/export) :
+                // le raster 2200×1640 occupe le rectangle uRect (px écran).
+                ' vec2 uv=(vUv*uViewport-uRect.xy)/uRect.zw;\n' +
                 ' if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){\n' +
                 '  gl_FragColor=vec4(frame,1.0);return;\n' +
                 ' }\n' +
@@ -1998,10 +2189,10 @@
                 '  gl_FragColor=vec4(base,1.0);return;\n' +
                 ' }\n' +
                 ' vec4 weather=texture2D(uWeather,uv);\n' +
-                // Données météo masquées à la France : alpha × masque France
-                ' float france=1.0;\n' +
-                ' if(uHasMask>0.5){france=texture2D(uMask,uv).r;}\n' +
-                ' float alpha=weather.a*france;\n' +
+                // Le maillage couvre TOUT le domaine AROME (mer et pays
+                // voisins inclus, comme météo-npdc) : plus aucune zone
+                // « vide de maillage » — l'image est entièrement remplie.
+                ' float alpha=weather.a;\n' +
                 ' gl_FragColor=vec4(mix(base,weather.rgb,alpha),1.0);\n' +
                 '}'
             );
@@ -2078,9 +2269,8 @@
                 texture: texture,
                 maskTexture: maskTexture,
                 fondTexture: fondTexture,
-                scale: gl.getUniformLocation(program, 'uScale'),
-                translation: gl.getUniformLocation(program, 'uTranslation'),
-                aspect: gl.getUniformLocation(program, 'uAspect'),
+                viewportSize: gl.getUniformLocation(program, 'uViewport'),
+                mapRect: gl.getUniformLocation(program, 'uRect'),
                 hasWeather: gl.getUniformLocation(program, 'uHasWeather'),
                 maskSampler: gl.getUniformLocation(program, 'uMask'),
                 useMask: gl.getUniformLocation(program, 'uUseMask'),
@@ -2123,17 +2313,11 @@
                 var gl = webgl.gl;
                 gl.viewport(0, 0, weatherCanvas.width, weatherCanvas.height);
                 gl.useProgram(webgl.program);
-                gl.uniform1f(webgl.scale, transform.scale);
-                var mapAspect = 2200.0 / 1640.0;
-                var viewAspect = width / (height || 1);
-                var ax = viewAspect > mapAspect ? viewAspect / mapAspect : 1.0;
-                var ay = viewAspect < mapAspect ? mapAspect / viewAspect : 1.0;
-                gl.uniform2f(webgl.aspect, ax, ay);
-                gl.uniform2f(
-                    webgl.translation,
-                    (transform.x / width) * ax,
-                    (transform.y / height) * ay
-                );
+                // Projection UNIQUE (computeMapRect) : identique aux vecteurs,
+                // labels, probes, GIF et export → aucun désalignement possible.
+                var mapRect = computeMapRect(width, height);
+                gl.uniform2f(webgl.viewportSize, width, height);
+                gl.uniform4f(webgl.mapRect, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
                 gl.uniform1f(webgl.hasWeather, webgl.ready ? 1 : 0);
                 gl.uniform1i(webgl.maskSampler, 1);
                 gl.uniform1f(webgl.useMask, webgl.maskReady ? 1 : 0);
@@ -2155,37 +2339,30 @@
             if (!currentWeatherImage) {
                 return;
             }
-            fallbackContext.save();
-            fallbackContext.translate(
-                width / 2 + transform.x,
-                height / 2 + transform.y
-            );
-            fallbackContext.scale(transform.scale, transform.scale);
-            fallbackContext.translate(-width / 2, -height / 2);
+            // Projection UNIQUE (computeMapRect) — mêmes coordonnées que le
+            // WebGL, les vecteurs, les labels et les probes.
+            var mapRect = computeMapRect(width, height);
+            var mrx = mapRect.x;
+            var mry = mapRect.y;
+            var mrw = mapRect.w;
+            var mrh = mapRect.h;
             fallbackContext.imageSmoothingEnabled = true;
             fallbackContext.imageSmoothingQuality = 'high';
             // Fond de carte (pays voisins inclus) si chargé, sinon gris neutre
             if (fondImageElement && fondImageElement.complete && fondImageElement.naturalWidth) {
-                fallbackContext.drawImage(fondImageElement, 0, 0, width, height);
+                fallbackContext.drawImage(fondImageElement, mrx, mry, mrw, mrh);
             } else {
                 fallbackContext.fillStyle = '#a5a6b0';
-                fallbackContext.fillRect(0, 0, width, height);
+                fallbackContext.fillRect(mrx, mry, mrw, mrh);
             }
-            // Données météo masquées à la France (contour propre, pas de maillage dehors)
-            // → canvas temporaire pour ne pas effacer le fond déjà dessiné.
+            // Dalle météo : maillage sur TOUT le domaine (mer et pays voisins
+            // inclus) → aucune zone vide, comme météo-npdc.
             var weatherLayer = document.createElement('canvas');
             weatherLayer.width = width;
             weatherLayer.height = height;
             var weatherLayerCtx = weatherLayer.getContext('2d');
-            weatherLayerCtx.drawImage(currentWeatherImage, 0, 0, width, height);
-            if (franceMaskImage && franceMaskImage.complete && franceMaskImage.naturalWidth) {
-                weatherLayerCtx.save();
-                weatherLayerCtx.globalCompositeOperation = 'destination-in';
-                weatherLayerCtx.drawImage(franceMaskImage, 0, 0, width, height);
-                weatherLayerCtx.restore();
-            }
+            weatherLayerCtx.drawImage(currentWeatherImage, mrx, mry, mrw, mrh);
             fallbackContext.drawImage(weatherLayer, 0, 0);
-            fallbackContext.restore();
         }
 
         function loadVectorOverlay(path) {
@@ -2237,20 +2414,18 @@
             resizeCanvas(vectorCanvas, width, height, pixelRatio);
             vectorContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
             vectorContext.clearRect(0, 0, width, height);
-            var mapAspect = 2200.0 / 1640.0;
-            var viewAspect = width / (height || 1);
-            var uScale = viewAspect > mapAspect ? (height / 1640.0) : (width / 2200.0);
-            var horizontalScale = transform.scale * uScale;
-            var verticalScale = transform.scale * uScale;
-            var offsetX = width / 2 + transform.x - horizontalScale * 1100.0;
-            var offsetY = height / 2 + transform.y - verticalScale * 820.0;
+            // Projection UNIQUE (computeMapRect) : parfaitement alignée avec le
+            // raster WebGL/2D — plus aucun décalage possible entre les deux.
+            var mapRect = computeMapRect(width, height);
+            var horizontalScale = mapRect.w / 2200.0;
+            var verticalScale = mapRect.h / 1640.0;
             vectorContext.setTransform(
                 pixelRatio * horizontalScale,
                 0,
                 0,
                 pixelRatio * verticalScale,
-                pixelRatio * offsetX,
-                pixelRatio * offsetY
+                pixelRatio * mapRect.x,
+                pixelRatio * mapRect.y
             );
             vectorDefinition.paths.forEach(function (entry) {
                 // Comme météociel : les limites de département s'estompent en zoomant
@@ -2297,21 +2472,100 @@
             return (2 * Math.atan(Math.exp(value)) - Math.PI / 2) * 180 / Math.PI;
         }
 
+        // ────────────────────────────────────────────────────────────────────
+        // PROJECTION UNIQUE de la carte (raster 2200×1640) vers un viewport
+        // de taille donnée. Tous les calques (WebGL, fallback 2D, vecteurs,
+        // labels, probes, GIF, export) passent par cette fonction : ils sont
+        // donc TOUJOURS parfaitement alignés, quel que soit le ratio écran.
+        //
+        //   - Mode « vue France » (scale ≤ 1.15) : cadrage intelligent sur le
+        //     rectangle réellement couvert par le maillage (masque France).
+        //     Les zones non maillées (Italie, mer, coins du trapèze AROME en
+        //     Mercator) sont placées HORS du viewport : plus aucune grande
+        //     zone « vide de maillage » à l'écran.
+        //   - Mode zoomé (région/département) : le raster remplit le viewport
+        //     en cover (le surplus est découpé, jamais de bandes, la France
+        //     reste proportionnelle — jamais étirée), zoom/pan inclus.
+        //
+        // Retour : { x, y, w, h } en pixels CSS du viewport.
+        // `t` (optionnel) : transformation à utiliser (défaut : transform
+        // courant) — le GIF fige sa propre transformation pendant l'encodage.
+        // Le header flotte AU-DESSUS de la carte (translucide) : la carte
+        // remplit donc tout le viewport, sans zone réservée.
+        // ────────────────────────────────────────────────────────────────────
+        function computeMapRect(width, height, t) {
+            t = t || transform;
+            var mapAspect = 2200.0 / 1640.0;
+            var viewAspect = width / (height || 1);
+            var s = viewAspect > mapAspect ? (width / 2200.0) : (height / 1640.0);
+            var bbox = null;
+            if (t.scale <= 1.15) {
+                bbox = computeVisibleBBox();
+            }
+            if (bbox) {
+                // Cadrage France : le raster 2200×1640 remplit tout le viewport
+                // en COVER + CLAMP (jamais de bandes vides, jamais de zone sans
+                // maillage), centré au mieux sur le rectangle réellement couvert
+                // par le maillage (masque France). La France (Corse incluse)
+                // tient entière dans le cadre sur tous les ratios paysage, et
+                // les coins non maillés du trapèze AROME en Mercator sortent
+                // du viewport.
+                var cx = (bbox.x0 + bbox.x1) / 2;
+                var cy = (bbox.y0 + bbox.y1) / 2;
+                // Rect du cadrage France (comme vu au scale = 1) : le clamp
+                // garantit que le raster couvre TOUT le viewport.
+                var bboxRect = {
+                    x: Math.max(Math.min(width / 2 - cx * s, 0), width - 2200.0 * s),
+                    y: Math.max(Math.min(height / 2 - cy * s, 0), height - 1640.0 * s),
+                    w: 2200.0 * s,
+                    h: 1640.0 * s
+                };
+                if (t.scale <= 1.001) {
+                    return bboxRect;
+                }
+                // INTERPOLATION FLUIDE : entre scale 1 et 1.15, on fond
+                // progressivement le cadrage France dans le mode cover, pour
+                // que le premier zoom soit continu (pas de saut brutal).
+                var coverScale = s * t.scale;
+                var coverRect = {
+                    x: width / 2 + t.x - 1100.0 * coverScale,
+                    y: height / 2 + t.y - 820.0 * coverScale,
+                    w: 2200.0 * coverScale,
+                    h: 1640.0 * coverScale
+                };
+                var f = Math.max(0, Math.min(1, (t.scale - 1.001) / 0.149));
+                return {
+                    x: bboxRect.x + (coverRect.x - bboxRect.x) * f,
+                    y: bboxRect.y + (coverRect.y - bboxRect.y) * f,
+                    w: bboxRect.w + (coverRect.w - bboxRect.w) * f,
+                    h: bboxRect.h + (coverRect.h - bboxRect.h) * f
+                };
+            }
+            // Cover pur : le raster remplit tout le viewport, sans bandes.
+            var scale = s * t.scale;
+            return {
+                x: width / 2 + t.x - 1100.0 * scale,
+                y: height / 2 + t.y - 820.0 * scale,
+                w: 2200.0 * scale,
+                h: 1640.0 * scale
+            };
+        }
+
         function visiblePlaces(width, height, bounds, northY, mercatorSpan, density) {
             if (transform.scale < 1.35 || !placeBuckets.size) {
                 return places;
             }
-            var mapLeft = (0 - width / 2 - transform.x) / transform.scale + width / 2;
-            var mapRight = (width - width / 2 - transform.x) /
-                transform.scale + width / 2;
-            var mapTop = (0 - height / 2 - transform.y) / transform.scale + height / 2;
-            var mapBottom = (height - height / 2 - transform.y) /
-                transform.scale + height / 2;
+            // Projection UNIQUE (computeMapRect) : même fenêtre que le raster.
+            var mapRect = computeMapRect(width, height);
+            var mapLeft = (0 - mapRect.x) / mapRect.w;
+            var mapRight = (width - mapRect.x) / mapRect.w;
+            var mapTop = (0 - mapRect.y) / mapRect.h;
+            var mapBottom = (height - mapRect.y) / mapRect.h;
             var longitudeSpan = Number(bounds.east) - Number(bounds.west);
-            var west = Number(bounds.west) + mapLeft / width * longitudeSpan;
-            var east = Number(bounds.west) + mapRight / width * longitudeSpan;
-            var north = inverseMercator(northY - mapTop / height * mercatorSpan);
-            var south = inverseMercator(northY - mapBottom / height * mercatorSpan);
+            var west = Number(bounds.west) + mapLeft * longitudeSpan;
+            var east = Number(bounds.west) + mapRight * longitudeSpan;
+            var north = inverseMercator(northY - mapTop * mercatorSpan);
+            var south = inverseMercator(northY - mapBottom * mercatorSpan);
             var candidates = [];
             for (var latitude = Math.floor(south) - 1;
                     latitude <= Math.ceil(north) + 1; latitude += 1) {
@@ -2399,6 +2653,9 @@
             );
             var occupied = [];
             var drawn = 0;
+            // Projection UNIQUE (computeMapRect) : les villes sont
+            // exactement au même endroit que le raster et les vecteurs.
+            var labelRect = computeMapRect(width, height);
             labelsContext.font = '700 ' + density.size + 'px Arial, sans-serif';
             labelsContext.textAlign = 'center';
             labelsContext.textBaseline = 'middle';
@@ -2415,15 +2672,10 @@
                 if (Number(place[1]) < density.population) {
                     break;
                 }
-                var mapAspect = 2200.0 / 1640.0;
-                var viewAspect = width / (height || 1);
-                var uScale = viewAspect > mapAspect ? (height / 1640.0) : (width / 2200.0);
-                var mapW = 2200.0 * uScale;
-                var mapH = 1640.0 * uScale;
                 var u = (Number(place[3]) - Number(bounds.west)) / longitudeSpan;
                 var v = (northY - mercator(Number(place[2]))) / mercatorSpan;
-                var screenX = (u - 0.5) * (mapW * transform.scale) + width / 2 + transform.x;
-                var screenY = (v - 0.5) * (mapH * transform.scale) + height / 2 + transform.y;
+                var screenX = labelRect.x + u * labelRect.w;
+                var screenY = labelRect.y + v * labelRect.h;
                 if (screenX < -80 || screenX > width + 80 ||
                         screenY < -15 || screenY > height + 15) {
                     continue;
@@ -2504,8 +2756,8 @@
             var box = viewport.getBoundingClientRect();
             var px = (typeof clientX === 'number' ? clientX : box.left + box.width / 2) -
                 box.left - box.width / 2;
-            var py = (typeof clientY === 'number' ? clientY : box.top + box.height / 2) -
-                box.top - box.height / 2;
+            var py = (typeof clientY === 'number' ? clientY : box.top + mapCenterY(box.height)) -
+                box.top - mapCenterY(box.height);
             var worldX = (px - transform.x) / previousScale;
             var worldY = (py - transform.y) / previousScale;
             transform.x = px - worldX * nextScale;
@@ -2515,9 +2767,10 @@
         }
 
         function resetView() {
-            // Vue initiale : la carte est légèrement décalée vers le bas pour
-            // que le header (menus) ne cache pas le nord de la France.
-            transform = { scale: 1, x: 0, y: 84 };
+            // Vue initiale : cadrage automatique (computeMapRect) — la France
+            // remplit le viewport sans zones vides, avec le léger décalage
+            // qui compense le header flottant.
+            transform = { scale: 1, x: 0, y: 0 };
             var regSel = document.getElementById('select-region');
             if (regSel) regSel.value = 'france';
             applyTransform();
@@ -2579,9 +2832,12 @@
             var u = (longitude - west) / (east - west);
             var v = (northY - mercator(latitude)) / (northY - southY);
             var scale = clamp(Number(pendingFocus.scale) || 32, 1, maxScale);
+            var s = (width / height) > (2200.0 / 1640.0) ?
+                (width / 2200.0) : (height / 1640.0);
             transform.scale = scale;
-            transform.x = width * scale * (0.5 - u);
-            transform.y = height * scale * (0.5 - v);
+            // Projection UNIQUE : le point ciblé se place au centre du viewport.
+            transform.x = 2200.0 * s * scale * (0.5 - u);
+            transform.y = 1640.0 * s * scale * (0.5 - v);
             pendingFocus = null;
             applyTransform();
         }

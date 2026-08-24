@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -40,7 +40,7 @@
             --amfm-accent-hover: #38bdf8;
             --amfm-text: #f8fafc;
             --amfm-muted: #94a3b8;
-            --touch-target-min: 44px;
+            --touch-target-min: 56px;
         }
 
         * {
@@ -93,34 +93,55 @@
             pointer-events: none;
         }
 
-        /* Header Supérieur */
+        /* Header Supérieur : top bar (62 px) + command bar (86 px) */
         .amfm-header {
             position: absolute;
-            top: max(14px, env(safe-area-inset-top));
+            top: max(12px, env(safe-area-inset-top));
             left: max(14px, env(safe-area-inset-left));
             right: max(14px, env(safe-area-inset-right));
             z-index: 100;
             display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 10px;
             pointer-events: none;
-            gap: 12px;
         }
 
-        .amfm-card {
+        /* Barre d'identité : logo + modèle + échéance en direct (62 px) */
+        .amfm-topbar {
             pointer-events: auto;
-            background: var(--amfm-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(8, 13, 24, 0.62);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--amfm-border);
-            border-radius: 12px;
-            padding: 6px 14px;
+            border-radius: 14px;
+            padding: 0 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
-            gap: 12px;
-            min-height: var(--touch-target-min);
+            justify-content: space-between;
+            gap: 16px;
+            min-height: 62px;
+        }
+
+        /* Barre de commandes principale (86 px) */
+        .amfm-commandbar {
+            pointer-events: auto;
+            background: rgba(8, 13, 24, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--amfm-border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            min-height: 86px;
+        }
+        .amfm-commandbar select,
+        .amfm-commandbar .amfm-btn {
+            min-height: 56px;
         }
 
         .amfm-title {
@@ -128,7 +149,7 @@
             font-weight: 800;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             color: #fff;
             white-space: nowrap;
         }
@@ -138,8 +159,9 @@
             font-weight: 700;
             color: var(--amfm-accent);
             font-variant-numeric: tabular-nums;
-            margin-top: 2px;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .amfm-headline .amfm-headline-layer {
             color: var(--amfm-muted);
@@ -147,35 +169,34 @@
         }
 
         .amfm-badge {
-            background: #00d2ff;
+            background: linear-gradient(135deg, #00d2ff, #0284c7);
             color: #070b14 !important;
             font-size: 11px;
             font-weight: 900;
-            padding: 2px 8px;
-            border-radius: 6px;
+            padding: 3px 10px;
+            border-radius: 8px;
             text-transform: uppercase;
             letter-spacing: 0.4px;
-        }
-
-        .amfm-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: nowrap;
         }
 
         select {
             background: rgba(8, 12, 20, 0.95);
             border: 1px solid var(--amfm-border);
             color: #fff;
-            font-size: 13px;
+            font-size: 13.5px;
             font-weight: 700;
-            padding: 8px 12px;
-            border-radius: 8px;
-            min-height: var(--touch-target-min);
+            padding: 0 14px;
+            border-radius: 14px;
+            min-height: 56px;
             outline: none;
             cursor: pointer;
             transition: all 0.2s ease;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2338bdf8' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 38px;
         }
         select:hover, select:focus-visible {
             border-color: var(--amfm-border-focus);
@@ -187,18 +208,19 @@
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid var(--amfm-border);
             color: #fff;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 13px;
+            padding: 0 16px;
+            border-radius: 14px;
+            font-size: 13.5px;
             font-weight: 700;
-            min-height: var(--touch-target-min);
+            min-height: 56px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             transition: all 0.2s ease;
             white-space: nowrap;
+            text-decoration: none;
         }
         .amfm-btn:hover, .amfm-btn:focus-visible {
             background: rgba(0, 210, 255, 0.25);
@@ -207,12 +229,23 @@
             outline-offset: 1px;
         }
         .amfm-btn:active { transform: scale(0.97); }
+        .amfm-btn-icon {
+            width: 56px;
+            padding: 0;
+        }
+        .amfm-btn.is-active {
+            background: rgba(0, 210, 255, 0.22);
+            border-color: var(--amfm-accent);
+            color: var(--amfm-accent-hover);
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.35) inset;
+        }
 
         .btn-download {
             background: linear-gradient(135deg, #0284c7, #0369a1) !important;
             color: #fff !important;
             font-weight: 800 !important;
             box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+            border: 1px solid rgba(0, 210, 255, 0.35);
         }
         .btn-download:hover {
             box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
@@ -223,42 +256,51 @@
         .amfm-legend {
             position: absolute;
             left: max(16px, env(safe-area-inset-left));
-            bottom: 86px;
+            /* Juste au-dessus de la timeline (70px + marge 14px) */
+            bottom: calc(max(14px, env(safe-area-inset-bottom)) + 82px);
             z-index: 100;
             background: var(--amfm-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
             border: 1px solid var(--amfm-border);
-            border-radius: 10px;
-            padding: 8px 14px;
+            border-radius: 14px;
+            padding: 12px 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            width: 240px;
+            width: 250px;
             pointer-events: none;
         }
         .amfm-legend-header {
             display: flex;
             justify-content: space-between;
-            font-size: 11px;
+            align-items: baseline;
+            font-size: 12px;
             font-weight: 800;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             color: #fff;
+            letter-spacing: 0.2px;
+        }
+        .amfm-legend-header [data-amfm-legend-unit] {
+            color: var(--amfm-accent);
+            font-size: 13px;
+            font-weight: 900;
         }
         .amfm-legend-bar {
-            height: 10px;
-            border-radius: 5px;
+            height: 12px;
+            border-radius: 6px;
             background: linear-gradient(to right, #482173, #3478c5, #55b7dd, #70cf66, #f2d43d, #ea652b, #d93435, #5b1037);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
         }
         .amfm-legend-ticks {
             display: flex;
             justify-content: space-between;
-            font-size: 10px;
+            font-size: 10.5px;
             font-weight: 700;
             color: var(--amfm-muted);
-            margin-top: 4px;
+            margin-top: 6px;
             font-variant-numeric: tabular-nums;
         }
 
-        /* Timeline Inférieure */
+        /* Timeline Inférieure (68-72 px) */
         .amfm-timeline {
             position: absolute;
             bottom: max(14px, env(safe-area-inset-bottom));
@@ -275,7 +317,7 @@
             display: flex;
             align-items: center;
             gap: 18px;
-            min-height: var(--touch-target-min);
+            min-height: 70px;
         }
 
         .amfm-player {
@@ -287,9 +329,9 @@
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid var(--amfm-border);
             color: #fff;
-            width: var(--touch-target-min);
-            height: var(--touch-target-min);
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
             cursor: pointer;
             font-size: 14px;
             display: inline-flex;
@@ -426,34 +468,36 @@
         }
         .amfm-probe-label { font-size: 11px; color: var(--amfm-muted); }
 
-        /* 📱 RESPONSIVE MOBILE & TABLETTE (< 900px) */
-        @media (max-width: 900px) {
-            .amfm-header {
-                flex-direction: column;
-                align-items: stretch;
+        /* 📱 RESPONSIVE MOBILE & TABLETTE (< 1100 px) */
+        @media (max-width: 1100px) {
+            .amfm-commandbar {
                 gap: 8px;
+                padding: 10px 12px;
+                min-height: 0;
             }
-            .amfm-card {
-                justify-content: space-between;
-                padding: 6px 10px;
+            .amfm-commandbar select,
+            .amfm-commandbar .amfm-btn {
+                min-height: 52px;
             }
-            .amfm-controls {
-                flex-wrap: wrap;
-                width: 100%;
-                gap: 6px;
-            }
-            .amfm-controls select {
+            .amfm-commandbar select {
                 flex: 1 1 calc(50% - 4px);
                 min-width: 130px;
             }
-            .amfm-controls .amfm-btn {
-                flex: 1 1 calc(50% - 4px);
+            .amfm-commandbar .amfm-btn {
+                flex: 0 1 auto;
+            }
+            .amfm-topbar {
+                min-height: 56px;
+                padding: 0 14px;
+            }
+            .amfm-headline {
+                max-width: 45vw;
             }
             .amfm-legend {
-                bottom: calc(max(14px, env(safe-area-inset-bottom)) + 76px);
+                bottom: calc(max(14px, env(safe-area-inset-bottom)) + 80px);
                 left: max(14px, env(safe-area-inset-left));
-                right: max(14px, env(safe-area-inset-right));
                 width: auto;
+                min-width: 200px;
             }
             .amfm-timeline {
                 gap: 12px;
@@ -461,9 +505,40 @@
             }
         }
 
+        /* 📱 Mobile (< 700 px) : commandes empilées en 2 colonnes */
+        @media (max-width: 700px) {
+            .amfm-header {
+                top: max(8px, env(safe-area-inset-top));
+                left: max(8px, env(safe-area-inset-left));
+                right: max(8px, env(safe-area-inset-right));
+                gap: 8px;
+            }
+            .amfm-topbar {
+                min-height: 52px;
+                padding: 0 12px;
+            }
+            .amfm-title { font-size: 13px; gap: 8px; }
+            .amfm-title img { height: 20px !important; }
+            .amfm-headline { display: none; }
+            .amfm-commandbar select,
+            .amfm-commandbar .amfm-btn {
+                min-height: 48px;
+                font-size: 12.5px;
+                border-radius: 12px;
+            }
+            .amfm-commandbar .amfm-btn-icon {
+                width: 48px;
+            }
+            .amfm-timeline {
+                padding: 6px 12px;
+                gap: 10px;
+                min-height: 64px;
+            }
+        }
+
         /* 📱 Mode Paysage Mobile */
         @media (max-height: 500px) and (orientation: landscape) {
-            .amfm-card:first-child { display: none; }
+            .amfm-topbar { display: none; }
             .amfm-legend { display: none; }
             .amfm-timeline {
                 padding: 6px 14px;
@@ -481,17 +556,23 @@
          data-timezone="Europe/Paris"
          data-animation="1">
         
-        <!-- Header Supérieur -->
+        <!-- Header Supérieur : top bar (62 px) + command bar (86 px) -->
         <header class="amfm-header" role="banner">
-            <div class="amfm-card">
+            <!-- Barre d'identité : logo, modèle, échéance en direct -->
+            <div class="amfm-topbar">
                 <div class="amfm-title">
-                    <img src="logo.png" alt="Météo-Climat Pro" style="height:24px;width:auto;" aria-hidden="false">
+                    <img src="logo.png" alt="Météo-Climat Pro" style="height:26px;width:auto;" aria-hidden="false">
                     <span>MODÈLE AROME HD</span>
                     <span class="amfm-badge">1,3 km</span>
                 </div>
+                <div class="amfm-headline" data-amfm-headline aria-live="polite">
+                    <span class="amfm-headline-layer">Température à 2 m (°C) — </span>Chargement…
+                </div>
             </div>
 
-            <div class="amfm-card amfm-controls" role="region" aria-label="Contrôles de la carte">
+            <!-- Barre de commandes principale : modèle → commune → paramètre →
+                 zone → exports PNG/JPEG/GIF → réglages → villes -->
+            <div class="amfm-commandbar" role="region" aria-label="Contrôles de la carte">
                 <!-- Sélecteur de Modèle -->
                 <select id="select-model" aria-label="Sélection du modèle de prévision">
                     <option value="arome" selected>🇫🇷 AROME HD (1,3 km)</option>
@@ -542,7 +623,7 @@
                     </optgroup>
                 </select>
 
-                <!-- Sélecteur de Région -->
+                <!-- Sélecteur de Zone -->
                 <select id="select-region" data-amfm-region-select aria-label="Zoomer sur une région de France">
                     <option value="france">🇫🇷 France Entière</option>
                     <option value="hdf">🏘️ Hauts-de-France</option>
@@ -572,14 +653,14 @@
                     <i class="fa-solid fa-film" aria-hidden="true"></i> GIF
                 </button>
 
-                <!-- Recadrer -->
-                <button type="button" class="amfm-btn" data-amfm-reset aria-label="Recentrer la carte météo">
+                <!-- Réglages / Recentrer -->
+                <button type="button" class="amfm-btn amfm-btn-icon" data-amfm-reset aria-label="Recentrer la carte météo" title="Recentrer">
                     <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
                 </button>
 
                 <!-- Afficher / masquer les villes -->
-                <button type="button" class="amfm-btn is-active" data-amfm-toggle-cities aria-pressed="true" aria-label="Afficher ou masquer les noms de villes sur la carte">
-                    <i class="fa-solid fa-city" aria-hidden="true"></i> Villes
+                <button type="button" class="amfm-btn amfm-btn-icon is-active" data-amfm-toggle-cities aria-pressed="true" aria-label="Afficher ou masquer les noms de villes sur la carte" title="Villes">
+                    <i class="fa-solid fa-city" aria-hidden="true"></i>
                 </button>
             </div>
         </header>
@@ -637,7 +718,7 @@
     <script src="js/palettes.js?v=1.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="js/regions.js?v=1.0.0"></script>
-    <script src="js/arome-map.js?v=5.3.0"></script>
+    <script src="js/arome-map.js?v=5.4.0"></script>
 </body>
 </html>
 
