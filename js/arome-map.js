@@ -121,6 +121,7 @@
 
         var manifest = null;
         var currentLayer = requestedLayer;
+        var currentModel = app.dataset.model || 'arome';
         var currentStep = 0;
         var loadToken = 0;
         var timer = null;
@@ -1288,6 +1289,7 @@
                 slider.max = String(steps.length - 1);
                 slider.value = String(currentStep);
             }
+            updateUrl();
             if (previousButton) previousButton.disabled = currentStep === 0;
             if (nextButton) nextButton.disabled = currentStep === steps.length - 1;
 
@@ -1382,6 +1384,7 @@
                 };
                 var target = coords[val] || coords.france;
                 focusOnPoint(target.u, target.v, target.scale);
+                updateUrl();
             });
         }
 
@@ -1431,7 +1434,9 @@
                     }
                     if (typeof buildLayerMenu === 'function') buildLayerMenu();
                     buildLegend();
+                    currentModel = modelKey;
                     renderStep(0);
+                    updateUrl();
                 })
                 .catch(function () {
                     // Revert — ne jamais afficher les images d'un autre modèle
@@ -1471,6 +1476,43 @@
             var steps = availableSteps();
             currentStep = clamp(currentStep, 0, Math.max(0, steps.length - 1));
             renderStep(currentStep);
+        }
+
+        // ── État dans l'URL (style meteo-npdc.fr) ─────────────────────────────
+        function updateUrl() {
+            if (!window.history || !window.history.replaceState) {
+                return;
+            }
+            var params = new URLSearchParams();
+            params.set('model', currentModel);
+            params.set('parametre', currentLayer);
+            var regSel = document.getElementById('select-region');
+            if (regSel) params.set('region', regSel.value);
+            params.set('heure', String(currentStep));
+            window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+        }
+
+        function applyUrlParams() {
+            var params = new URLSearchParams(window.location.search);
+            var p = params.get('parametre') || params.get('layer');
+            if (p && manifest && manifest.layers[p]) {
+                setLayer(p);
+            }
+            var reg = params.get('region');
+            if (reg) {
+                var regSel = document.getElementById('select-region');
+                if (regSel && regSel.querySelector('option[value="' + reg + '"]')) {
+                    regSel.value = reg;
+                    regSel.dispatchEvent(new Event('change'));
+                }
+            }
+            var heure = parseInt(params.get('heure'), 10);
+            if (!isNaN(heure)) {
+                var steps = availableSteps();
+                if (heure >= 0 && heure < steps.length) {
+                    renderStep(heure);
+                }
+            }
         }
 
         function stopAnimation() {
@@ -2397,6 +2439,7 @@
                 }
                 applyTransform();
                 renderStep(currentStep);
+                applyUrlParams();
                 if (pendingFocus && typeof focusLocation === 'function') {
                     focusLocation(pendingFocus);
                 }
