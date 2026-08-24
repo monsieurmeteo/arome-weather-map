@@ -771,28 +771,17 @@
             // natif 2200×1640 — jamais de bandes vides, jamais de déformation.
             var hScale, vScale, offX, offY;
             if (transform.scale <= 1.15) {
-                // Vue France entière : cover du rectangle couvert par le
-                // maillage (masque France) + marge, dans le canvas natif.
-                // La France remplit le cadre, pays voisins en contexte —
-                // aucune bande, aucun coin vide.
-                var exportBBox = computeVisibleBBox();
-                if (exportBBox) {
-                    var pad = 0.045;
-                    var ebw = (exportBBox.x1 - exportBBox.x0) * (1 + 2 * pad);
-                    var ebh = (exportBBox.y1 - exportBBox.y0) * (1 + 2 * pad);
-                    var mapAspect = 2200.0 / 1640.0;
-                    if (ebw / ebh > mapAspect) { ebh = ebw / mapAspect; }
-                    else { ebw = ebh * mapAspect; }
-                    hScale = 2200.0 / ebw;
-                    vScale = hScale;
-                    offX = 1100 - ((exportBBox.x0 + exportBBox.x1) / 2) * hScale;
-                    offY = 820 - ((exportBBox.y0 + exportBBox.y1) / 2) * vScale;
-                } else {
-                    hScale = 1;
-                    vScale = 1;
-                    offX = 0;
-                    offY = 0;
-                }
+                // Vue France métropolitaine + Corse bord à bord (sans coin gris sud-est)
+                var fx0 = 240;  // Ouest Bretagne / Atlantique
+                var fx1 = 1860; // Est Alsace / Corse
+                var fy0 = 130;  // Nord Dunkerque / Manche
+                var fy1 = 1480; // Sud Corse / Méditerranée
+                var fw = fx1 - fx0;
+                var fh = fy1 - fy0;
+                hScale = 2200.0 / fw;
+                vScale = 1640.0 / fh;
+                offX = -fx0 * hScale;
+                offY = -fy0 * vScale;
             } else {
                 // Vue zoomée (région/département) : reproduit la portion du
                 // raster visible à l'écran, en cover sur le canvas natif.
@@ -1371,23 +1360,18 @@
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
 
             if (transform.scale <= 1.15) {
-                var exportBBox = computeVisibleBBox();
-                if (exportBBox) {
-                    var pad = 0.035;
-                    var ebw = (exportBBox.x1 - exportBBox.x0) * (1 + 2 * pad);
-                    var ebh = (exportBBox.y1 - exportBBox.y0) * (1 + 2 * pad);
-                    gh = Math.round(gw * ebh / ebw);
-                    hScale = gw / ebw;
-                    vScale = gh / ebh;
-                    offX = gw / 2 - ((exportBBox.x0 + exportBBox.x1) / 2) * hScale;
-                    offY = gh / 2 - ((exportBBox.y0 + exportBBox.y1) / 2) * vScale;
-                } else {
-                    gh = Math.round(gw * 1640.0 / 2200.0);
-                    hScale = gw / 2200.0;
-                    vScale = gh / 1640.0;
-                    offX = 0;
-                    offY = 0;
-                }
+                // Cadrage France métropolitaine + Corse bord à bord (sans coin gris sud-est)
+                var fx0 = 240;  // Ouest Bretagne / Atlantique
+                var fx1 = 1860; // Est Alsace / Corse
+                var fy0 = 130;  // Nord Dunkerque / Manche
+                var fy1 = 1480; // Sud Corse / Méditerranée
+                var fw = fx1 - fx0;
+                var fh = fy1 - fy0;
+                gh = Math.round(gw * fh / fw);
+                hScale = gw / fw;
+                vScale = gh / fh;
+                offX = -fx0 * hScale;
+                offY = -fy0 * vScale;
             } else {
                 // Vue zoomée / région : reproduit fidèlement la portion visible à l'écran
                 var viewRect = computeMapRect(vw, vh);
