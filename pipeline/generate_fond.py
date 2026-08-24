@@ -212,25 +212,74 @@ def generate_svg(out_path=None):
         "Slovenia", "San Marino", "Vatican", "Malta", "Algeria",
         "Morocco", "Tunisia", "Libya",
     }
-    # 1. Pays d'Europe voisins (sans la France)
-    pays_d = build_paths(countries, keep=WESTERN_EUROPE)
-    # 2. Départements et côtes françaises haute définition (officiel unique)
-    depts_d = build_paths(depts)
+    import shapely.geometry
+    from shapely.ops import unary_union
+
+    # Construire l'union exacte de la France métropolitaine depuis les départements
+    france_shapes = [shapely.geometry.shape(f["geometry"]) for f in depts.get("features", [])]
+    france_union = unary_union(france_shapes)
+    # Buffer de 0.015 degré (~1.5 km) pour absorber toutes les imprécisions de tracé
+    france_mask = france_union.buffer(0.015)
+
+    def build_paths_countries(collection, keep=None):
+        out = []
+        for feat in collection.get("features", []):
+            props = feat.get("properties", {})
+            name = props.get("NAME") or props.get("ADMIN") or props.get("name") or ""
+            if keep and name not in keep:
+                continue
+            geom = feat.get("geometry")
+            if not geom:
+                continue
+            shape = shapely.geometry.shape(geom)
+            # Soustraire la France pour ne pas redessiner les frontières communes
+            cleaned = shape.difference(france_mask)
+            if cleaned.is_empty:
+                continue
+            # Reconvertir en anneaux
+            if cleaned.geom_type == "Polygon":
+                rings = [list(cleaned.exterior.coords)] + [list(i.coords) for i in cleaned.interiors]
+            elif cleaned.geom_type == "MultiPolygon":
+                rings = []
+                for p in cleaned.geoms:
+                    rings.append(list(p.exterior.coords))
+                    rings.extend([list(i.coords) for i in p.interiors])
+            elif cleaned.geom_type in ("GeometryCollection", "MultiLineString", "LineString"):
+                continue
+            else:
+                continue
+            out.append(_polygon_path(rings))
+        return " ".join(p for p in out if p)
+
+    def build_paths_depts(collection):
+        out = []
+        for feat in collection.get("features", []):
+            geom = feat.get("geometry")
+            if not geom:
+                continue
+            rings = list(_iter_rings(geom))
+            out.append(_polygon_path(rings))
+        return " ".join(p for p in out if p)
+
+    # 1. Pays d'Europe voisins découpés (les frontières communes avec la France sont effacées)
+    pays_d = build_paths_countries(countries, keep=WESTERN_EUROPE)
+    # 2. Départements français haute définition (tracé unique pour toute la France et ses frontières)
+    depts_d = build_paths_depts(depts)
 
     svg = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<svg xmlns="http://www.w3.org/2000/svg" '
         'viewBox="0 0 %d %d" width="%d" height="%d">\n'
-        '<path d="%s" fill="none" stroke="#1a1f26" stroke-width="2.0" '
+        '<path d="%s" fill="none" stroke="#1a1f26" stroke-width="1.8" '
         'stroke-linejoin="round" stroke-linecap="round"/>\n'
-        '<path d="%s" fill="none" stroke="#222831" stroke-width="1.0" '
+        '<path d="%s" fill="none" stroke="#1a1f26" stroke-width="1.2" '
         'stroke-linejoin="round" stroke-linecap="round"/>\n'
         '</svg>\n' % (WIDTH, HEIGHT, WIDTH, HEIGHT, pays_d, depts_d)
     )
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(svg)
-    print("SVG frontières régénéré (sans doublon) : %s (%d octets)" % (out_path, len(svg)))
+    print("SVG frontières régénéré (frontières communes uniques) : %s (%d octets)" % (out_path, len(svg)))
     return out_path
 
 
