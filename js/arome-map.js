@@ -1017,6 +1017,7 @@
                         }
                     }
                 } catch (e) {}
+            }
             // Villes sur la carte
             if (manifest && manifest.bounds && places.length) {
                 try {
