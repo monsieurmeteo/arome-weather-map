@@ -961,16 +961,16 @@
                     var mercatorSpan = northY - southY;
                     if (longitudeSpan && mercatorSpan) {
                         var exportScale = hScale;   // zoom courant
-                        var popMin = exportScale < 1.35 ? 90000 :
-                            (exportScale < 2.25 ? 35000 :
-                            (exportScale < 3.75 ? 12000 :
-                            (exportScale < 6 ? 3000 :
-                            (exportScale < 8 ? 700 : 120))));
-                        var maxLabels = exportScale < 1.35 ? 40 :
-                            (exportScale < 2.25 ? 60 :
-                            (exportScale < 3.75 ? 90 :
-                            (exportScale < 6 ? 130 :
-                            (exportScale < 8 ? 190 : 250))));
+                        var popMin = exportScale < 1.35 ? 200000 :
+                            (exportScale < 2.25 ? 80000 :
+                            (exportScale < 3.75 ? 30000 :
+                            (exportScale < 6 ? 8000 :
+                            (exportScale < 8 ? 2000 : 300))));
+                        var maxLabels = exportScale < 1.35 ? 20 :
+                            (exportScale < 2.25 ? 30 :
+                            (exportScale < 3.75 ? 45 :
+                            (exportScale < 6 ? 70 :
+                            (exportScale < 8 ? 100 : 140))));
                         context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                         context.textAlign = 'center';
                         context.textBaseline = 'middle';
@@ -1738,10 +1738,10 @@
                 if (regionData && Array.isArray(regionData.center) &&
                         regionData.center.length >= 2) {
                     // Zoom précis sur le centre de la région (coordonnées réelles).
-                    // scale = 2^(zoom−6)×1.6 : France (6) → 1×, région (7-8) → 3-6×,
-                    // département/IDF (9) → 13×, commune (12) → 38× (max 30).
+                    // scale = 2^(zoom−6)×1.15 : France (6) → 1×, région (7-8) → 2-4×,
+                    // département/IDF (9) → 9×, commune (12) → 26× (max 28).
                     var regionScale = val === 'france' ? 1 :
-                        Math.min(30, Math.max(2.2, Math.pow(2, (regionData.zoom || 7) - 6) * 1.6));
+                        Math.min(28, Math.max(1.8, Math.pow(2, (regionData.zoom || 7) - 6) * 1.15));
                     focusLocation({
                         latitude: Number(regionData.center[0]),
                         longitude: Number(regionData.center[1]),
@@ -2324,27 +2324,27 @@
 
         function labelDensity() {
             if (transform.scale < 1.35) {
-                return { population: 90000, maximum: 40, size: 11 };
+                return { population: 200000, maximum: 20, size: 12 };
             }
             if (transform.scale < 2.25) {
-                return { population: 35000, maximum: 60, size: 11 };
+                return { population: 80000, maximum: 30, size: 12 };
             }
             if (transform.scale < 3.75) {
-                return { population: 12000, maximum: 90, size: 11 };
+                return { population: 30000, maximum: 45, size: 12 };
             }
             if (transform.scale < 6) {
-                return { population: 3000, maximum: 130, size: 11 };
+                return { population: 8000, maximum: 70, size: 12 };
             }
             if (transform.scale < 8) {
-                return { population: 700, maximum: 190, size: 12 };
+                return { population: 2000, maximum: 100, size: 12 };
             }
             if (transform.scale < 16) {
-                return { population: 120, maximum: 250, size: 12 };
+                return { population: 300, maximum: 140, size: 13 };
             }
             if (transform.scale < 32) {
-                return { population: 20, maximum: 220, size: 12 };
+                return { population: 60, maximum: 130, size: 13 };
             }
-            return { population: 1, maximum: 190, size: 12 };
+            return { population: 5, maximum: 110, size: 13 };
         }
 
         function overlaps(rectangle, occupied) {
