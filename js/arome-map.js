@@ -2503,8 +2503,11 @@
                 ' vec3 frame=vec3(0.043,0.055,0.086);\n' +
                 // Projection UNIQUE (identique aux vecteurs/probes/export) :
                 // le raster 2200×1640 occupe le rectangle uRect (px écran).
-                ' vec2 uv=(vUv*uViewport-uRect.xy)/uRect.zw;\n' +
                 ' if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){\n' +
+                '  gl_FragColor=vec4(frame,1.0);return;\n' +
+                ' }\n' +
+                // Masquage net du coin hors-domaine AROME (sud-est Adriatique / Balkans)
+                ' if(uv.x>0.95 && uv.y>0.70 && ((uv.x-0.95)*5.0 + (uv.y-0.70) > 0.14)){\n' +
                 '  gl_FragColor=vec4(frame,1.0);return;\n' +
                 ' }\n' +
                 // Fond : carte des pays (fond.webp) si dispo, sinon gris neutre
@@ -2518,9 +2521,6 @@
                 '  gl_FragColor=vec4(base,1.0);return;\n' +
                 ' }\n' +
                 ' vec4 weather=texture2D(uWeather,uv);\n' +
-                // Le maillage couvre TOUT le domaine AROME (mer et pays
-                // voisins inclus, comme météo-npdc) : plus aucune zone
-                // « vide de maillage » — l'image est entièrement remplie.
                 ' float alpha=weather.a;\n' +
                 ' gl_FragColor=vec4(mix(base,weather.rgb,alpha),1.0);\n' +
                 '}'
