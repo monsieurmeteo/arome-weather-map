@@ -1039,17 +1039,17 @@
                     var mercatorSpan = northY - southY;
                     if (longitudeSpan && mercatorSpan) {
                         var exportScale = hScale;
-                        // Alignement exact sur la densité du site (vue France = 200k pop, régions = 70k -> 25k)
-                        var popMin = exportScale < 1.35 ? 180000 : (exportScale < 2.25 ? 70000 : (exportScale < 3.5 ? 25000 : 8000));
-                        var maxLabels = exportScale < 1.35 ? 20 : (exportScale < 2.25 ? 35 : 60);
-                        var fontSize = exportScale < 1.35 ? 20 : 22;
+                        // Alignement exact sur la densité du site (vue France = métropoles régionales clés ~95k hab, max 32)
+                        var popMin = exportScale < 1.35 ? 95000 : (exportScale < 2.25 ? 45000 : (exportScale < 3.5 ? 15000 : 5000));
+                        var maxLabels = exportScale < 1.35 ? 32 : (exportScale < 2.25 ? 50 : 80);
+                        var fontSize = exportScale < 1.35 ? 22 : 24;
                         context.font = '700 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                         context.textAlign = 'center';
                         context.textBaseline = 'middle';
                         context.lineJoin = 'round';
                         context.strokeStyle = 'rgba(8, 19, 28, 0.94)';
                         context.fillStyle = '#ffffff';
-                        context.lineWidth = 3.8;
+                        context.lineWidth = 4.2;
 
                         var occupied = [];
                         // Zones protégées (titre en haut à gauche, logo en haut à droite, légende en bas)
@@ -2520,16 +2520,16 @@
 
         function labelDensity() {
             if (transform.scale < 1.35) {
-                return { population: 200000, maximum: 20, size: 12 };
+                return { population: 95000, maximum: 32, size: 12 };
             }
             if (transform.scale < 2.25) {
-                return { population: 80000, maximum: 30, size: 12 };
+                return { population: 45000, maximum: 45, size: 12 };
             }
             if (transform.scale < 3.75) {
-                return { population: 30000, maximum: 45, size: 12 };
+                return { population: 15000, maximum: 60, size: 12 };
             }
             if (transform.scale < 6) {
-                return { population: 8000, maximum: 70, size: 12 };
+                return { population: 5000, maximum: 80, size: 12 };
             }
             if (transform.scale < 8) {
                 return { population: 2000, maximum: 100, size: 12 };
