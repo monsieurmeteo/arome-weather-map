@@ -862,24 +862,51 @@
             }
             context.restore(); // Fin clip carte
 
-            // Logo Météo-Climat Pro (en haut à droite)
-            if (logoImage && logoImage.complete && logoImage.naturalWidth) {
-                var logoW = 240;
-                var logoH = Math.round(logoW * logoImage.naturalHeight / logoImage.naturalWidth);
-                var lx = output.width - 24 - logoW;
-                var ly = 24;
-                context.save();
-                context.fillStyle = 'rgba(7, 11, 20, 0.72)';
-                context.beginPath();
-                if (typeof context.roundRect === 'function') {
-                    context.roundRect(lx - 12, ly - 8, logoW + 24, logoH + 16, 12);
-                } else {
-                    context.rect(lx - 12, ly - 8, logoW + 24, logoH + 16);
-                }
-                context.fill();
-                context.drawImage(logoImage, lx, ly, logoW, logoH);
-                context.restore();
+            // Logo Météo-Climat Pro officiel (en haut à droite, agrandi et parfaitement aligné)
+            var margin = 28;
+            var bannerY = 28;
+            var bannerH = 140;
+
+            var logoBoxW = 400;
+            var logoBoxH = bannerH;
+            var logoBoxX = output.width - margin - logoBoxW;
+            var logoBoxY = bannerY;
+
+            context.save();
+            context.fillStyle = 'rgba(7, 11, 20, 0.92)';
+            context.beginPath();
+            if (typeof context.roundRect === 'function') {
+                context.roundRect(logoBoxX, logoBoxY, logoBoxW, logoBoxH, 16);
+            } else {
+                context.rect(logoBoxX, logoBoxY, logoBoxW, logoBoxH);
             }
+            context.fill();
+            context.strokeStyle = 'rgba(0, 210, 255, 0.8)';
+            context.lineWidth = 3;
+            context.stroke();
+
+            if (logoImage && logoImage.complete && logoImage.naturalWidth) {
+                var logoTargetW = 350;
+                var logoTargetH = Math.round(logoTargetW * logoImage.naturalHeight / logoImage.naturalWidth);
+                if (logoTargetH > logoBoxH - 24) {
+                    logoTargetH = logoBoxH - 24;
+                    logoTargetW = Math.round(logoTargetH * logoImage.naturalWidth / logoImage.naturalHeight);
+                }
+                var lx = logoBoxX + (logoBoxW - logoTargetW) / 2;
+                var ly = logoBoxY + (logoBoxH - logoTargetH) / 2;
+                context.drawImage(logoImage, lx, ly, logoTargetW, logoTargetH);
+            } else {
+                // Fallback typographique HD si l'image est en cours de chargement
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.font = '800 32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                context.fillStyle = '#ffffff';
+                context.fillText('MÉTÉO-CLIMAT', logoBoxX + logoBoxW / 2, logoBoxY + 48);
+                context.font = '900 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                context.fillStyle = '#ffcc00';
+                context.fillText('PRO', logoBoxX + logoBoxW / 2, logoBoxY + 92);
+            }
+            context.restore();
 
             // Cartouche d'antenne (en haut à gauche)
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
