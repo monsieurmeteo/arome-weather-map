@@ -112,7 +112,7 @@
         var toolHint = app.querySelector('[data-amfm-tool-hint]');
         var advancedTools = app.querySelector('[data-amfm-advanced-tools]');
         var captureButton = app.querySelector('[data-amfm-capture]');
-        var captureLandscapeButton = app.querySelector('[data-amfm-capture-landscape]');
+        var captureScreenButton = app.querySelector('[data-amfm-capture-screen]') || app.querySelector('[data-amfm-capture-landscape]');
         var captureJpegButton = app.querySelector('[data-amfm-capture-jpeg]');
         var captureGifButton = app.querySelector('[data-amfm-capture-gif]');
         var toggleCitiesButton = app.querySelector('[data-amfm-toggle-cities]');
@@ -803,7 +803,7 @@
             }
         }
 
-        function composeCaptureCanvas(customStep, customImage, isLandscape) {
+        function composeCaptureCanvas(customStep, customImage, isScreen) {
             var activeImg = customImage || currentWeatherImage;
             if (!activeImg) {
                 return null;
@@ -814,28 +814,22 @@
                 return null;
             }
 
-            var outW = isLandscape ? 2560 : 2200;
-            var outH = isLandscape ? 1440 : 1640;
-            var hScale, vScale, offX, offY;
+            var outW, outH, hScale, vScale, offX, offY;
 
-            if (isLandscape) {
-                // Vue Paysage 16:9 Broadcast (cadrage exact de la vue écran)
-                var viewRect = computeMapRect(vw, vh);
-                var u0 = (0 - viewRect.x) / viewRect.w;
-                var u1 = (vw - viewRect.x) / viewRect.w;
-                var v0 = (0 - viewRect.y) / viewRect.h;
-                var v1 = (vh - viewRect.y) / viewRect.h;
-                var vueW = Math.max(0.01, u1 - u0);
-                var vueH = Math.max(0.01, v1 - v0);
-                var k = Math.max(outW / (vueW * 2200.0), outH / (vueH * 1640.0));
-                hScale = k;
-                vScale = k;
-                var uc = (u0 + u1) / 2;
-                var vc = (v0 + v1) / 2;
-                offX = outW / 2 - uc * 2200.0 * k;
-                offY = outH / 2 - vc * 1640.0 * k;
+            if (isScreen) {
+                // Capture d'écran HD EXACTE : reproduction au pixel près de la vue affichée à l'écran (x2 pour netteté Retina/4K)
+                var ratio = 2.0;
+                outW = Math.round(vw * ratio);
+                outH = Math.round(vh * ratio);
+                var mapRect = computeMapRect(vw, vh);
+                hScale = (mapRect.w / 2200.0) * ratio;
+                vScale = (mapRect.h / 1640.0) * ratio;
+                offX = mapRect.x * ratio;
+                offY = mapRect.y * ratio;
             } else if (transform.scale <= 1.15) {
                 // Vue France entière : boîte Météo-NPDC (West: -5.8°, East: +10.2°, North: 51.6°, South: 41.1°)
+                outW = 2200;
+                outH = 1640;
                 var fx0 = 270;  // Ouest Bretagne
                 var fx1 = 1870; // Est Corse
                 var fy0 = 125;  // Nord Mer du Nord / Sud Angleterre
@@ -851,6 +845,8 @@
                 offY = outH / 2 - cy * scale;
             } else {
                 // Vue zoomée (région/département) : remplit 100% du canvas 2200×1640 en cover (zéro bande noire)
+                outW = 2200;
+                outH = 1640;
                 var viewRect = computeMapRect(vw, vh);
                 var u0 = (0 - viewRect.x) / viewRect.w;
                 var u1 = (vw - viewRect.x) / viewRect.w;
@@ -3097,8 +3093,8 @@
         if (captureButton) {
             captureButton.addEventListener('click', function () { captureImage('png', false); });
         }
-        if (captureLandscapeButton) {
-            captureLandscapeButton.addEventListener('click', function () { captureImage('png', true); });
+        if (captureScreenButton) {
+            captureScreenButton.addEventListener('click', function () { captureImage('png', true); });
         }
         if (captureJpegButton) {
             captureJpegButton.addEventListener('click', function () { captureImage('jpeg', false); });
