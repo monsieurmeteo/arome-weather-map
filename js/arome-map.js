@@ -787,7 +787,7 @@
                 offX = outW / 2 - cx * scale;
                 offY = outH / 2 - cy * scale;
             } else {
-                // Vue zoomée (région/département) : reproduit la portion visible à l'écran dans le canvas 2200×1640
+                // Vue zoomée (région/département) : remplit 100% du canvas 2200×1640 en cover (zéro bande noire)
                 var viewRect = computeMapRect(vw, vh);
                 var u0 = (0 - viewRect.x) / viewRect.w;
                 var u1 = (vw - viewRect.x) / viewRect.w;
@@ -795,7 +795,7 @@
                 var v1 = (vh - viewRect.y) / viewRect.h;
                 var vueW = Math.max(0.01, u1 - u0);
                 var vueH = Math.max(0.01, v1 - v0);
-                var k = Math.min(outW / (vueW * 2200.0), outH / (vueH * 1640.0));
+                var k = Math.max(outW / (vueW * 2200.0), outH / (vueH * 1640.0));
                 hScale = k;
                 vScale = k;
                 var uc = (u0 + u1) / 2;
@@ -813,10 +813,10 @@
             context.fillStyle = '#0b1220';
             context.fillRect(0, 0, output.width, output.height);
 
-            // Fond de carte terres/mers
+            // Fond de carte terres/mers (clip plein écran)
             context.save();
             context.beginPath();
-            context.rect(offX, offY, 2200 * hScale, 1640 * vScale);
+            context.rect(0, 0, outW, outH);
             context.clip();
             if (fondImageElement && fondImageElement.complete && fondImageElement.naturalWidth) {
                 context.save();
@@ -862,10 +862,10 @@
             }
             context.restore(); // Fin clip carte
 
-            // Logo Météo-Climat Pro officiel (en haut à droite, agrandi et parfaitement aligné)
-            var margin = 28;
-            var bannerY = 28;
-            var bannerH = 140;
+            // Logo Météo-Climat Pro officiel (en haut à droite, abaissé et centré dans l'image)
+            var margin = 32;
+            var bannerY = 36;
+            var bannerH = 135;
 
             var logoBoxW = 400;
             var logoBoxH = bannerH;
