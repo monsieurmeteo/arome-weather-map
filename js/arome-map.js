@@ -138,7 +138,7 @@
         var placeBuckets = new Map();
         var citiesVisible = true;
         var valuesVisible = false;
-        var seaMode = 'land'; // 'land' (terres seules par défaut), 'coast' (terres + littoral), 'none' (toutes zones mer comprise)
+        var seaMode = 'none'; // 'none' (partout mer comprise par défaut), 'land' (terres seules), 'coast' (terres + littoral)
         var vectorDefinition = null;
         var currentWeatherImage = null;
         var logoImage = new Image();
@@ -1142,9 +1142,9 @@
             if (valuesVisible && manifest && manifest.layers && manifest.layers[currentLayer]) {
                 try {
                     var vLayer = manifest.layers[currentLayer];
-                    // Calage dense et harmonieux pour couvrir chaque département sans trou
-                    var stepGrid = hScale < 1.35 ? 78 : (hScale < 2.5 ? 72 : 64);
-                    var valFontSize = hScale < 1.35 ? 22 : 25;
+                    // Calage dense avec grands chiffres ultra lisibles pour la carte nationale et régionale
+                    var stepGrid = hScale < 1.35 ? 88 : (hScale < 2.5 ? 78 : 66);
+                    var valFontSize = hScale < 1.35 ? 30 : 32;
                     context.font = '800 ' + valFontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     context.textAlign = 'center';
                     context.textBaseline = 'middle';
@@ -1171,8 +1171,8 @@
                             // Exclusion totale des valeurs en mer (ne garder que les terres)
                             if (!isLand(gu, gv)) continue;
 
-                            // Protection anti-collision ajustée au millimètre avec cartouche, logo et légende
-                            var gRect = { left: gx - 16, right: gx + 16, top: gy - 12, bottom: gy + 12 };
+                            // Protection anti-collision ajustée pour les grands chiffres
+                            var gRect = { left: gx - 20, right: gx + 20, top: gy - 16, bottom: gy + 16 };
                             var gClash = false;
                             for (var oi = 0; oi < occupied.length; oi += 1) {
                                 var o = occupied[oi];
@@ -1201,7 +1201,7 @@
                             var gStr = (currentLayer === 'pluie_1h' || currentLayer === 'pluie_cumul') ? (gVal < 10 ? gVal.toFixed(1) : String(Math.round(gVal))) : String(Math.round(gVal));
 
                             context.strokeStyle = 'rgba(8, 19, 28, 0.95)';
-                            context.lineWidth = 5.2;
+                            context.lineWidth = 5.8;
                             context.strokeText(gStr, gx, gy);
                             context.fillStyle = getValueColour(gVal, currentLayer);
                             context.fillText(gStr, gx, gy);
