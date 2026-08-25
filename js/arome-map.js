@@ -1034,11 +1034,11 @@
                 } catch (e) {}
             }
             var occupied = [];
-            // Zones protégées strictes et élargies (cartouche haut-gauche, logo haut-droite, légende bas)
-            occupied.push({ left: 0, right: margin + bannerW + 70, top: 0, bottom: bannerY + bannerH + 70 });
-            occupied.push({ left: output.width - margin - 470, right: output.width, top: 0, bottom: bannerY + bannerH + 70 });
+            // Zones protégées ajustées au millimètre (cartouche haut-gauche, logo haut-droite, légende bas)
+            occupied.push({ left: 0, right: margin + bannerW + 16, top: 0, bottom: bannerY + bannerH + 16 });
+            occupied.push({ left: output.width - margin - 390, right: output.width, top: 0, bottom: bannerY + bannerH + 16 });
             if (legendW > 0 && legendY > 0) {
-                occupied.push({ left: legendX - 70, right: legendX + legendW + 70, top: legendY - 35, bottom: output.height });
+                occupied.push({ left: legendX - 25, right: legendX + legendW + 25, top: legendY - 15, bottom: output.height });
             }
 
             // Villes sur la carte (respecte citiesVisible et se masque automatiquement si valuesVisible est actif)
@@ -1127,8 +1127,8 @@
                             var gu = (gx - offX) / (2200 * hScale);
                             if (gu < 0 || gu > 1) continue;
 
-                            // Protection anti-collision stricte avec cartouche, logo et légende
-                            var gRect = { left: gx - 24, right: gx + 24, top: gy - 16, bottom: gy + 16 };
+                            // Protection anti-collision ajustée au millimètre avec cartouche, logo et légende
+                            var gRect = { left: gx - 16, right: gx + 16, top: gy - 12, bottom: gy + 12 };
                             var gClash = false;
                             for (var oi = 0; oi < occupied.length; oi += 1) {
                                 var o = occupied[oi];
