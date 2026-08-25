@@ -913,14 +913,24 @@
 
             var margin = 24;
             var bannerY = 24;
-            var bannerH = 145;
-            context.font = '700 44px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var bannerH = 155;
             var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
-            var titleText = modelTitle + ' • ' + prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : '');
-            var dateText = dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '') + ' — Météo-Climat Pro';
-            var titleW = context.measureText(titleText).width;
-            var dateW = context.measureText(dateText).width;
-            var bannerW = Math.min(output.width - margin * 2 - 280, Math.max(titleW, dateW) + 52);
+            var paramTitle = prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : '');
+            var runLabel = '';
+            if (manifest && manifest.run_time) {
+                try {
+                    runLabel = 'Run ' + String(manifest.run_time).slice(11, 16) + 'Z';
+                } catch (e) {}
+            }
+            var dateText = dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '') + (runLabel ? ' • ' + runLabel : '');
+
+            context.font = '700 38px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var w1 = context.measureText(paramTitle).width;
+            context.font = '700 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var w2 = context.measureText(modelTitle).width;
+            context.font = '600 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var w3 = context.measureText(dateText).width;
+            var bannerW = Math.max(w1, w2, w3) + 48;
 
             context.fillStyle = 'rgba(7, 11, 20, 0.92)';
             context.beginPath();
@@ -934,28 +944,22 @@
             context.lineWidth = 3;
             context.stroke();
 
-            // Titre
+            // 1. Titre du paramètre météo (en premier, blanc franc)
             context.fillStyle = '#ffffff';
-            context.font = '700 42px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '700 38px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             context.textAlign = 'left';
             context.textBaseline = 'alphabetic';
-            context.fillText(titleText, margin + 20, bannerY + 56);
+            context.fillText(paramTitle, margin + 24, bannerY + 50);
 
-            // Échéance
+            // 2. Modèle météo (en dessous, cyan éclatant)
             context.fillStyle = '#00d2ff';
-            context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText(dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : ''), margin + 20, bannerY + 98);
+            context.font = '700 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText(modelTitle, margin + 24, bannerY + 92);
 
-            // Run
-            var runLabel = '';
-            if (manifest && manifest.run_time) {
-                try {
-                    runLabel = 'Run ' + String(manifest.run_time).slice(11, 16) + 'Z';
-                } catch (e) {}
-            }
+            // 3. Date, Échéance & Run (en dessous, gris-bleu lisible)
             context.fillStyle = '#c9d6e8';
-            context.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText((runLabel ? runLabel + ' • ' : '') + 'Météo-Climat Pro', margin + 20, bannerY + 130);
+            context.font = '600 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText(dateText, margin + 24, bannerY + 132);
 
             // Légende colorimétrique officielle en bas
             var legendY = 0, legendX = 0, legendW = 0, legendH = 0;
