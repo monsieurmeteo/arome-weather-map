@@ -144,12 +144,30 @@
         var franceMaskImage = new Image();
         franceMaskImage.crossOrigin = 'anonymous';
         franceMaskImage.src = resolvePath('maps/mask_france.png');
+        var maskSamplerCanvas = document.createElement('canvas');
+        maskSamplerCanvas.width = 2200;
+        maskSamplerCanvas.height = 1640;
+        var maskSamplerContext = maskSamplerCanvas.getContext ? maskSamplerCanvas.getContext('2d', { willReadFrequently: true }) : null;
+        var maskSamplerReady = false;
+
         franceMaskImage.onload = function () {
-            // Le bbox du masque pilote le cadrage France : dès qu'il est
-            // connu, on re-rend pour appliquer le cadrage intelligent.
             visibleBBoxCache = null;
+            if (maskSamplerContext) {
+                try {
+                    maskSamplerContext.drawImage(franceMaskImage, 0, 0, 2200, 1640);
+                    maskSamplerReady = true;
+                } catch (e) {}
+            }
             scheduleRender();
         };
+
+        function isLand(u, v) {
+            if (!maskSamplerReady || !maskSamplerContext) return true;
+            var px = Math.min(Math.max(0, Math.round(u * 2199)), 2199);
+            var py = Math.min(Math.max(0, Math.round(v * 1639)), 1639);
+            var pix = maskSamplerContext.getImageData(px, py, 1, 1).data;
+            return pix[0] > 64 || (pix[3] > 64 && pix[0] > 64);
+        }
         // Fond de carte (pays voisins inclus, style Positron)
         var fondImageElement = new Image();
         fondImageElement.crossOrigin = 'anonymous';
@@ -1126,6 +1144,9 @@
                         for (var gx = stepGrid / 2; gx < output.width - 20; gx += stepGrid) {
                             var gu = (gx - offX) / (2200 * hScale);
                             if (gu < 0 || gu > 1) continue;
+
+                            // Exclusion totale des valeurs en mer (ne garder que les terres)
+                            if (!isLand(gu, gv)) continue;
 
                             // Protection anti-collision ajustée au millimètre avec cartouche, logo et légende
                             var gRect = { left: gx - 16, right: gx + 16, top: gy - 12, bottom: gy + 12 };
@@ -2769,6 +2790,9 @@
                 for (var x = stepPx / 2; x < width; x += stepPx) {
                     var u = (x - mapRect.x) / mapRect.w;
                     if (u < 0 || u > 1) continue;
+
+                    // Exclusion totale des valeurs en mer (ne garder que les terres)
+                    if (!isLand(u, v)) continue;
 
                     var val = sampleProbe(currentProbe, u, v);
                     if (val === null) val = samplePalette(u, v, layer);
