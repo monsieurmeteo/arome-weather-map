@@ -1159,7 +1159,7 @@
                             context.strokeStyle = 'rgba(8, 19, 28, 0.95)';
                             context.lineWidth = 3.6;
                             context.strokeText(gStr, gx, gy);
-                            context.fillStyle = '#ffffff';
+                            context.fillStyle = getValueColour(gVal, currentLayer);
                             context.fillText(gStr, gx, gy);
                         }
                     }
@@ -2707,6 +2707,34 @@
             }
         }
 
+        function getValueColour(val, layerKey) {
+            if (layerKey === 'temperature' || layerKey === 'point_rosee' || layerKey === 't2m') {
+                if (val >= 40) return '#ff2a6d'; // Canicule extrême (magenta/fuchsia)
+                if (val >= 35) return '#ff7b00'; // Très forte chaleur (orange vif)
+                if (val >= 30) return '#ffea00'; // Forte chaleur (jaune d'or)
+                if (val <= 0)  return '#70d6ff'; // Gel (cyan éclatant)
+                return '#ffffff';
+            }
+            if (layerKey === 'vent_moyen' || layerKey === 'rafales' || layerKey === 'rafales_max_cumul' || layerKey === 'wind' || layerKey === 'gust') {
+                if (val >= 100) return '#ff2a6d'; // Tempête
+                if (val >= 80)  return '#ff7b00'; // Fort coup de vent
+                if (val >= 50)  return '#ffea00'; // Coup de vent
+                return '#ffffff';
+            }
+            if (layerKey === 'pluie_1h' || layerKey === 'pluie_cumul' || layerKey === 'precip') {
+                if (val >= 50) return '#ff2a6d'; // Pluies torrentielles
+                if (val >= 25) return '#ff7b00'; // Fortes pluies
+                if (val >= 10) return '#ffea00'; // Pluies modérées
+                return '#ffffff';
+            }
+            if (layerKey === 'mucape') {
+                if (val >= 1500) return '#ff2a6d'; // Risque orageux violent
+                if (val >= 800)  return '#ffea00'; // Risque orageux modéré
+                return '#ffffff';
+            }
+            return '#ffffff';
+        }
+
         function drawValues(width, height, pixelRatio) {
             if (!valuesContext || !valuesCanvas) return;
             resizeCanvas(valuesCanvas, width, height, pixelRatio);
@@ -2754,7 +2782,7 @@
                     valuesContext.strokeStyle = 'rgba(10, 15, 25, 0.95)';
                     valuesContext.lineWidth = 3.2;
                     valuesContext.strokeText(strVal, x, y);
-                    valuesContext.fillStyle = '#ffffff';
+                    valuesContext.fillStyle = getValueColour(val, currentLayer);
                     valuesContext.fillText(strVal, x, y);
                 }
             }
