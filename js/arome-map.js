@@ -1033,6 +1033,14 @@
                     });
                 } catch (e) {}
             }
+            var occupied = [];
+            // Zones protégées strictes (cartouche en haut à gauche, logo en haut à droite, légende en bas)
+            occupied.push({ left: 0, right: margin + bannerW + 35, top: 0, bottom: bannerY + bannerH + 35 });
+            occupied.push({ left: output.width - margin - 450, right: output.width, top: 0, bottom: bannerY + 180 });
+            if (legendW > 0) {
+                occupied.push({ left: legendX - 35, right: legendX + legendW + 35, top: output.height - 180, bottom: output.height });
+            }
+
             // Villes sur la carte (respecte citiesVisible et se masque automatiquement si valuesVisible est actif)
             if (citiesVisible && !valuesVisible && manifest && manifest.bounds && places && places.length) {
                 try {
@@ -1054,14 +1062,6 @@
                         context.strokeStyle = 'rgba(8, 19, 28, 0.94)';
                         context.fillStyle = '#ffffff';
                         context.lineWidth = 4.2;
-
-                        var occupied = [];
-                        // Zones protégées (titre en haut à gauche, logo en haut à droite, légende en bas)
-                        occupied.push({ left: margin - 10, right: margin + bannerW + 10, top: bannerY - 10, bottom: bannerY + bannerH + 10 });
-                        occupied.push({ left: output.width - margin - 400, right: output.width, top: 0, bottom: bannerY + 160 });
-                        if (legendW > 0) {
-                            occupied.push({ left: legendX - 30, right: legendX + legendW + 30, top: legendY - 20, bottom: output.height });
-                        }
 
                         var drawn = 0;
                         for (var pi = 0; pi < places.length; pi += 1) {
@@ -1101,8 +1101,10 @@
             if (valuesVisible && manifest && manifest.layers && manifest.layers[currentLayer]) {
                 try {
                     var vLayer = manifest.layers[currentLayer];
-                    var stepGrid = 64; // pas en pixels sur 2200x1640 HD
-                    context.font = '800 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    // Calage exact sur le pas de grille visuel du site (aéré et lisible)
+                    var stepGrid = hScale < 1.35 ? 112 : (hScale < 2.5 ? 94 : 80);
+                    var valFontSize = hScale < 1.35 ? 28 : 30;
+                    context.font = '800 ' + valFontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     context.textAlign = 'center';
                     context.textBaseline = 'middle';
                     context.lineJoin = 'round';
@@ -1118,23 +1120,21 @@
                         localSampler = tempCtx;
                     }
 
-                    for (var gy = 40; gy < output.height - 40; gy += stepGrid) {
+                    for (var gy = stepGrid / 2; gy < output.height - 20; gy += stepGrid) {
                         var gv = (gy - offY) / (1640 * vScale);
                         if (gv < 0 || gv > 1) continue;
-                        for (var gx = 40; gx < output.width - 40; gx += stepGrid) {
+                        for (var gx = stepGrid / 2; gx < output.width - 20; gx += stepGrid) {
                             var gu = (gx - offX) / (2200 * hScale);
                             if (gu < 0 || gu > 1) continue;
 
-                            // Protection anti-collision avec le titre, le logo, la légende et les villes
-                            var gRect = { left: gx - 16, right: gx + 16, top: gy - 10, bottom: gy + 10 };
+                            // Protection anti-collision stricte avec cartouche, logo et légende
+                            var gRect = { left: gx - 24, right: gx + 24, top: gy - 16, bottom: gy + 16 };
                             var gClash = false;
-                            if (typeof occupied !== 'undefined' && occupied && occupied.length) {
-                                for (var oi = 0; oi < occupied.length; oi += 1) {
-                                    var o = occupied[oi];
-                                    if (gRect.left < o.right && gRect.right > o.left && gRect.top < o.bottom && gRect.bottom > o.top) {
-                                        gClash = true;
-                                        break;
-                                    }
+                            for (var oi = 0; oi < occupied.length; oi += 1) {
+                                var o = occupied[oi];
+                                if (gRect.left < o.right && gRect.right > o.left && gRect.top < o.bottom && gRect.bottom > o.top) {
+                                    gClash = true;
+                                    break;
                                 }
                             }
                             if (gClash) continue;
@@ -1157,7 +1157,7 @@
                             var gStr = (currentLayer === 'pluie_1h' || currentLayer === 'pluie_cumul') ? (gVal < 10 ? gVal.toFixed(1) : String(Math.round(gVal))) : String(Math.round(gVal));
 
                             context.strokeStyle = 'rgba(8, 19, 28, 0.95)';
-                            context.lineWidth = 3.6;
+                            context.lineWidth = 5.2;
                             context.strokeText(gStr, gx, gy);
                             context.fillStyle = getValueColour(gVal, currentLayer);
                             context.fillText(gStr, gx, gy);
@@ -2752,9 +2752,9 @@
 
             var layer = manifest.layers[currentLayer];
             var mapRect = computeMapRect(width, height);
-            // Pas de la grille adaptatif selon le niveau de zoom
-            var stepPx = transform.scale < 1.35 ? 46 : (transform.scale < 2.5 ? 42 : 38);
-            var fontSize = transform.scale < 1.35 ? 11 : 12;
+            // Pas de la grille aéré et parfaitement synchronisé avec l'export
+            var stepPx = transform.scale < 1.35 ? 64 : (transform.scale < 2.5 ? 54 : 46);
+            var fontSize = transform.scale < 1.35 ? 13.5 : 15;
             valuesContext.font = '800 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             valuesContext.textAlign = 'center';
             valuesContext.textBaseline = 'middle';
@@ -2786,7 +2786,7 @@
                     }
 
                     valuesContext.strokeStyle = 'rgba(10, 15, 25, 0.95)';
-                    valuesContext.lineWidth = 3.2;
+                    valuesContext.lineWidth = 3.8;
                     valuesContext.strokeText(strVal, x, y);
                     valuesContext.fillStyle = getValueColour(val, currentLayer);
                     valuesContext.fillText(strVal, x, y);
