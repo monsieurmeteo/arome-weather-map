@@ -112,6 +112,7 @@
         var toolHint = app.querySelector('[data-amfm-tool-hint]');
         var advancedTools = app.querySelector('[data-amfm-advanced-tools]');
         var captureButton = app.querySelector('[data-amfm-capture]');
+        var captureLandscapeButton = app.querySelector('[data-amfm-capture-landscape]');
         var captureJpegButton = app.querySelector('[data-amfm-capture-jpeg]');
         var captureGifButton = app.querySelector('[data-amfm-capture-gif]');
         var toggleCitiesButton = app.querySelector('[data-amfm-toggle-cities]');
@@ -802,7 +803,7 @@
             }
         }
 
-        function composeCaptureCanvas(customStep, customImage) {
+        function composeCaptureCanvas(customStep, customImage, isLandscape) {
             var activeImg = customImage || currentWeatherImage;
             if (!activeImg) {
                 return null;
@@ -813,11 +814,27 @@
                 return null;
             }
 
-            var outW = 2200;
-            var outH = 1640;
+            var outW = isLandscape ? 2560 : 2200;
+            var outH = isLandscape ? 1440 : 1640;
             var hScale, vScale, offX, offY;
 
-            if (transform.scale <= 1.15) {
+            if (isLandscape) {
+                // Vue Paysage 16:9 Broadcast (cadrage exact de la vue écran)
+                var viewRect = computeMapRect(vw, vh);
+                var u0 = (0 - viewRect.x) / viewRect.w;
+                var u1 = (vw - viewRect.x) / viewRect.w;
+                var v0 = (0 - viewRect.y) / viewRect.h;
+                var v1 = (vh - viewRect.y) / viewRect.h;
+                var vueW = Math.max(0.01, u1 - u0);
+                var vueH = Math.max(0.01, v1 - v0);
+                var k = Math.max(outW / (vueW * 2200.0), outH / (vueH * 1640.0));
+                hScale = k;
+                vScale = k;
+                var uc = (u0 + u1) / 2;
+                var vc = (v0 + v1) / 2;
+                offX = outW / 2 - uc * 2200.0 * k;
+                offY = outH / 2 - vc * 1640.0 * k;
+            } else if (transform.scale <= 1.15) {
                 // Vue France entière : boîte Météo-NPDC (West: -5.8°, East: +10.2°, North: 51.6°, South: 41.1°)
                 var fx0 = 270;  // Ouest Bretagne
                 var fx1 = 1870; // Est Corse
@@ -1213,9 +1230,9 @@
             return output;
         }
 
-        function captureImage(format) {
+        function captureImage(format, isLandscape) {
             format = format || 'png';
-            var canvas = composeCaptureCanvas();
+            var canvas = composeCaptureCanvas(null, null, isLandscape);
             if (!canvas || !canvas.toBlob) {
                 setToolHint('Capture indisponible pour ce navigateur.');
                 return;
@@ -1235,7 +1252,7 @@
                     .normalize('NFD').replace(/[̀-ͯ]/g, '')
                     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
                 link.href = url;
-                link.download = 'MeteoClimatPro_' + (manifest ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME') + '_' + (slug || 'carte') + '_' + Date.now() + '.' + ext;
+                link.download = 'MeteoClimatPro_' + (manifest ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME') + '_' + (slug || 'carte') + (isLandscape ? '_paysage_16x9' : '') + '_' + Date.now() + '.' + ext;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -3078,10 +3095,13 @@
             });
         });
         if (captureButton) {
-            captureButton.addEventListener('click', function () { captureImage('png'); });
+            captureButton.addEventListener('click', function () { captureImage('png', false); });
+        }
+        if (captureLandscapeButton) {
+            captureLandscapeButton.addEventListener('click', function () { captureImage('png', true); });
         }
         if (captureJpegButton) {
-            captureJpegButton.addEventListener('click', function () { captureImage('jpeg'); });
+            captureJpegButton.addEventListener('click', function () { captureImage('jpeg', false); });
         }
         if (captureGifButton) {
             captureGifButton.addEventListener('click', openGifModal);
