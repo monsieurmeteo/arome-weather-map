@@ -117,6 +117,7 @@
         var toggleCitiesButton = app.querySelector('[data-amfm-toggle-cities]');
         var toggleValuesButton = app.querySelector('[data-amfm-toggle-values]');
         var toggleSeaButton = app.querySelector('[data-amfm-toggle-sea]');
+        var seaSelect = app.querySelector('[data-amfm-select-sea]');
         var pinButton = app.querySelector('[data-amfm-pin]');
         var diagramPopup = app.querySelector('[data-amfm-diagram-popup]');
         var diagramTitle = app.querySelector('[data-amfm-diagram-title]');
@@ -137,7 +138,7 @@
         var placeBuckets = new Map();
         var citiesVisible = true;
         var valuesVisible = false;
-        var seaMode = 'coast'; // 'coast' (terre + littoral), 'none' (toutes zones mer comprise), 'land' (terre seule)
+        var seaMode = 'land'; // 'land' (terres seules par défaut), 'coast' (terres + littoral), 'none' (toutes zones mer comprise)
         var vectorDefinition = null;
         var currentWeatherImage = null;
         var logoImage = new Image();
@@ -3101,6 +3102,12 @@
                 scheduleRender();
             });
         }
+        if (seaSelect) {
+            seaSelect.addEventListener('change', function (e) {
+                seaMode = e.target.value || 'land';
+                scheduleRender();
+            });
+        }
         if (toggleSeaButton) {
             toggleSeaButton.addEventListener('click', function () {
                 if (seaMode === 'coast') {
@@ -3116,6 +3123,7 @@
                     toggleSeaButton.classList.add('is-active');
                     toggleSeaButton.title = 'Mode Mer : Terres + Bord de mer (cliquer pour Tout afficher)';
                 }
+                if (seaSelect) seaSelect.value = seaMode;
                 scheduleRender();
             });
         }

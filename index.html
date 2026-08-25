@@ -222,6 +222,10 @@
             flex: 0.8;
             min-width: 130px;
         }
+        .amfm-select-sea {
+            flex: 0.8;
+            min-width: 140px;
+        }
 
         /* Boutons d'Action compacts */
         .amfm-btn {
@@ -1018,9 +1022,12 @@
                         <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
                     </button>
 
-                    <button type="button" class="amfm-btn amfm-btn-icon is-active" data-amfm-toggle-sea aria-pressed="true" aria-label="Filtrer les zones maritimes et littorales" title="Mode Mer : Terres + Bord de mer (cliquer pour basculer)">
-                        <i class="fa-solid fa-water" aria-hidden="true"></i>
-                    </button>
+                    <!-- Sélecteur Mode Terre / Mer -->
+                    <select class="amfm-select-sea" data-amfm-select-sea aria-label="Filtrer l'affichage des valeurs en mer et littoral" title="Zone d'affichage des valeurs météo">
+                        <option value="land" selected>🌲 Terres seules</option>
+                        <option value="coast">🏖️ Terres + Bord de mer</option>
+                        <option value="none">🌊 Partout (Mer comprise)</option>
+                    </select>
 
                     <button type="button" class="amfm-btn amfm-btn-icon" onclick="localStorage.removeItem('amfm_auth_token'); if('caches' in window){caches.keys().then(function(k){k.forEach(function(n){caches.delete(n);});});} window.location.reload(true);" aria-label="Déconnexion et vider le cache" title="Vider le cache et Déconnexion">
                         <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
@@ -1158,7 +1165,7 @@
     <script src="js/palettes.js?v=1.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="js/regions.js?v=1.0.0"></script>
-    <script src="js/arome-map.js?v=6.0.4"></script>
+    <script src="js/arome-map.js?v=6.0.5"></script>
 </body>
 </html>
 
