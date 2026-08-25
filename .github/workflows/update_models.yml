@@ -65,14 +65,20 @@ jobs:
             git commit -m "Mise a jour automatique des modeles meteo [$(date -u +'%Y-%m-%d %H:%MZ')]"
           fi
           # Fusionner avec le remote en gardant NOS artefacts regeneres
-          # (evite les conflits binaires sur output/*.webp)
-          git fetch origin main
-          git merge origin/main -X ours --no-edit || {
-            git checkout --ours -- output/ 2>/dev/null || true
-            git add output/
-            git commit --no-edit || true
-          }
-          git push origin main
+          for i in 1 2 3; do
+            git fetch origin main
+            git merge origin/main -X ours --no-edit || {
+              git checkout --ours -- output/ 2>/dev/null || true
+              git add output/
+              git commit -m "Merge remote changes" --no-edit || true
+            }
+            if git push origin main; then
+              echo "Push reussi."
+              break
+            fi
+            echo "Tentative $i echouee, retry dans 5s..."
+            sleep 5
+          done
 
       # ── Déploiement intégré (le push GITHUB_TOKEN ne redéclenche pas
       #    deploy-pages.yml, donc on déploie ici directement). ──────────
