@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     
+    <!-- Anti-Cache Stratégique HTTP & Navigateurs -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <!-- SEO & Métadonnées Générales -->
     <title>Météo AROME HD 1,3 km & Multi-Modèles — Météo-Climat Pro</title>
     <meta name="description" content="Visualisation cartographique haute résolution des prévisions météo AROME HD (1,3 km) de Météo-France et multi-modèles (ARPEGE, ICON, GFS, ECMWF) : températures, rafales, pluie radar, orages MUCAPE et neige.">
@@ -873,6 +878,15 @@
                 var p = (passIn && passIn.value ? passIn.value.trim() : '');
                 if (u === VALID_USER && p === VALID_PASS) {
                     localStorage.setItem(AUTH_KEY, 'valid');
+                    // Purge immédiate de tous les caches navigateurs
+                    if ('caches' in window) {
+                        try {
+                            caches.keys().then(function(names) {
+                                names.forEach(function(name) { caches.delete(name); });
+                            });
+                        } catch(e) {}
+                    }
+                    try { sessionStorage.clear(); } catch(e) {}
                     if (errBox) errBox.style.display = 'none';
                     if (overlay) overlay.classList.add('is-hidden');
                 } else {
@@ -1002,6 +1016,10 @@
 
                     <button type="button" class="amfm-btn amfm-btn-icon" data-amfm-toggle-values aria-pressed="false" aria-label="Afficher ou masquer la grille de valeurs météo" title="Afficher/Masquer les valeurs météo sur la carte">
                         <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
+                    </button>
+
+                    <button type="button" class="amfm-btn amfm-btn-icon" onclick="localStorage.removeItem('amfm_auth_token'); if('caches' in window){caches.keys().then(function(k){k.forEach(function(n){caches.delete(n);});});} window.location.reload(true);" aria-label="Déconnexion et vider le cache" title="Vider le cache et Déconnexion">
+                        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
                     </button>
 
                     <div class="amfm-headline" data-amfm-headline aria-live="polite">
@@ -1136,7 +1154,7 @@
     <script src="js/palettes.js?v=1.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="js/regions.js?v=1.0.0"></script>
-    <script src="js/arome-map.js?v=6.0.1"></script>
+    <script src="js/arome-map.js?v=6.0.2"></script>
 </body>
 </html>
 
