@@ -840,16 +840,17 @@
             weatherCtx.restore();
             context.drawImage(weatherMasked, 0, 0);
 
-            // Frontières vectorielles uniques (noir franc 100% net, identique au site)
+            // Frontières vectorielles uniques (noir franc 100% net, calibré pour résolution HD 2200x1640 et GIF)
             if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
                 context.save();
                 context.transform(hScale, 0, 0, vScale, offX, offY);
+                var hdStrokeFactor = 2.4;
                 vectorDefinition.paths.forEach(function (entry) {
-                    context.strokeStyle = entry.colour || '#0d1117';
+                    context.strokeStyle = '#05080c';
                     context.globalAlpha = 1.0;
                     context.lineCap = 'round';
                     context.lineJoin = 'round';
-                    context.lineWidth = (entry.width || 1.6) / hScale;
+                    context.lineWidth = ((entry.width || 1.6) * hdStrokeFactor) / hScale;
                     context.stroke(entry.path);
                 });
                 context.restore();
