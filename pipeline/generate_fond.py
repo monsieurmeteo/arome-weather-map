@@ -165,121 +165,82 @@ def _load_geojson(path_or_url):
 
 
 def generate_svg(out_path=None):
-    """Régénère frontieres.svg dans la projection EXACTE des tuiles (BOUNDS).
-    Trois couches (classées par le front selon stroke-width) :
-      - pays (2.0) : frontières internationales
-      - régions (1.45) : limites des 13 régions françaises
-      - départements (0.8) : contours des 96 départements
-    """
-    out_path = out_path or SVG_FILE
-    countries = _load_geojson(COUNTRIES_FILE)
-    regions = _load_geojson(REGIONS_FILE)
-    depts = _load_geojson(DEPARTEMENTS_URL)
-
-    def build_paths(collection, keep=None, bbox=None):
-        out = []
-        for feat in collection.get("features", []):
-            props = feat.get("properties", {})
-            name = props.get("NAME") or props.get("ADMIN") or \
-                props.get("nom") or props.get("name") or ""
-            if keep and name not in keep:
-                continue
-            geom = feat.get("geometry")
-            if not geom:
-                continue
-            # Filtre par bbox de la feature : ignore les pays loin du canvas
-            if bbox and feat.get("bbox"):
-                fb = feat["bbox"]  # [minLon, minLat, maxLon, maxLat]
-                # Convertit les 4 coins en pixels et vérifie l'intersection
-                xs = [_project((fb[0], fb[1]))[0], _project((fb[2], fb[1]))[0],
-                      _project((fb[0], fb[3]))[0], _project((fb[2], fb[3]))[0]]
-                ys = [_project((fb[0], fb[1]))[1], _project((fb[2], fb[1]))[1],
-                      _project((fb[0], fb[3]))[1], _project((fb[2], fb[3]))[1]]
-                if max(xs) < bbox[0] or min(xs) > bbox[2] or \
-                        max(ys) < bbox[1] or min(ys) > bbox[3]:
-                    continue
-            rings = list(_iter_rings(geom))
-            out.append(_polygon_path(rings, bbox))
-        return " ".join(p for p in out if p)
-
-    # Pays d'Europe visibles dans le cadre (la France est exclue ici
-    # car elle est tracée avec une précision officielle maximale via depts_d).
-    WESTERN_EUROPE = {
-        "United Kingdom", "Ireland", "Belgium", "Netherlands",
-        "Luxembourg", "Germany", "Switzerland", "Austria", "Italy",
-        "Spain", "Portugal", "Andorra", "Monaco", "Liechtenstein",
-        "Denmark", "Czechia", "Czech Republic", "Poland", "Croatia",
-        "Slovenia", "San Marino", "Vatican", "Malta", "Algeria",
-        "Morocco", "Tunisia", "Libya",
-    }
+    """Régénère frontieres.svg avec des lignes UNIQUES (LineString) pour
+    les frontières internationales et les côtes, sans aucune duplication polygonale."""
     import shapely.geometry
     from shapely.ops import unary_union
 
-    # Construire l'union exacte de la France métropolitaine depuis les départements
-    france_shapes = [shapely.geometry.shape(f["geometry"]) for f in depts.get("features", [])]
+    out_path = out_path or SVG_FILE
+    depts = _load_geojson(DEPARTEMENTS_URL)
+    boundaries = _load_geojson(os.path.join(BASE_DIR, "config", "international-boundaries.geojson"))
+    coastlines = _load_geojson(os.path.join(BASE_DIR, "config", "coastlines.geojson"))
+
+    bounds_box = shapely.geometry.box(
+        BOUNDS["west"] - 0.5, BOUNDS["south"] - 0.5,
+        BOUNDS["east"] + 0.5, BOUNDS["north"] + 0.5
+    )
+
+    # 1. France : départements et côtes haute précision
+    france_shapes = []
+    depts_d = []
+    for f in depts.get("features", []):
+        s = shapely.geometry.shape(f["geometry"])
+        france_shapes.append(s)
+        rings = list(_iter_rings(f["geometry"]))
+        depts_d.append(_polygon_path(rings))
+
     france_union = unary_union(france_shapes)
-    # Buffer de 0.015 degré (~1.5 km) pour absorber toutes les imprécisions de tracé
     france_mask = france_union.buffer(0.015)
 
-    def build_paths_countries(collection, keep=None):
+    # 2. Lignes de frontières internationales uniques (hors France)
+    def line_to_svg(geom):
+        pts = [_project(p) for p in geom.coords]
+        if len(pts) < 2:
+            return ""
+        return "M%.1f %.1f L%s" % (pts[0][0], pts[0][1], " ".join("%.1f %.1f" % p for p in pts[1:]))
+
+    def extract_lines(collection):
         out = []
         for feat in collection.get("features", []):
-            props = feat.get("properties", {})
-            name = props.get("NAME") or props.get("ADMIN") or props.get("name") or ""
-            if keep and name not in keep:
-                continue
             geom = feat.get("geometry")
             if not geom:
                 continue
-            shape = shapely.geometry.shape(geom)
-            # Soustraire la France pour ne pas redessiner les frontières communes
-            cleaned = shape.difference(france_mask)
+            s = shapely.geometry.shape(geom)
+            if not s.intersects(bounds_box):
+                continue
+            # Couper ce qui touche la France pour ne laisser que le département français tracer la frontière
+            cleaned = s.intersection(bounds_box).difference(france_mask)
             if cleaned.is_empty:
                 continue
-            # Reconvertir en anneaux
-            if cleaned.geom_type == "Polygon":
-                rings = [list(cleaned.exterior.coords)] + [list(i.coords) for i in cleaned.interiors]
-            elif cleaned.geom_type == "MultiPolygon":
-                rings = []
-                for p in cleaned.geoms:
-                    rings.append(list(p.exterior.coords))
-                    rings.extend([list(i.coords) for i in p.interiors])
-            elif cleaned.geom_type in ("GeometryCollection", "MultiLineString", "LineString"):
-                continue
-            else:
-                continue
-            out.append(_polygon_path(rings))
+            if cleaned.geom_type == "LineString":
+                d = line_to_svg(cleaned)
+                if d:
+                    out.append(d)
+            elif cleaned.geom_type == "MultiLineString":
+                for ls in cleaned.geoms:
+                    d = line_to_svg(ls)
+                    if d:
+                        out.append(d)
         return " ".join(p for p in out if p)
 
-    def build_paths_depts(collection):
-        out = []
-        for feat in collection.get("features", []):
-            geom = feat.get("geometry")
-            if not geom:
-                continue
-            rings = list(_iter_rings(geom))
-            out.append(_polygon_path(rings))
-        return " ".join(p for p in out if p)
-
-    # 1. Pays d'Europe voisins découpés (les frontières communes avec la France sont effacées)
-    pays_d = build_paths_countries(countries, keep=WESTERN_EUROPE)
-    # 2. Départements français haute définition (tracé unique pour toute la France et ses frontières)
-    depts_d = build_paths_depts(depts)
+    foreign_boundaries_d = extract_lines(boundaries)
+    foreign_coastlines_d = extract_lines(coastlines)
+    all_foreign_d = (foreign_boundaries_d + " " + foreign_coastlines_d).strip()
 
     svg = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<svg xmlns="http://www.w3.org/2000/svg" '
         'viewBox="0 0 %d %d" width="%d" height="%d">\n'
-        '<path d="%s" fill="none" stroke="#1a1f26" stroke-width="1.8" '
+        '<path d="%s" fill="none" stroke="#0d1117" stroke-width="2.6" '
         'stroke-linejoin="round" stroke-linecap="round"/>\n'
-        '<path d="%s" fill="none" stroke="#1a1f26" stroke-width="1.2" '
+        '<path d="%s" fill="none" stroke="#0d1117" stroke-width="1.6" '
         'stroke-linejoin="round" stroke-linecap="round"/>\n'
-        '</svg>\n' % (WIDTH, HEIGHT, WIDTH, HEIGHT, pays_d, depts_d)
+        '</svg>\n' % (WIDTH, HEIGHT, WIDTH, HEIGHT, all_foreign_d, " ".join(depts_d))
     )
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(svg)
-    print("SVG frontières régénéré (frontières communes uniques) : %s (%d octets)" % (out_path, len(svg)))
+    print("SVG frontières régénéré (traits plus épais et nets) : %s (%d octets)" % (out_path, len(svg)))
     return out_path
 
 
