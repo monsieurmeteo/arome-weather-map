@@ -624,6 +624,42 @@ def regrid(data, lats, lons):
 
 def save_webp(data, layer, dst):
     rgba = apply_palette(data, PALETTES.get(layer, PALETTES["temperature"]))
+    if layer in ("pression", "pression_surface"):
+        try:
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
+
+            fig = plt.figure(figsize=(WIDTH / 100.0, HEIGHT / 100.0), dpi=100)
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.axis('off')
+            ax.imshow(rgba, aspect='auto', origin='upper')
+
+            # Isobares tous les 2 hPa
+            levels_all = np.arange(940, 1070, 2)
+            cs = ax.contour(data, levels=levels_all, colors='#0d1117', linewidths=1.3, linestyles='solid')
+
+            # Isobares maîtresses tous les 10 hPa
+            levels_major = np.arange(940, 1070, 10)
+            ax.contour(data, levels=levels_major, colors='#0d1117', linewidths=2.5, linestyles='solid')
+
+            # Étiquettes de valeur (tous les 4 hPa)
+            labels = ax.clabel(cs, levels=np.arange(940, 1070, 4), inline=True, fmt='%d', fontsize=13, colors='#0d1117', inline_spacing=14)
+            for l in labels:
+                l.set_fontweight('bold')
+                l.set_bbox(dict(facecolor='white', edgecolor='#0d1117', linewidth=0.5, alpha=0.92, boxstyle='round,pad=0.2'))
+
+            fig.canvas.draw()
+            buf_rgba = np.asarray(fig.canvas.buffer_rgba())
+            final_img = Image.fromarray(buf_rgba, "RGBA")
+            if final_img.size != (WIDTH, HEIGHT):
+                final_img = final_img.resize((WIDTH, HEIGHT), Image.Resampling.LANCZOS)
+            plt.close(fig)
+            final_img.save(dst, format="WEBP", quality=85, method=4)
+            return
+        except Exception as e:
+            print(f"[WARN] Erreur trace isobares: {e}")
+
     Image.fromarray(rgba, "RGBA").save(dst, format="WEBP", quality=85, method=4)
 
 def _cleanup_orphans(out_dir, steps):
