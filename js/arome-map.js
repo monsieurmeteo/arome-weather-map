@@ -1029,8 +1029,8 @@
                     });
                 } catch (e) {}
             }
-            // Villes sur la carte
-            if (manifest && manifest.bounds && places && places.length) {
+            // Villes sur la carte (respecte strictement l'option d'activation/désactivation citiesVisible)
+            if (citiesVisible && manifest && manifest.bounds && places && places.length) {
                 try {
                     var bounds = manifest.bounds;
                     var northY = mercator(Number(bounds.north));
@@ -1039,16 +1039,17 @@
                     var mercatorSpan = northY - southY;
                     if (longitudeSpan && mercatorSpan) {
                         var exportScale = hScale;
-                        // En zoom régional (exportScale >= 2), on affiche les villes à partir de 15 000 hab
-                        var popMin = exportScale < 1.35 ? 120000 : (exportScale < 2.25 ? 40000 : (exportScale < 3.5 ? 15000 : 5000));
-                        var maxLabels = exportScale < 1.35 ? 30 : (exportScale < 2.25 ? 50 : 80);
-                        context.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                        // Alignement exact sur la densité du site (vue France = 200k pop, régions = 70k -> 25k)
+                        var popMin = exportScale < 1.35 ? 180000 : (exportScale < 2.25 ? 70000 : (exportScale < 3.5 ? 25000 : 8000));
+                        var maxLabels = exportScale < 1.35 ? 20 : (exportScale < 2.25 ? 35 : 60);
+                        var fontSize = exportScale < 1.35 ? 20 : 22;
+                        context.font = '700 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                         context.textAlign = 'center';
                         context.textBaseline = 'middle';
                         context.lineJoin = 'round';
                         context.strokeStyle = 'rgba(8, 19, 28, 0.94)';
                         context.fillStyle = '#ffffff';
-                        context.lineWidth = 4.5;
+                        context.lineWidth = 3.8;
 
                         var occupied = [];
                         // Zones protégées (titre en haut à gauche, logo en haut à droite, légende en bas)
