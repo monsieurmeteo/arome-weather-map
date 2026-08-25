@@ -2081,12 +2081,15 @@
                 setLayer(p);
             }
             var reg = params.get('region');
+            var regSel = document.getElementById('select-region');
             if (reg) {
-                var regSel = document.getElementById('select-region');
                 if (regSel && regSel.querySelector('option[value="' + reg + '"]')) {
                     regSel.value = reg;
                     regSel.dispatchEvent(new Event('change'));
                 }
+            } else if (regSel && regSel.querySelector('option[value="hdf"]')) {
+                regSel.value = 'hdf';
+                regSel.dispatchEvent(new Event('change'));
             }
             var heure = parseInt(params.get('heure'), 10);
             if (!isNaN(heure)) {
