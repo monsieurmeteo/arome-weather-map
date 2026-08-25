@@ -913,7 +913,7 @@
 
             var margin = 24;
             var bannerY = 24;
-            var bannerH = 155;
+            var bannerH = 175;
             var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
             var paramTitle = prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : '');
             var runLabel = '';
@@ -922,13 +922,14 @@
                     runLabel = 'Run ' + String(manifest.run_time).slice(11, 16) + 'Z';
                 } catch (e) {}
             }
-            var dateText = dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '') + (runLabel ? ' • ' + runLabel : '');
+            var dateText = dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '');
+            var modelAndRun = modelTitle + (runLabel ? ' • ' + runLabel : '');
 
             context.font = '700 38px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var w1 = context.measureText(paramTitle).width;
-            context.font = '700 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            var w2 = context.measureText(modelTitle).width;
-            context.font = '600 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var w2 = context.measureText(modelAndRun).width;
+            context.font = '800 34px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             var w3 = context.measureText(dateText).width;
             var bannerW = Math.max(w1, w2, w3) + 48;
 
@@ -949,17 +950,17 @@
             context.font = '700 38px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             context.textAlign = 'left';
             context.textBaseline = 'alphabetic';
-            context.fillText(paramTitle, margin + 24, bannerY + 50);
+            context.fillText(paramTitle, margin + 24, bannerY + 48);
 
-            // 2. Modèle météo (en dessous, cyan éclatant)
+            // 2. Modèle météo & Run (en dessous, cyan éclatant)
             context.fillStyle = '#00d2ff';
-            context.font = '700 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText(modelTitle, margin + 24, bannerY + 92);
+            context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText(modelAndRun, margin + 24, bannerY + 88);
 
-            // 3. Date, Échéance & Run (en dessous, gris-bleu lisible)
-            context.fillStyle = '#c9d6e8';
-            context.font = '600 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText(dateText, margin + 24, bannerY + 132);
+            // 3. Date & Échéance (en dessous, GRAND, blanc éclatant avec accent cyan)
+            context.fillStyle = '#ffffff';
+            context.font = '800 34px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText(dateText, margin + 24, bannerY + 140);
 
             // Légende colorimétrique officielle en bas
             var legendY = 0, legendX = 0, legendW = 0, legendH = 0;
