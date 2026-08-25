@@ -2709,27 +2709,33 @@
 
         function getValueColour(val, layerKey) {
             if (layerKey === 'temperature' || layerKey === 'point_rosee' || layerKey === 't2m') {
-                if (val >= 40) return '#ff2a6d'; // Canicule extrême (magenta/fuchsia)
+                if (val >= 40) return '#ff2a6d'; // Canicule extrême (fuchsia)
                 if (val >= 35) return '#ff7b00'; // Très forte chaleur (orange vif)
-                if (val >= 30) return '#ffea00'; // Forte chaleur (jaune d'or)
-                if (val <= 0)  return '#70d6ff'; // Gel (cyan éclatant)
+                if (val >= 30) return '#ffea00'; // Forte chaleur (jaune d'or dès 30°C)
+                if (val <= 0)  return '#70d6ff'; // Gelées (cyan éclatant)
                 return '#ffffff';
             }
             if (layerKey === 'vent_moyen' || layerKey === 'rafales' || layerKey === 'rafales_max_cumul' || layerKey === 'wind' || layerKey === 'gust') {
-                if (val >= 100) return '#ff2a6d'; // Tempête
-                if (val >= 80)  return '#ff7b00'; // Fort coup de vent
-                if (val >= 50)  return '#ffea00'; // Coup de vent
+                if (val >= 120) return '#ff2a6d'; // Tempête violente
+                if (val >= 105) return '#ff7b00'; // Tempête
+                if (val >= 90)  return '#ffea00'; // Fort coup de vent (dès 90 km/h)
                 return '#ffffff';
             }
-            if (layerKey === 'pluie_1h' || layerKey === 'pluie_cumul' || layerKey === 'precip') {
-                if (val >= 50) return '#ff2a6d'; // Pluies torrentielles
-                if (val >= 25) return '#ff7b00'; // Fortes pluies
-                if (val >= 10) return '#ffea00'; // Pluies modérées
+            if (layerKey === 'pluie_1h') {
+                if (val >= 30) return '#ff2a6d'; // Pluies diluviennes
+                if (val >= 20) return '#ff7b00'; // Très fortes pluies
+                if (val >= 10) return '#ffea00'; // Pluies soutenues (dès 10 mm/h)
+                return '#ffffff';
+            }
+            if (layerKey === 'pluie_cumul' || layerKey === 'precip') {
+                if (val >= 80) return '#ff2a6d'; // Cumul exceptionnel
+                if (val >= 50) return '#ff7b00'; // Fort cumul
+                if (val >= 20) return '#ffea00'; // Cumul notable (dès 20 mm)
                 return '#ffffff';
             }
             if (layerKey === 'mucape') {
-                if (val >= 1500) return '#ff2a6d'; // Risque orageux violent
-                if (val >= 800)  return '#ffea00'; // Risque orageux modéré
+                if (val >= 1500) return '#ff2a6d'; // Orages violents
+                if (val >= 800)  return '#ffea00'; // Risque orageux
                 return '#ffffff';
             }
             return '#ffffff';
