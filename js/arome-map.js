@@ -1024,7 +1024,7 @@
                 } catch (e) {}
             }
             // Villes sur la carte
-            if (manifest && manifest.bounds && places.length) {
+            if (manifest && manifest.bounds && places && places.length) {
                 try {
                     var bounds = manifest.bounds;
                     var northY = mercator(Number(bounds.north));
@@ -1033,16 +1033,25 @@
                     var mercatorSpan = northY - southY;
                     if (longitudeSpan && mercatorSpan) {
                         var exportScale = hScale;
-                        var popMin = exportScale < 1.35 ? 180000 : (exportScale < 2.25 ? 70000 : (exportScale < 3.75 ? 25000 : 5000));
-                        var maxLabels = exportScale < 1.35 ? 25 : (exportScale < 2.25 ? 40 : 60);
+                        // En zoom régional (exportScale >= 2), on affiche les villes à partir de 15 000 hab
+                        var popMin = exportScale < 1.35 ? 120000 : (exportScale < 2.25 ? 40000 : (exportScale < 3.5 ? 15000 : 5000));
+                        var maxLabels = exportScale < 1.35 ? 30 : (exportScale < 2.25 ? 50 : 80);
                         context.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                         context.textAlign = 'center';
                         context.textBaseline = 'middle';
                         context.lineJoin = 'round';
                         context.strokeStyle = 'rgba(8, 19, 28, 0.94)';
                         context.fillStyle = '#ffffff';
-                        context.lineWidth = 4;
+                        context.lineWidth = 4.5;
+
                         var occupied = [];
+                        // Zones protégées (titre en haut à gauche, logo en haut à droite, légende en bas)
+                        occupied.push({ left: margin - 10, right: margin + bannerW + 10, top: bannerY - 10, bottom: bannerY + bannerH + 10 });
+                        occupied.push({ left: output.width - margin - 400, right: output.width, top: 0, bottom: bannerY + 160 });
+                        if (legendW > 0) {
+                            occupied.push({ left: legendX - 30, right: legendX + legendW + 30, top: legendY - 20, bottom: output.height });
+                        }
+
                         var drawn = 0;
                         for (var pi = 0; pi < places.length; pi += 1) {
                             var place = places[pi];
@@ -1052,12 +1061,12 @@
                             var v = (northY - mercator(Number(place[2]))) / mercatorSpan;
                             var sx = u * 2200 * hScale + offX;
                             var sy = v * 1640 * vScale + offY;
-                            if (sx < 20 || sx > output.width - 20 || sy < topBannerH + 20 || sy > outH - bottomBannerH - 20) {
+                            if (sx < 25 || sx > output.width - 25 || sy < 25 || sy > output.height - 25) {
                                 continue;
                             }
                             var text = String(place[0]);
                             var tw = context.measureText(text).width;
-                            var rect = { left: sx - tw / 2 - 5, right: sx + tw / 2 + 5, top: sy - 14, bottom: sy + 14 };
+                            var rect = { left: sx - tw / 2 - 6, right: sx + tw / 2 + 6, top: sy - 14, bottom: sy + 14 };
                             var clash = false;
                             for (var oi = 0; oi < occupied.length; oi += 1) {
                                 var other = occupied[oi];
@@ -1814,20 +1823,20 @@
             // la région ENTIÈRE dans le viewport sans excès de zoom.
             var REGION_CONFIG = {
                 france: { reset: true },
-                hdf: { latitude: 50.35, longitude: 2.80, scale: 3.20 },
-                normandie: { latitude: 49.30, longitude: 0.15, scale: 3.20 },
-                idf: { latitude: 48.80, longitude: 2.50, scale: 4.20 },
-                grandest: { latitude: 48.85, longitude: 5.80, scale: 2.50 },
-                bretagne: { latitude: 48.25, longitude: -2.80, scale: 3.10 },
-                pdl: { latitude: 47.55, longitude: -0.80, scale: 3.00 },
-                cvl: { latitude: 47.60, longitude: 1.80, scale: 3.00 },
-                bfc: { latitude: 47.30, longitude: 5.00, scale: 2.80 },
-                naq: { latitude: 45.40, longitude: 0.10, scale: 2.20 },
-                ara: { latitude: 45.55, longitude: 4.80, scale: 2.40 },
-                occitanie: { latitude: 43.70, longitude: 2.30, scale: 2.40 },
-                paca: { latitude: 43.95, longitude: 6.10, scale: 3.00 },
-                corse: { latitude: 42.15, longitude: 9.10, scale: 4.80 },
-                belgique: { latitude: 50.60, longitude: 4.40, scale: 3.60 }
+                hdf: { latitude: 49.85, longitude: 2.82, scale: 2.65 },
+                normandie: { latitude: 48.95, longitude: -0.07, scale: 2.85 },
+                idf: { latitude: 48.65, longitude: 2.50, scale: 4.20 },
+                grandest: { latitude: 48.65, longitude: 5.80, scale: 2.25 },
+                bretagne: { latitude: 48.00, longitude: -3.08, scale: 2.80 },
+                pdl: { latitude: 47.30, longitude: -0.85, scale: 2.75 },
+                cvl: { latitude: 47.45, longitude: 1.60, scale: 2.55 },
+                bfc: { latitude: 47.10, longitude: 5.00, scale: 2.65 },
+                naq: { latitude: 44.95, longitude: 0.40, scale: 1.85 },
+                ara: { latitude: 45.30, longitude: 4.65, scale: 2.25 },
+                occitanie: { latitude: 43.50, longitude: 2.25, scale: 2.25 },
+                paca: { latitude: 43.85, longitude: 6.00, scale: 2.85 },
+                corse: { latitude: 42.10, longitude: 9.05, scale: 4.20 },
+                belgique: { latitude: 50.25, longitude: 4.40, scale: 3.10 }
             };
 
             regionSelect.addEventListener('change', function (e) {
