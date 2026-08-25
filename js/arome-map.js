@@ -88,8 +88,10 @@
         var viewport = app.querySelector('[data-amfm-viewport]');
         var weatherCanvas = app.querySelector('[data-amfm-weather]');
         var vectorCanvas = app.querySelector('[data-amfm-vectors]');
+        var valuesCanvas = app.querySelector('[data-amfm-values]');
         var labelsCanvas = app.querySelector('[data-amfm-labels]');
         var vectorContext = vectorCanvas ? vectorCanvas.getContext('2d') : null;
+        var valuesContext = valuesCanvas ? valuesCanvas.getContext('2d') : null;
         var labelsContext = labelsCanvas ? labelsCanvas.getContext('2d') : null;
         var mapTitle = app.querySelector('[data-amfm-map-title]');
         var mapRun = app.querySelector('[data-amfm-map-run]');
@@ -113,6 +115,7 @@
         var captureJpegButton = app.querySelector('[data-amfm-capture-jpeg]');
         var captureGifButton = app.querySelector('[data-amfm-capture-gif]');
         var toggleCitiesButton = app.querySelector('[data-amfm-toggle-cities]');
+        var toggleValuesButton = app.querySelector('[data-amfm-toggle-values]');
         var pinButton = app.querySelector('[data-amfm-pin]');
         var diagramPopup = app.querySelector('[data-amfm-diagram-popup]');
         var diagramTitle = app.querySelector('[data-amfm-diagram-title]');
@@ -132,6 +135,7 @@
         var places = [];
         var placeBuckets = new Map();
         var citiesVisible = true;
+        var valuesVisible = false;
         var vectorDefinition = null;
         var currentWeatherImage = null;
         var logoImage = new Image();
@@ -1029,8 +1033,8 @@
                     });
                 } catch (e) {}
             }
-            // Villes sur la carte (respecte strictement l'option d'activation/désactivation citiesVisible)
-            if (citiesVisible && manifest && manifest.bounds && places && places.length) {
+            // Villes sur la carte (respecte citiesVisible et se masque automatiquement si valuesVisible est actif)
+            if (citiesVisible && !valuesVisible && manifest && manifest.bounds && places && places.length) {
                 try {
                     var bounds = manifest.bounds;
                     var northY = mercator(Number(bounds.north));
@@ -1091,6 +1095,75 @@
                         }
                     }
                 } catch (e) {}
+            }
+
+            // Grille de valeurs numériques (si valuesVisible activé)
+            if (valuesVisible && manifest && manifest.layers && manifest.layers[currentLayer]) {
+                try {
+                    var vLayer = manifest.layers[currentLayer];
+                    var stepGrid = 64; // pas en pixels sur 2200x1640 HD
+                    context.font = '800 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    context.textAlign = 'center';
+                    context.textBaseline = 'middle';
+                    context.lineJoin = 'round';
+
+                    // Sampler local
+                    var localSampler = samplerContext;
+                    if (customImage && customImage.complete && customImage.naturalWidth) {
+                        var tempS = document.createElement('canvas');
+                        tempS.width = customImage.naturalWidth || 2200;
+                        tempS.height = customImage.naturalHeight || 1640;
+                        var tempCtx = tempS.getContext('2d', { willReadFrequently: true });
+                        tempCtx.drawImage(customImage, 0, 0);
+                        localSampler = tempCtx;
+                    }
+
+                    for (var gy = 40; gy < output.height - 40; gy += stepGrid) {
+                        var gv = (gy - offY) / (1640 * vScale);
+                        if (gv < 0 || gv > 1) continue;
+                        for (var gx = 40; gx < output.width - 40; gx += stepGrid) {
+                            var gu = (gx - offX) / (2200 * hScale);
+                            if (gu < 0 || gu > 1) continue;
+
+                            // Protection anti-collision avec le titre, le logo, la légende et les villes
+                            var gRect = { left: gx - 16, right: gx + 16, top: gy - 10, bottom: gy + 10 };
+                            var gClash = false;
+                            if (typeof occupied !== 'undefined' && occupied && occupied.length) {
+                                for (var oi = 0; oi < occupied.length; oi += 1) {
+                                    var o = occupied[oi];
+                                    if (gRect.left < o.right && gRect.right > o.left && gRect.top < o.bottom && gRect.bottom > o.top) {
+                                        gClash = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (gClash) continue;
+
+                            var gVal = null;
+                            if (localSampler) {
+                                var px = Math.min(Math.max(0, Math.round(gu * (localSampler.canvas.width - 1))), localSampler.canvas.width - 1);
+                                var py = Math.min(Math.max(0, Math.round(gv * (localSampler.canvas.height - 1))), localSampler.canvas.height - 1);
+                                var pix = localSampler.getImageData(px, py, 1, 1).data;
+                                if (pix[3] >= 12) {
+                                    gVal = valueFromColour(pix[0], pix[1], pix[2], vLayer);
+                                }
+                            }
+                            if (gVal === null || !Number.isFinite(gVal)) continue;
+
+                            if ((currentLayer === 'pluie_1h' || currentLayer === 'pluie_cumul' || currentLayer === 'neige' || currentLayer === 'equivalent_eau_neige') && gVal < 0.2) continue;
+                            if (currentLayer === 'mucape' && gVal < 40) continue;
+                            if (currentLayer === 'graupel' && gVal < 0.1) continue;
+
+                            var gStr = (currentLayer === 'pluie_1h' || currentLayer === 'pluie_cumul') ? (gVal < 10 ? gVal.toFixed(1) : String(Math.round(gVal))) : String(Math.round(gVal));
+
+                            context.strokeStyle = 'rgba(8, 19, 28, 0.95)';
+                            context.lineWidth = 3.6;
+                            context.strokeText(gStr, gx, gy);
+                            context.fillStyle = '#ffffff';
+                            context.fillText(gStr, gx, gy);
+                        }
+                    }
+                } catch (vErr) {}
             }
 
             return output;
@@ -2394,6 +2467,7 @@
                 var pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
                 drawWeather(width, height, pixelRatio);
                 drawVectors(width, height, pixelRatio);
+                drawValues(width, height, pixelRatio);
                 drawLabels(width, height, pixelRatio);
             });
         }
@@ -2561,7 +2635,7 @@
             resizeCanvas(labelsCanvas, width, height, pixelRatio);
             labelsContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
             labelsContext.clearRect(0, 0, width, height);
-            if (!citiesVisible || !places.length || !manifest.bounds) {
+            if (!citiesVisible || valuesVisible || !places.length || !manifest.bounds) {
                 return;
             }
 
@@ -2629,6 +2703,59 @@
                 drawn += 1;
                 if (drawn >= density.maximum) {
                     break;
+                }
+            }
+        }
+
+        function drawValues(width, height, pixelRatio) {
+            if (!valuesContext || !valuesCanvas) return;
+            resizeCanvas(valuesCanvas, width, height, pixelRatio);
+            valuesContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+            valuesContext.clearRect(0, 0, width, height);
+            if (!valuesVisible || !manifest || !currentLayer || !manifest.layers[currentLayer] || !samplerReady) {
+                return;
+            }
+
+            var layer = manifest.layers[currentLayer];
+            var mapRect = computeMapRect(width, height);
+            // Pas de la grille adaptatif selon le niveau de zoom
+            var stepPx = transform.scale < 1.35 ? 46 : (transform.scale < 2.5 ? 42 : 38);
+            var fontSize = transform.scale < 1.35 ? 11 : 12;
+            valuesContext.font = '800 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            valuesContext.textAlign = 'center';
+            valuesContext.textBaseline = 'middle';
+            valuesContext.lineJoin = 'round';
+
+            for (var y = stepPx / 2; y < height; y += stepPx) {
+                var v = (y - mapRect.y) / mapRect.h;
+                if (v < 0 || v > 1) continue;
+                for (var x = stepPx / 2; x < width; x += stepPx) {
+                    var u = (x - mapRect.x) / mapRect.w;
+                    if (u < 0 || u > 1) continue;
+
+                    var val = sampleProbe(currentProbe, u, v);
+                    if (val === null) val = samplePalette(u, v, layer);
+                    if (val === null || !Number.isFinite(val)) continue;
+
+                    // Filtre d'exclusion pour pluie / neige / orages : ne pas afficher si 0
+                    if ((currentLayer === 'pluie_1h' || currentLayer === 'pluie_cumul' || currentLayer === 'neige' || currentLayer === 'equivalent_eau_neige') && val < 0.2) {
+                        continue;
+                    }
+                    if (currentLayer === 'mucape' && val < 40) continue;
+                    if (currentLayer === 'graupel' && val < 0.1) continue;
+
+                    var strVal = '';
+                    if (currentLayer === 'pluie_1h' || currentLayer === 'pluie_cumul') {
+                        strVal = val < 10 ? val.toFixed(1) : String(Math.round(val));
+                    } else {
+                        strVal = String(Math.round(val));
+                    }
+
+                    valuesContext.strokeStyle = 'rgba(10, 15, 25, 0.95)';
+                    valuesContext.lineWidth = 3.2;
+                    valuesContext.strokeText(strVal, x, y);
+                    valuesContext.fillStyle = '#ffffff';
+                    valuesContext.fillText(strVal, x, y);
                 }
             }
         }
@@ -2880,6 +3007,14 @@
                 citiesVisible = !citiesVisible;
                 toggleCitiesButton.classList.toggle('is-active', citiesVisible);
                 toggleCitiesButton.setAttribute('aria-pressed', citiesVisible ? 'true' : 'false');
+                scheduleRender();
+            });
+        }
+        if (toggleValuesButton) {
+            toggleValuesButton.addEventListener('click', function () {
+                valuesVisible = !valuesVisible;
+                toggleValuesButton.classList.toggle('is-active', valuesVisible);
+                toggleValuesButton.setAttribute('aria-pressed', valuesVisible ? 'true' : 'false');
                 scheduleRender();
             });
         }
