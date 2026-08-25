@@ -116,6 +116,8 @@
         var captureGifButton = app.querySelector('[data-amfm-capture-gif]');
         var toggleCitiesButton = app.querySelector('[data-amfm-toggle-cities]');
         var toggleValuesButton = app.querySelector('[data-amfm-toggle-values]');
+        var toggleSeaButton = app.querySelector('[data-amfm-toggle-sea]');
+        var seaSelect = app.querySelector('[data-amfm-select-sea]');
         var pinButton = app.querySelector('[data-amfm-pin]');
         var diagramPopup = app.querySelector('[data-amfm-diagram-popup]');
         var diagramTitle = app.querySelector('[data-amfm-diagram-title]');
@@ -136,6 +138,7 @@
         var placeBuckets = new Map();
         var citiesVisible = true;
         var valuesVisible = false;
+        var seaMode = 'none'; // 'none' (partout mer comprise par défaut), 'land' (terres seules), 'coast' (terres + littoral)
         var vectorDefinition = null;
         var currentWeatherImage = null;
         var logoImage = new Image();
@@ -162,11 +165,31 @@
         };
 
         function isLand(u, v) {
+            if (seaMode === 'none') return true; // Mode 'none' : afficher partout y compris en pleine mer
             if (!maskSamplerReady || !maskSamplerContext) return true;
             var px = Math.min(Math.max(0, Math.round(u * 2199)), 2199);
             var py = Math.min(Math.max(0, Math.round(v * 1639)), 1639);
             var pix = maskSamplerContext.getImageData(px, py, 1, 1).data;
-            return pix[0] > 64 || (pix[3] > 64 && pix[0] > 64);
+            if (pix[0] > 64 || (pix[3] > 64 && pix[0] > 64)) return true;
+
+            if (seaMode === 'coast') {
+                // Inclusion généreuse du trait de côte et des zones littorales (~16 km)
+                var r = 18;
+                var offsets = [
+                    [r, 0], [-r, 0], [0, r], [0, -r],
+                    [13, 13], [-13, 13], [13, -13], [-13, -13],
+                    [r, Math.round(r / 2)], [-r, Math.round(r / 2)], [Math.round(r / 2), r], [Math.round(r / 2), -r]
+                ];
+                for (var i = 0; i < offsets.length; i++) {
+                    var nx = Math.min(Math.max(0, px + offsets[i][0]), 2199);
+                    var ny = Math.min(Math.max(0, py + offsets[i][1]), 1639);
+                    var npix = maskSamplerContext.getImageData(nx, ny, 1, 1).data;
+                    if (npix[0] > 64 || (npix[3] > 64 && npix[0] > 64)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
         // Fond de carte (pays voisins inclus, style Positron)
         var fondImageElement = new Image();
@@ -1119,9 +1142,9 @@
             if (valuesVisible && manifest && manifest.layers && manifest.layers[currentLayer]) {
                 try {
                     var vLayer = manifest.layers[currentLayer];
-                    // Calage exact sur le pas de grille visuel du site (aéré et lisible)
-                    var stepGrid = hScale < 1.35 ? 112 : (hScale < 2.5 ? 94 : 80);
-                    var valFontSize = hScale < 1.35 ? 28 : 30;
+                    // Calage dense avec grands chiffres ultra lisibles pour la carte nationale et régionale
+                    var stepGrid = hScale < 1.35 ? 88 : (hScale < 2.5 ? 78 : 66);
+                    var valFontSize = hScale < 1.35 ? 30 : 32;
                     context.font = '800 ' + valFontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     context.textAlign = 'center';
                     context.textBaseline = 'middle';
@@ -1148,8 +1171,8 @@
                             // Exclusion totale des valeurs en mer (ne garder que les terres)
                             if (!isLand(gu, gv)) continue;
 
-                            // Protection anti-collision ajustée au millimètre avec cartouche, logo et légende
-                            var gRect = { left: gx - 16, right: gx + 16, top: gy - 12, bottom: gy + 12 };
+                            // Protection anti-collision ajustée pour les grands chiffres
+                            var gRect = { left: gx - 20, right: gx + 20, top: gy - 16, bottom: gy + 16 };
                             var gClash = false;
                             for (var oi = 0; oi < occupied.length; oi += 1) {
                                 var o = occupied[oi];
@@ -1178,7 +1201,7 @@
                             var gStr = (currentLayer === 'pluie_1h' || currentLayer === 'pluie_cumul') ? (gVal < 10 ? gVal.toFixed(1) : String(Math.round(gVal))) : String(Math.round(gVal));
 
                             context.strokeStyle = 'rgba(8, 19, 28, 0.95)';
-                            context.lineWidth = 5.2;
+                            context.lineWidth = 5.8;
                             context.strokeText(gStr, gx, gy);
                             context.fillStyle = getValueColour(gVal, currentLayer);
                             context.fillText(gStr, gx, gy);
@@ -2776,9 +2799,9 @@
 
             var layer = manifest.layers[currentLayer];
             var mapRect = computeMapRect(width, height);
-            // Pas de la grille fin et parfaitement proportionné sur le site web
-            var stepPx = transform.scale < 1.35 ? 48 : (transform.scale < 2.5 ? 42 : 36);
-            var fontSize = transform.scale < 1.35 ? 10.5 : 12;
+            // Pas de la grille dense et équilibré pour couvrir toute la France sans vide
+            var stepPx = transform.scale < 1.35 ? 36 : (transform.scale < 2.5 ? 34 : 32);
+            var fontSize = transform.scale < 1.35 ? 10 : 11.5;
             valuesContext.font = '800 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             valuesContext.textAlign = 'center';
             valuesContext.textBaseline = 'middle';
@@ -3076,6 +3099,31 @@
                 valuesVisible = !valuesVisible;
                 toggleValuesButton.classList.toggle('is-active', valuesVisible);
                 toggleValuesButton.setAttribute('aria-pressed', valuesVisible ? 'true' : 'false');
+                scheduleRender();
+            });
+        }
+        if (seaSelect) {
+            seaSelect.addEventListener('change', function (e) {
+                seaMode = e.target.value || 'land';
+                scheduleRender();
+            });
+        }
+        if (toggleSeaButton) {
+            toggleSeaButton.addEventListener('click', function () {
+                if (seaMode === 'coast') {
+                    seaMode = 'none'; // Affiche tout (y compris pleine mer)
+                    toggleSeaButton.classList.add('is-active');
+                    toggleSeaButton.title = 'Mode Mer : Tout afficher (cliquer pour Terres seules)';
+                } else if (seaMode === 'none') {
+                    seaMode = 'land'; // Terre seule
+                    toggleSeaButton.classList.remove('is-active');
+                    toggleSeaButton.title = 'Mode Mer : Terres seules (cliquer pour Terres + Bord de mer)';
+                } else {
+                    seaMode = 'coast'; // Terre + Bord de mer
+                    toggleSeaButton.classList.add('is-active');
+                    toggleSeaButton.title = 'Mode Mer : Terres + Bord de mer (cliquer pour Tout afficher)';
+                }
+                if (seaSelect) seaSelect.value = seaMode;
                 scheduleRender();
             });
         }
