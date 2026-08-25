@@ -1297,6 +1297,8 @@
                 img.src = versioned(step.files[currentLayer]);
             }
 
+            var layer = manifest && manifest.layers && manifest.layers[currentLayer];
+
             gif.on('progress', function (p) {
                 var pct = 50 + Math.round(p * 50);
                 if (gifProgressBar) gifProgressBar.style.width = pct + '%';
@@ -1306,17 +1308,30 @@
                 }
             });
             gif.on('finished', function (blob) {
-                var url = URL.createObjectURL(blob);
-                var link = document.createElement('a');
-                var slug = String(layer ? layer.label : 'animation').toLowerCase()
-                    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-                    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-                link.href = url;
-                link.download = 'MeteoClimatPro_' + (manifest ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME') + '_' + (slug || 'animation') + '.gif';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+                try {
+                    var currentLayerObj = manifest && manifest.layers && manifest.layers[currentLayer];
+                    var slug = String(currentLayerObj ? currentLayerObj.label : 'animation').toLowerCase()
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                    var modelName = (manifest && manifest.model_name) ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME';
+                    var filename = 'MeteoClimatPro_' + modelName + '_' + (slug || 'animation') + '.gif';
+
+                    var url = URL.createObjectURL(blob);
+                    var link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    link.rel = 'noopener';
+                    document.body.appendChild(link);
+                    link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+                    window.setTimeout(function () {
+                        if (link.parentNode) {
+                            link.parentNode.removeChild(link);
+                        }
+                        URL.revokeObjectURL(url);
+                    }, 2000);
+                } catch (finishErr) {
+                    console.error('Erreur déclenchement téléchargement GIF:', finishErr);
+                }
 
                 if (gifModal) gifModal.hidden = true;
                 if (gifProgressBox) gifProgressBox.style.display = 'none';
