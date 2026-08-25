@@ -3276,10 +3276,18 @@
                     setLayerMenuOpen(!window.matchMedia ||
                         !window.matchMedia('(max-width: 760px)').matches);
                 }
-                applyTransform();
                 renderStep(currentStep);
                 applyUrlParams();
-                if (pendingFocus && typeof focusLocation === 'function') {
+                var currentParams = new URLSearchParams(window.location.search);
+                if (!currentParams.get('region')) {
+                    var regSel = document.getElementById('select-region');
+                    if (regSel && regSel.querySelector('option[value="hdf"]')) {
+                        regSel.value = 'hdf';
+                    }
+                    if (typeof focusLocation === 'function') {
+                        focusLocation({ latitude: 49.85, longitude: 2.82, scale: 2.65 });
+                    }
+                } else if (pendingFocus && typeof focusLocation === 'function') {
                     focusLocation(pendingFocus);
                 }
             })
