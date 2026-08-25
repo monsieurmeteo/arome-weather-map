@@ -1238,16 +1238,17 @@
                 captureGifButton.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>0%</span>';
             }
 
-            // Dimensions GIF : exactement les mêmes proportions 4:3 (1100 × 820) que la capture HD (2200 × 1640)
-            var gw = 1100;
-            var gh = 820;
+            // Dimensions GIF : ratio 4:3 exact (880 × 656) aligné sur la capture HD (2200 × 1640)
+            var gw = 880;
+            var gh = 656;
 
+            var workerAbsoluteUrl = new URL('js/gif.worker.js', window.location.href).href;
             var gifOptions = {
                 quality: 10,
                 width: gw,
                 height: gh,
                 workers: 2,
-                workerScript: 'js/gif.worker.js'
+                workerScript: workerAbsoluteUrl
             };
             var gif = new window.GIF(gifOptions);
             var index = 0;
@@ -1255,7 +1256,16 @@
             function next() {
                 if (index >= filteredSteps.length) {
                     if (gifStatusText) gifStatusText.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> Finalisation du fichier GIF…';
-                    gif.render();
+                    try {
+                        gif.render();
+                    } catch (renderErr) {
+                        console.error('Erreur render GIF:', renderErr);
+                        if (captureGifButton) {
+                            captureGifButton.classList.remove('is-loading');
+                            captureGifButton.innerHTML = '<i class="fa-solid fa-film"></i> <span>GIF</span>';
+                        }
+                        if (gifSubmitBtn) gifSubmitBtn.disabled = false;
+                    }
                     return;
                 }
                 var step = filteredSteps[index];
@@ -1309,11 +1319,16 @@
                 window.setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
 
                 if (gifModal) gifModal.hidden = true;
+                if (gifProgressBox) gifProgressBox.style.display = 'none';
+                if (gifSubmitBtn) {
+                    gifSubmitBtn.disabled = false;
+                    gifSubmitBtn.innerHTML = '<i class="fa-solid fa-download"></i> Télécharger le GIF';
+                }
                 if (captureGifButton) {
                     captureGifButton.classList.remove('is-loading');
                     captureGifButton.innerHTML = '<i class="fa-solid fa-film"></i> <span>GIF</span>';
                 }
-                setToolHint('GIF généré avec succès !');
+                setToolHint('GIF généré et téléchargé avec succès !');
             });
             if (typeof gif.on === 'function') {
                 gif.on('abort', function () {
