@@ -757,8 +757,9 @@
             }
         }
 
-        function composeCaptureCanvas() {
-            if (!currentWeatherImage) {
+        function composeCaptureCanvas(customStep, customImage) {
+            var activeImg = customImage || currentWeatherImage;
+            if (!activeImg) {
                 return null;
             }
             var vw = viewport.clientWidth;
@@ -835,7 +836,7 @@
             var weatherCtx = weatherMasked.getContext('2d');
             weatherCtx.save();
             weatherCtx.transform(hScale, 0, 0, vScale, offX, offY);
-            weatherCtx.drawImage(currentWeatherImage, 0, 0);
+            weatherCtx.drawImage(activeImg, 0, 0);
             weatherCtx.restore();
             context.drawImage(weatherMasked, 0, 0);
 
@@ -888,7 +889,7 @@
 
             // Cartouche d'antenne (en haut à gauche)
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
-            var step = availableSteps()[currentStep];
+            var step = customStep || availableSteps()[currentStep];
             var prettyLabel = layer ? layer.label : '';
             var prettyUnit = layer && layer.unit ? layer.unit : '';
             if (typeof window.getLayerPalette === 'function') {
@@ -1224,66 +1225,9 @@
                 captureGifButton.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>0%</span>';
             }
 
-            // Calcul du CADRAGE EXACT sans bandes noires
-            var gw = 760;
-            var gh;
-            var hScale, vScale, offX, offY;
-            var vw = viewport.clientWidth;
-            var vh = viewport.clientHeight;
-            var layer = manifest && manifest.layers && manifest.layers[currentLayer];
-
-            if (transform.scale <= 1.15) {
-                // Cadrage France métropolitaine + Corse bord à bord (sans coin gris sud-est)
-                var fx0 = 240;  // Ouest Bretagne / Atlantique
-                var fx1 = 1860; // Est Alsace / Corse
-                var fy0 = 130;  // Nord Dunkerque / Manche
-                var fy1 = 1480; // Sud Corse / Méditerranée
-                var fw = fx1 - fx0;
-                var fh = fy1 - fy0;
-                gh = Math.round(gw * fh / fw);
-                hScale = gw / fw;
-                vScale = gh / fh;
-                offX = -fx0 * hScale;
-                offY = -fy0 * vScale;
-            } else {
-                // Vue zoomée / région : reproduit fidèlement la portion visible à l'écran
-                var viewRect = computeMapRect(vw, vh);
-                var u0 = (0 - viewRect.x) / viewRect.w;
-                var u1 = (vw - viewRect.x) / viewRect.w;
-                var v0 = (0 - viewRect.y) / viewRect.h;
-                var v1 = (vh - viewRect.y) / viewRect.h;
-                var vueW = Math.max(0.01, u1 - u0);
-                var vueH = Math.max(0.01, v1 - v0);
-                gh = Math.round(gw * (vueH * 1640.0) / (vueW * 2200.0));
-                hScale = gw / (vueW * 2200.0);
-                vScale = gh / (vueH * 1640.0);
-                offX = -u0 * 2200.0 * hScale;
-                offY = -v0 * 1640.0 * vScale;
-            }
-
-            // Priorité villes pour la région choisie
-            var prioritySet = null;
-            try {
-                var regionSelect = document.getElementById('select-region');
-                var regionKey = regionSelect ? regionSelect.value : 'france';
-                var REGION_KEY_MAP = {
-                    france: 'france', hdf: 'hdf', normandie: 'normandie',
-                    idf: 'ile-de-france', grandest: 'grand-est',
-                    bretagne: 'bretagne', pdl: 'pdl', cvl: 'cvl',
-                    bfc: 'bfc', naq: 'naq', ara: 'ara',
-                    occitanie: 'occitanie', paca: 'paca', corse: 'corse'
-                };
-                var regDef = window.Europe1Regions &&
-                    window.Europe1Regions[REGION_KEY_MAP[regionKey] || regionKey];
-                if (regDef && regDef.cities && regDef.cities.length) {
-                    prioritySet = new Set();
-                    regDef.cities.forEach(function (city) {
-                        var name = String(city.name || '').toLowerCase()
-                            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                        if (name) prioritySet.add(name);
-                    });
-                }
-            } catch (e) {}
+            // Dimensions GIF : exactement les mêmes proportions 4:3 (1100 × 820) que la capture HD (2200 × 1640)
+            var gw = 1100;
+            var gh = 820;
 
             var gifOptions = {
                 quality: 10,
@@ -1295,260 +1239,6 @@
             var gif = new window.GIF(gifOptions);
             var index = 0;
 
-            function drawFrame(canvas, img, stepObj) {
-                var ctx = canvas.getContext('2d');
-                var leadHour = stepObj ? stepObj.lead_hour : 0;
-                var validTime = stepObj ? stepObj.valid_time : null;
-
-                // 1. Fond sombre & Fond de carte
-                ctx.fillStyle = '#0b1220';
-                ctx.fillRect(0, 0, gw, gh);
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(0, 0, gw, gh);
-                ctx.clip();
-                if (fondImageElement && fondImageElement.complete && fondImageElement.naturalWidth) {
-                    ctx.save();
-                    ctx.transform(hScale, 0, 0, vScale, offX, offY);
-                    ctx.drawImage(fondImageElement, 0, 0);
-                    ctx.restore();
-                } else {
-                    ctx.fillStyle = '#a5a6b0';
-                    ctx.fillRect(0, 0, gw, gh);
-                }
-
-                // 2. Dalle météo
-                var weatherLayer = document.createElement('canvas');
-                weatherLayer.width = gw;
-                weatherLayer.height = gh;
-                var wctx = weatherLayer.getContext('2d');
-                wctx.save();
-                wctx.transform(hScale, 0, 0, vScale, offX, offY);
-                wctx.drawImage(img, 0, 0);
-                wctx.restore();
-                ctx.drawImage(weatherLayer, 0, 0);
-
-                // 3. Frontières
-                if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
-                    ctx.save();
-                    ctx.transform(hScale, 0, 0, vScale, offX, offY);
-                    vectorDefinition.paths.forEach(function (entry) {
-                        var fade = 1;
-                        if (entry.kind === 'department') {
-                            fade = transform.scale <= 3 ? 1 :
-                                Math.max(0.22, 1 - (transform.scale - 3) / 14);
-                        } else if (entry.kind === 'region') {
-                            fade = transform.scale <= 8 ? 1 :
-                                Math.max(0.35, 1 - (transform.scale - 8) / 20);
-                        }
-                        ctx.strokeStyle = entry.colour;
-                        ctx.globalAlpha = (entry.opacity || 1) * fade;
-                        ctx.lineWidth = entry.width / hScale;
-                        ctx.stroke(entry.path);
-                    });
-                    ctx.restore();
-                }
-                ctx.restore(); // Fin du clip
-
-                // 4. Logo Météo-Climat Pro (calé en haut à droite à l'intérieur du cadre)
-                var logoW = 95;
-                var logoH = 28;
-                if (logoImage && logoImage.complete && logoImage.naturalWidth) {
-                    logoH = Math.round(logoW * logoImage.naturalHeight / logoImage.naturalWidth);
-                    var lx = gw - 12 - logoW;
-                    var ly = 12;
-                    ctx.save();
-                    ctx.fillStyle = 'rgba(7, 11, 20, 0.82)';
-                    ctx.beginPath();
-                    if (typeof ctx.roundRect === 'function') {
-                        ctx.roundRect(lx - 6, ly - 4, logoW + 12, logoH + 8, 6);
-                    } else {
-                        ctx.rect(lx - 6, ly - 4, logoW + 12, logoH + 8);
-                    }
-                    ctx.fill();
-                    ctx.drawImage(logoImage, lx, ly, logoW, logoH);
-                    ctx.restore();
-                }
-
-                // 5. Cartouche Officiel (calé en haut à gauche à l'intérieur du cadre)
-                var prettyLabel = layer ? layer.label : '';
-                var prettyUnit = layer && layer.unit ? layer.unit : '';
-                if (typeof window.getLayerPalette === 'function') {
-                    try {
-                        var prettyPal = window.getLayerPalette(currentLayer);
-                        if (prettyPal) {
-                            prettyLabel = prettyPal.label || prettyLabel;
-                            prettyUnit = prettyPal.unit !== undefined ? prettyPal.unit : prettyUnit;
-                        }
-                    } catch (e) {}
-                }
-                var dateStr = '';
-                if (validTime) {
-                    try {
-                        dateStr = validityFormat.format(new Date(validTime)).replace(':', 'h');
-                    } catch (e) {
-                        dateStr = new Date(validTime).toLocaleDateString('fr-FR');
-                    }
-                }
-                var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
-                var titleText = modelTitle + ' • ' + prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : '');
-                var dateText = dateStr + ' (H+' + String(leadHour).padStart(2, '0') + ')';
-
-                var bMargin = 12;
-                var bY = 12;
-                var bH = 50;
-                ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-                var tW = ctx.measureText(titleText).width;
-                ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-                var dW = ctx.measureText(dateText).width;
-                var bW = Math.min(gw - 120, Math.max(tW, dW) + 24);
-
-                ctx.save();
-                ctx.fillStyle = 'rgba(7, 11, 20, 0.92)';
-                ctx.beginPath();
-                if (typeof ctx.roundRect === 'function') {
-                    ctx.roundRect(bMargin, bY, bW, bH, 8);
-                } else {
-                    ctx.rect(bMargin, bY, bW, bH);
-                }
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(0, 210, 255, 0.7)';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-                ctx.fillText(titleText, bMargin + 10, bY + 20);
-
-                ctx.fillStyle = '#00d2ff';
-                ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-                ctx.fillText(dateText + ' — Météo-Climat Pro', bMargin + 10, bY + 39);
-                ctx.restore();
-
-                // 6. Légende colorimétrique (calée en bas à l'intérieur du cadre)
-                var legW = Math.min(340, gw - 40);
-                var legH = 26;
-                var legY = gh - 34;
-                var legX = (gw - legW) / 2;
-                if (layer && typeof window.getLayerPalette === 'function' && typeof window.paletteTicks === 'function') {
-                    try {
-                        ctx.save();
-                        ctx.fillStyle = 'rgba(7, 11, 20, 0.92)';
-                        ctx.beginPath();
-                        if (typeof ctx.roundRect === 'function') {
-                            ctx.roundRect(legX - 10, legY - 4, legW + 20, legH + 8, 8);
-                        } else {
-                            ctx.rect(legX - 10, legY - 4, legW + 20, legH + 8);
-                        }
-                        ctx.fill();
-
-                        var pal = window.getLayerPalette(currentLayer);
-                        var stops = pal && pal.stops ? pal.stops : [];
-                        var low = (pal && pal.transparent_below !== null && pal.transparent_below !== undefined) ?
-                            pal.transparent_below : (stops.length ? stops[0].value : 0);
-                        var max = stops.length ? stops[stops.length - 1].value : 1;
-                        var span = (max - low) || 1;
-                        var grad = ctx.createLinearGradient(legX, 0, legX + legW, 0);
-                        stops.forEach(function (s) {
-                            var pos = Math.max(0, Math.min(1, (Number(s.value) - low) / span));
-                            grad.addColorStop(pos, s.color);
-                        });
-                        ctx.fillStyle = grad;
-                        ctx.fillRect(legX, legY + 2, legW, 9);
-                        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-                        ctx.lineWidth = 1;
-                        ctx.strokeRect(legX, legY + 2, legW, 9);
-
-                        ctx.fillStyle = '#eaf1ff';
-                        ctx.font = 'bold 9px sans-serif';
-                        ctx.textAlign = 'center';
-                        var ticks = window.paletteTicks(currentLayer);
-                        ticks.forEach(function (tick, i) {
-                            var tx = legX + (ticks.length > 1 ? i / (ticks.length - 1) : 0.5) * legW;
-                            ctx.fillText(String(tick), tx, legY + 20);
-                        });
-                        ctx.restore();
-                    } catch (e) {}
-                }
-
-                // 7. Villes sur chaque frame du GIF
-                if (manifest && manifest.bounds && places && places.length && citiesVisible !== false) {
-                    try {
-                        var bounds = manifest.bounds;
-                        var northY = mercator(Number(bounds.north));
-                        var southY = mercator(Number(bounds.south));
-                        var lonSpan = Number(bounds.east) - Number(bounds.west);
-                        var latSpan = northY - southY;
-                        if (lonSpan && latSpan) {
-                            var expScale = hScale * (2200 / gw);
-                            var popMin = expScale < 1.35 ? 200000 :
-                                (expScale < 2.25 ? 80000 :
-                                (expScale < 3.75 ? 30000 :
-                                (expScale < 6 ? 8000 : 2000)));
-                            var maxLabels = expScale < 1.35 ? 22 :
-                                (expScale < 2.25 ? 32 : 45);
-
-                            ctx.save();
-                            ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.strokeStyle = 'rgba(8, 19, 28, 0.94)';
-                            ctx.fillStyle = '#ffffff';
-                            ctx.lineWidth = 3;
-
-                            var occupied = [];
-                            occupied.push({ left: bMargin - 4, right: bMargin + bW + 4, top: bY - 4, bottom: bY + bH + 4 });
-                            occupied.push({ left: gw - 12 - logoW - 6, right: gw, top: 4, bottom: 12 + logoH + 6 });
-                            occupied.push({ left: legX - 12, right: legX + legW + 12, top: legY - 6, bottom: gh });
-
-                            var orderedPlaces = places;
-                            if (prioritySet && prioritySet.size) {
-                                orderedPlaces = places.slice().sort(function (a, b) {
-                                    var aP = prioritySet.has(String(a[0]).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-                                    var bP = prioritySet.has(String(b[0]).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-                                    if (aP !== bP) return aP ? -1 : 1;
-                                    return Number(b[1]) - Number(a[1]);
-                                });
-                            }
-
-                            var drawn = 0;
-                            for (var pi = 0; pi < orderedPlaces.length; pi++) {
-                                var pl = orderedPlaces[pi];
-                                if (!Array.isArray(pl) || pl.length < 4) continue;
-                                if (Number(pl[1]) < popMin) {
-                                    var isP = prioritySet && prioritySet.has(String(pl[0]).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-                                    if (!isP) continue;
-                                }
-                                var u = (Number(pl[3]) - Number(bounds.west)) / lonSpan;
-                                var v = (northY - mercator(Number(pl[2]))) / latSpan;
-                                var sx = u * 2200 * hScale + offX;
-                                var sy = v * 1640 * vScale + offY;
-                                if (sx < 15 || sx > gw - 15 || sy < 15 || sy > gh - 15) continue;
-
-                                var cityName = String(pl[0]);
-                                var tw = ctx.measureText(cityName).width;
-                                var rect = { left: sx - tw / 2 - 4, right: sx + tw / 2 + 4, top: sy - 8, bottom: sy + 8 };
-                                var clash = false;
-                                for (var oi = 0; oi < occupied.length; oi++) {
-                                    var o = occupied[oi];
-                                    if (rect.left < o.right && rect.right > o.left && rect.top < o.bottom && rect.bottom > o.top) {
-                                        clash = true;
-                                        break;
-                                    }
-                                }
-                                if (clash) continue;
-                                occupied.push(rect);
-                                ctx.strokeText(cityName, sx, sy);
-                                ctx.fillText(cityName, sx, sy);
-                                drawn++;
-                                if (drawn >= maxLabels) break;
-                            }
-                            ctx.restore();
-                        }
-                    } catch (e) {}
-                }
-            }
-
             function next() {
                 if (index >= filteredSteps.length) {
                     if (gifStatusText) gifStatusText.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> Finalisation du fichier GIF…';
@@ -1559,11 +1249,15 @@
                 var img = new Image();
                 img.crossOrigin = 'anonymous';
                 img.onload = function () {
-                    var canvas = document.createElement('canvas');
-                    canvas.width = gw;
-                    canvas.height = gh;
-                    drawFrame(canvas, img, step);
-                    gif.addFrame(canvas, { copy: true, delay: frameDelay });
+                    var fullCanvas = composeCaptureCanvas(step, img);
+                    if (fullCanvas) {
+                        var gifCanvas = document.createElement('canvas');
+                        gifCanvas.width = gw;
+                        gifCanvas.height = gh;
+                        var gctx = gifCanvas.getContext('2d');
+                        gctx.drawImage(fullCanvas, 0, 0, gw, gh);
+                        gif.addFrame(gifCanvas, { copy: true, delay: frameDelay });
+                    }
                     index += 1;
                     var pct = Math.round((index / filteredSteps.length) * 50);
                     if (gifProgressBar) gifProgressBar.style.width = pct + '%';
