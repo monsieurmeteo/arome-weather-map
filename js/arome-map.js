@@ -839,22 +839,16 @@
             weatherCtx.restore();
             context.drawImage(weatherMasked, 0, 0);
 
-            // Frontières vectorielles uniques
+            // Frontières vectorielles uniques (noir franc 100% net, identique au site)
             if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
                 context.save();
                 context.transform(hScale, 0, 0, vScale, offX, offY);
                 vectorDefinition.paths.forEach(function (entry) {
-                    var fade = 1;
-                    if (entry.kind === 'department') {
-                        fade = transform.scale <= 3 ? 1 : Math.max(0.22, 1 - (transform.scale - 3) / 14);
-                    } else if (entry.kind === 'region') {
-                        fade = transform.scale <= 8 ? 1 : Math.max(0.35, 1 - (transform.scale - 8) / 20);
-                    }
-                    context.strokeStyle = entry.colour || '#1a1f26';
-                    context.globalAlpha = (entry.opacity || 1) * fade;
-                    context.lineCap = entry.lineCap || 'round';
-                    context.lineJoin = entry.lineJoin || 'round';
-                    context.lineWidth = (entry.width || 1.0) / hScale;
+                    context.strokeStyle = entry.colour || '#0d1117';
+                    context.globalAlpha = 1.0;
+                    context.lineCap = 'round';
+                    context.lineJoin = 'round';
+                    context.lineWidth = (entry.width || 1.6) / hScale;
                     context.stroke(entry.path);
                 });
                 context.restore();
@@ -2636,17 +2630,10 @@
                 pixelRatio * mapRect.y
             );
             vectorDefinition.paths.forEach(function (entry) {
-                // Comme météociel : les limites de département s'estompent en zoomant
-                if (entry.kind === 'department' && transform.scale > 3.2) {
-                    return;
-                }
-                if (entry.kind === 'region' && transform.scale > 10) {
-                    return;
-                }
-                vectorContext.strokeStyle = entry.colour;
-                vectorContext.globalAlpha = entry.opacity;
-                vectorContext.lineCap = entry.lineCap;
-                vectorContext.lineJoin = entry.lineJoin;
+                vectorContext.strokeStyle = entry.colour || '#0d1117';
+                vectorContext.globalAlpha = 1.0;
+                vectorContext.lineCap = 'round';
+                vectorContext.lineJoin = 'round';
                 vectorContext.lineWidth = entry.width / horizontalScale;
                 vectorContext.stroke(entry.path);
             });
