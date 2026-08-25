@@ -1034,11 +1034,11 @@
                 } catch (e) {}
             }
             var occupied = [];
-            // Zones protégées strictes (cartouche en haut à gauche, logo en haut à droite, légende en bas)
-            occupied.push({ left: 0, right: margin + bannerW + 35, top: 0, bottom: bannerY + bannerH + 35 });
-            occupied.push({ left: output.width - margin - 450, right: output.width, top: 0, bottom: bannerY + 180 });
-            if (legendW > 0) {
-                occupied.push({ left: legendX - 35, right: legendX + legendW + 35, top: output.height - 180, bottom: output.height });
+            // Zones protégées strictes et élargies (cartouche haut-gauche, logo haut-droite, légende bas)
+            occupied.push({ left: 0, right: margin + bannerW + 70, top: 0, bottom: bannerY + bannerH + 70 });
+            occupied.push({ left: output.width - margin - 470, right: output.width, top: 0, bottom: bannerY + bannerH + 70 });
+            if (legendW > 0 && legendY > 0) {
+                occupied.push({ left: legendX - 70, right: legendX + legendW + 70, top: legendY - 35, bottom: output.height });
             }
 
             // Villes sur la carte (respecte citiesVisible et se masque automatiquement si valuesVisible est actif)
@@ -2752,9 +2752,9 @@
 
             var layer = manifest.layers[currentLayer];
             var mapRect = computeMapRect(width, height);
-            // Pas de la grille aéré et parfaitement synchronisé avec l'export
-            var stepPx = transform.scale < 1.35 ? 64 : (transform.scale < 2.5 ? 54 : 46);
-            var fontSize = transform.scale < 1.35 ? 13.5 : 15;
+            // Pas de la grille fin et parfaitement proportionné sur le site web
+            var stepPx = transform.scale < 1.35 ? 48 : (transform.scale < 2.5 ? 42 : 36);
+            var fontSize = transform.scale < 1.35 ? 10.5 : 12;
             valuesContext.font = '800 ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             valuesContext.textAlign = 'center';
             valuesContext.textBaseline = 'middle';
@@ -2786,7 +2786,7 @@
                     }
 
                     valuesContext.strokeStyle = 'rgba(10, 15, 25, 0.95)';
-                    valuesContext.lineWidth = 3.8;
+                    valuesContext.lineWidth = 2.6;
                     valuesContext.strokeText(strVal, x, y);
                     valuesContext.fillStyle = getValueColour(val, currentLayer);
                     valuesContext.fillText(strVal, x, y);
