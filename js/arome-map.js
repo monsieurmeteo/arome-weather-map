@@ -2126,20 +2126,20 @@
             // la région ENTIÈRE dans le viewport sans excès de zoom.
             var REGION_CONFIG = {
                 france: { reset: true },
-                hdf: { latitude: 50.15, longitude: 2.80, scale: 2.15 },
-                normandie: { latitude: 49.15, longitude: 0.20, scale: 2.25 },
-                idf: { latitude: 48.70, longitude: 2.50, scale: 2.80 },
-                grandest: { latitude: 48.70, longitude: 5.80, scale: 1.85 },
-                bretagne: { latitude: 48.15, longitude: -2.80, scale: 2.25 },
-                pdl: { latitude: 47.50, longitude: -0.60, scale: 2.10 },
-                cvl: { latitude: 47.50, longitude: 1.80, scale: 2.10 },
-                bfc: { latitude: 47.20, longitude: 5.00, scale: 1.95 },
-                naq: { latitude: 45.30, longitude: 0.20, scale: 1.75 },
-                ara: { latitude: 45.50, longitude: 4.80, scale: 1.75 },
-                occitanie: { latitude: 43.60, longitude: 2.30, scale: 1.85 },
-                paca: { latitude: 43.85, longitude: 6.10, scale: 2.15 },
-                corse: { latitude: 42.15, longitude: 9.10, scale: 2.85 },
-                belgique: { latitude: 50.50, longitude: 4.40, scale: 2.40 }
+                hdf: { latitude: 50.10, longitude: 2.80, scale: 3.40 },
+                normandie: { latitude: 49.15, longitude: 0.15, scale: 3.40 },
+                idf: { latitude: 48.70, longitude: 2.50, scale: 4.80 },
+                grandest: { latitude: 48.70, longitude: 5.80, scale: 2.60 },
+                bretagne: { latitude: 48.15, longitude: -2.80, scale: 3.30 },
+                pdl: { latitude: 47.45, longitude: -0.80, scale: 3.20 },
+                cvl: { latitude: 47.50, longitude: 1.80, scale: 3.20 },
+                bfc: { latitude: 47.20, longitude: 5.00, scale: 3.00 },
+                naq: { latitude: 45.30, longitude: 0.10, scale: 2.30 },
+                ara: { latitude: 45.45, longitude: 4.80, scale: 2.50 },
+                occitanie: { latitude: 43.60, longitude: 2.30, scale: 2.50 },
+                paca: { latitude: 43.85, longitude: 6.10, scale: 3.20 },
+                corse: { latitude: 42.15, longitude: 9.10, scale: 5.60 },
+                belgique: { latitude: 50.50, longitude: 4.40, scale: 3.80 }
             };
 
             regionSelect.addEventListener('change', function (e) {
