@@ -144,12 +144,46 @@
         var franceMaskImage = new Image();
         franceMaskImage.crossOrigin = 'anonymous';
         franceMaskImage.src = resolvePath('maps/mask_france.png');
+        var maskSamplerCanvas = document.createElement('canvas');
+        maskSamplerCanvas.width = 2200;
+        maskSamplerCanvas.height = 1640;
+        var maskSamplerContext = maskSamplerCanvas.getContext ? maskSamplerCanvas.getContext('2d', { willReadFrequently: true }) : null;
+        var maskSamplerReady = false;
+
         franceMaskImage.onload = function () {
-            // Le bbox du masque pilote le cadrage France : dès qu'il est
-            // connu, on re-rend pour appliquer le cadrage intelligent.
             visibleBBoxCache = null;
+            if (maskSamplerContext) {
+                try {
+                    maskSamplerContext.drawImage(franceMaskImage, 0, 0, 2200, 1640);
+                    maskSamplerReady = true;
+                } catch (e) {}
+            }
             scheduleRender();
         };
+
+        function isLand(u, v) {
+            if (!maskSamplerReady || !maskSamplerContext) return true;
+            var px = Math.min(Math.max(0, Math.round(u * 2199)), 2199);
+            var py = Math.min(Math.max(0, Math.round(v * 1639)), 1639);
+            var pix = maskSamplerContext.getImageData(px, py, 1, 1).data;
+            if (pix[0] > 64 || (pix[3] > 64 && pix[0] > 64)) return true;
+
+            // Inclusion des lignes de bord de mer & zones littorales immédiates (~12 km)
+            var r = 16;
+            var offsets = [
+                [r, 0], [-r, 0], [0, r], [0, -r],
+                [11, 11], [-11, 11], [11, -11], [-11, -11]
+            ];
+            for (var i = 0; i < offsets.length; i++) {
+                var nx = Math.min(Math.max(0, px + offsets[i][0]), 2199);
+                var ny = Math.min(Math.max(0, py + offsets[i][1]), 1639);
+                var npix = maskSamplerContext.getImageData(nx, ny, 1, 1).data;
+                if (npix[0] > 64 || (npix[3] > 64 && npix[0] > 64)) {
+                    return true;
+                }
+            }
+            return false;
+        }
         // Fond de carte (pays voisins inclus, style Positron)
         var fondImageElement = new Image();
         fondImageElement.crossOrigin = 'anonymous';
@@ -1034,11 +1068,11 @@
                 } catch (e) {}
             }
             var occupied = [];
-            // Zones protégées strictes et élargies (cartouche haut-gauche, logo haut-droite, légende bas)
-            occupied.push({ left: 0, right: margin + bannerW + 70, top: 0, bottom: bannerY + bannerH + 70 });
-            occupied.push({ left: output.width - margin - 470, right: output.width, top: 0, bottom: bannerY + bannerH + 70 });
+            // Zones protégées ajustées au millimètre (cartouche haut-gauche, logo haut-droite, légende bas)
+            occupied.push({ left: 0, right: margin + bannerW + 16, top: 0, bottom: bannerY + bannerH + 16 });
+            occupied.push({ left: output.width - margin - 390, right: output.width, top: 0, bottom: bannerY + bannerH + 16 });
             if (legendW > 0 && legendY > 0) {
-                occupied.push({ left: legendX - 70, right: legendX + legendW + 70, top: legendY - 35, bottom: output.height });
+                occupied.push({ left: legendX - 25, right: legendX + legendW + 25, top: legendY - 15, bottom: output.height });
             }
 
             // Villes sur la carte (respecte citiesVisible et se masque automatiquement si valuesVisible est actif)
@@ -1127,8 +1161,11 @@
                             var gu = (gx - offX) / (2200 * hScale);
                             if (gu < 0 || gu > 1) continue;
 
-                            // Protection anti-collision stricte avec cartouche, logo et légende
-                            var gRect = { left: gx - 24, right: gx + 24, top: gy - 16, bottom: gy + 16 };
+                            // Exclusion totale des valeurs en mer (ne garder que les terres)
+                            if (!isLand(gu, gv)) continue;
+
+                            // Protection anti-collision ajustée au millimètre avec cartouche, logo et légende
+                            var gRect = { left: gx - 16, right: gx + 16, top: gy - 12, bottom: gy + 12 };
                             var gClash = false;
                             for (var oi = 0; oi < occupied.length; oi += 1) {
                                 var o = occupied[oi];
@@ -2770,6 +2807,9 @@
                     var u = (x - mapRect.x) / mapRect.w;
                     if (u < 0 || u > 1) continue;
 
+                    // Exclusion totale des valeurs en mer (ne garder que les terres)
+                    if (!isLand(u, v)) continue;
+
                     var val = sampleProbe(currentProbe, u, v);
                     if (val === null) val = samplePalette(u, v, layer);
                     if (val === null || !Number.isFinite(val)) continue;
@@ -3276,10 +3316,18 @@
                     setLayerMenuOpen(!window.matchMedia ||
                         !window.matchMedia('(max-width: 760px)').matches);
                 }
-                applyTransform();
                 renderStep(currentStep);
                 applyUrlParams();
-                if (pendingFocus && typeof focusLocation === 'function') {
+                var currentParams = new URLSearchParams(window.location.search);
+                if (!currentParams.get('region')) {
+                    var regSel = document.getElementById('select-region');
+                    if (regSel && regSel.querySelector('option[value="hdf"]')) {
+                        regSel.value = 'hdf';
+                    }
+                    if (typeof focusLocation === 'function') {
+                        focusLocation({ latitude: 49.85, longitude: 2.82, scale: 2.65 });
+                    }
+                } else if (pendingFocus && typeof focusLocation === 'function') {
                     focusLocation(pendingFocus);
                 }
             })
