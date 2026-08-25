@@ -767,34 +767,27 @@
                 return null;
             }
 
-            // Dimensions HD format carré Météo-NPDC officiel (2000×2000)
-            var outW = 2000;
-            var outH = 2000;
-            var topBannerH = 130;
-            var bottomBannerH = 110;
-            var mapAreaH = outH - topBannerH - bottomBannerH; // 1760 px
-
+            var outW = 2200;
+            var outH = 1640;
             var hScale, vScale, offX, offY;
 
             if (transform.scale <= 1.15) {
-                // Cadrage boîte Météo-NPDC France entière :
-                // (West: -5.8°, East: +10.2°, North: 51.6°, South: 41.1°)
-                // 100% de la surface est modélisée par AROME (zéro zone grise)
+                // Vue France entière : boîte Météo-NPDC (West: -5.8°, East: +10.2°, North: 51.6°, South: 41.1°)
                 var fx0 = 270;  // Ouest Bretagne
                 var fx1 = 1870; // Est Corse
                 var fy0 = 125;  // Nord Mer du Nord / Sud Angleterre
-                var fy1 = 1460; // Sud Bonifacio (Corse complète)
+                var fy1 = 1460; // Sud Bonifacio
                 var fw = fx1 - fx0; // 1600
                 var fh = fy1 - fy0; // 1335
-                var scale = Math.min(outW / fw, mapAreaH / fh);
+                var scale = Math.min(outW / fw, outH / fh);
                 hScale = scale;
-                vScale = scale; // Échelle strictement isotrope 1:1
+                vScale = scale;
                 var cx = (fx0 + fx1) / 2; // 1070
                 var cy = (fy0 + fy1) / 2; // 792.5
                 offX = outW / 2 - cx * scale;
-                offY = topBannerH + mapAreaH / 2 - cy * scale;
+                offY = outH / 2 - cy * scale;
             } else {
-                // Vue zoomée (région/département) : cadrée proprement dans la zone utile
+                // Vue zoomée (région/département) : reproduit la portion visible à l'écran dans le canvas 2200×1640
                 var viewRect = computeMapRect(vw, vh);
                 var u0 = (0 - viewRect.x) / viewRect.w;
                 var u1 = (vw - viewRect.x) / viewRect.w;
@@ -802,13 +795,13 @@
                 var v1 = (vh - viewRect.y) / viewRect.h;
                 var vueW = Math.max(0.01, u1 - u0);
                 var vueH = Math.max(0.01, v1 - v0);
-                var k = Math.min(outW / (vueW * 2200.0), mapAreaH / (vueH * 1640.0));
+                var k = Math.min(outW / (vueW * 2200.0), outH / (vueH * 1640.0));
                 hScale = k;
                 vScale = k;
                 var uc = (u0 + u1) / 2;
                 var vc = (v0 + v1) / 2;
                 offX = outW / 2 - uc * 2200.0 * k;
-                offY = topBannerH + mapAreaH / 2 - vc * 1640.0 * k;
+                offY = outH / 2 - vc * 1640.0 * k;
             }
 
             var output = document.createElement('canvas');
@@ -816,17 +809,15 @@
             output.height = outH;
             var context = output.getContext('2d');
 
-            // 1. Fond bleu nuit Météo-NPDC (#0b1626)
-            context.fillStyle = '#0b1626';
+            // Fond sombre du domaine (#0b1220)
+            context.fillStyle = '#0b1220';
             context.fillRect(0, 0, output.width, output.height);
 
-            // 2. Zone cartographique avec clipping
+            // Fond de carte terres/mers
             context.save();
             context.beginPath();
-            context.rect(0, topBannerH, outW, mapAreaH);
+            context.rect(offX, offY, 2200 * hScale, 1640 * vScale);
             context.clip();
-
-            // Fond de carte terres/mers
             if (fondImageElement && fondImageElement.complete && fondImageElement.naturalWidth) {
                 context.save();
                 context.transform(hScale, 0, 0, vScale, offX, offY);
@@ -834,7 +825,7 @@
                 context.restore();
             } else {
                 context.fillStyle = '#8fa3b8';
-                context.fillRect(0, topBannerH, outW, mapAreaH);
+                context.fillRect(0, 0, output.width, output.height);
             }
 
             // Dalle météo
@@ -848,7 +839,7 @@
             weatherCtx.restore();
             context.drawImage(weatherMasked, 0, 0);
 
-            // Frontières vectorielles haute définition
+            // Frontières vectorielles uniques
             if (vectorDefinition && vectorDefinition.paths && vectorDefinition.paths.length) {
                 context.save();
                 context.transform(hScale, 0, 0, vScale, offX, offY);
@@ -871,16 +862,26 @@
             }
             context.restore(); // Fin clip carte
 
-            // ── 3. BANDEAU SUPÉRIEUR STYLE METEO-NPDC ──────────────────────────
-            context.fillStyle = '#0a192f';
-            context.fillRect(0, 0, outW, topBannerH);
-            context.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-            context.lineWidth = 2;
-            context.beginPath();
-            context.moveTo(0, topBannerH);
-            context.lineTo(outW, topBannerH);
-            context.stroke();
+            // Logo Météo-Climat Pro (en haut à droite)
+            if (logoImage && logoImage.complete && logoImage.naturalWidth) {
+                var logoW = 240;
+                var logoH = Math.round(logoW * logoImage.naturalHeight / logoImage.naturalWidth);
+                var lx = output.width - 24 - logoW;
+                var ly = 24;
+                context.save();
+                context.fillStyle = 'rgba(7, 11, 20, 0.72)';
+                context.beginPath();
+                if (typeof context.roundRect === 'function') {
+                    context.roundRect(lx - 12, ly - 8, logoW + 24, logoH + 16, 12);
+                } else {
+                    context.rect(lx - 12, ly - 8, logoW + 24, logoH + 16);
+                }
+                context.fill();
+                context.drawImage(logoImage, lx, ly, logoW, logoH);
+                context.restore();
+            }
 
+            // Cartouche d'antenne (en haut à gauche)
             var layer = manifest && manifest.layers && manifest.layers[currentLayer];
             var step = availableSteps()[currentStep];
             var prettyLabel = layer ? layer.label : '';
@@ -904,118 +905,116 @@
                 }
             }
 
-            // Titre du paramètre (grand, blanc gras)
+            var margin = 24;
+            var bannerY = 24;
+            var bannerH = 145;
+            context.font = '700 44px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var modelTitle = (manifest && manifest.model_name) ? manifest.model_name : 'AROME HD';
+            var titleText = modelTitle + ' • ' + prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : '');
+            var dateText = dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : '') + ' — Météo-Climat Pro';
+            var titleW = context.measureText(titleText).width;
+            var dateW = context.measureText(dateText).width;
+            var bannerW = Math.min(output.width - margin * 2 - 280, Math.max(titleW, dateW) + 52);
+
+            context.fillStyle = 'rgba(7, 11, 20, 0.92)';
+            context.beginPath();
+            if (typeof context.roundRect === 'function') {
+                context.roundRect(margin, bannerY, bannerW, bannerH, 16);
+            } else {
+                context.rect(margin, bannerY, bannerW, bannerH);
+            }
+            context.fill();
+            context.strokeStyle = 'rgba(0, 210, 255, 0.8)';
+            context.lineWidth = 3;
+            context.stroke();
+
+            // Titre
             context.fillStyle = '#ffffff';
             context.font = '700 42px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             context.textAlign = 'left';
-            context.textBaseline = 'middle';
-            var mainTitle = prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : '');
-            context.fillText(mainTitle, 24, 38);
+            context.textBaseline = 'alphabetic';
+            context.fillText(titleText, margin + 20, bannerY + 56);
 
-            // Cartouche d'échéance arrondi bleu roi
-            var leadText = dateStr + (step ? ' (+' + String(step.lead_hour) + 'h)' : '');
-            context.font = '700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            var leadW = context.measureText(leadText).width;
-            var capH = 42;
-            var capY = 68;
-            context.fillStyle = '#15529a';
-            context.beginPath();
-            if (typeof context.roundRect === 'function') {
-                context.roundRect(24, capY, leadW + 28, capH, 8);
-            } else {
-                context.rect(24, capY, leadW + 28, capH);
-            }
-            context.fill();
-            context.strokeStyle = '#2b7fff';
-            context.lineWidth = 1.5;
-            context.stroke();
+            // Échéance
+            context.fillStyle = '#00d2ff';
+            context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText(dateStr + (step ? ' (H+' + String(step.lead_hour).padStart(2, '0') + ')' : ''), margin + 20, bannerY + 98);
 
-            context.fillStyle = '#ffffff';
-            context.fillText(leadText, 38, capY + capH / 2 + 1);
-
-            // À droite : Run et Modèle
+            // Run
             var runLabel = '';
             if (manifest && manifest.run_time) {
                 try {
-                    var rD = new Date(manifest.run_time);
-                    var dayStr = String(rD.getUTCDate()).padStart(2, '0') + '/' + String(rD.getUTCMonth() + 1).padStart(2, '0');
-                    var hourStr = String(rD.getUTCHours()).padStart(2, '0') + 'z';
-                    runLabel = 'Run AROME ' + dayStr + ' ' + hourStr;
+                    runLabel = 'Run ' + String(manifest.run_time).slice(11, 16) + 'Z';
                 } catch (e) {}
             }
-            if (!runLabel) runLabel = 'AROME HD • Météo-Climat Pro';
+            context.fillStyle = '#c9d6e8';
+            context.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            context.fillText((runLabel ? runLabel + ' • ' : '') + 'Météo-Climat Pro', margin + 20, bannerY + 130);
 
-            context.textAlign = 'right';
-            context.fillStyle = '#c5d8f0';
-            context.font = '600 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText(runLabel, outW - 24, 40);
-
-            context.fillStyle = '#8bb4e8';
-            context.font = '500 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText('Météo-Climat Pro', outW - 24, 88);
-
-            // ── 4. BANDEAU INFÉRIEUR STYLE METEO-NPDC ──────────────────────────
-            var botY = outH - bottomBannerH;
-            context.fillStyle = '#0a192f';
-            context.fillRect(0, botY, outW, bottomBannerH);
-            context.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-            context.lineWidth = 2;
-            context.beginPath();
-            context.moveTo(0, botY);
-            context.lineTo(outW, botY);
-            context.stroke();
-
-            // Signature au centre au-dessus de la barre
-            context.textAlign = 'center';
-            context.fillStyle = '#ffffff';
-            context.font = '700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            context.fillText('Météo-France • meteo-climat.pro', outW / 2, botY + 24);
-
-            // Barre de légende colorimétrique Météo-NPDC
-            if (layer && typeof window.getLayerPalette === 'function') {
+            // Légende colorimétrique officielle en bas
+            var legendY = 0, legendX = 0, legendW = 0, legendH = 0;
+            if (layer && typeof window.getLayerPalette === 'function' && typeof window.paletteTicks === 'function') {
                 try {
+                    legendW = 1100;
+                    legendH = 96;
+                    var legendBottom = 24;
+                    legendX = (output.width - legendW) / 2;
+                    legendY = output.height - legendH - legendBottom;
+
+                    context.fillStyle = 'rgba(7, 11, 20, 0.95)';
+                    context.beginPath();
+                    if (typeof context.roundRect === 'function') {
+                        context.roundRect(legendX - 22, legendY - 10, legendW + 44, legendH + 30, 18);
+                    } else {
+                        context.rect(legendX - 22, legendY - 10, legendW + 44, legendH + 30);
+                    }
+                    context.fill();
+                    context.strokeStyle = 'rgba(0, 210, 255, 0.7)';
+                    context.lineWidth = 2.5;
+                    context.stroke();
+
+                    // Étiquette
+                    context.fillStyle = '#ffffff';
+                    context.font = '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    context.textAlign = 'center';
+                    context.textBaseline = 'alphabetic';
+                    context.fillText(prettyLabel + (prettyUnit ? ' (' + prettyUnit + ')' : ''), output.width / 2, legendY + 30);
+
+                    // Barre
                     var pal = window.getLayerPalette(currentLayer);
                     var stops = pal && pal.stops ? pal.stops : [];
-                    if (stops.length) {
-                        var legX = 24;
-                        var legW = outW - 48;
-                        var legBarY = botY + 42;
-                        var legBarH = 22;
-
-                        var low = (pal.transparent_below !== null && pal.transparent_below !== undefined) ?
-                            pal.transparent_below : stops[0].value;
-                        var max = stops[stops.length - 1].value;
-                        var span = (max - low) || 1;
-
-                        var grad = context.createLinearGradient(legX, 0, legX + legW, 0);
-                        if (pal.transparent_below !== null && pal.transparent_below !== undefined) {
-                            grad.addColorStop(0, 'rgba(0,0,0,0)');
-                        }
-                        stops.forEach(function (s) {
-                            var pos = Math.max(0, Math.min(1, (Number(s.value) - low) / span));
-                            grad.addColorStop(pos, s.color);
-                        });
-                        context.fillStyle = grad;
-                        context.fillRect(legX, legBarY, legW, legBarH);
-                        context.strokeStyle = '#000000';
-                        context.lineWidth = 1;
-                        context.strokeRect(legX, legBarY, legW, legBarH);
-
-                        // Graduations chiffrées sous la barre
-                        context.fillStyle = '#ffffff';
-                        context.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-                        context.textBaseline = 'top';
-
-                        // Sélectionner 15 à 20 graduations bien réparties
-                        var stepCount = Math.min(stops.length, 25);
-                        var stepIdx = Math.max(1, Math.floor(stops.length / stepCount));
-                        for (var i = 0; i < stops.length; i += stepIdx) {
-                            var sVal = Number(stops[i].value);
-                            var sPos = legX + Math.max(0, Math.min(1, (sVal - low) / span)) * legW;
-                            var sText = Number.isInteger(sVal) ? String(sVal) : sVal.toFixed(1);
-                            context.fillText(sText, sPos, legBarY + legBarH + 5);
-                        }
+                    var low = (pal && pal.transparent_below !== null && pal.transparent_below !== undefined) ? pal.transparent_below : (stops.length ? stops[0].value : 0);
+                    var max = stops.length ? stops[stops.length - 1].value : 1;
+                    var span = (max - low) || 1;
+                    var barY = legendY + 44;
+                    var gradient = context.createLinearGradient(legendX, 0, legendX + legendW, 0);
+                    if (pal && pal.transparent_below !== null && pal.transparent_below !== undefined) {
+                        gradient.addColorStop(0, 'rgba(0,0,0,0)');
                     }
+                    stops.forEach(function (s) {
+                        var pos = Math.max(0, Math.min(1, (Number(s.value) - low) / span));
+                        gradient.addColorStop(pos, s.color);
+                    });
+                    context.fillStyle = gradient;
+                    context.beginPath();
+                    if (typeof context.roundRect === 'function') {
+                        context.roundRect(legendX, barY, legendW, 24, 12);
+                    } else {
+                        context.rect(legendX, barY, legendW, 24);
+                    }
+                    context.fill();
+                    context.strokeStyle = 'rgba(255,255,255,0.6)';
+                    context.lineWidth = 2;
+                    context.stroke();
+
+                    // Ticks
+                    context.fillStyle = '#eaf1ff';
+                    context.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                    var ticks = window.paletteTicks(currentLayer);
+                    ticks.forEach(function (tick, i) {
+                        var x = legendX + (ticks.length > 1 ? i / (ticks.length - 1) : 0.5) * legendW;
+                        context.fillText(String(tick), x, barY + 46);
+                    });
                 } catch (e) {}
             }
             // Villes sur la carte
