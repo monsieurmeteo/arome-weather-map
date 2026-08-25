@@ -166,7 +166,23 @@
             var px = Math.min(Math.max(0, Math.round(u * 2199)), 2199);
             var py = Math.min(Math.max(0, Math.round(v * 1639)), 1639);
             var pix = maskSamplerContext.getImageData(px, py, 1, 1).data;
-            return pix[0] > 64 || (pix[3] > 64 && pix[0] > 64);
+            if (pix[0] > 64 || (pix[3] > 64 && pix[0] > 64)) return true;
+
+            // Inclusion des lignes de bord de mer & zones littorales immédiates (~12 km)
+            var r = 16;
+            var offsets = [
+                [r, 0], [-r, 0], [0, r], [0, -r],
+                [11, 11], [-11, 11], [11, -11], [-11, -11]
+            ];
+            for (var i = 0; i < offsets.length; i++) {
+                var nx = Math.min(Math.max(0, px + offsets[i][0]), 2199);
+                var ny = Math.min(Math.max(0, py + offsets[i][1]), 1639);
+                var npix = maskSamplerContext.getImageData(nx, ny, 1, 1).data;
+                if (npix[0] > 64 || (npix[3] > 64 && npix[0] > 64)) {
+                    return true;
+                }
+            }
+            return false;
         }
         // Fond de carte (pays voisins inclus, style Positron)
         var fondImageElement = new Image();
