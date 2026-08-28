@@ -355,14 +355,14 @@ def compute_fields(raw, altitude, previous, lead_hour):
     condition[fog & np.isfinite(r2) & np.isfinite(lcc) & np.isfinite(ws10)] = 8
 
     # ── Diagnostics orageux ──────────────────────────────────────────────
+        # ── Diagnostics orageux (Méthode officielle page commune) ────────────
     thunder = np.zeros(shape, dtype=np.int16)
-    # Harmonisation stricte : un orage nécessite simultanément instabilité et écho radar
-    thunder[(cape >= 150) & (refl >= 32)] = 1
-    thunder[(cape >= 500) & (refl >= 38)] = 2
-    thunder[(cape >= 1000) & (refl >= 46)] = 3
-    thunder[(cape >= 1800) & (refl >= 52)] = 4
+    thunder[(cape >= 100) | (refl >= 30)] = 1
+    thunder[(cape >= 500) | (refl >= 40)] = 2
+    thunder[(cape >= 1200) | (refl >= 50)] = 3
+    thunder[(cape >= 2200) & (refl >= 52)] = 4
     thunder[(refl >= 58) | ((cape >= 1800) & (gust >= 90))] = 4
-    thunder[~np.isfinite(cape) | ~np.isfinite(refl)] = 0
+    thunder[~np.isfinite(cape) & ~np.isfinite(refl)] = 0
 
     lightning = np.clip(
         np.nan_to_num(cape, nan=0.0) / 30.0
