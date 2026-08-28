@@ -932,9 +932,9 @@
                     </a>
                 </div>
 
-                                                <!-- Centre : Calque Météo + Sélecteur de Région -->
+                                                                <!-- Centre : Calque Météo + Sélecteur de Région -->
                 <div class="amfm-nav-controls">
-                    <!-- Sélecteur Direct de Calque Météo AROME HD -->
+                    <!-- Sélecteur Direct de Calque Météo AROME HD Standard -->
                     <select id="direct-layer-select" class="amfm-select-layer" aria-label="Sélection du paramètre météorologique">
                         <!-- 🌡️ TEMPÉRATURES -->
                         <optgroup label="🌡️ Températures">
@@ -942,34 +942,19 @@
                             <option value="temperature_ressentie">❄️ Température ressentie (°C)</option>
                             <option value="point_rosee">💧 Point de rosée (°C)</option>
                             <option value="humidex">🔥 Indice Humidex</option>
-                            <option value="temperature_max_24h">☀️ Température Max 24h (J+0 &amp; J+1)</option>
-                            <option value="temperature_min_24h">❄️ Température Min 24h (J+0 &amp; J+1)</option>
                         </optgroup>
 
                         <!-- 🌧️ PRÉCIPITATIONS & PLUIE -->
                         <optgroup label="🌧️ Précipitations &amp; Pluie">
                             <option value="pluie_1h">🌧️ Pluie horaire (mm/h)</option>
                             <option value="pluie_cumul">📊 Précipitations cumulées (mm)</option>
-                            <option value="precipitation_24h_max">🌧️ Pluie Max 24h (J+0 &amp; J+1)</option>
                             <option value="reflectivite">📡 Réflectivité Radar Doppler (dBZ)</option>
                             <option value="graupel">🧊 Graupel / Grésil au sol (mm)</option>
                         </optgroup>
 
-                        <!-- ⚡ ORAGES, FOUDRE, GRÊLE & TORNADES (SUITE COMPLÈTE CONSERVÉE) -->
-                        <optgroup label="⚡ Instabilité, Orages, Foudre, Grêle &amp; Tornades">
-                            <option value="orage_risque">⚡ Risque &amp; Probabilité d'Orage (%)</option>
-                            <option value="foudre_densite">⚡ Densité de Foudre (éclairs/km²/h)</option>
-                            <option value="orage_max_24h">⚡ Risque Max d'Orage 24h (J+0 &amp; J+1)</option>
-                            <option value="foudre_max_24h">⚡ Densité Max de Foudre 24h (J+0 &amp; J+1)</option>
-                            <option value="grele_risque">🌩️ Risque &amp; Probabilité de Grêle (%)</option>
-                            <option value="grele_diametre">🔴 Diamètre Estimé des Grêlons (cm)</option>
-                            <option value="grele_max_24h">🌩️ Risque Max Grêle 24h (J+0 &amp; J+1)</option>
-                            <option value="grele_diam_max_24h">🔴 Diamètre Max Grêlons 24h (J+0 &amp; J+1)</option>
-                            <option value="tornade_risque">🌪️ Risque de Tornade &amp; Trombe (%)</option>
-                            <option value="stp_index">🌀 Indice STP Tornade (0-10+)</option>
-                            <option value="tornade_max_24h">🌪️ Risque Max Tornade 24h (J+0 &amp; J+1)</option>
-                            <option value="stp_max_24h">🌀 Indice STP Max 24h (J+0 &amp; J+1)</option>
-                            <option value="mucape">⚡ Instabilité convective (MUCAPE J/kg)</option>
+                        <!-- ⚡ INSTABILITÉ & ORAGES -->
+                        <optgroup label="⚡ Instabilité convective">
+                            <option value="mucape">⚡ MUCAPE convective (J/kg)</option>
                         </optgroup>
 
                         <!-- 💨 VENT & TEMPÊTES -->
@@ -977,7 +962,6 @@
                             <option value="vent">💨 Vent moyen à 10 m (km/h)</option>
                             <option value="rafales">⚡ Rafales maximales (km/h)</option>
                             <option value="rafales_cumul">🌪️ Rafales max cumulées (km/h)</option>
-                            <option value="wind_gust_max_24h">💨 Rafale Max 24h (J+0 &amp; J+1)</option>
                         </optgroup>
 
                         <!-- ☁️ NUAGES & HUMIDITÉ -->
