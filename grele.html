@@ -349,7 +349,7 @@
 
         <!-- Hero & Recherche -->
         <section class="hail-hero">
-            <h1>Prévision du Risque de Grêle par Code Postal</h1>
+            <h1>Centre d’Alerte Orages, Foudre, Grêle &amp; Tornades par Code Postal</h1>
             <p>Calcul haute précision heure par heure (0 à 51h) basé sur le modèle AROME 1,3 km, la réflectivité radar et les algorithmes officiels MESH / ICE3.</p>
 
             <div class="search-box">
@@ -368,12 +368,30 @@
                 <div class="summary-timing" id="sum-timing"><i class="fa-solid fa-clock"></i> Échéance : H+00 à H+51</div>
                 <p class="summary-desc" id="sum-desc">Analyse convective en cours...</p>
             </div>
-            <div class="risk-gauge-box">
-                <div class="risk-indicator" id="sum-indicator" style="background:var(--risk-0);">0</div>
-                <div>
-                    <div class="risk-meta-title">Niveau de Risque Max</div>
-                    <div class="risk-meta-val" id="sum-level">Risque Nul</div>
-                    <div style="font-size:12px; color:var(--accent); font-weight:700;" id="sum-diam">Diamètre : Aucun</div>
+            <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-indicator" style="background:var(--risk-0);">0</div>
+                    <div>
+                        <div class="risk-meta-title">Risque Grêle Max</div>
+                        <div class="risk-meta-val" id="sum-level">Risque Nul</div>
+                        <div style="font-size:12px; color:var(--accent); font-weight:700;" id="sum-diam">Diamètre : Aucun</div>
+                    </div>
+                </div>
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-orage-ind" style="background:var(--risk-0); font-size:18px;">⚡</div>
+                    <div>
+                        <div class="risk-meta-title">Risque Orage &amp; Foudre</div>
+                        <div class="risk-meta-val" id="sum-orage-lvl">Calme</div>
+                        <div style="font-size:12px; color:#38bdf8; font-weight:700;" id="sum-foudre">Foudre : 0 écl/km²/h</div>
+                    </div>
+                </div>
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-tor-ind" style="background:var(--risk-0); font-size:18px;">🌪️</div>
+                    <div>
+                        <div class="risk-meta-title">Risque Tornade (STP)</div>
+                        <div class="risk-meta-val" id="sum-tor-lvl">Nul</div>
+                        <div style="font-size:12px; color:#c084fc; font-weight:700;" id="sum-stp">Indice STP : 0.0</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -393,14 +411,16 @@
                     <tr>
                         <th>Échéance</th>
                         <th>Date & Heure</th>
+                        <th>Orage (%)</th>
+                        <th>Foudre (écl/km²/h)</th>
                         <th>Risque Grêle</th>
-                        <th>Probabilité</th>
-                        <th>Diamètre Estimé</th>
+                        <th>Diamètre Grêlons</th>
+                        <th>Tornade (STP)</th>
                         <th>Radar (dBZ)</th>
                         <th>CAPE (J/kg)</th>
                         <th>Graupel au sol</th>
                         <th>Température</th>
-                        <th>Rafales</th>
+                        <th>Rafales sous orage</th>
                     </tr>
                 </thead>
                 <tbody id="hail-tbody">
@@ -646,32 +666,58 @@
                         var tgrp = Math.max(0, getValue(deptData, target.idx, l, 'graupel_mm') || 0);
                         var gust = Math.max(0, getValue(deptData, target.idx, l, 'wind_gust_kmh') || 20);
 
-                        // Calcul scientifique MESH / Witt
-                        var prob = 0;
-                        var diam = 0;
-                        var level = 0;
+                        // Calculs scientifiques AROME : Orages, Foudre, Grêle, Tornades
+                        var d2m = getValue(deptData, target.idx, l, 'dewpoint_c') || (t2m - 5.0);
+                        var shear = getValue(deptData, target.idx, l, 'wind_shear_kmh') || 20.0;
+                        var rain1h = getValue(deptData, target.idx, l, 'precipitation_mm') || 0.0;
 
-                        if (refl >= 40) {
-                            var capeFactor = Math.min(2.5, Math.sqrt(Math.max(100, cape) / 1000.0));
-                            var reflFactor = (refl - 38.0) / 22.0;
-                            prob = Math.min(100, Math.max(0, Math.round(reflFactor * capeFactor * 75.0 + tgrp * 10.0)));
-
-                            diam = parseFloat((2.54 * Math.pow(Math.max(0, refl - 42) / 18.0, 1.3) * Math.sqrt(Math.max(200, cape) / 1200.0)).toFixed(1));
-                            if (tgrp > 0 && diam < 0.5) diam = 0.5;
-
-                            if (prob < 15) level = 0;
-                            else if (prob < 45 || diam < 1.0) level = 1;
-                            else if (prob < 70 || diam < 3.0) level = 2;
-                            else if (prob < 85 || diam < 5.0) level = 3;
-                            else level = 4;
+                        // 1. Orages & Foudre
+                        var probOrage = 0;
+                        var foudreDens = 0;
+                        if (refl >= 35 && cape >= 150) {
+                            var ct = Math.pow(Math.min(4.0, cape / 700.0), 0.6);
+                            var rt = Math.pow(Math.min(2.0, refl / 38.0), 1.4);
+                            probOrage = Math.min(100, Math.round(ct * rt * (1 + Math.min(3, rain1h / 4.0)) * 75.0));
+                            foudreDens = parseFloat(((cape / 800.0) * Math.pow(Math.max(0, refl - 36) / 14.0, 1.8) * (1 + Math.min(3, tgrp)) * 2.2).toFixed(1));
                         }
+
+                        // 2. Grêle & Diamètre MESH
+                        var probGrele = 0;
+                        var diamGrele = 0;
+                        var levelGrele = 0;
+                        if (refl >= 40) {
+                            var capeF = Math.min(2.5, Math.sqrt(Math.max(100, cape) / 1000.0));
+                            var reflF = (refl - 38.0) / 22.0;
+                            probGrele = Math.min(100, Math.max(0, Math.round(reflF * capeF * 75.0 + tgrp * 10.0)));
+                            diamGrele = parseFloat((2.54 * Math.pow(Math.max(0, refl - 42) / 18.0, 1.3) * Math.sqrt(Math.max(200, cape) / 1200.0)).toFixed(1));
+                            if (tgrp > 0 && diamGrele < 0.5) diamGrele = 0.5;
+
+                            if (probGrele < 15) levelGrele = 0;
+                            else if (probGrele < 45 || diamGrele < 1.0) levelGrele = 1;
+                            else if (probGrele < 70 || diamGrele < 3.0) levelGrele = 2;
+                            else if (probGrele < 85 || diamGrele < 5.0) levelGrele = 3;
+                            else levelGrele = 4;
+                        }
+
+                        // 3. Tornades (STP)
+                        var lcl_m = Math.min(3000, Math.max(50, 125.0 * Math.max(0, t2m - d2m)));
+                        var lcl_f = Math.min(1.5, Math.max(0, (2000.0 - lcl_m) / 1000.0));
+                        var cape_f = Math.min(4.0, cape / 1500.0);
+                        var shear_f = Math.min(2.0, shear / 20.0);
+                        var srh_f = Math.min(3.0, (shear * Math.sqrt(Math.max(10, cape)) * 0.12) / 100.0);
+                        var stp = (cape >= 200 && refl >= 38) ? parseFloat((cape_f * lcl_f * srh_f * shear_f).toFixed(1)) : 0.0;
+                        var probTor = (stp > 0.3) ? Math.min(100, Math.round(stp * 22.0)) : 0;
 
                         hoursData.push({
                             step: lh,
                             date: vt,
-                            prob: prob,
-                            diam: diam,
-                            level: level,
+                            probOrage: probOrage,
+                            foudre: foudreDens,
+                            prob: probGrele,
+                            diam: diamGrele,
+                            level: levelGrele,
+                            stp: stp,
+                            probTor: probTor,
                             refl: Math.round(refl),
                             cape: Math.round(cape),
                             tgrp: tgrp.toFixed(1),
@@ -689,45 +735,72 @@
         }
 
         function displayResults(data) {
-            // 1. Calcul du Max
-            var maxItem = data.reduce(function (prev, cur) {
-                return (cur.prob > prev.prob) ? cur : prev;
-            }, data[0]);
+            // Calcul des Maximums
+            var maxGrele = data.reduce(function (p, c) { return (c.prob > p.prob) ? c : p; }, data[0]);
+            var maxOrage = data.reduce(function (p, c) { return (c.probOrage > p.probOrage) ? c : p; }, data[0]);
+            var maxTor = data.reduce(function (p, c) { return (c.stp > p.stp) ? c : p; }, data[0]);
 
             var levelLabels = [
-                'Niveau 0 — Risque Nul',
-                'Niveau 1 — Risque Faible (Grésil < 1 cm)',
-                'Niveau 2 — Risque Modéré (Grêlons 1 à 3 cm)',
-                'Niveau 3 — Grêle Destructrice (3 à 5 cm)',
-                'Niveau 4 — Grêlons Géants (> 5 cm)'
+                'Risque Nul',
+                'Risque Faible (Grésil < 1 cm)',
+                'Risque Modéré (1 à 3 cm)',
+                'Grêle Destructrice (3 à 5 cm)',
+                'Grêlons Géants (> 5 cm)'
             ];
             var levelColors = ['var(--risk-0)', 'var(--risk-1)', 'var(--risk-2)', 'var(--risk-3)', 'var(--risk-4)'];
 
-            document.getElementById('sum-indicator').textContent = maxItem.level;
-            document.getElementById('sum-indicator').style.background = levelColors[maxItem.level];
-            document.getElementById('sum-level').textContent = levelLabels[maxItem.level];
-            document.getElementById('sum-level').style.color = levelColors[maxItem.level];
-            document.getElementById('sum-diam').textContent = maxItem.diam > 0 ? 'Diamètre Max : ~' + maxItem.diam + ' cm' : 'Aucun grêlon significatif prévu';
+            // 1. Synthèse Grêle
+            document.getElementById('sum-indicator').textContent = maxGrele.level;
+            document.getElementById('sum-indicator').style.background = levelColors[maxGrele.level];
+            document.getElementById('sum-level').textContent = levelLabels[maxGrele.level];
+            document.getElementById('sum-level').style.color = levelColors[maxGrele.level];
+            document.getElementById('sum-diam').textContent = maxGrele.diam > 0 ? 'Diamètre Max : ~' + maxGrele.diam + ' cm' : 'Aucun grêlon significatif';
 
-            if (maxItem.level >= 2) {
-                var dStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(maxItem.date);
-                document.getElementById('sum-desc').innerHTML = '<strong style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> ALERTE :</strong> Pic orageux attendu le <strong>' + dStr + '</strong> avec un risque maximal de <strong>' + maxItem.prob + ' %</strong>.';
-            } else {
-                document.getElementById('sum-desc').innerHTML = '<strong style="color:#10b981;"><i class="fa-solid fa-circle-check"></i> Situation Calme :</strong> Aucune dégradation grêligène majeure prévue sur les 51 prochaines heures.';
+            // 2. Synthèse Orage
+            var orageLvlText = maxOrage.probOrage >= 75 ? 'Violent' : (maxOrage.probOrage >= 50 ? 'Fort' : (maxOrage.probOrage >= 25 ? 'Modéré' : (maxOrage.probOrage > 0 ? 'Faible' : 'Calme')));
+            var orageColor = maxOrage.probOrage >= 75 ? 'var(--risk-3)' : (maxOrage.probOrage >= 50 ? 'var(--risk-2)' : (maxOrage.probOrage > 0 ? 'var(--risk-1)' : 'var(--risk-0)'));
+            var orageEl = document.getElementById('sum-orage-lvl');
+            if (orageEl) {
+                orageEl.textContent = orageLvlText + ' (' + maxOrage.probOrage + ' %)';
+                orageEl.style.color = orageColor;
+                document.getElementById('sum-orage-ind').style.background = orageColor;
+                document.getElementById('sum-foudre').textContent = 'Foudre Max : ' + maxOrage.foudre + ' écl/km²/h';
             }
 
-            // 2. Remplissage Tableau
+            // 3. Synthèse Tornade
+            var torLvlText = maxTor.stp >= 4.0 ? 'Extrême' : (maxTor.stp >= 2.5 ? 'Sévère' : (maxTor.stp >= 1.0 ? 'Modéré' : (maxTor.stp >= 0.5 ? 'Faible' : 'Nul')));
+            var torColor = maxTor.stp >= 2.5 ? 'var(--risk-3)' : (maxTor.stp >= 1.0 ? 'var(--risk-2)' : (maxTor.stp >= 0.5 ? 'var(--risk-1)' : 'var(--risk-0)'));
+            var torEl = document.getElementById('sum-tor-lvl');
+            if (torEl) {
+                torEl.textContent = torLvlText;
+                torEl.style.color = torColor;
+                document.getElementById('sum-tor-ind').style.background = torColor;
+                document.getElementById('sum-stp').textContent = 'Indice STP Max : ' + maxTor.stp;
+            }
+
+            if (maxGrele.level >= 2 || maxOrage.probOrage >= 60 || maxTor.stp >= 1.0) {
+                var dStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(maxGrele.date);
+                document.getElementById('sum-desc').innerHTML = '<strong style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> ALERTE MÉTÉO SÉVÈRE :</strong> Risque orageux maximal attendu le <strong>' + dStr + '</strong>.';
+            } else {
+                document.getElementById('sum-desc').innerHTML = '<strong style="color:#10b981;"><i class="fa-solid fa-circle-check"></i> Situation Calme :</strong> Aucun orage sévère, chute de grêle ni risque tornadique prévus sur 51 heures.';
+            }
+
+            // 4. Remplissage Tableau
             var rowsHtml = data.map(function (d) {
                 var timeStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: '2-digit', hour: '2-digit' }).format(d.date);
                 var badgeClass = 'badge-risk-' + d.level;
                 var badgeText = d.level === 0 ? '🟢 Nul' : (d.level === 1 ? '🟡 Faible' : (d.level === 2 ? '🟠 Modéré' : (d.level === 3 ? '🔴 Sévère' : '🟣 Géant')));
 
+                var torBadge = d.stp >= 2.5 ? '<span style="color:#ef4444;font-weight:800;">🌪️ ' + d.stp + '</span>' : (d.stp >= 1.0 ? '<span style="color:#fb923c;font-weight:800;">' + d.stp + '</span>' : (d.stp > 0 ? '<span style="color:#facc15;">' + d.stp + '</span>' : '<span style="color:#64748b;">0.0</span>'));
+
                 return '<tr>' +
                        '<td><span style="color:var(--text-muted);font-weight:700;">H+' + String(d.step).padStart(2, '0') + '</span></td>' +
                        '<td><strong>' + timeStr + '</strong></td>' +
+                       '<td>' + (d.probOrage > 0 ? '<strong style="color:#facc15;">⚡ ' + d.probOrage + ' %</strong>' : '<span style="color:#64748b;">0 %</span>') + '</td>' +
+                       '<td>' + (d.foudre > 0 ? '<span style="color:#38bdf8;font-weight:800;">' + d.foudre + '</span>' : '<span style="color:#64748b;">0</span>') + '</td>' +
                        '<td><span class="badge-risk ' + badgeClass + '">' + badgeText + '</span></td>' +
-                       '<td><strong style="color:' + (d.prob >= 50 ? '#ef4444' : (d.prob > 0 ? '#facc15' : '#94a3b8')) + '">' + d.prob + ' %</strong></td>' +
                        '<td>' + (d.diam > 0 ? '<strong style="color:var(--accent);">' + d.diam + ' cm</strong>' : '<span style="color:#64748b;">—</span>') + '</td>' +
+                       '<td>' + torBadge + '</td>' +
                        '<td>' + (d.refl >= 45 ? '<span style="color:#f87171;font-weight:800;">' + d.refl + ' dBZ</span>' : d.refl + ' dBZ') + '</td>' +
                        '<td>' + (d.cape >= 1000 ? '<span style="color:#fb923c;font-weight:800;">' + d.cape + ' J/kg</span>' : d.cape + ' J/kg') + '</td>' +
                        '<td>' + (d.tgrp > 0 ? '<span style="color:#38bdf8;font-weight:800;">' + d.tgrp + ' mm</span>' : '0 mm') + '</td>' +
