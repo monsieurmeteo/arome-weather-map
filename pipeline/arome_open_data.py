@@ -92,18 +92,12 @@ def latest_run():
 def available_leads(run_str, max_hours=51):
     """Détecte toutes les échéances réelles (jusqu'à 51h) directement sur le bucket S3."""
     leads = []
-    consecutive_404 = 0
     for h in range(0, max_hours + 1):
         url = GRIB_BASE.format(run=run_str, pkg="SP1", lead=h)
         try:
             r = requests.head(url, headers=HEADERS, timeout=10)
             if r.status_code == 200:
                 leads.append(h)
-                consecutive_404 = 0
-            elif r.status_code == 404:
-                consecutive_404 += 1
-                if h >= 6 and consecutive_404 >= 2:
-                    break
         except Exception:
             leads.append(h)
     if not leads:
