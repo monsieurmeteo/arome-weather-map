@@ -1706,7 +1706,7 @@
                 return [];
             }
             return manifest.steps.filter(function (step) {
-                return step && step.files && step.files[currentLayer] && Number(step.lead_hour) >= 1;
+                return step && step.files && step.files[currentLayer] && (step.lead_hour !== undefined && step.lead_hour !== null);
             });
         }
 
