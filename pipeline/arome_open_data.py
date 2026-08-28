@@ -355,6 +355,7 @@ def compute_fields(raw, altitude, previous, lead_hour):
     condition[fog & np.isfinite(r2) & np.isfinite(lcc) & np.isfinite(ws10)] = 8
 
     # ── Diagnostics orageux ──────────────────────────────────────────────
+        # ── Diagnostics orageux (Méthode officielle page commune) ────────────
     thunder = np.zeros(shape, dtype=np.int16)
     thunder[(cape >= 100) | (refl >= 30)] = 1
     thunder[(cape >= 500) | (refl >= 40)] = 2

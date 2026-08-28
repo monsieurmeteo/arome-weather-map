@@ -671,15 +671,24 @@
                         var shear = getValue(deptData, target.idx, l, 'wind_shear_kmh') || 20.0;
                         var rain1h = getValue(deptData, target.idx, l, 'precipitation_mm') || 0.0;
 
-                        // 1. Orages & Foudre
-                        var probOrage = 0;
-                        var foudreDens = 0;
-                        if (refl >= 35 && cape >= 150) {
-                            var ct = Math.pow(Math.min(4.0, cape / 700.0), 0.6);
-                            var rt = Math.pow(Math.min(2.0, refl / 38.0), 1.4);
-                            probOrage = Math.min(100, Math.round(ct * rt * (1 + Math.min(3, rain1h / 4.0)) * 75.0));
-                            foudreDens = parseFloat(((cape / 800.0) * Math.pow(Math.max(0, refl - 36) / 14.0, 1.8) * (1 + Math.min(3, tgrp)) * 2.2).toFixed(1));
+                        // 1. Orages & Foudre (Méthode EXACTE de la page commune)
+                        var thunderCode = 0;
+                        if (refl >= 58 || (cape >= 2200 && refl >= 52)) {
+                            thunderCode = 4; // Violent
+                        } else if (cape >= 1200 || refl >= 50) {
+                            thunderCode = 3; // Fort
+                        } else if (cape >= 500 || refl >= 40) {
+                            thunderCode = 2; // Modéré
+                        } else if (cape >= 100 || refl >= 30) {
+                            thunderCode = 1; // Faible
                         }
+
+                        var thunderLabels = ['Nul', 'Faible', 'Modéré', 'Fort', 'Violent'];
+                        var thunderProbs = [0, 30, 60, 80, 100];
+                        var probOrage = thunderProbs[thunderCode];
+                        var thunderLabel = thunderLabels[thunderCode];
+
+                        var foudreScore = Math.min(100, Math.max(0, Math.round((cape / 30.0) + Math.max(0, refl - 25.0) * 1.8)));
 
                         // 2. Grêle & Diamètre MESH
                         var probGrele = 0;
@@ -764,7 +773,7 @@
                 orageEl.textContent = orageLvlText + ' (' + maxOrage.probOrage + ' %)';
                 orageEl.style.color = orageColor;
                 document.getElementById('sum-orage-ind').style.background = orageColor;
-                document.getElementById('sum-foudre').textContent = 'Foudre Max : ' + maxOrage.foudre + ' écl/km²/h';
+                document.getElementById('sum-foudre').textContent = 'Indice Foudre : ' + maxOrage.foudre + ' /100';
             }
 
             // 3. Synthèse Tornade
