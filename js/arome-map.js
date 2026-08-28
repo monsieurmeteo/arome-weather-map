@@ -2049,7 +2049,21 @@
         var layerSelect = document.getElementById('direct-layer-select');
         if (layerSelect) {
             layerSelect.addEventListener('change', function(e) {
-                setLayer(e.target.value);
+                var selected = e.target.value;
+                var isPeLayer = selected.startsWith('prob_');
+                var activeMdl = currentModel || app.dataset.model || 'arome';
+                
+                if (isPeLayer && activeMdl !== 'arome_pe') {
+                    var mSel = document.getElementById('select-model');
+                    if (mSel) mSel.value = 'arome_pe';
+                    switchModel('arome_pe', selected);
+                } else if (!isPeLayer && activeMdl === 'arome_pe') {
+                    var mSel = document.getElementById('select-model');
+                    if (mSel) mSel.value = 'arome';
+                    switchModel('arome', selected);
+                } else {
+                    setLayer(selected);
+                }
             });
         }
 
