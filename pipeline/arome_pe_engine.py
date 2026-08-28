@@ -171,7 +171,7 @@ def compute_probability_field(fields, spec):
     return prob
 
 
-def render_pe_step(fields, lead_hour, out_pe_dir, step_files_pe):
+def render_pe_step(fields, lead_hour, out_pe_dir, step_files_pe, lats=None, lons=None):
     """Génère les rasters WebP et sondes HKV pour chaque seuil de probabilité."""
     os.makedirs(out_pe_dir, exist_ok=True)
     maps_dir = out_pe_dir
@@ -182,7 +182,7 @@ def render_pe_step(fields, lead_hour, out_pe_dir, step_files_pe):
             continue
 
         # 1. Regrid sur le domaine Mercator France HD (2200 x 1640)
-        regridded_prob = regrid(prob_grid)
+        regridded_prob = regrid(prob_grid, lats, lons) if (lats is not None and lons is not None) else regrid(prob_grid)
 
         # 2. Application de la palette de probabilités et export WebP
         rgba = apply_palette(regridded_prob, PROB_PALETTE)
