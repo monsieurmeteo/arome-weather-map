@@ -674,7 +674,7 @@
                         // 1. Orages & Foudre
                         var probOrage = 0;
                         var foudreDens = 0;
-                        if (refl >= 35 && cape >= 150) {
+                        if (refl >= 32 && cape >= 150) {
                             var ct = Math.pow(Math.min(4.0, cape / 700.0), 0.6);
                             var rt = Math.pow(Math.min(2.0, refl / 38.0), 1.4);
                             probOrage = Math.min(100, Math.round(ct * rt * (1 + Math.min(3, rain1h / 4.0)) * 75.0));
