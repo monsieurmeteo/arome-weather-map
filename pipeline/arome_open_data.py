@@ -848,7 +848,7 @@ def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
                 fields["tmin_24h"] = fields.get("temperature_min_24h", fields.get("temperature_c", np.zeros_like(lats)))
                 fields["snow_cumul_24h"] = fields.get("snow_depth_cm", np.zeros_like(lats))
 
-                render_pe_step(fields, lead, out_pe_dir, step_files_pe, lats, lons)
+                # render_pe_step(fields, lead, out_pe_dir, step_files_pe, lats, lons)  # PE desactive
                 if step_files_pe:
                     vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
                         + datetime.timedelta(hours=lead)
