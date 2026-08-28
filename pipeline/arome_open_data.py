@@ -55,30 +55,59 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 NI, NJ = 2801, 1791
 LAT0, LON0, STEP = 55.4, -12.0, 0.01
 
-# ── Données ─────────────────────────────────────────────────────────────────
 def latest_run():
-    r = requests.get(DATASET_API, headers=HEADERS, timeout=30)
-    r.raise_for_status()
+    """Trouve le run AROME le plus récent disponible et vérifie sa disponibilité S3."""
     runs = set()
-    for res in r.json().get("resources", []):
-        m = re.search(r"__(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\.grib2",
-                      res.get("title", ""))
-        if m:
-            runs.add(m.group(1))
+    try:
+        r = requests.get(DATASET_API, headers=HEADERS, timeout=30)
+        if r.status_code == 200:
+            for res in r.json().get("resources", []):
+                m = re.search(r"__(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\.grib2",
+                              res.get("title", ""))
+                if m:
+                    runs.add(m.group(1))
+    except Exception:
+        pass
+
     if not runs:
-        raise RuntimeError("Aucun run AROME sur data.gouv.fr")
-    return max(runs)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        for delta_h in range(0, 24, 3):
+            cand_dt = (now - datetime.timedelta(hours=delta_h))
+            cand_h = (cand_dt.hour // 3) * 3
+            cand = cand_dt.replace(hour=cand_h, minute=0, second=0, microsecond=0)
+            runs.add(cand.strftime("%Y-%m-%dT%H:00:00Z"))
+
+    sorted_runs = sorted(runs, reverse=True)
+    for run_cand in sorted_runs:
+        test_url = GRIB_BASE.format(run=run_cand, pkg="SP1", lead=0)
+        try:
+            resp = requests.head(test_url, headers=HEADERS, timeout=10)
+            if resp.status_code == 200:
+                return run_cand
+        except Exception:
+            pass
+    return sorted_runs[0]
 
 
-def available_leads(run_str):
-    r = requests.get(DATASET_API, headers=HEADERS, timeout=30)
-    r.raise_for_status()
-    leads = set()
-    for res in r.json().get("resources", []):
-        m = re.search(r"__(\d{2})H__" + re.escape(run_str) + r"\.grib2",
-                      res.get("title", ""))
-        if m:
-            leads.add(int(m.group(1)))
+def available_leads(run_str, max_hours=51):
+    """Détecte toutes les échéances réelles (jusqu'à 51h) directement sur le bucket S3."""
+    leads = []
+    consecutive_404 = 0
+    for h in range(0, max_hours + 1):
+        url = GRIB_BASE.format(run=run_str, pkg="SP1", lead=h)
+        try:
+            r = requests.head(url, headers=HEADERS, timeout=10)
+            if r.status_code == 200:
+                leads.append(h)
+                consecutive_404 = 0
+            elif r.status_code == 404:
+                consecutive_404 += 1
+                if h >= 6 and consecutive_404 >= 2:
+                    break
+        except Exception:
+            leads.append(h)
+    if not leads:
+        leads = list(range(0, min(52, max_hours + 1)))
     return sorted(leads)
 
 
