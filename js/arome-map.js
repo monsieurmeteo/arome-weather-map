@@ -1767,7 +1767,25 @@
                 }
                 grouped[group].push({ key: key, layer: layer });
             });
-            if (!manifest.layers[currentLayer]) {
+                                var isPe = (modelKey === 'arome_pe');
+                    var dSel = document.getElementById('direct-layer-select');
+                    if (dSel) {
+                        var optGroups = dSel.querySelectorAll('optgroup');
+                        for (var gi = 0; gi < optGroups.length; gi++) {
+                            var grp = optGroups[gi];
+                            var lbl = grp.getAttribute('label') || '';
+                            var isProbGroup = (lbl.indexOf('Probabilités') !== -1 || lbl.indexOf('🎲') !== -1 || lbl.indexOf('🧭 Pression') !== -1 || lbl.indexOf('🏔️') !== -1 || lbl.indexOf('⚡') !== -1 || lbl.indexOf('💨 Max') !== -1);
+                            if (isPe) {
+                                grp.hidden = !isProbGroup;
+                                grp.style.display = isProbGroup ? '' : 'none';
+                            } else {
+                                grp.hidden = isProbGroup;
+                                grp.style.display = isProbGroup ? 'none' : '';
+                            }
+                        }
+                    }
+
+                    if (!manifest.layers[currentLayer]) {
                 currentLayer = Object.keys(manifest.layers || {})[0] || '';
             }
             groupOrder.forEach(function (group) {
@@ -2066,6 +2084,24 @@
                     manifest = payload;
                     applyPaletteStops();
                     currentStep = 0;
+                                        var isPe = (modelKey === 'arome_pe');
+                    var dSel = document.getElementById('direct-layer-select');
+                    if (dSel) {
+                        var optGroups = dSel.querySelectorAll('optgroup');
+                        for (var gi = 0; gi < optGroups.length; gi++) {
+                            var grp = optGroups[gi];
+                            var lbl = grp.getAttribute('label') || '';
+                            var isProbGroup = (lbl.indexOf('Probabilités') !== -1 || lbl.indexOf('🎲') !== -1 || lbl.indexOf('🧭 Pression') !== -1 || lbl.indexOf('🏔️') !== -1 || lbl.indexOf('⚡') !== -1 || lbl.indexOf('💨 Max') !== -1);
+                            if (isPe) {
+                                grp.hidden = !isProbGroup;
+                                grp.style.display = isProbGroup ? '' : 'none';
+                            } else {
+                                grp.hidden = isProbGroup;
+                                grp.style.display = isProbGroup ? 'none' : '';
+                            }
+                        }
+                    }
+
                     if (!manifest.layers[currentLayer]) {
                         currentLayer = Object.keys(manifest.layers)[0] || 'temperature';
                         var dSel = document.getElementById('direct-layer-select');
