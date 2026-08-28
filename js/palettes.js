@@ -2,6 +2,32 @@
     'use strict';
     // Palettes météociel (couleurs exactes extraites de meteociel.fr).
     var PALETTES = {
+        grele_risque: {
+            label: 'Risque de grêle (AROME MESH)', unit: '%', decimals: 0, transparent_below: 10,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 15, color: '#facc15' },
+                { value: 35, color: '#fb923c' },
+                { value: 60, color: '#ef4444' },
+                { value: 80, color: '#dc2626' },
+                { value: 95, color: '#a855f7' },
+                { value: 100, color: '#7e22ce' }
+            ]
+        },
+        grele_diametre: {
+            label: 'Diamètre estimé des grêlons (MESH)', unit: 'cm', decimals: 1, transparent_below: 0.5,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 0.5, color: '#facc15' },
+                { value: 1.0, color: '#fb923c' },
+                { value: 2.0, color: '#f87171' },
+                { value: 3.0, color: '#ef4444' },
+                { value: 4.0, color: '#dc2626' },
+                { value: 5.0, color: '#c084fc' },
+                { value: 6.0, color: '#9333ea' },
+                { value: 8.0, color: '#581c87' }
+            ]
+        },
         probabilite: {
             label: 'Probabilité de dépassement', unit: '%', decimals: 0, transparent_below: 5,
             stops: [
