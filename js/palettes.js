@@ -2,6 +2,20 @@
     'use strict';
     // Palettes météociel (couleurs exactes extraites de meteociel.fr).
     var PALETTES = {
+        probabilite: {
+            label: 'Probabilité de dépassement', unit: '%', decimals: 0, transparent_below: 5,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 10, color: '#40b4ff' },
+                { value: 25, color: '#28d296' },
+                { value: 40, color: '#b4f028' },
+                { value: 50, color: '#ffe600' },
+                { value: 65, color: '#ffa000' },
+                { value: 80, color: '#f01414' },
+                { value: 95, color: '#be0082' },
+                { value: 100, color: '#8c00c8' }
+            ]
+        },
         temperature: {
             label: 'Température à 2 m', unit: '°C', decimals: 0, transparent_below: null,
             stops: [
@@ -561,7 +575,8 @@
         },
     };
 
-    function getLayerPalette(key) { return PALETTES[key] || PALETTES.temperature; }
+    function getLayerPalette(key) {
+        if (key && key.indexOf("prob_") === 0) return PALETTES.probabilite; return PALETTES[key] || PALETTES.temperature; }
     function paletteGradientCSS(key) {
         var pal = getLayerPalette(key); var stops = pal.stops;
         var low = (pal.transparent_below !== null && pal.transparent_below !== undefined) ? pal.transparent_below : stops[0].value;
