@@ -764,8 +764,8 @@
                     displayResults(hoursData);
                 })
                 .catch(function (err) {
-                    console.warn('Fallback : ' + err.message);
-                    renderSimulatedData(nom, zip, lat, lon);
+                    console.warn('Erreur chargement commune : ' + err.message);
+                    document.getElementById('sum-desc').innerHTML = '<span style="color:#facc15;"><i class="fa-solid fa-triangle-exclamation"></i> Données en cours de synchronisation pour <strong>' + nom + '</strong>. Veuillez patienter ou essayer une autre commune.</span>';
                 });
         }
 
