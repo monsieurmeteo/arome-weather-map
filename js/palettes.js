@@ -2,6 +2,58 @@
     'use strict';
     // Palettes météociel (couleurs exactes extraites de meteociel.fr).
     var PALETTES = {
+        foudre_densite: {
+            label: 'Densité de foudre (éclairs/km²/h)', unit: 'écl/km²/h', decimals: 1, transparent_below: 0.2,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 0.2, color: '#fef08a' },
+                { value: 1.0, color: '#facc15' },
+                { value: 3.0, color: '#fb923c' },
+                { value: 6.0, color: '#f87171' },
+                { value: 10.0, color: '#ef4444' },
+                { value: 15.0, color: '#dc2626' },
+                { value: 25.0, color: '#c084fc' },
+                { value: 40.0, color: '#7e22ce' }
+            ]
+        },
+        foudre_max_24h: {
+            label: 'Densité Max de Foudre (24h)', unit: 'écl/km²/h', decimals: 1, transparent_below: 0.2,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 0.2, color: '#fef08a' },
+                { value: 1.0, color: '#facc15' },
+                { value: 3.0, color: '#fb923c' },
+                { value: 6.0, color: '#f87171' },
+                { value: 10.0, color: '#ef4444' },
+                { value: 15.0, color: '#dc2626' },
+                { value: 25.0, color: '#c084fc' },
+                { value: 40.0, color: '#7e22ce' }
+            ]
+        },
+        orage_risque: {
+            label: 'Risque d’orage (0-100 %)', unit: '%', decimals: 0, transparent_below: 10,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 15, color: '#facc15' },
+                { value: 35, color: '#fb923c' },
+                { value: 60, color: '#ef4444' },
+                { value: 80, color: '#dc2626' },
+                { value: 95, color: '#a855f7' },
+                { value: 100, color: '#7e22ce' }
+            ]
+        },
+        orage_max_24h: {
+            label: 'Risque Maximal d’Orage (24h)', unit: '%', decimals: 0, transparent_below: 10,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 15, color: '#facc15' },
+                { value: 35, color: '#fb923c' },
+                { value: 60, color: '#ef4444' },
+                { value: 80, color: '#dc2626' },
+                { value: 95, color: '#a855f7' },
+                { value: 100, color: '#7e22ce' }
+            ]
+        },
         stp_index: {
             label: 'Indice STP Tornade (NOAA SPC)', unit: '', decimals: 1, transparent_below: 0.5,
             stops: [
