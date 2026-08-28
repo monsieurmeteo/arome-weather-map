@@ -671,14 +671,20 @@
                         var shear = getValue(deptData, target.idx, l, 'wind_shear_kmh') || 20.0;
                         var rain1h = getValue(deptData, target.idx, l, 'precipitation_mm') || 0.0;
 
-                        // 1. Orages & Foudre
+                        // 1. Orages & Foudre (Logique Météo-France : CAPE potentielle + Échos)
                         var probOrage = 0;
                         var foudreDens = 0;
-                        if (refl >= 32 && cape >= 150) {
-                            var ct = Math.pow(Math.min(4.0, cape / 700.0), 0.6);
-                            var rt = Math.pow(Math.min(2.0, refl / 38.0), 1.4);
-                            probOrage = Math.min(100, Math.round(ct * rt * (1 + Math.min(3, rain1h / 4.0)) * 75.0));
-                            foudreDens = parseFloat(((cape / 800.0) * Math.pow(Math.max(0, refl - 36) / 14.0, 1.8) * (1 + Math.min(3, tgrp)) * 2.2).toFixed(1));
+                        if (cape >= 80 || refl >= 25 || tgrp > 0) {
+                            var capeTerm = Math.min(3.0, cape / 500.0) * 35.0;
+                            var reflTerm = Math.max(0, (refl - 20.0) / 25.0) * 45.0;
+                            var rainTerm = Math.min(2.0, rain1h / 3.0) * 15.0;
+                            var iceTerm = Math.min(25.0, tgrp * 20.0);
+                            probOrage = Math.min(100, Math.round(capeTerm + reflTerm + rainTerm + iceTerm));
+                            if (cape >= 150 && probOrage < 20) probOrage = 20;
+
+                            if (cape >= 200 && refl >= 30) {
+                                foudreDens = parseFloat(((cape / 800.0) * Math.pow(Math.max(0, refl - 28.0) / 16.0, 1.6) * (1.0 + Math.min(3.0, tgrp)) * 2.0).toFixed(1));
+                            }
                         }
 
                         // 2. Grêle & Diamètre MESH
