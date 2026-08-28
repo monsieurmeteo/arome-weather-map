@@ -1,0 +1,472 @@
+{
+  "model_name": "AROME-PE France (Probabilités)",
+  "provider": "Météo-France",
+  "resolution": "Ensemble calibré 1,3 km (0 à 100 %)",
+  "run_time": "2026-08-28T18:00:00Z",
+  "generated_at": "2026-08-28T22:28:11.421162+00:00",
+  "layers": {
+    "prob_pluie_24h_10": {
+      "label": "Probabilité Pluie 24h ≥ 10 mm (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_pluie_24h_20": {
+      "label": "Probabilité Pluie 24h ≥ 20 mm (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_pluie_24h_50": {
+      "label": "Probabilité Pluie 24h ≥ 50 mm (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_pluie_24h_100": {
+      "label": "Probabilité Pluie 24h ≥ 100 mm (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_rafales_24h_80": {
+      "label": "Probabilité Rafales 24h ≥ 80 km/h (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_rafales_24h_100": {
+      "label": "Probabilité Rafales 24h ≥ 100 km/h (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_rafales_24h_120": {
+      "label": "Probabilité Rafales 24h ≥ 120 km/h (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_tmax_24h_30": {
+      "label": "Probabilité Tmax ≥ 30 °C (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_tmax_24h_35": {
+      "label": "Probabilité Tmax ≥ 35 °C (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_tmax_24h_40": {
+      "label": "Probabilité Canicule Tmax ≥ 40 °C (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_tmin_24h_0": {
+      "label": "Probabilité Gelée Tmin ≤ 0 °C (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_tmin_24h_m5": {
+      "label": "Probabilité Forte Gelée Tmin ≤ -5 °C (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_neige_24h_1": {
+      "label": "Probabilité Neige 24h ≥ 1 cm (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_neige_24h_5": {
+      "label": "Probabilité Neige 24h ≥ 5 cm (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_neige_24h_10": {
+      "label": "Probabilité Neige 24h ≥ 10 cm (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_orage_24h": {
+      "label": "Probabilité Risque Orageux 24h (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_grele_24h": {
+      "label": "Probabilité Risque de Grêle 24h (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_tornade_24h": {
+      "label": "Probabilité Risque Tornade 24h (J+0 & J+1)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "📅 Probabilités 24h (J+0 & J+1)",
+      "transparent_below": 5
+    },
+    "prob_pression_1000": {
+      "label": "Probabilité Pression < 1000 hPa",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🧭 Pression",
+      "transparent_below": 5
+    },
+    "prob_pression_990": {
+      "label": "Probabilité Pression < 990 hPa",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🧭 Pression",
+      "transparent_below": 5
+    },
+    "prob_pression_980": {
+      "label": "Probabilité Pression < 980 hPa (Dépression)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🧭 Pression",
+      "transparent_below": 5
+    },
+    "prob_pression_970": {
+      "label": "Probabilité Pression < 970 hPa (Tempête majeure)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🧭 Pression",
+      "transparent_below": 5
+    },
+    "prob_pression_1030": {
+      "label": "Probabilité Pression > 1030 hPa (Anticyclone)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🧭 Pression",
+      "transparent_below": 5
+    },
+    "prob_t2m_0": {
+      "label": "Probabilité Gel T2m ≤ 0 °C",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌡️ Températures",
+      "transparent_below": 5
+    },
+    "prob_t2m_m5": {
+      "label": "Probabilité Gel marqué ≤ -5 °C",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌡️ Températures",
+      "transparent_below": 5
+    },
+    "prob_t2m_m10": {
+      "label": "Probabilité Grand froid ≤ -10 °C",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌡️ Températures",
+      "transparent_below": 5
+    },
+    "prob_t2m_30": {
+      "label": "Probabilité Forte chaleur ≥ 30 °C",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌡️ Températures",
+      "transparent_below": 5
+    },
+    "prob_t2m_35": {
+      "label": "Probabilité Très forte chaleur ≥ 35 °C",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌡️ Températures",
+      "transparent_below": 5
+    },
+    "prob_t2m_40": {
+      "label": "Probabilité Canicule extrême ≥ 40 °C",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌡️ Températures",
+      "transparent_below": 5
+    },
+    "prob_pluie_1h_01": {
+      "label": "Probabilité Pluie 1h > 0.1 mm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Précipitations 1h",
+      "transparent_below": 5
+    },
+    "prob_pluie_1h_5": {
+      "label": "Probabilité Pluie 1h > 5 mm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Précipitations 1h",
+      "transparent_below": 5
+    },
+    "prob_pluie_1h_10": {
+      "label": "Probabilité Pluie 1h > 10 mm (Forte)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Précipitations 1h",
+      "transparent_below": 5
+    },
+    "prob_pluie_1h_20": {
+      "label": "Probabilité Pluie 1h > 20 mm (Orage violent)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Précipitations 1h",
+      "transparent_below": 5
+    },
+    "prob_pluie_1h_30": {
+      "label": "Probabilité Pluie 1h > 30 mm (Déluge orageux)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Précipitations 1h",
+      "transparent_below": 5
+    },
+    "prob_pluie_cumul_01": {
+      "label": "Probabilité Cumul Pluie > 0.1 mm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Cumuls Précipitations",
+      "transparent_below": 5
+    },
+    "prob_pluie_cumul_1": {
+      "label": "Probabilité Cumul Pluie > 1 mm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Cumuls Précipitations",
+      "transparent_below": 5
+    },
+    "prob_pluie_cumul_10": {
+      "label": "Probabilité Cumul Pluie > 10 mm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Cumuls Précipitations",
+      "transparent_below": 5
+    },
+    "prob_pluie_cumul_20": {
+      "label": "Probabilité Cumul Pluie > 20 mm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Cumuls Précipitations",
+      "transparent_below": 5
+    },
+    "prob_pluie_cumul_50": {
+      "label": "Probabilité Cumul Pluie > 50 mm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Cumuls Précipitations",
+      "transparent_below": 5
+    },
+    "prob_pluie_cumul_100": {
+      "label": "Probabilité Cumul Pluie > 100 mm (Inondations)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🌧️ Cumuls Précipitations",
+      "transparent_below": 5
+    },
+    "prob_neige_risque": {
+      "label": "Probabilité Risque de Neige",
+      "unit": "%",
+      "decimals": 0,
+      "group": "❄️ Neige",
+      "transparent_below": 5
+    },
+    "prob_neige_1": {
+      "label": "Probabilité Cumul Neige > 1 cm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "❄️ Neige",
+      "transparent_below": 5
+    },
+    "prob_neige_5": {
+      "label": "Probabilité Cumul Neige > 5 cm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "❄️ Neige",
+      "transparent_below": 5
+    },
+    "prob_neige_10": {
+      "label": "Probabilité Cumul Neige > 10 cm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "❄️ Neige",
+      "transparent_below": 5
+    },
+    "prob_neige_20": {
+      "label": "Probabilité Cumul Neige > 20 cm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "❄️ Neige",
+      "transparent_below": 5
+    },
+    "prob_neige_50": {
+      "label": "Probabilité Cumul Neige > 50 cm",
+      "unit": "%",
+      "decimals": 0,
+      "group": "❄️ Neige",
+      "transparent_below": 5
+    },
+    "prob_rafales_80": {
+      "label": "Probabilité Rafales > 80 km/h (Coup de vent)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Vent & Rafales",
+      "transparent_below": 5
+    },
+    "prob_rafales_90": {
+      "label": "Probabilité Rafales > 90 km/h",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Vent & Rafales",
+      "transparent_below": 5
+    },
+    "prob_rafales_100": {
+      "label": "Probabilité Rafales > 100 km/h (Forte tempête)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Vent & Rafales",
+      "transparent_below": 5
+    },
+    "prob_rafales_110": {
+      "label": "Probabilité Rafales > 110 km/h",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Vent & Rafales",
+      "transparent_below": 5
+    },
+    "prob_rafales_120": {
+      "label": "Probabilité Rafales > 120 km/h (Tempête violente)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Vent & Rafales",
+      "transparent_below": 5
+    },
+    "prob_max_rafales_80": {
+      "label": "Probabilité Max Rafales > 80 km/h",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Max Rafales",
+      "transparent_below": 5
+    },
+    "prob_max_rafales_90": {
+      "label": "Probabilité Max Rafales > 90 km/h",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Max Rafales",
+      "transparent_below": 5
+    },
+    "prob_max_rafales_100": {
+      "label": "Probabilité Max Rafales > 100 km/h",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Max Rafales",
+      "transparent_below": 5
+    },
+    "prob_max_rafales_110": {
+      "label": "Probabilité Max Rafales > 110 km/h",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Max Rafales",
+      "transparent_below": 5
+    },
+    "prob_max_rafales_120": {
+      "label": "Probabilité Max Rafales > 120 km/h",
+      "unit": "%",
+      "decimals": 0,
+      "group": "💨 Max Rafales",
+      "transparent_below": 5
+    },
+    "prob_cape_500": {
+      "label": "Probabilité Risque Orageux (CAPE > 500 J/kg)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "⚡ Orages & Instabilité",
+      "transparent_below": 5
+    },
+    "prob_cape_1000": {
+      "label": "Probabilité Orages Modérés (CAPE > 1000 J/kg)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "⚡ Orages & Instabilité",
+      "transparent_below": 5
+    },
+    "prob_cape_2000": {
+      "label": "Probabilité Orages Violents (CAPE > 2000 J/kg)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "⚡ Orages & Instabilité",
+      "transparent_below": 5
+    },
+    "prob_t850_m5": {
+      "label": "Probabilité T850 < -5 °C (Masse d'air froide)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🏔️ Altitude 850 hPa",
+      "transparent_below": 5
+    },
+    "prob_t850_m10": {
+      "label": "Probabilité T850 < -10 °C (Vague de froid)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🏔️ Altitude 850 hPa",
+      "transparent_below": 5
+    },
+    "prob_t850_10": {
+      "label": "Probabilité T850 > 10 °C (Douceur altitude)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🏔️ Altitude 850 hPa",
+      "transparent_below": 5
+    },
+    "prob_t850_20": {
+      "label": "Probabilité T850 > 20 °C (Dôme de chaleur)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🏔️ Altitude 850 hPa",
+      "transparent_below": 5
+    },
+    "prob_t500_m35": {
+      "label": "Probabilité T500 < -35 °C (Goutte froide)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🏔️ Altitude 500 hPa",
+      "transparent_below": 5
+    },
+    "prob_t500_m25": {
+      "label": "Probabilité T500 < -25 °C (Air froid altitude)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🏔️ Altitude 500 hPa",
+      "transparent_below": 5
+    },
+    "prob_t500_m10": {
+      "label": "Probabilité T500 > -10 °C (Dorsale anticyclonique)",
+      "unit": "%",
+      "decimals": 0,
+      "group": "🏔️ Altitude 500 hPa",
+      "transparent_below": 5
+    }
+  },
+  "steps": []
+}
