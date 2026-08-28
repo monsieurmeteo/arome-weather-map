@@ -710,7 +710,7 @@
 
     /* ── Tableau orages ──────────────────────────────────────────────── */
     function renderStormsTable(forecasts, hourFmt, dayFmt) {
-        var head = ['Jour', 'Heure', 'Risque orage', 'CAPE', 'LCL', 'Foudre', 'Grêle', 'Pluie conv.',
+        var head = ['Jour', 'Heure', 'Risque orage', 'CAPE', 'LCL', 'Foudre', 'Grêle (cm)', 'Tornade (STP)', 'Pluie conv.',
                     'Graupel', 'Pluie 1h', 'Rafales', 'Type d’orage'];
         var thead = ui.tblStorms.tHead || ui.tblStorms.createTHead();
         thead.replaceChildren();
@@ -745,7 +745,34 @@
             appendNum(row, valueAt(f.lp, 'lcl_m'), 0, ' m');
             var lig = valueAt(f.lp, 'lightning_score');
             appendNum(row, lig, 0, '/100', finite(lig) && lig >= 60 ? 'num-strong' : '');
-            appendHazard(row, valueAt(f.lp, 'hail_risk_code'));
+            
+            // Grêle Diamètre MESH
+            var refl = valueAt(f.lp, 'reflectivity_dbz') || 0;
+            var capeVal = valueAt(f.lp, 'cape_jkg') || 0;
+            var grp = valueAt(f.lp, 'graupel_mm') || 0;
+            var diam = 0;
+            if (refl >= 40) {
+                diam = parseFloat((2.54 * Math.pow(Math.max(0, refl - 42) / 18.0, 1.3) * Math.sqrt(Math.max(200, capeVal) / 1200.0)).toFixed(1));
+                if (grp > 0 && diam < 0.5) diam = 0.5;
+            }
+            var tdHail = el('td', diam >= 2.5 ? 'num-strong' : (diam >= 1.0 ? 'temp-warm' : ''));
+            tdHail.textContent = diam > 0 ? diam + ' cm' : '—';
+            row.appendChild(tdHail);
+
+            // Tornade STP
+            var t2m = valueAt(f.lp, 'temperature_c') || 20;
+            var d2m = valueAt(f.lp, 'dewpoint_c') || (t2m - 5);
+            var lcl_m = Math.min(3000, Math.max(50, 125.0 * Math.max(0, t2m - d2m)));
+            var lcl_f = Math.min(1.5, Math.max(0, (2000.0 - lcl_m) / 1000.0));
+            var cape_f = Math.min(4.0, capeVal / 1500.0);
+            var shear = valueAt(f.lp, 'wind_shear_kmh') || 20.0;
+            var shear_f = Math.min(2.0, shear / 20.0);
+            var srh_f = Math.min(3.0, (shear * Math.sqrt(Math.max(10, capeVal)) * 0.12) / 100.0);
+            var stp = (capeVal >= 200 && refl >= 38) ? parseFloat((cape_f * lcl_f * srh_f * shear_f).toFixed(1)) : 0.0;
+            var tdTor = el('td', stp >= 2.5 ? 'num-strong' : (stp >= 1.0 ? 'temp-warm' : ''));
+            tdTor.textContent = stp > 0.3 ? '🌪️ ' + stp : (stp > 0 ? stp : '—');
+            row.appendChild(tdTor);
+
             appendNum(row, valueAt(f.lp, 'convective_precipitation_mm'), 1, ' mm');
             appendNum(row, valueAt(f.lp, 'graupel_mm'), 2, ' mm');
             var r = valueAt(f.lp, 'precipitation_mm');
