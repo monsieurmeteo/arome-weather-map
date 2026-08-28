@@ -932,15 +932,9 @@
                     </a>
                 </div>
 
-                                <!-- Centre : Modèle + Calque Météo + Sélecteur de Région -->
+                                                <!-- Centre : Calque Météo + Sélecteur de Région -->
                 <div class="amfm-nav-controls">
-                    <!-- 1. Sélecteur de Modèle -->
-                    <select id="select-model" class="amfm-select-model" aria-label="Sélection du modèle météorologique">
-                        <option value="arome" selected>🇫🇷 AROME HD (1,3 km)</option>
-                        <option value="arome_pe">🎲 AROME-PE (Probabilités)</option>
-                    </select>
-
-                    <!-- 2. Sélecteur Direct de Calque Météo Unifié -->
+                    <!-- Sélecteur Direct de Calque Météo AROME HD -->
                     <select id="direct-layer-select" class="amfm-select-layer" aria-label="Sélection du paramètre météorologique">
                         <!-- 🌡️ TEMPÉRATURES -->
                         <optgroup label="🌡️ Températures">
@@ -952,16 +946,16 @@
                             <option value="temperature_min_24h">❄️ Température Min 24h (J+0 &amp; J+1)</option>
                         </optgroup>
 
-                        <!-- 🌧️ PRÉCIPITATIONS -->
+                        <!-- 🌧️ PRÉCIPITATIONS & PLUIE -->
                         <optgroup label="🌧️ Précipitations &amp; Pluie">
                             <option value="pluie_1h">🌧️ Pluie horaire (mm/h)</option>
                             <option value="pluie_cumul">📊 Précipitations cumulées (mm)</option>
                             <option value="precipitation_24h_max">🌧️ Pluie Max 24h (J+0 &amp; J+1)</option>
                             <option value="reflectivite">📡 Réflectivité Radar Doppler (dBZ)</option>
-                            <option value="graupel">🧊 Graupel / Grésil (mm)</option>
+                            <option value="graupel">🧊 Graupel / Grésil au sol (mm)</option>
                         </optgroup>
 
-                        <!-- ⚡ PHÉNOMÈNES SÉVÈRES : ORAGES, FOUDRE, GRÊLE & TORNADES -->
+                        <!-- ⚡ ORAGES, FOUDRE, GRÊLE & TORNADES -->
                         <optgroup label="⚡ Instabilité, Orages, Foudre, Grêle &amp; Tornades">
                             <option value="orage_risque">⚡ Risque &amp; Probabilité d'Orage (%)</option>
                             <option value="foudre_densite">⚡ Densité de Foudre (éclairs/km²/h)</option>
@@ -1007,99 +1001,9 @@
                             <option value="pression">🧭 Pression niveau mer (hPa)</option>
                             <option value="pression_surface">⛰️ Pression au sol (hPa)</option>
                         </optgroup>
-
-                                                <!-- 🎲 PROBABILITÉS 24H (J+0 & J+1) -->
-                        <optgroup label="🎲 Probabilités 24h (J+0 &amp; J+1)" class="grp-pe">
-                            <option value="prob_pluie_24h_10">🌧️ Probabilité Pluie 24h ≥ 10 mm</option>
-                            <option value="prob_pluie_24h_20">🌧️ Probabilité Pluie 24h ≥ 20 mm</option>
-                            <option value="prob_pluie_24h_50">🌧️ Probabilité Pluie 24h ≥ 50 mm</option>
-                            <option value="prob_pluie_24h_100">🌧️ Probabilité Pluie 24h ≥ 100 mm</option>
-                            <option value="prob_rafales_24h_80">💨 Probabilité Rafales 24h ≥ 80 km/h</option>
-                            <option value="prob_rafales_24h_100">💨 Probabilité Rafales 24h ≥ 100 km/h</option>
-                            <option value="prob_rafales_24h_120">💨 Probabilité Rafales 24h ≥ 120 km/h</option>
-                            <option value="prob_tmax_24h_30">☀️ Probabilité Tmax ≥ 30 °C</option>
-                            <option value="prob_tmax_24h_35">☀️ Probabilité Tmax ≥ 35 °C</option>
-                            <option value="prob_tmax_24h_40">☀️ Probabilité Canicule Tmax ≥ 40 °C</option>
-                            <option value="prob_tmin_24h_0">❄️ Probabilité Gelée Tmin ≤ 0 °C</option>
-                            <option value="prob_tmin_24h_m5">❄️ Probabilité Forte Gelée Tmin ≤ -5 °C</option>
-                            <option value="prob_neige_24h_1">❄️ Probabilité Neige 24h ≥ 1 cm</option>
-                            <option value="prob_neige_24h_5">❄️ Probabilité Neige 24h ≥ 5 cm</option>
-                            <option value="prob_neige_24h_10">❄️ Probabilité Neige 24h ≥ 10 cm</option>
-                            <option value="prob_orage_24h">⚡ Probabilité Risque Orageux 24h</option>
-                            <option value="prob_grele_24h">🌩️ Probabilité Risque de Grêle 24h</option>
-                            <option value="prob_tornade_24h">🌪️ Probabilité Risque Tornade 24h</option>
-                        </optgroup>
-
-                        <!-- 🎲 PROBABILITÉS HORAIRES & CUMULÉES AROME-PE -->
-                        <optgroup label="🎲 Probabilités Précipitations 1h" class="grp-pe">
-                            <option value="prob_pluie_1h_01">🌧️ Probabilité Pluie 1h > 0.1 mm</option>
-                            <option value="prob_pluie_1h_5">🌧️ Probabilité Pluie 1h > 5 mm</option>
-                            <option value="prob_pluie_1h_10">🌧️ Probabilité Pluie 1h > 10 mm</option>
-                            <option value="prob_pluie_1h_20">🌧️ Probabilité Pluie 1h > 20 mm</option>
-                            <option value="prob_pluie_1h_30">🌧️ Probabilité Pluie 1h > 30 mm (Orage violent)</option>
-                        </optgroup>
-                        <optgroup label="🎲 Probabilités Pluie Cumulée" class="grp-pe">
-                            <option value="prob_pluie_cumul_01">🌧️ Probabilité Cumul Pluie > 0.1 mm</option>
-                            <option value="prob_pluie_cumul_1">🌧️ Probabilité Cumul Pluie > 1 mm</option>
-                            <option value="prob_pluie_cumul_10">🌧️ Probabilité Cumul Pluie > 10 mm</option>
-                            <option value="prob_pluie_cumul_20">🌧️ Probabilité Cumul Pluie > 20 mm</option>
-                            <option value="prob_pluie_cumul_50">🌧️ Probabilité Cumul Pluie > 50 mm</option>
-                            <option value="prob_pluie_cumul_100">🌧️ Probabilité Cumul Pluie > 100 mm</option>
-                        </optgroup>
-                        <optgroup label="🎲 Probabilités Rafales Instantanées" class="grp-pe">
-                            <option value="prob_rafales_80">💨 Probabilité Rafales > 80 km/h</option>
-                            <option value="prob_rafales_90">💨 Probabilité Rafales > 90 km/h</option>
-                            <option value="prob_rafales_100">💨 Probabilité Rafales > 100 km/h (Tempête)</option>
-                            <option value="prob_rafales_110">💨 Probabilité Rafales > 110 km/h</option>
-                            <option value="prob_rafales_120">💨 Probabilité Rafales > 120 km/h (Ouragan)</option>
-                        </optgroup>
-                        <optgroup label="🎲 Probabilités Rafales Max Cumulées" class="grp-pe">
-                            <option value="prob_max_rafales_80">🌪️ Probabilité Rafale Max > 80 km/h</option>
-                            <option value="prob_max_rafales_90">🌪️ Probabilité Rafale Max > 90 km/h</option>
-                            <option value="prob_max_rafales_100">🌪️ Probabilité Rafale Max > 100 km/h</option>
-                            <option value="prob_max_rafales_110">🌪️ Probabilité Rafale Max > 110 km/h</option>
-                            <option value="prob_max_rafales_120">🌪️ Probabilité Rafale Max > 120 km/h</option>
-                        </optgroup>
-                        <optgroup label="🎲 Probabilités Neige &amp; Hiver" class="grp-pe">
-                            <option value="prob_neige_risque">❄️ Risque de Chute de Neige</option>
-                            <option value="prob_neige_1">❄️ Probabilité Cumul Neige > 1 cm</option>
-                            <option value="prob_neige_5">❄️ Probabilité Cumul Neige > 5 cm</option>
-                            <option value="prob_neige_10">❄️ Probabilité Cumul Neige > 10 cm</option>
-                            <option value="prob_neige_20">❄️ Probabilité Cumul Neige > 20 cm</option>
-                            <option value="prob_neige_50">❄️ Probabilité Cumul Neige > 50 cm</option>
-                        </optgroup>
-                        <optgroup label="🎲 Probabilités Températures (Gel &amp; Canicule)" class="grp-pe">
-                            <option value="prob_t2m_0">❄️ Probabilité Gel T2m ≤ 0 °C</option>
-                            <option value="prob_t2m_m5">❄️ Probabilité Gel marqué ≤ -5 °C</option>
-                            <option value="prob_t2m_m10">❄️ Probabilité Grand froid ≤ -10 °C</option>
-                            <option value="prob_t2m_30">☀️ Probabilité Forte chaleur ≥ 30 °C</option>
-                            <option value="prob_t2m_35">☀️ Probabilité Très forte chaleur ≥ 35 °C</option>
-                            <option value="prob_t2m_40">☀️ Probabilité Canicule extrême ≥ 40 °C</option>
-                        </optgroup>
-                        <optgroup label="🎲 Probabilités Orages &amp; Instabilité (CAPE)" class="grp-pe">
-                            <option value="prob_cape_500">⚡ Probabilité Risque Orageux (CAPE > 500 J/kg)</option>
-                            <option value="prob_cape_1000">⚡ Probabilité Orages Modérés (CAPE > 1000 J/kg)</option>
-                            <option value="prob_cape_2000">⚡ Probabilité Orages Violents (CAPE > 2000 J/kg)</option>
-                        </optgroup>
-                        <optgroup label="🎲 Probabilités Pression au sol" class="grp-pe">
-                            <option value="prob_pression_1000">🧭 Probabilité Pression < 1000 hPa</option>
-                            <option value="prob_pression_990">🧭 Probabilité Pression < 990 hPa</option>
-                            <option value="prob_pression_980">🧭 Probabilité Pression < 980 hPa (Dépression)</option>
-                            <option value="prob_pression_970">🧭 Probabilité Pression < 970 hPa (Tempête)</option>
-                            <option value="prob_pression_1030">🧭 Probabilité Pression > 1030 hPa (Anticyclone)</option>
-                        </optgroup>
-                        <optgroup label="🎲 Probabilités Altitude T850 &amp; T500" class="grp-pe">
-                            <option value="prob_t850_m5">🏔️ Probabilité T850 < -5 °C</option>
-                            <option value="prob_t850_m10">🏔️ Probabilité T850 < -10 °C</option>
-                            <option value="prob_t850_10">🏔️ Probabilité T850 > 10 °C</option>
-                            <option value="prob_t850_20">🏔️ Probabilité T850 > 20 °C</option>
-                            <option value="prob_t500_m35">🏔️ Probabilité T500 < -35 °C</option>
-                            <option value="prob_t500_m25">🏔️ Probabilité T500 < -25 °C</option>
-                            <option value="prob_t500_m10">🏔️ Probabilité T500 > -10 °C</option>
-                        </optgroup>
                     </select>
 
-                    <!-- 3. Sélecteur de Zone (France Entière + 13 Régions) -->
+                    <!-- Sélecteur de Zone (France Entière + 13 Régions) -->
                     <select id="select-region" data-amfm-region-select class="amfm-select-region" aria-label="Zoomer sur une région de France">
                         <option value="france" selected>🇫🇷 France Entière</option>
                         <option value="hdf">🏘️ Hauts-de-France</option>
