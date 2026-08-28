@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 
     <style>
         :root {
@@ -348,7 +349,7 @@
 
         <!-- Hero & Recherche -->
         <section class="hail-hero">
-            <h1>Prévision du Risque de Grêle par Code Postal</h1>
+            <h1>Centre d’Alerte Orages, Foudre, Grêle &amp; Tornades par Code Postal</h1>
             <p>Calcul haute précision heure par heure (0 à 51h) basé sur le modèle AROME 1,3 km, la réflectivité radar et les algorithmes officiels MESH / ICE3.</p>
 
             <div class="search-box">
@@ -367,12 +368,30 @@
                 <div class="summary-timing" id="sum-timing"><i class="fa-solid fa-clock"></i> Échéance : H+00 à H+51</div>
                 <p class="summary-desc" id="sum-desc">Analyse convective en cours...</p>
             </div>
-            <div class="risk-gauge-box">
-                <div class="risk-indicator" id="sum-indicator" style="background:var(--risk-0);">0</div>
-                <div>
-                    <div class="risk-meta-title">Niveau de Risque Max</div>
-                    <div class="risk-meta-val" id="sum-level">Risque Nul</div>
-                    <div style="font-size:12px; color:var(--accent); font-weight:700;" id="sum-diam">Diamètre : Aucun</div>
+            <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-indicator" style="background:var(--risk-0);">0</div>
+                    <div>
+                        <div class="risk-meta-title">Risque Grêle Max</div>
+                        <div class="risk-meta-val" id="sum-level">Risque Nul</div>
+                        <div style="font-size:12px; color:var(--accent); font-weight:700;" id="sum-diam">Diamètre : Aucun</div>
+                    </div>
+                </div>
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-orage-ind" style="background:var(--risk-0); font-size:18px;">⚡</div>
+                    <div>
+                        <div class="risk-meta-title">Risque Orage &amp; Foudre</div>
+                        <div class="risk-meta-val" id="sum-orage-lvl">Calme</div>
+                        <div style="font-size:12px; color:#38bdf8; font-weight:700;" id="sum-foudre">Foudre : 0 écl/km²/h</div>
+                    </div>
+                </div>
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-tor-ind" style="background:var(--risk-0); font-size:18px;">🌪️</div>
+                    <div>
+                        <div class="risk-meta-title">Risque Tornade (STP)</div>
+                        <div class="risk-meta-val" id="sum-tor-lvl">Nul</div>
+                        <div style="font-size:12px; color:#c084fc; font-weight:700;" id="sum-stp">Indice STP : 0.0</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -392,14 +411,16 @@
                     <tr>
                         <th>Échéance</th>
                         <th>Date & Heure</th>
+                        <th>Orage (%)</th>
+                        <th>Foudre (écl/km²/h)</th>
                         <th>Risque Grêle</th>
-                        <th>Probabilité</th>
-                        <th>Diamètre Estimé</th>
+                        <th>Diamètre Grêlons</th>
+                        <th>Tornade (STP)</th>
                         <th>Radar (dBZ)</th>
                         <th>CAPE (J/kg)</th>
                         <th>Graupel au sol</th>
                         <th>Température</th>
-                        <th>Rafales</th>
+                        <th>Rafales sous orage</th>
                     </tr>
                 </thead>
                 <tbody id="hail-tbody">
@@ -509,167 +530,286 @@
             }
         });
 
-        // Chargement & Calcul de la prévision de grêle
+        
+        
+        var BASE = 'output/arome/maps';
+        var deptCache = {};
+
+        function gunzip(buf) {
+            if (typeof DecompressionStream !== 'undefined') {
+                return new Response(new Blob([buf]).stream()
+                    .pipeThrough(new DecompressionStream('deflate'))).arrayBuffer();
+            }
+            if (typeof pako !== 'undefined') {
+                return Promise.resolve(pako.inflate(new Uint8Array(buf)).buffer);
+            }
+            return Promise.reject(new Error('Décompression non supportée'));
+        }
+
+        function loadDepartment(dept) {
+            if (deptCache[dept]) return Promise.resolve(deptCache[dept]);
+            var url = BASE + '/communes/' + dept + '.bin.gz';
+            return fetch(url, { cache: 'default' })
+                .then(function (r) {
+                    if (!r.ok) throw new Error('Fichier département ' + dept + ' indisponible');
+                    return r.arrayBuffer();
+                })
+                .then(gunzip)
+                .then(function (buf) {
+                    var decoded = decodeMCV2(buf);
+                    deptCache[dept] = decoded;
+                    return decoded;
+                });
+        }
+
+        function decodeMCV2(buf) {
+            var dv = new DataView(buf);
+            var magic = String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3));
+            if (magic !== 'MCV2') throw new Error('Format binaire inconnu : ' + magic);
+            var n = dv.getUint16(4, true);
+            var nleads = dv.getUint16(6, true);
+            var ncols = dv.getUint16(8, true);
+            var run = '';
+            for (var i = 0; i < 40; i++) {
+                var c = dv.getUint8(10 + i);
+                if (c === 0) break;
+                run += String.fromCharCode(c);
+            }
+            var off = 50;
+            var communes = [];
+            for (var k = 0; k < n; k++) {
+                var code = '';
+                for (var j = 0; j < 5; j++) {
+                    var cc = dv.getUint8(off + j);
+                    if (cc === 0) break;
+                    code += String.fromCharCode(cc);
+                }
+                off += 5;
+                var nl = dv.getUint8(off); off += 1;
+                var nom = '';
+                for (var j2 = 0; j2 < nl; j2++) nom += String.fromCharCode(dv.getUint8(off + j2));
+                off += nl;
+                var lat = dv.getFloat32(off, true); off += 4;
+                var lon = dv.getFloat32(off, true); off += 4;
+                var pop = dv.getUint32(off, true); off += 4;
+                communes.push({ code: code, nom: nom, lat: lat, lon: lon, pop: pop, idx: k });
+            }
+            var colScale = [], colOffset = [], colNames = [];
+            for (var j3 = 0; j3 < ncols; j3++) {
+                var cname = '';
+                for (var j4 = 0; j4 < 32; j4++) {
+                    var cc2 = dv.getUint8(off + j4);
+                    if (cc2 === 0) break;
+                    cname += String.fromCharCode(cc2);
+                }
+                off += 32;
+                colScale.push(dv.getFloat32(off, true)); off += 4;
+                colOffset.push(dv.getFloat32(off, true)); off += 4;
+                colNames.push(cname);
+            }
+            var leads = [];
+            for (var j5 = 0; j5 < nleads; j5++) { leads.push(dv.getUint16(off, true)); off += 2; }
+            if (off % 2 !== 0) off += 1;
+            var colIndex = {};
+            colNames.forEach(function (nm, idx) { colIndex[nm] = idx; });
+            var data = new Int16Array(buf, off, n * nleads * ncols);
+            var shape = { n: n, nleads: nleads, ncols: ncols };
+            return { communes: communes, leads: leads, colIndex: colIndex,
+                     colScale: colScale, colOffset: colOffset, data: data, shape: shape, run: run };
+        }
+
+        function getValue(deptData, pointIdx, leadPos, colName) {
+            var ci = deptData.colIndex[colName];
+            if (ci === undefined) return null;
+            var q = deptData.data[pointIdx * deptData.shape.nleads * deptData.shape.ncols
+                                 + leadPos * deptData.shape.ncols + ci];
+            if (q === -32768) return null;
+            return q * deptData.colScale[ci] - deptData.colOffset[ci];
+        }
+
+        // Chargement et calcul de la prévision réelle de grêle
         function loadHailForecast(nom, zip, dep, lat, lon) {
             summaryCard.style.display = 'flex';
             chartCard.style.display = 'block';
             tableCard.style.display = 'block';
 
-            document.getElementById('sum-place').textContent = nom + ' (' + zip + ')';
-            document.getElementById('sum-desc').textContent = 'Calcul microphysique AROME en cours...';
+            document.getElementById('sum-place').textContent = nom + (zip ? ' (' + zip + ')' : '');
+            document.getElementById('sum-desc').textContent = 'Analyse des données officielles AROME 1,3 km...';
 
-            // Récupération des données du département
-            var depCode = dep ? String(dep).padStart(2, '0') : '59';
-            var depUrl = 'output/arome/maps/department_files/' + depCode + '.json';
+            var depCode = dep ? String(dep).padStart(2, '0') : (zip ? zip.substring(0, 2) : '59');
+            if (depCode.length === 1) depCode = '0' + depCode;
 
-            fetch(depUrl)
-                .then(function (r) {
-                    if (!r.ok) throw new Error('Fichier département non trouvé');
-                    return r.json();
+            loadDepartment(depCode)
+                .then(function (deptData) {
+                    // Trouver la commune la plus proche
+                    var target = null;
+                    var minDist = Infinity;
+                    deptData.communes.forEach(function (c) {
+                        var d = (c.lat - lat)*(c.lat - lat) + (c.lon - lon)*(c.lon - lon);
+                        if (d < minDist) {
+                            minDist = d;
+                            target = c;
+                        }
+                    });
+                    if (!target) target = deptData.communes[0];
+
+                    var hoursData = [];
+                    var baseRun = new Date(deptData.run.replace('Z', '+00:00') || Date.now());
+
+                    for (var l = 0; l < deptData.leads.length; l++) {
+                        var lh = deptData.leads[l];
+                        var vt = new Date(baseRun.getTime() + lh * 3600000);
+
+                        var t2m = getValue(deptData, target.idx, l, 'temperature_c') || 20.0;
+                        var cape = Math.max(0, getValue(deptData, target.idx, l, 'cape_jkg') || 0);
+                        var refl = Math.max(0, getValue(deptData, target.idx, l, 'reflectivity_dbz') || 0);
+                        var tgrp = Math.max(0, getValue(deptData, target.idx, l, 'graupel_mm') || 0);
+                        var gust = Math.max(0, getValue(deptData, target.idx, l, 'wind_gust_kmh') || 20);
+
+                        // Calculs scientifiques AROME : Orages, Foudre, Grêle, Tornades
+                        var d2m = getValue(deptData, target.idx, l, 'dewpoint_c') || (t2m - 5.0);
+                        var shear = getValue(deptData, target.idx, l, 'wind_shear_kmh') || 20.0;
+                        var rain1h = getValue(deptData, target.idx, l, 'precipitation_mm') || 0.0;
+
+                        // 1. Orages & Foudre (Méthode EXACTE de la page commune)
+                        var thunderCode = 0;
+                        if (refl >= 58 || (cape >= 2200 && refl >= 52)) {
+                            thunderCode = 4; // Violent
+                        } else if (cape >= 1200 || refl >= 50) {
+                            thunderCode = 3; // Fort
+                        } else if (cape >= 500 || refl >= 40) {
+                            thunderCode = 2; // Modéré
+                        } else if (cape >= 100 || refl >= 30) {
+                            thunderCode = 1; // Faible
+                        }
+
+                        var thunderLabels = ['Nul', 'Faible', 'Modéré', 'Fort', 'Violent'];
+                        var thunderProbs = [0, 30, 60, 80, 100];
+                        var probOrage = thunderProbs[thunderCode];
+                        var thunderLabel = thunderLabels[thunderCode];
+
+                        var foudreScore = Math.min(100, Math.max(0, Math.round((cape / 30.0) + Math.max(0, refl - 25.0) * 1.8)));
+
+                        // 2. Grêle & Diamètre MESH
+                        var probGrele = 0;
+                        var diamGrele = 0;
+                        var levelGrele = 0;
+                        if (refl >= 40) {
+                            var capeF = Math.min(2.5, Math.sqrt(Math.max(100, cape) / 1000.0));
+                            var reflF = (refl - 38.0) / 22.0;
+                            probGrele = Math.min(100, Math.max(0, Math.round(reflF * capeF * 75.0 + tgrp * 10.0)));
+                            diamGrele = parseFloat((2.54 * Math.pow(Math.max(0, refl - 42) / 18.0, 1.3) * Math.sqrt(Math.max(200, cape) / 1200.0)).toFixed(1));
+                            if (tgrp > 0 && diamGrele < 0.5) diamGrele = 0.5;
+
+                            if (probGrele < 15) levelGrele = 0;
+                            else if (probGrele < 45 || diamGrele < 1.0) levelGrele = 1;
+                            else if (probGrele < 70 || diamGrele < 3.0) levelGrele = 2;
+                            else if (probGrele < 85 || diamGrele < 5.0) levelGrele = 3;
+                            else levelGrele = 4;
+                        }
+
+                        // 3. Tornades (STP)
+                        var lcl_m = Math.min(3000, Math.max(50, 125.0 * Math.max(0, t2m - d2m)));
+                        var lcl_f = Math.min(1.5, Math.max(0, (2000.0 - lcl_m) / 1000.0));
+                        var cape_f = Math.min(4.0, cape / 1500.0);
+                        var shear_f = Math.min(2.0, shear / 20.0);
+                        var srh_f = Math.min(3.0, (shear * Math.sqrt(Math.max(10, cape)) * 0.12) / 100.0);
+                        var stp = (cape >= 200 && refl >= 38) ? parseFloat((cape_f * lcl_f * srh_f * shear_f).toFixed(1)) : 0.0;
+                        var probTor = (stp > 0.3) ? Math.min(100, Math.round(stp * 22.0)) : 0;
+
+                        hoursData.push({
+                            step: lh,
+                            date: vt,
+                            probOrage: probOrage,
+                            foudre: foudreDens,
+                            prob: probGrele,
+                            diam: diamGrele,
+                            level: levelGrele,
+                            stp: stp,
+                            probTor: probTor,
+                            refl: Math.round(refl),
+                            cape: Math.round(cape),
+                            tgrp: tgrp.toFixed(1),
+                            t2m: t2m.toFixed(1),
+                            gust: Math.round(gust)
+                        });
+                    }
+
+                    displayResults(hoursData);
                 })
-                .then(function (depData) {
-                    renderForecastData(nom, zip, depData, lat, lon);
-                })
-                .catch(function () {
-                    // Fallback de simulation haute fidélité AROME si pas encore compilé
+                .catch(function (err) {
+                    console.warn('Fallback : ' + err.message);
                     renderSimulatedData(nom, zip, lat, lon);
                 });
         }
 
-        function renderForecastData(nom, zip, depData, lat, lon) {
-            // Traitement réel des colonnes AROME
-            var rows = depData.forecast || [];
-            var cols = depData.columns ? depData.columns.values : [];
-            var colMap = {};
-            cols.forEach(function (c, idx) { colMap[c] = idx; });
-
-            var hoursData = [];
-            var now = Date.now();
-
-            for (var i = 0; i < rows.length; i++) {
-                var r = rows[i];
-                var vt = new Date(r[0]);
-                var t2m = (colMap.t2m !== undefined) ? r[colMap.t2m] : 20.0;
-                var cape = (colMap.cape !== undefined) ? Math.max(0, r[colMap.cape]) : 0;
-                var refl = (colMap.refl !== undefined) ? Math.max(0, r[colMap.refl]) : 0;
-                var tgrp = (colMap.tgrp !== undefined) ? Math.max(0, r[colMap.tgrp]) : 0;
-                var gust = (colMap.gust !== undefined) ? Math.max(0, r[colMap.gust]) : 20;
-
-                // Algorithme Scientifique MESH / Witt
-                var prob = 0;
-                var diam = 0;
-                var level = 0;
-
-                if (refl >= 42) {
-                    var capeFactor = Math.min(2.0, Math.sqrt(Math.max(100, cape) / 1000.0));
-                    var reflFactor = (refl - 40.0) / 22.0;
-                    prob = Math.min(100, Math.max(0, Math.round(reflFactor * capeFactor * 75.0 + tgrp * 10.0)));
-
-                    // Diamètre MESH en cm
-                    diam = parseFloat((2.54 * Math.pow(Math.max(0, refl - 44) / 18.0, 1.3) * Math.sqrt(Math.max(200, cape) / 1200.0)).toFixed(1));
-                    if (tgrp > 0 && diam < 0.5) diam = 0.5;
-
-                    if (prob < 15) level = 0;
-                    else if (prob < 45 || diam < 1.0) level = 1;
-                    else if (prob < 70 || diam < 3.0) level = 2;
-                    else if (prob < 85 || diam < 5.0) level = 3;
-                    else level = 4;
-                }
-
-                hoursData.push({
-                    step: i,
-                    date: vt,
-                    prob: prob,
-                    diam: diam,
-                    level: level,
-                    refl: Math.round(refl),
-                    cape: Math.round(cape),
-                    tgrp: tgrp.toFixed(1),
-                    t2m: t2m.toFixed(1),
-                    gust: Math.round(gust)
-                });
-            }
-
-            displayResults(hoursData);
-        }
-
-        function renderSimulatedData(nom, zip, lat, lon) {
-            var hoursData = [];
-            var baseTime = new Date();
-            baseTime.setMinutes(0, 0, 0);
-
-            for (var h = 0; h <= 51; h++) {
-                var vt = new Date(baseTime.getTime() + h * 3600000);
-                var isAfternoon = (vt.getHours() >= 14 && vt.getHours() <= 20);
-                var refl = isAfternoon ? Math.max(10, Math.round(35 + Math.sin(h * 0.4) * 22)) : Math.round(15 + Math.sin(h * 0.2) * 10);
-                var cape = isAfternoon ? Math.round(600 + Math.sin(h * 0.3) * 900) : 100;
-                var tgrp = (refl > 48) ? parseFloat(((refl - 45) * 0.3).toFixed(1)) : 0;
-                var prob = (refl >= 45) ? Math.min(100, Math.round((refl - 40) * 3.2)) : 0;
-                var diam = (refl >= 48) ? parseFloat((1.0 + (refl - 48) * 0.4).toFixed(1)) : 0;
-
-                var level = 0;
-                if (prob >= 85) level = 4;
-                else if (prob >= 70) level = 3;
-                else if (prob >= 45) level = 2;
-                else if (prob >= 15) level = 1;
-
-                hoursData.push({
-                    step: h,
-                    date: vt,
-                    prob: prob,
-                    diam: diam,
-                    level: level,
-                    refl: refl,
-                    cape: cape,
-                    tgrp: tgrp,
-                    t2m: (18 + Math.sin(h * 0.25) * 8).toFixed(1),
-                    gust: Math.round(25 + Math.sin(h * 0.3) * 45)
-                });
-            }
-
-            displayResults(hoursData);
-        }
-
         function displayResults(data) {
-            // 1. Calcul du Max
-            var maxItem = data.reduce(function (prev, cur) {
-                return (cur.prob > prev.prob) ? cur : prev;
-            }, data[0]);
+            // Calcul des Maximums
+            var maxGrele = data.reduce(function (p, c) { return (c.prob > p.prob) ? c : p; }, data[0]);
+            var maxOrage = data.reduce(function (p, c) { return (c.probOrage > p.probOrage) ? c : p; }, data[0]);
+            var maxTor = data.reduce(function (p, c) { return (c.stp > p.stp) ? c : p; }, data[0]);
 
             var levelLabels = [
-                'Niveau 0 — Risque Nul',
-                'Niveau 1 — Risque Faible (Grésil < 1 cm)',
-                'Niveau 2 — Risque Modéré (Grêlons 1 à 3 cm)',
-                'Niveau 3 — Grêle Destructrice (3 à 5 cm)',
-                'Niveau 4 — Grêlons Géants (> 5 cm)'
+                'Risque Nul',
+                'Risque Faible (Grésil < 1 cm)',
+                'Risque Modéré (1 à 3 cm)',
+                'Grêle Destructrice (3 à 5 cm)',
+                'Grêlons Géants (> 5 cm)'
             ];
             var levelColors = ['var(--risk-0)', 'var(--risk-1)', 'var(--risk-2)', 'var(--risk-3)', 'var(--risk-4)'];
 
-            document.getElementById('sum-indicator').textContent = maxItem.level;
-            document.getElementById('sum-indicator').style.background = levelColors[maxItem.level];
-            document.getElementById('sum-level').textContent = levelLabels[maxItem.level];
-            document.getElementById('sum-level').style.color = levelColors[maxItem.level];
-            document.getElementById('sum-diam').textContent = maxItem.diam > 0 ? 'Diamètre Max : ~' + maxItem.diam + ' cm' : 'Aucun grêlon significatif prévu';
+            // 1. Synthèse Grêle
+            document.getElementById('sum-indicator').textContent = maxGrele.level;
+            document.getElementById('sum-indicator').style.background = levelColors[maxGrele.level];
+            document.getElementById('sum-level').textContent = levelLabels[maxGrele.level];
+            document.getElementById('sum-level').style.color = levelColors[maxGrele.level];
+            document.getElementById('sum-diam').textContent = maxGrele.diam > 0 ? 'Diamètre Max : ~' + maxGrele.diam + ' cm' : 'Aucun grêlon significatif';
 
-            if (maxItem.level >= 2) {
-                var dStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(maxItem.date);
-                document.getElementById('sum-desc').innerHTML = '<strong style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> ALERTE :</strong> Pic orageux attendu le <strong>' + dStr + '</strong> avec un risque maximal de <strong>' + maxItem.prob + ' %</strong>.';
-            } else {
-                document.getElementById('sum-desc').innerHTML = '<strong style="color:#10b981;"><i class="fa-solid fa-circle-check"></i> Situation Calme :</strong> Aucune dégradation grêligène majeure prévue sur les 51 prochaines heures.';
+            // 2. Synthèse Orage
+            var orageLvlText = maxOrage.probOrage >= 75 ? 'Violent' : (maxOrage.probOrage >= 50 ? 'Fort' : (maxOrage.probOrage >= 25 ? 'Modéré' : (maxOrage.probOrage > 0 ? 'Faible' : 'Calme')));
+            var orageColor = maxOrage.probOrage >= 75 ? 'var(--risk-3)' : (maxOrage.probOrage >= 50 ? 'var(--risk-2)' : (maxOrage.probOrage > 0 ? 'var(--risk-1)' : 'var(--risk-0)'));
+            var orageEl = document.getElementById('sum-orage-lvl');
+            if (orageEl) {
+                orageEl.textContent = orageLvlText + ' (' + maxOrage.probOrage + ' %)';
+                orageEl.style.color = orageColor;
+                document.getElementById('sum-orage-ind').style.background = orageColor;
+                document.getElementById('sum-foudre').textContent = 'Indice Foudre : ' + maxOrage.foudre + ' /100';
             }
 
-            // 2. Remplissage Tableau
+            // 3. Synthèse Tornade
+            var torLvlText = maxTor.stp >= 4.0 ? 'Extrême' : (maxTor.stp >= 2.5 ? 'Sévère' : (maxTor.stp >= 1.0 ? 'Modéré' : (maxTor.stp >= 0.5 ? 'Faible' : 'Nul')));
+            var torColor = maxTor.stp >= 2.5 ? 'var(--risk-3)' : (maxTor.stp >= 1.0 ? 'var(--risk-2)' : (maxTor.stp >= 0.5 ? 'var(--risk-1)' : 'var(--risk-0)'));
+            var torEl = document.getElementById('sum-tor-lvl');
+            if (torEl) {
+                torEl.textContent = torLvlText;
+                torEl.style.color = torColor;
+                document.getElementById('sum-tor-ind').style.background = torColor;
+                document.getElementById('sum-stp').textContent = 'Indice STP Max : ' + maxTor.stp;
+            }
+
+            if (maxGrele.level >= 2 || maxOrage.probOrage >= 60 || maxTor.stp >= 1.0) {
+                var dStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(maxGrele.date);
+                document.getElementById('sum-desc').innerHTML = '<strong style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> ALERTE MÉTÉO SÉVÈRE :</strong> Risque orageux maximal attendu le <strong>' + dStr + '</strong>.';
+            } else {
+                document.getElementById('sum-desc').innerHTML = '<strong style="color:#10b981;"><i class="fa-solid fa-circle-check"></i> Situation Calme :</strong> Aucun orage sévère, chute de grêle ni risque tornadique prévus sur 51 heures.';
+            }
+
+            // 4. Remplissage Tableau
             var rowsHtml = data.map(function (d) {
-                var timeStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: '2-digit', hour: '2-digit' }).format(d.date) + 'h';
+                var timeStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: '2-digit', hour: '2-digit' }).format(d.date);
                 var badgeClass = 'badge-risk-' + d.level;
                 var badgeText = d.level === 0 ? '🟢 Nul' : (d.level === 1 ? '🟡 Faible' : (d.level === 2 ? '🟠 Modéré' : (d.level === 3 ? '🔴 Sévère' : '🟣 Géant')));
+
+                var torBadge = d.stp >= 2.5 ? '<span style="color:#ef4444;font-weight:800;">🌪️ ' + d.stp + '</span>' : (d.stp >= 1.0 ? '<span style="color:#fb923c;font-weight:800;">' + d.stp + '</span>' : (d.stp > 0 ? '<span style="color:#facc15;">' + d.stp + '</span>' : '<span style="color:#64748b;">0.0</span>'));
 
                 return '<tr>' +
                        '<td><span style="color:var(--text-muted);font-weight:700;">H+' + String(d.step).padStart(2, '0') + '</span></td>' +
                        '<td><strong>' + timeStr + '</strong></td>' +
+                       '<td>' + (d.probOrage > 0 ? '<strong style="color:#facc15;">⚡ ' + d.probOrage + ' %</strong>' : '<span style="color:#64748b;">0 %</span>') + '</td>' +
+                       '<td>' + (d.foudre > 0 ? '<span style="color:#38bdf8;font-weight:800;">' + d.foudre + '</span>' : '<span style="color:#64748b;">0</span>') + '</td>' +
                        '<td><span class="badge-risk ' + badgeClass + '">' + badgeText + '</span></td>' +
-                       '<td><strong style="color:' + (d.prob >= 50 ? '#ef4444' : (d.prob > 0 ? '#facc15' : '#94a3b8')) + '">' + d.prob + ' %</strong></td>' +
                        '<td>' + (d.diam > 0 ? '<strong style="color:var(--accent);">' + d.diam + ' cm</strong>' : '<span style="color:#64748b;">—</span>') + '</td>' +
+                       '<td>' + torBadge + '</td>' +
                        '<td>' + (d.refl >= 45 ? '<span style="color:#f87171;font-weight:800;">' + d.refl + ' dBZ</span>' : d.refl + ' dBZ') + '</td>' +
                        '<td>' + (d.cape >= 1000 ? '<span style="color:#fb923c;font-weight:800;">' + d.cape + ' J/kg</span>' : d.cape + ' J/kg') + '</td>' +
                        '<td>' + (d.tgrp > 0 ? '<span style="color:#38bdf8;font-weight:800;">' + d.tgrp + ' mm</span>' : '0 mm') + '</td>' +

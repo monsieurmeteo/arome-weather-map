@@ -2,6 +2,134 @@
     'use strict';
     // Palettes météociel (couleurs exactes extraites de meteociel.fr).
     var PALETTES = {
+        foudre_densite: {
+            label: 'Densité de foudre (éclairs/km²/h)', unit: 'écl/km²/h', decimals: 1, transparent_below: 0.2,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 0.2, color: '#fef08a' },
+                { value: 1.0, color: '#facc15' },
+                { value: 3.0, color: '#fb923c' },
+                { value: 6.0, color: '#f87171' },
+                { value: 10.0, color: '#ef4444' },
+                { value: 15.0, color: '#dc2626' },
+                { value: 25.0, color: '#c084fc' },
+                { value: 40.0, color: '#7e22ce' }
+            ]
+        },
+        foudre_max_24h: {
+            label: 'Densité Max de Foudre (24h)', unit: 'écl/km²/h', decimals: 1, transparent_below: 0.2,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 0.2, color: '#fef08a' },
+                { value: 1.0, color: '#facc15' },
+                { value: 3.0, color: '#fb923c' },
+                { value: 6.0, color: '#f87171' },
+                { value: 10.0, color: '#ef4444' },
+                { value: 15.0, color: '#dc2626' },
+                { value: 25.0, color: '#c084fc' },
+                { value: 40.0, color: '#7e22ce' }
+            ]
+        },
+        orage_risque: {
+            label: 'Risque d’orage (0-100 %)', unit: '%', decimals: 0, transparent_below: 10,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 15, color: '#facc15' },
+                { value: 35, color: '#fb923c' },
+                { value: 60, color: '#ef4444' },
+                { value: 80, color: '#dc2626' },
+                { value: 95, color: '#a855f7' },
+                { value: 100, color: '#7e22ce' }
+            ]
+        },
+        orage_max_24h: {
+            label: 'Risque Maximal d’Orage (24h)', unit: '%', decimals: 0, transparent_below: 10,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 15, color: '#facc15' },
+                { value: 35, color: '#fb923c' },
+                { value: 60, color: '#ef4444' },
+                { value: 80, color: '#dc2626' },
+                { value: 95, color: '#a855f7' },
+                { value: 100, color: '#7e22ce' }
+            ]
+        },
+        stp_index: {
+            label: 'Indice STP Tornade (NOAA SPC)', unit: '', decimals: 1, transparent_below: 0.5,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 0.5, color: '#facc15' },
+                { value: 1.0, color: '#fb923c' },
+                { value: 2.0, color: '#f87171' },
+                { value: 3.0, color: '#ef4444' },
+                { value: 5.0, color: '#dc2626' },
+                { value: 7.0, color: '#a855f7' },
+                { value: 10.0, color: '#6b21a8' }
+            ]
+        },
+        stp_max_24h: {
+            label: 'Indice STP Max (24h)', unit: '', decimals: 1, transparent_below: 0.5,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 0.5, color: '#facc15' },
+                { value: 1.0, color: '#fb923c' },
+                { value: 2.0, color: '#f87171' },
+                { value: 3.0, color: '#ef4444' },
+                { value: 5.0, color: '#dc2626' },
+                { value: 7.0, color: '#a855f7' },
+                { value: 10.0, color: '#6b21a8' }
+            ]
+        },
+        tornade_risque: {
+            label: 'Risque de tornade (0-100 %)', unit: '%', decimals: 0, transparent_below: 10,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 15, color: '#facc15' },
+                { value: 35, color: '#fb923c' },
+                { value: 60, color: '#ef4444' },
+                { value: 80, color: '#dc2626' },
+                { value: 95, color: '#a855f7' },
+                { value: 100, color: '#7e22ce' }
+            ]
+        },
+        tornade_max_24h: {
+            label: 'Risque Maximal de Tornade (24h)', unit: '%', decimals: 0, transparent_below: 10,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 15, color: '#facc15' },
+                { value: 35, color: '#fb923c' },
+                { value: 60, color: '#ef4444' },
+                { value: 80, color: '#dc2626' },
+                { value: 95, color: '#a855f7' },
+                { value: 100, color: '#7e22ce' }
+            ]
+        },
+        grele_max_24h: {
+            label: 'Risque Maximal de Grêle (24h)', unit: '%', decimals: 0, transparent_below: 10,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 15, color: '#facc15' },
+                { value: 35, color: '#fb923c' },
+                { value: 60, color: '#ef4444' },
+                { value: 80, color: '#dc2626' },
+                { value: 95, color: '#a855f7' },
+                { value: 100, color: '#7e22ce' }
+            ]
+        },
+        grele_diam_max_24h: {
+            label: 'Diamètre Max Grêlons (24h)', unit: 'cm', decimals: 1, transparent_below: 0.5,
+            stops: [
+                { value: 0, color: 'rgba(0,0,0,0)' },
+                { value: 0.5, color: '#facc15' },
+                { value: 1.0, color: '#fb923c' },
+                { value: 2.0, color: '#f87171' },
+                { value: 3.0, color: '#ef4444' },
+                { value: 4.0, color: '#dc2626' },
+                { value: 5.0, color: '#c084fc' },
+                { value: 6.0, color: '#9333ea' },
+                { value: 8.0, color: '#581c87' }
+            ]
+        },
         grele_risque: {
             label: 'Risque de grêle (AROME MESH)', unit: '%', decimals: 0, transparent_below: 10,
             stops: [

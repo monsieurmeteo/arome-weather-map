@@ -49,6 +49,29 @@ PROB_PALETTE = [
 
 # Définition des 40 seuils de probabilités
 PROBABILITY_SPECS = {
+    # ── SYNTHÈSES 24 HEURES (J+0 et J+1) ────────────────────────
+    "prob_pluie_24h_10":   {"var": "rain_cumul_24h", "op": ">", "threshold": 10.0, "sigma": 8.0, "label": "Probabilité Pluie 24h ≥ 10 mm (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_pluie_24h_20":   {"var": "rain_cumul_24h", "op": ">", "threshold": 20.0, "sigma": 8.0, "label": "Probabilité Pluie 24h ≥ 20 mm (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_pluie_24h_50":   {"var": "rain_cumul_24h", "op": ">", "threshold": 50.0, "sigma": 8.0, "label": "Probabilité Pluie 24h ≥ 50 mm (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_pluie_24h_100":  {"var": "rain_cumul_24h", "op": ">", "threshold": 100.0, "sigma": 8.0, "label": "Probabilité Pluie 24h ≥ 100 mm (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+
+    "prob_rafales_24h_80":  {"var": "gust_max_24h", "op": ">", "threshold": 80.0,  "sigma": 7.0, "label": "Probabilité Rafales 24h ≥ 80 km/h (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_rafales_24h_100": {"var": "gust_max_24h", "op": ">", "threshold": 100.0, "sigma": 7.0, "label": "Probabilité Rafales 24h ≥ 100 km/h (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_rafales_24h_120": {"var": "gust_max_24h", "op": ">", "threshold": 120.0, "sigma": 7.0, "label": "Probabilité Rafales 24h ≥ 120 km/h (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+
+    "prob_tmax_24h_30":    {"var": "tmax_24h", "op": ">=", "threshold": 30.0, "sigma": 8.0, "label": "Probabilité Tmax ≥ 30 °C (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_tmax_24h_35":    {"var": "tmax_24h", "op": ">=", "threshold": 35.0, "sigma": 8.0, "label": "Probabilité Tmax ≥ 35 °C (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_tmax_24h_40":    {"var": "tmax_24h", "op": ">=", "threshold": 40.0, "sigma": 8.0, "label": "Probabilité Canicule Tmax ≥ 40 °C (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_tmin_24h_0":     {"var": "tmin_24h", "op": "<=", "threshold": 0.0,  "sigma": 8.0, "label": "Probabilité Gelée Tmin ≤ 0 °C (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_tmin_24h_m5":    {"var": "tmin_24h", "op": "<=", "threshold": -5.0, "sigma": 8.0, "label": "Probabilité Forte Gelée Tmin ≤ -5 °C (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+
+    "prob_neige_24h_1":    {"var": "snow_cumul_24h", "op": ">=", "threshold": 1.0,  "sigma": 8.0, "label": "Probabilité Neige 24h ≥ 1 cm (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_neige_24h_5":    {"var": "snow_cumul_24h", "op": ">=", "threshold": 5.0,  "sigma": 8.0, "label": "Probabilité Neige 24h ≥ 5 cm (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_neige_24h_10":   {"var": "snow_cumul_24h", "op": ">=", "threshold": 10.0, "sigma": 8.0, "label": "Probabilité Neige 24h ≥ 10 cm (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+
+    "prob_orage_24h":      {"var": "orage_max_24h", "op": ">=", "threshold": 35.0, "sigma": 8.0, "label": "Probabilité Risque Orageux 24h (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_grele_24h":      {"var": "grele_max_24h", "op": ">=", "threshold": 35.0, "sigma": 7.0, "label": "Probabilité Risque de Grêle 24h (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
+    "prob_tornade_24h":    {"var": "tornade_max_24h", "op": ">=", "threshold": 25.0, "sigma": 8.0, "label": "Probabilité Risque Tornade 24h (J+0 & J+1)", "group": "📅 Probabilités 24h (J+0 & J+1)"},
     # ── Pression au niveau de la mer ────────────────────────────
     "prob_pression_1000": {"var": "prmsl", "op": "<", "threshold": 1000.0, "sigma": 12.0, "label": "Probabilité Pression < 1000 hPa", "group": "🧭 Pression"},
     "prob_pression_990":  {"var": "prmsl", "op": "<", "threshold": 990.0,  "sigma": 12.0, "label": "Probabilité Pression < 990 hPa", "group": "🧭 Pression"},
