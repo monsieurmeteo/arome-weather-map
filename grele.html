@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 
     <style>
         :root {
@@ -509,88 +510,173 @@
             }
         });
 
-        // Chargement & Calcul de la prévision de grêle
+        
+        var BASE = 'output/arome/maps';
+        var deptCache = {};
+
+        function loadDepartment(dept) {
+            if (deptCache[dept]) return Promise.resolve(deptCache[dept]);
+            var url = BASE + '/communes/' + dept + '.bin.gz';
+            return fetch(url, { cache: 'default' })
+                .then(function (r) {
+                    if (!r.ok) throw new Error('Fichier département ' + dept + ' indisponible');
+                    return r.arrayBuffer();
+                })
+                .then(function (ab) {
+                    return pako.inflate(new Uint8Array(ab)).buffer;
+                })
+                .then(function (buf) {
+                    var decoded = decodeMCV2(buf);
+                    deptCache[dept] = decoded;
+                    return decoded;
+                });
+        }
+
+        function decodeMCV2(buf) {
+            var dv = new DataView(buf);
+            var magic = String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3));
+            if (magic !== 'MCV2') throw new Error('Format inconnu : ' + magic);
+            var n = dv.getUint16(4, true);
+            var nleads = dv.getUint16(6, true);
+            var ncols = dv.getUint16(8, true);
+            var run = '';
+            for (var i = 0; i < 40; i++) {
+                var c = dv.getUint8(10 + i);
+                if (c === 0) break;
+                run += String.fromCharCode(c);
+            }
+            var off = 50;
+            var communes = [];
+            for (var i = 0; i < n; i++) {
+                var code = '';
+                for (var j = 0; j < 5; j++) code += String.fromCharCode(dv.getUint8(off + j));
+                code = code.replace(/\0+$/, '');
+                off += 5;
+                var lenNom = dv.getUint8(off);
+                off += 1;
+                var nomBytes = new Uint8Array(buf, off, lenNom);
+                var nom = new TextDecoder('utf-8').decode(nomBytes);
+                off += lenNom;
+                var lat = dv.getFloat32(off, true); off += 4;
+                var lon = dv.getFloat32(off, true); off += 4;
+                var pop = dv.getUint32(off, true); off += 4;
+                communes.push({ code: code, nom: nom, lat: lat, lon: lon, pop: pop, idx: i });
+            }
+            var columns = [];
+            for (var i = 0; i < ncols; i++) {
+                var cname = '';
+                for (var j = 0; j < 32; j++) {
+                    var ch = dv.getUint8(off + j);
+                    if (ch === 0) break;
+                    cname += String.fromCharCode(ch);
+                }
+                off += 32;
+                var scale = dv.getFloat32(off, true); off += 4;
+                var offset = dv.getFloat32(off, true); off += 4;
+                columns.push({ name: cname, scale: scale, offset: offset });
+            }
+            var leads = [];
+            for (var i = 0; i < nleads; i++) {
+                leads.push(dv.getUint16(off, true));
+                off += 2;
+            }
+            if (off % 2 === 1) off += 1;
+            var nvals = n * nleads * ncols;
+            var data = new Int16Array(buf, off, nvals);
+            return { run: run, n: n, nleads: nleads, ncols: ncols, communes: communes, columns: columns, leads: leads, data: data };
+        }
+
+        // Chargement réel de la commune
         function loadHailForecast(nom, zip, dep, lat, lon) {
             summaryCard.style.display = 'flex';
             chartCard.style.display = 'block';
             tableCard.style.display = 'block';
 
             document.getElementById('sum-place').textContent = nom + ' (' + zip + ')';
-            document.getElementById('sum-desc').textContent = 'Calcul microphysique AROME en cours...';
+            document.getElementById('sum-desc').textContent = 'Chargement des données officielles AROME 1,3 km en cours...';
 
-            // Récupération des données du département
-            var depCode = dep ? String(dep).padStart(2, '0') : '59';
-            var depUrl = 'output/arome/maps/department_files/' + depCode + '.json';
+            var depCode = dep ? String(dep).padStart(2, '0') : (zip ? zip.substring(0, 2) : '59');
+            if (depCode.length === 1) depCode = '0' + depCode;
 
-            fetch(depUrl)
-                .then(function (r) {
-                    if (!r.ok) throw new Error('Fichier département non trouvé');
-                    return r.json();
+            loadDepartment(depCode)
+                .then(function (deptData) {
+                    // Trouver la commune la plus proche
+                    var target = null;
+                    var minDist = Infinity;
+                    deptData.communes.forEach(function (c) {
+                        var d = (c.lat - lat)*(c.lat - lat) + (c.lon - lon)*(c.lon - lon);
+                        if (d < minDist) {
+                            minDist = d;
+                            target = c;
+                        }
+                    });
+                    if (!target) target = deptData.communes[0];
+
+                    var colIdx = {};
+                    deptData.columns.forEach(function (col, idx) { colIdx[col.name] = idx; });
+
+                    function getVal(cIdx, lIdx, colName) {
+                        var c = colIdx[colName];
+                        if (c === undefined) return 0;
+                        var raw = deptData.data[(cIdx * deptData.nleads + lIdx) * deptData.ncols + c];
+                        if (raw === -32768) return 0;
+                        var col = deptData.columns[c];
+                        return (raw * col.scale) - col.offset;
+                    }
+
+                    var hoursData = [];
+                    var baseRun = new Date(deptData.run.replace('Z', '+00:00') || Date.now());
+
+                    for (var l = 0; l < deptData.leads.length; l++) {
+                        var lh = deptData.leads[l];
+                        var vt = new Date(baseRun.getTime() + lh * 3600000);
+
+                        var t2m = getVal(target.idx, l, 'temperature_c');
+                        var cape = Math.max(0, getVal(target.idx, l, 'cape_jkg'));
+                        var refl = Math.max(0, getVal(target.idx, l, 'reflectivity_dbz'));
+                        var tgrp = Math.max(0, getVal(target.idx, l, 'graupel_mm'));
+                        var gust = Math.max(0, getVal(target.idx, l, 'wind_gust_kmh'));
+
+                        // Calcul scientifique MESH
+                        var prob = 0;
+                        var diam = 0;
+                        var level = 0;
+
+                        if (refl >= 40) {
+                            var capeFactor = Math.min(2.5, Math.sqrt(Math.max(100, cape) / 1000.0));
+                            var reflFactor = (refl - 38.0) / 22.0;
+                            prob = Math.min(100, Math.max(0, Math.round(reflFactor * capeFactor * 75.0 + tgrp * 10.0)));
+
+                            diam = parseFloat((2.54 * Math.pow(Math.max(0, refl - 42) / 18.0, 1.3) * Math.sqrt(Math.max(200, cape) / 1200.0)).toFixed(1));
+                            if (tgrp > 0 && diam < 0.5) diam = 0.5;
+
+                            if (prob < 15) level = 0;
+                            else if (prob < 45 || diam < 1.0) level = 1;
+                            else if (prob < 70 || diam < 3.0) level = 2;
+                            else if (prob < 85 || diam < 5.0) level = 3;
+                            else level = 4;
+                        }
+
+                        hoursData.push({
+                            step: lh,
+                            date: vt,
+                            prob: prob,
+                            diam: diam,
+                            level: level,
+                            refl: Math.round(refl),
+                            cape: Math.round(cape),
+                            tgrp: tgrp.toFixed(1),
+                            t2m: t2m.toFixed(1),
+                            gust: Math.round(gust)
+                        });
+                    }
+
+                    displayResults(hoursData);
                 })
-                .then(function (depData) {
-                    renderForecastData(nom, zip, depData, lat, lon);
-                })
-                .catch(function () {
-                    // Fallback de simulation haute fidélité AROME si pas encore compilé
+                .catch(function (err) {
+                    console.warn('Fallback simulation : ' + err.message);
                     renderSimulatedData(nom, zip, lat, lon);
                 });
-        }
-
-        function renderForecastData(nom, zip, depData, lat, lon) {
-            // Traitement réel des colonnes AROME
-            var rows = depData.forecast || [];
-            var cols = depData.columns ? depData.columns.values : [];
-            var colMap = {};
-            cols.forEach(function (c, idx) { colMap[c] = idx; });
-
-            var hoursData = [];
-            var now = Date.now();
-
-            for (var i = 0; i < rows.length; i++) {
-                var r = rows[i];
-                var vt = new Date(r[0]);
-                var t2m = (colMap.t2m !== undefined) ? r[colMap.t2m] : 20.0;
-                var cape = (colMap.cape !== undefined) ? Math.max(0, r[colMap.cape]) : 0;
-                var refl = (colMap.refl !== undefined) ? Math.max(0, r[colMap.refl]) : 0;
-                var tgrp = (colMap.tgrp !== undefined) ? Math.max(0, r[colMap.tgrp]) : 0;
-                var gust = (colMap.gust !== undefined) ? Math.max(0, r[colMap.gust]) : 20;
-
-                // Algorithme Scientifique MESH / Witt
-                var prob = 0;
-                var diam = 0;
-                var level = 0;
-
-                if (refl >= 42) {
-                    var capeFactor = Math.min(2.0, Math.sqrt(Math.max(100, cape) / 1000.0));
-                    var reflFactor = (refl - 40.0) / 22.0;
-                    prob = Math.min(100, Math.max(0, Math.round(reflFactor * capeFactor * 75.0 + tgrp * 10.0)));
-
-                    // Diamètre MESH en cm
-                    diam = parseFloat((2.54 * Math.pow(Math.max(0, refl - 44) / 18.0, 1.3) * Math.sqrt(Math.max(200, cape) / 1200.0)).toFixed(1));
-                    if (tgrp > 0 && diam < 0.5) diam = 0.5;
-
-                    if (prob < 15) level = 0;
-                    else if (prob < 45 || diam < 1.0) level = 1;
-                    else if (prob < 70 || diam < 3.0) level = 2;
-                    else if (prob < 85 || diam < 5.0) level = 3;
-                    else level = 4;
-                }
-
-                hoursData.push({
-                    step: i,
-                    date: vt,
-                    prob: prob,
-                    diam: diam,
-                    level: level,
-                    refl: Math.round(refl),
-                    cape: Math.round(cape),
-                    tgrp: tgrp.toFixed(1),
-                    t2m: t2m.toFixed(1),
-                    gust: Math.round(gust)
-                });
-            }
-
-            displayResults(hoursData);
         }
 
         function renderSimulatedData(nom, zip, lat, lon) {
