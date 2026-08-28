@@ -592,7 +592,26 @@ def export_probe(field, out_path):
         f.write(bytes(header) + normalized.tobytes())
 
 
-def save_probes(out_dir, lead, fields, step_files, regridded):
+def save_probes(out_dir, lead, fields, step_files, regridded)
+
+        # Rendu AROME-PE (Probabilités)
+        if "steps_pe" in kwargs:
+            try:
+                from arome_pe_engine import render_pe_step
+                out_pe_dir = os.path.join(BASE_DIR, "output", "arome_pe", "maps")
+                step_files_pe = {}
+                render_pe_step(fields, lead, out_pe_dir, step_files_pe)
+                if step_files_pe:
+                    vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
+                        + datetime.timedelta(hours=lead)
+                    kwargs["steps_pe"].append({
+                        "lead_hour": lead,
+                        "valid_time": vt.isoformat(),
+                        "files": step_files_pe.get("files", {}),
+                        "probes": step_files_pe.get("probes", {})
+                    })
+            except Exception as e:
+                print("  WARNING: AROME-PE non rendu H+%02d (%s)" % (lead, e)):
     """Écrit maps/values/{layer}/{lead}.hkv.gz pour chaque paramètre tuilé.
     step_files["probes"] = {layer: rel_path}."""
     probes = {}
@@ -758,6 +777,7 @@ TILE_FIELDS = {
 
 
 def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
+                per_lead_values, altitude_cache, **kwargs):
                 per_lead_values, altitude_cache):
     """Télécharge, décode, calcule, rend les tuiles + échantillonne les communes."""
     tmp = tempfile.mkdtemp(prefix="arome_grib_")
@@ -822,6 +842,25 @@ def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
         # ── Grilles de valeurs pour la sonde au survol ─────────────────
         save_probes(out_dir, lead, fields, step_files, regridded)
 
+        # Rendu AROME-PE (Probabilités)
+        if "steps_pe" in kwargs:
+            try:
+                from arome_pe_engine import render_pe_step
+                out_pe_dir = os.path.join(BASE_DIR, "output", "arome_pe", "maps")
+                step_files_pe = {}
+                render_pe_step(fields, lead, out_pe_dir, step_files_pe)
+                if step_files_pe:
+                    vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
+                        + datetime.timedelta(hours=lead)
+                    kwargs["steps_pe"].append({
+                        "lead_hour": lead,
+                        "valid_time": vt.isoformat(),
+                        "files": step_files_pe.get("files", {}),
+                        "probes": step_files_pe.get("probes", {})
+                    })
+            except Exception as e:
+                print("  WARNING: AROME-PE non rendu H+%02d (%s)" % (lead, e))
+
         print("  H+%02d: %d champs, %d tuiles, %d probes, %d communes échantillonnées"
               % (lead, len(fields), len(step_files.get("files", {})),
                  len(step_files.get("probes", {})), len(communes)))
@@ -842,6 +881,7 @@ def run(max_hours=51):
     print("Communes chargées: %d" % len(communes))
 
     steps = []
+    steps_pe = []
     previous_state = {}
     per_lead_values = {}
     altitude_cache = {}
@@ -850,7 +890,7 @@ def run(max_hours=51):
             break
         step_files = {}
         ok = render_lead(run_str, lh, out_dir, step_files, previous_state,
-                         communes, per_lead_values, altitude_cache)
+                         communes, per_lead_values, altitude_cache, steps_pe=steps_pe)
         if ok and step_files:
             vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
                 + datetime.timedelta(hours=lh)
@@ -874,6 +914,14 @@ def run(max_hours=51):
     meta = {"name": "AROME HD (1,3 km)", "provider": "Meteo-France",
             "resolution": "1,3 km (0.01°)", "run_time": run_str}
     write_manifest(out_dir, steps, meta)
+
+    # Manifest AROME-PE
+    try:
+        from arome_pe_engine import write_pe_manifest
+        out_pe_dir = os.path.join(BASE_DIR, "output", "arome_pe", "maps")
+        write_pe_manifest(out_pe_dir, steps_pe, run_str)
+    except Exception as e:
+        print("WARNING: AROME-PE Manifest non écrit (%s)" % e)
     print("OK AROME open data : %d échéances, %d communes"
           % (len(steps), len(communes)))
 
