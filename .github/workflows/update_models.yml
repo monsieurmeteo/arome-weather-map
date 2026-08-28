@@ -87,6 +87,8 @@ jobs:
           mkdir -p _site
           cp index.html _site/ 2>/dev/null || true
           cp previsions.html _site/ 2>/dev/null || true
+          cp grele.html _site/ 2>/dev/null || true
+          cp *.html _site/ 2>/dev/null || true
           cp logo.png _site/ 2>/dev/null || true
           cp -r js _site/ 2>/dev/null || true
           cp -r css _site/ 2>/dev/null || true
