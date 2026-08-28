@@ -592,26 +592,7 @@ def export_probe(field, out_path):
         f.write(bytes(header) + normalized.tobytes())
 
 
-def save_probes(out_dir, lead, fields, step_files, regridded)
-
-        # Rendu AROME-PE (Probabilités)
-        if "steps_pe" in kwargs:
-            try:
-                from arome_pe_engine import render_pe_step
-                out_pe_dir = os.path.join(BASE_DIR, "output", "arome_pe", "maps")
-                step_files_pe = {}
-                render_pe_step(fields, lead, out_pe_dir, step_files_pe)
-                if step_files_pe:
-                    vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
-                        + datetime.timedelta(hours=lead)
-                    kwargs["steps_pe"].append({
-                        "lead_hour": lead,
-                        "valid_time": vt.isoformat(),
-                        "files": step_files_pe.get("files", {}),
-                        "probes": step_files_pe.get("probes", {})
-                    })
-            except Exception as e:
-                print("  WARNING: AROME-PE non rendu H+%02d (%s)" % (lead, e)):
+def save_probes(out_dir, lead, fields, step_files, regridded):
     """Écrit maps/values/{layer}/{lead}.hkv.gz pour chaque paramètre tuilé.
     step_files["probes"] = {layer: rel_path}."""
     probes = {}
@@ -761,6 +742,8 @@ TILE_FIELDS = {
     "pluie_cumul": "precipitation_total_mm",
     "reflectivite": "reflectivity_dbz",
     "graupel": "graupel_mm",
+    "grele_risque": "grele_risque",
+    "grele_diametre": "grele_diametre",
     "vent": "wind_speed_kmh",
     "rafales": "wind_gust_kmh",
     "nebulosite": "cloud_cover_pct",
@@ -778,7 +761,6 @@ TILE_FIELDS = {
 
 def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
                 per_lead_values, altitude_cache, **kwargs):
-                per_lead_values, altitude_cache):
     """Télécharge, décode, calcule, rend les tuiles + échantillonne les communes."""
     tmp = tempfile.mkdtemp(prefix="arome_grib_")
     try:
