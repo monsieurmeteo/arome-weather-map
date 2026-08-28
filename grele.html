@@ -14,11 +14,483 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
-        <!-- Scripts Chart.js, Pako et Moteur Grêle MESH / Orages -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
+        // Chargement automatique au démarrage pour affichage immédiat
+        document.addEventListener('DOMContentLoaded', function () {
+            var defaultNom = 'Lille';
+            var defaultZip = '59000';
+            var defaultDep = '59';
+            var defaultLat = 50.633;
+            var defaultLon = 3.058;
+            
+            searchInput.value = defaultNom + ' (' + defaultZip + ')';
+            loadHailForecast(defaultNom, defaultZip, defaultDep, defaultLat, defaultLon);
+        });
+
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js">
+        // Chargement automatique au démarrage pour affichage immédiat
+        document.addEventListener('DOMContentLoaded', function () {
+            var defaultNom = 'Lille';
+            var defaultZip = '59000';
+            var defaultDep = '59';
+            var defaultLat = 50.633;
+            var defaultLon = 3.058;
+            
+            searchInput.value = defaultNom + ' (' + defaultZip + ')';
+            loadHailForecast(defaultNom, defaultZip, defaultDep, defaultLat, defaultLon);
+        });
+
+    </script>
+
+    <style>
+        :root {
+            --bg-deep: #070b14;
+            --bg-card: rgba(13, 20, 36, 0.85);
+            --bg-card-hover: rgba(20, 32, 58, 0.95);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-accent: rgba(0, 210, 255, 0.4);
+            --accent: #00d2ff;
+            --accent-glow: rgba(0, 210, 255, 0.25);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --risk-0: #10b981; /* Vert */
+            --risk-1: #eab308; /* Jaune */
+            --risk-2: #f97316; /* Orange */
+            --risk-3: #ef4444; /* Rouge */
+            --risk-4: #a855f7; /* Violet */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+        }
+
+        /* Topbar */
+        .hail-header {
+            background: rgba(7, 11, 20, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 10px 20px;
+        }
+        .hail-navbar {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .hail-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+        .hail-logo { height: 32px; width: auto; }
+        .hail-title { font-size: 16px; font-weight: 800; }
+        .hail-title span { color: var(--accent); }
+        .hail-badge {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(168, 85, 247, 0.3));
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #f87171;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .hail-nav-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .hail-nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .hail-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+        }
+
+        /* Container Principal */
+        .hail-main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px 16px 48px;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Hero & Barre de Recherche */
+        .hail-hero {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .hail-hero h1 {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+        .hail-hero p {
+            color: var(--text-muted);
+            font-size: 14px;
+            max-width: 680px;
+            margin: 0 auto 20px;
+        }
+
+        .search-box {
+            max-width: 540px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .search-input-wrap {
+            display: flex;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-accent);
+            border-radius: 12px;
+            padding: 6px 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s;
+        }
+        .search-input-wrap:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 16px var(--accent-glow);
+        }
+        .search-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 15px;
+            font-weight: 600;
+            padding: 8px;
+            outline: none;
+        }
+        .search-input::placeholder { color: #64748b; }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 6px;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            max-height: 260px;
+            overflow-y: auto;
+            z-index: 50;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+        .search-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            justify-content: space-between;
+            font-size: 13.5px;
+        }
+        .search-item:hover { background: rgba(0, 210, 255, 0.15); color: var(--accent); }
+        .search-item span { color: var(--text-muted); font-size: 12px; }
+
+        /* Bloc Alerte Résumé */
+        .summary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(8px);
+        }
+        .summary-left { flex: 1; min-width: 280px; }
+        .summary-place { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+        .summary-timing { color: var(--accent); font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+        .summary-desc { color: var(--text-muted); font-size: 13.5px; }
+
+        .risk-gauge-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            padding: 16px 20px;
+            border-radius: 12px;
+        }
+        .risk-indicator {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: #fff;
+            box-shadow: 0 0 16px rgba(0, 0, 0, 0.5);
+        }
+        .risk-meta-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+        .risk-meta-val { font-size: 18px; font-weight: 800; }
+
+        /* Graphique Chronologique */
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .chart-title {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Tableau Heure par Heure */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        .hail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .hail-table th {
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-muted);
+            font-weight: 700;
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 11.5px;
+            text-transform: uppercase;
+        }
+        .hail-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-weight: 600;
+        }
+        .hail-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge-risk {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 11px;
+        }
+        .badge-risk-0 { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-risk-1 { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .badge-risk-2 { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.3); }
+        .badge-risk-3 { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .badge-risk-4 { background: rgba(168, 85, 247, 0.25); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.5); }
+
+        /* Guide des Conseils */
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .tip-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+        }
+        .tip-icon {
+            font-size: 22px;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+        .tip-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .tip-card p { font-size: 12.5px; color: var(--text-muted); }
+
+        /* Footer */
+        .hail-footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="hail-header">
+        <div class="hail-navbar">
+            <a href="index.html" class="hail-brand" title="Retour aux cartes AROME HD">
+                <img src="logo.png" alt="Météo-Climat Pro" class="hail-logo">
+                <span class="hail-title">Météo-Climat Pro <span>Grêle</span></span>
+                <span class="hail-badge"><i class="fa-solid fa-bolt"></i> AROME MESH/ICE3</span>
+            </a>
+            <div class="hail-nav-links">
+                <a href="index.html" class="hail-nav-btn"><i class="fa-solid fa-map"></i> Cartes HD</a>
+                <a href="previsions.html" class="hail-nav-btn"><i class="fa-solid fa-house-chimney"></i> Communes</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="hail-main">
+
+        <!-- Hero & Recherche -->
+        <section class="hail-hero">
+            <h1>Centre d’Alerte Orages, Foudre, Grêle &amp; Tornades par Code Postal</h1>
+            <p>Calcul haute précision heure par heure (0 à 51h) basé sur le modèle AROME 1,3 km, la réflectivité radar et les algorithmes officiels MESH / ICE3.</p>
+
+            <div class="search-box">
+                <div class="search-input-wrap">
+                    <i class="fa-solid fa-magnifying-glass" style="color:#64748b;"></i>
+                    <input type="text" id="hail-search" class="search-input" placeholder="Entrez un code postal (ex: 59000, 75001) ou une ville..." autocomplete="off">
+                </div>
+                <div id="search-results" class="search-results"></div>
+            </div>
+        </section>
+
+        <!-- Cartouche d'Alerte Synthèse -->
+        <section class="summary-card" id="summary-card" style="display:none;">
+            <div class="summary-left">
+                <h2 class="summary-place" id="sum-place">Lille (59000)</h2>
+                <div class="summary-timing" id="sum-timing"><i class="fa-solid fa-clock"></i> Échéance : H+00 à H+51</div>
+                <p class="summary-desc" id="sum-desc">Analyse convective en cours...</p>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-indicator" style="background:var(--risk-0);">0</div>
+                    <div>
+                        <div class="risk-meta-title">Risque Grêle Max</div>
+                        <div class="risk-meta-val" id="sum-level">Risque Nul</div>
+                        <div style="font-size:12px; color:var(--accent); font-weight:700;" id="sum-diam">Diamètre : Aucun</div>
+                    </div>
+                </div>
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-orage-ind" style="background:var(--risk-0); font-size:18px;">⚡</div>
+                    <div>
+                        <div class="risk-meta-title">Risque Orage &amp; Foudre</div>
+                        <div class="risk-meta-val" id="sum-orage-lvl">Calme</div>
+                        <div style="font-size:12px; color:#38bdf8; font-weight:700;" id="sum-foudre">Foudre : 0 écl/km²/h</div>
+                    </div>
+                </div>
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-tor-ind" style="background:var(--risk-0); font-size:18px;">🌪️</div>
+                    <div>
+                        <div class="risk-meta-title">Risque Tornade (STP)</div>
+                        <div class="risk-meta-val" id="sum-tor-lvl">Nul</div>
+                        <div style="font-size:12px; color:#c084fc; font-weight:700;" id="sum-stp">Indice STP : 0.0</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Graphique d'Évolution -->
+        <section class="chart-card" id="chart-card" style="display:none;">
+            <h3 class="chart-title"><i class="fa-solid fa-chart-line" style="color:var(--accent);"></i> Évolution du Risque de Grêle et Réflectivité (51 Heures)</h3>
+            <div style="height: 240px; position: relative;">
+                <canvas id="hail-chart"></canvas>
+            </div>
+        </section>
+
+        <!-- Tableau Heure par Heure -->
+        <section class="table-card" id="table-card" style="display:none;">
+            <table class="hail-table">
+                <thead>
+                    <tr>
+                        <th>Échéance</th>
+                        <th>Date & Heure</th>
+                        <th>Orage (%)</th>
+                        <th>Foudre (écl/km²/h)</th>
+                        <th>Risque Grêle</th>
+                        <th>Diamètre Grêlons</th>
+                        <th>Tornade (STP)</th>
+                        <th>Radar (dBZ)</th>
+                        <th>CAPE (J/kg)</th>
+                        <th>Graupel au sol</th>
+                        <th>Température</th>
+                        <th>Rafales sous orage</th>
+                    </tr>
+                </thead>
+                <tbody id="hail-tbody">
+                    <!-- Rempli dynamiquement -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Guide & Recommandations -->
+        <section class="tips-grid">
+            <div class="tip-card">
+                <i class="fa-solid fa-car tip-icon"></i>
+                <div>
+                    <h4>Véhicules & Carrosseries</h4>
+                    <p>Dès le niveau 🟠 Modéré (grêlons > 1-2 cm), stationnez les véhicules sous abri ou protégez-les avec une bâche anti-grêle.</p>
+                </div>
+            </div>
+            <div class="tip-card">
+                <i class="fa-solid fa-wheat-awn tip-icon"></i>
+                <div>
+                    <h4>Cultures, Jardins & Serres</h4>
+                    <p>Fermez les serres, déployez les filets paragrêle et rentrez les plantes sensibles aux impacts destructeurs.</p>
+                </div>
+            </div>
+            <div class="tip-card">
+                <i class="fa-solid fa-house-chimney-window tip-icon"></i>
+                <div>
+                    <h4>Habitations & Toitures</h4>
+                    <p>Fermez volets et fenêtres de toit (Velux). Éloignez-vous des baies vitrées en cas d'orage de grêle violent.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="hail-footer">
+        <p>Météo-Climat Pro — Données officielles AROME 0,01° (1,3 km) Météo-France • Modélisation microphysique ICE3 & Algorithme Radar MESH / Witt.</p>
+    </footer>
+
     <script>
-(function () {
+    (function () {
         'use strict';
 
         var searchInput = document.getElementById('hail-search');
@@ -295,8 +767,8 @@
                     displayResults(hoursData);
                 })
                 .catch(function (err) {
-                    console.warn('Erreur chargement commune : ' + err.message);
-                    document.getElementById('sum-desc').innerHTML = '<span style="color:#facc15;"><i class="fa-solid fa-triangle-exclamation"></i> Données en cours de synchronisation pour <strong>' + nom + '</strong>. Veuillez patienter ou essayer une autre commune.</span>';
+                    console.warn('Fallback : ' + err.message);
+                    console.warn("Erreur chargement:", err.message);
                 });
         }
 
