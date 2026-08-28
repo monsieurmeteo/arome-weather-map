@@ -840,6 +840,13 @@ def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
                 from arome_pe_engine import render_pe_step
                 out_pe_dir = os.path.join(BASE_DIR, "output", "arome_pe", "maps")
                 step_files_pe = {}
+                # Injection des champs 24h pour le moteur de probabilités PE
+                fields["rain_cumul_24h"] = fields.get("precipitation_total_mm", np.zeros_like(lats))
+                fields["gust_max_24h"] = fields.get("wind_gust_max_kmh", np.zeros_like(lats))
+                fields["tmax_24h"] = fields.get("temperature_max_24h", fields.get("temperature_c", np.zeros_like(lats)))
+                fields["tmin_24h"] = fields.get("temperature_min_24h", fields.get("temperature_c", np.zeros_like(lats)))
+                fields["snow_cumul_24h"] = fields.get("snow_depth_cm", np.zeros_like(lats))
+
                 render_pe_step(fields, lead, out_pe_dir, step_files_pe)
                 if step_files_pe:
                     vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
