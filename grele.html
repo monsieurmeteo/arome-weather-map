@@ -511,8 +511,20 @@
         });
 
         
+        
         var BASE = 'output/arome/maps';
         var deptCache = {};
+
+        function gunzip(buf) {
+            if (typeof DecompressionStream !== 'undefined') {
+                return new Response(new Blob([buf]).stream()
+                    .pipeThrough(new DecompressionStream('deflate'))).arrayBuffer();
+            }
+            if (typeof pako !== 'undefined') {
+                return Promise.resolve(pako.inflate(new Uint8Array(buf)).buffer);
+            }
+            return Promise.reject(new Error('Décompression non supportée'));
+        }
 
         function loadDepartment(dept) {
             if (deptCache[dept]) return Promise.resolve(deptCache[dept]);
@@ -522,9 +534,7 @@
                     if (!r.ok) throw new Error('Fichier département ' + dept + ' indisponible');
                     return r.arrayBuffer();
                 })
-                .then(function (ab) {
-                    return pako.inflate(new Uint8Array(ab)).buffer;
-                })
+                .then(gunzip)
                 .then(function (buf) {
                     var decoded = decodeMCV2(buf);
                     deptCache[dept] = decoded;
@@ -535,7 +545,7 @@
         function decodeMCV2(buf) {
             var dv = new DataView(buf);
             var magic = String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3));
-            if (magic !== 'MCV2') throw new Error('Format inconnu : ' + magic);
+            if (magic !== 'MCV2') throw new Error('Format binaire inconnu : ' + magic);
             var n = dv.getUint16(4, true);
             var nleads = dv.getUint16(6, true);
             var ncols = dv.getUint16(8, true);
@@ -547,53 +557,64 @@
             }
             var off = 50;
             var communes = [];
-            for (var i = 0; i < n; i++) {
+            for (var k = 0; k < n; k++) {
                 var code = '';
-                for (var j = 0; j < 5; j++) code += String.fromCharCode(dv.getUint8(off + j));
-                code = code.replace(/\0+$/, '');
+                for (var j = 0; j < 5; j++) {
+                    var cc = dv.getUint8(off + j);
+                    if (cc === 0) break;
+                    code += String.fromCharCode(cc);
+                }
                 off += 5;
-                var lenNom = dv.getUint8(off);
-                off += 1;
-                var nomBytes = new Uint8Array(buf, off, lenNom);
-                var nom = new TextDecoder('utf-8').decode(nomBytes);
-                off += lenNom;
+                var nl = dv.getUint8(off); off += 1;
+                var nom = '';
+                for (var j2 = 0; j2 < nl; j2++) nom += String.fromCharCode(dv.getUint8(off + j2));
+                off += nl;
                 var lat = dv.getFloat32(off, true); off += 4;
                 var lon = dv.getFloat32(off, true); off += 4;
                 var pop = dv.getUint32(off, true); off += 4;
-                communes.push({ code: code, nom: nom, lat: lat, lon: lon, pop: pop, idx: i });
+                communes.push({ code: code, nom: nom, lat: lat, lon: lon, pop: pop, idx: k });
             }
-            var columns = [];
-            for (var i = 0; i < ncols; i++) {
+            var colScale = [], colOffset = [], colNames = [];
+            for (var j3 = 0; j3 < ncols; j3++) {
                 var cname = '';
-                for (var j = 0; j < 32; j++) {
-                    var ch = dv.getUint8(off + j);
-                    if (ch === 0) break;
-                    cname += String.fromCharCode(ch);
+                for (var j4 = 0; j4 < 32; j4++) {
+                    var cc2 = dv.getUint8(off + j4);
+                    if (cc2 === 0) break;
+                    cname += String.fromCharCode(cc2);
                 }
                 off += 32;
-                var scale = dv.getFloat32(off, true); off += 4;
-                var offset = dv.getFloat32(off, true); off += 4;
-                columns.push({ name: cname, scale: scale, offset: offset });
+                colScale.push(dv.getFloat32(off, true)); off += 4;
+                colOffset.push(dv.getFloat32(off, true)); off += 4;
+                colNames.push(cname);
             }
             var leads = [];
-            for (var i = 0; i < nleads; i++) {
-                leads.push(dv.getUint16(off, true));
-                off += 2;
-            }
-            if (off % 2 === 1) off += 1;
-            var nvals = n * nleads * ncols;
-            var data = new Int16Array(buf, off, nvals);
-            return { run: run, n: n, nleads: nleads, ncols: ncols, communes: communes, columns: columns, leads: leads, data: data };
+            for (var j5 = 0; j5 < nleads; j5++) { leads.push(dv.getUint16(off, true)); off += 2; }
+            if (off % 2 !== 0) off += 1;
+            var colIndex = {};
+            colNames.forEach(function (nm, idx) { colIndex[nm] = idx; });
+            var data = new Int16Array(buf, off, n * nleads * ncols);
+            var shape = { n: n, nleads: nleads, ncols: ncols };
+            return { communes: communes, leads: leads, colIndex: colIndex,
+                     colScale: colScale, colOffset: colOffset, data: data, shape: shape, run: run };
         }
 
-        // Chargement réel de la commune
+        function getValue(deptData, pointIdx, leadPos, colName) {
+            var ci = deptData.colIndex[colName];
+            if (ci === undefined) return null;
+            var q = deptData.data[pointIdx * deptData.shape.nleads * deptData.shape.ncols
+                                 + leadPos * deptData.shape.ncols + ci];
+            if (q === -32768) return null;
+            return q * deptData.colScale[ci] - deptData.colOffset[ci];
+        }
+
+        // Chargement et calcul de la prévision réelle de grêle
         function loadHailForecast(nom, zip, dep, lat, lon) {
             summaryCard.style.display = 'flex';
             chartCard.style.display = 'block';
             tableCard.style.display = 'block';
 
-            document.getElementById('sum-place').textContent = nom + ' (' + zip + ')';
-            document.getElementById('sum-desc').textContent = 'Chargement des données officielles AROME 1,3 km en cours...';
+            document.getElementById('sum-place').textContent = nom + (zip ? ' (' + zip + ')' : '');
+            document.getElementById('sum-desc').textContent = 'Analyse des données officielles AROME 1,3 km...';
 
             var depCode = dep ? String(dep).padStart(2, '0') : (zip ? zip.substring(0, 2) : '59');
             if (depCode.length === 1) depCode = '0' + depCode;
@@ -612,18 +633,6 @@
                     });
                     if (!target) target = deptData.communes[0];
 
-                    var colIdx = {};
-                    deptData.columns.forEach(function (col, idx) { colIdx[col.name] = idx; });
-
-                    function getVal(cIdx, lIdx, colName) {
-                        var c = colIdx[colName];
-                        if (c === undefined) return 0;
-                        var raw = deptData.data[(cIdx * deptData.nleads + lIdx) * deptData.ncols + c];
-                        if (raw === -32768) return 0;
-                        var col = deptData.columns[c];
-                        return (raw * col.scale) - col.offset;
-                    }
-
                     var hoursData = [];
                     var baseRun = new Date(deptData.run.replace('Z', '+00:00') || Date.now());
 
@@ -631,13 +640,13 @@
                         var lh = deptData.leads[l];
                         var vt = new Date(baseRun.getTime() + lh * 3600000);
 
-                        var t2m = getVal(target.idx, l, 'temperature_c');
-                        var cape = Math.max(0, getVal(target.idx, l, 'cape_jkg'));
-                        var refl = Math.max(0, getVal(target.idx, l, 'reflectivity_dbz'));
-                        var tgrp = Math.max(0, getVal(target.idx, l, 'graupel_mm'));
-                        var gust = Math.max(0, getVal(target.idx, l, 'wind_gust_kmh'));
+                        var t2m = getValue(deptData, target.idx, l, 'temperature_c') || 20.0;
+                        var cape = Math.max(0, getValue(deptData, target.idx, l, 'cape_jkg') || 0);
+                        var refl = Math.max(0, getValue(deptData, target.idx, l, 'reflectivity_dbz') || 0);
+                        var tgrp = Math.max(0, getValue(deptData, target.idx, l, 'graupel_mm') || 0);
+                        var gust = Math.max(0, getValue(deptData, target.idx, l, 'wind_gust_kmh') || 20);
 
-                        // Calcul scientifique MESH
+                        // Calcul scientifique MESH / Witt
                         var prob = 0;
                         var diam = 0;
                         var level = 0;
@@ -674,46 +683,9 @@
                     displayResults(hoursData);
                 })
                 .catch(function (err) {
-                    console.warn('Fallback simulation : ' + err.message);
+                    console.warn('Fallback : ' + err.message);
                     renderSimulatedData(nom, zip, lat, lon);
                 });
-        }
-
-        function renderSimulatedData(nom, zip, lat, lon) {
-            var hoursData = [];
-            var baseTime = new Date();
-            baseTime.setMinutes(0, 0, 0);
-
-            for (var h = 0; h <= 51; h++) {
-                var vt = new Date(baseTime.getTime() + h * 3600000);
-                var isAfternoon = (vt.getHours() >= 14 && vt.getHours() <= 20);
-                var refl = isAfternoon ? Math.max(10, Math.round(35 + Math.sin(h * 0.4) * 22)) : Math.round(15 + Math.sin(h * 0.2) * 10);
-                var cape = isAfternoon ? Math.max(0, Math.round(800 + Math.sin(h * 0.3) * 700)) : 0;
-                var tgrp = (refl > 48) ? parseFloat(((refl - 45) * 0.3).toFixed(1)) : 0;
-                var prob = (refl >= 45) ? Math.min(100, Math.round((refl - 40) * 3.2)) : 0;
-                var diam = (refl >= 48) ? parseFloat((1.0 + (refl - 48) * 0.4).toFixed(1)) : 0;
-
-                var level = 0;
-                if (prob >= 85) level = 4;
-                else if (prob >= 70) level = 3;
-                else if (prob >= 45) level = 2;
-                else if (prob >= 15) level = 1;
-
-                hoursData.push({
-                    step: h,
-                    date: vt,
-                    prob: prob,
-                    diam: diam,
-                    level: level,
-                    refl: refl,
-                    cape: Math.max(0, cape),
-                    tgrp: tgrp,
-                    t2m: (18 + Math.sin(h * 0.25) * 8).toFixed(1),
-                    gust: Math.round(25 + Math.sin(h * 0.3) * 45)
-                });
-            }
-
-            displayResults(hoursData);
         }
 
         function displayResults(data) {
