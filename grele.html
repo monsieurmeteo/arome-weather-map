@@ -832,8 +832,9 @@
 
             if (hailChart) hailChart.destroy();
 
-            var ctx = document.getElementById('hail-chart').getContext('2d');
-            hailChart = new Chart(ctx, {
+            try {
+                var ctx = document.getElementById('hail-chart').getContext('2d');
+                hailChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
@@ -890,6 +891,9 @@
                     }
                 }
             });
+            } catch (chartErr) {
+                console.warn('Chart render fallback:', chartErr);
+            }
         }
 
         // Chargement automatique au démarrage (Lille / 59000 par défaut)
