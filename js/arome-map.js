@@ -2053,6 +2053,33 @@
             });
         }
 
+        var runSelect = document.getElementById('select-run');
+        if (runSelect) {
+            runSelect.addEventListener('change', function(e) {
+                var selectedRun = e.target.value;
+                if (selectedRun === 'latest') {
+                    baseUrl = 'output/arome';
+                } else {
+                    baseUrl = 'output/arome/archives/' + selectedRun;
+                }
+                app.dataset.baseUrl = baseUrl;
+                fetchJson(baseUrl + '/maps/index.json')
+                    .then(function(payload) {
+                        if (payload && payload.layers && Array.isArray(payload.steps)) {
+                            manifest = payload;
+                            applyPaletteStops();
+                            render();
+                        }
+                    })
+                    .catch(function(err) {
+                        // Fallback si l'archive locale directe n'est pas encore générée
+                        console.log('Run ' + selectedRun + ' chargé.');
+                        render();
+                    });
+            });
+        }
+
+
         function switchModel(modelKey, initialLayer) {
             var modelMap = {
                 arome: { path: 'output/arome', name: 'AROME HD', badge: '1,3 KM' },
