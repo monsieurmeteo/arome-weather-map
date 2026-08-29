@@ -2053,6 +2053,147 @@
             });
         }
 
+        function switchModel(modelKey, initialLayer) {
+            var modelMap = {
+                arome: { path: 'output/arome', name: 'AROME HD', badge: '1,3 KM' },
+                arome_pe: { path: 'output/arome_pe', name: 'AROME-PE (Probabilités)', badge: 'ENSEMBLE' },
+                arpege: { path: 'output/arpege', name: 'ARPEGE Europe', badge: '5 KM' },
+                icon: { path: 'output/icon', name: 'ICON-EU', badge: '7 KM' },
+                gfs: { path: 'output/gfs', name: 'GFS Monde', badge: '13 KM' },
+                ecmwf: { path: 'output/ecmwf', name: 'ECMWF IFS', badge: '9 KM' }
+            };
+            var target = modelMap[modelKey] || modelMap.arome;
+            var prevBaseUrl = baseUrl;
+            baseUrl = target.path;
+            app.dataset.baseUrl = target.path;
+            app.dataset.model = modelKey;
+
+            var titleSpan = document.querySelector('.amfm-title span');
+            if (titleSpan) {
+                titleSpan.textContent = 'MODÈLE ' + target.name;
+            }
+            var badge = document.querySelector('.amfm-title .amfm-badge');
+            if (badge) {
+                badge.textContent = target.badge;
+            }
+
+            fetchJson(baseUrl + '/maps/index.json')
+                .then(function(payload) {
+                    if (!payload || !payload.layers || !Array.isArray(payload.steps)) {
+                        throw new Error('manifeste invalide');
+                    }
+                    manifest = payload;
+                    applyPaletteStops();
+                    currentStep = 0;
+                                        var isPe = (modelKey === 'arome_pe');
+                    var dSel = document.getElementById('direct-layer-select');
+                    if (dSel) {
+                        var optGroups = dSel.querySelectorAll('optgroup');
+                        for (var gi = 0; gi < optGroups.length; gi++) {
+                            var grp = optGroups[gi];
+                            var lbl = grp.getAttribute('label') || '';
+                            var isProbGroup = (lbl.indexOf('Probabilités') !== -1 || lbl.indexOf('🎲') !== -1 || lbl.indexOf('🧭 Pression') !== -1 || lbl.indexOf('🏔️') !== -1 || lbl.indexOf('⚡') !== -1 || lbl.indexOf('💨 Max') !== -1);
+                            if (isPe) {
+                                grp.hidden = !isProbGroup;
+                                grp.style.display = isProbGroup ? '' : 'none';
+                            } else {
+                                grp.hidden = isProbGroup;
+                                grp.style.display = isProbGroup ? 'none' : '';
+                            }
+                        }
+                    }
+
+                    if (!manifest.layers[currentLayer]) {
+                        currentLayer = (initialLayer && manifest.layers[initialLayer]) ? initialLayer : (Object.keys(manifest.layers)[0] || 'temperature');
+                        var dSel = document.getElementById('direct-layer-select');
+                        if (dSel) dSel.value = currentLayer;
+                    }
+                    if (typeof buildLayerMenu === 'function') buildLayerMenu();
+                    buildLegend();
+                    currentModel = modelKey;
+                    renderStep(0);
+                    updateUrl();
+                })
+                .catch(function () {
+                    // Revert — ne jamais afficher les images d'un autre modèle
+                    // sous une baseUrl cassée.
+                    baseUrl = prevBaseUrl;
+                    app.dataset.baseUrl = prevBaseUrl;
+                    app.dataset.model = 'arome';
+                    if (titleSpan) titleSpan.textContent = 'MODÈLE AROME HD';
+                    if (badge) badge.textContent = '1,3 KM';
+                    var modelSel = document.getElementById('select-model');
+                    if (modelSel) modelSel.value = 'arome';
+                    showError('Modèle ' + target.name + ' non encore disponible — génération en cours.');
+                    window.setTimeout(function() { clearError(); }, 4000);
+                });
+        }
+
+        var modelSelect = document.getElementById('select-model');
+        if (modelSelect) {
+            modelSelect.addEventListener('change', function(e) {
+                switchModel(e.target.value);
+            });
+        }
+
+        // ponytail: duplicate regionSelect removed (handled above via focusOnPoint)
+
+        function setLayer(layer) {
+            if (!manifest || !manifest.layers[layer]) {
+                return;
+            }
+            currentLayer = layer;
+            var dSel = document.getElementById('direct-layer-select');
+            if (dSel && dSel.value !== layer) {
+                dSel.value = layer;
+            }
+            refreshLayerMenu();
+            buildLegend();
+            var steps = availableSteps();
+            currentStep = clamp(currentStep, 0, Math.max(0, steps.length - 1));
+            renderStep(currentStep);
+        }
+
+        // ── État dans l'URL (style meteo-npdc.fr) ─────────────────────────────
+        function updateUrl() {
+            if (!window.history || !window.history.replaceState) {
+                return;
+            }
+            var params = new URLSearchParams();
+            params.set('model', currentModel);
+            params.set('parametre', currentLayer);
+            var regSel = document.getElementById('select-region');
+            if (regSel) params.set('region', regSel.value);
+            params.set('heure', String(currentStep));
+            window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+        }
+
+        function applyUrlParams() {
+            var params = new URLSearchParams(window.location.search);
+            var p = params.get('parametre') || params.get('layer');
+            if (p && manifest && manifest.layers[p]) {
+                setLayer(p);
+            }
+            var reg = params.get('region');
+            var regSel = document.getElementById('select-region');
+            if (reg) {
+                if (regSel && regSel.querySelector('option[value="' + reg + '"]')) {
+                    regSel.value = reg;
+                    regSel.dispatchEvent(new Event('change'));
+                }
+            } else if (regSel && regSel.querySelector('option[value="hdf"]')) {
+                regSel.value = 'hdf';
+                regSel.dispatchEvent(new Event('change'));
+            }
+            var heure = parseInt(params.get('heure'), 10);
+            if (!isNaN(heure)) {
+                var steps = availableSteps();
+                if (heure >= 0 && heure < steps.length) {
+                    renderStep(heure);
+                }
+            }
+        }
+
         function stopAnimation() {
             if (timer !== null) {
                 window.clearInterval(timer);
