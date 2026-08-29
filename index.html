@@ -930,15 +930,12 @@
                     <a href="previsions.html" class="amfm-btn amfm-btn-commune" aria-label="Prévisions détaillées par commune ou code postal" title="Prévisions par commune">
                         <i class="fa-solid fa-house-chimney" aria-hidden="true"></i> <span>Commune</span>
                     </a>
-                    
                 </div>
 
                                                                 <!-- Centre : Calque Météo + Sélecteur de Région -->
                 <div class="amfm-nav-controls">
                     <!-- Sélecteur de Run AROME HD (Direct & Archives) -->
-                    <button type="button" id="btn-open-run-modal" class="amfm-btn" style="background:rgba(56,189,248,0.15); border:1.5px solid #38bdf8; color:#38bdf8; font-weight:800; padding:6px 12px; font-size:13px; display:inline-flex; align-items:center; gap:6px;" title="Changer de date ou de run AROME">
-                        <i class="fa-solid fa-calendar-days"></i> <span id="current-run-label">🔴 29/08 21z (Direct)</span> <i class="fa-solid fa-caret-down" style="font-size:10px;"></i>
-                    </button>
+                    
                     <!-- Sélecteur Direct de Calque Météo AROME HD Standard -->
                     <select id="direct-layer-select" class="amfm-select-layer" aria-label="Sélection du paramètre météorologique">
                         <!-- 🌡️ TEMPÉRATURES -->
@@ -1185,127 +1182,7 @@
     <script src="js/regions.js?v=1.0.0"></script>
     <script src="js/arome-map.js?v=3.0.0&old=6.0.8"></script>
 
-    <!-- 📅 MODAL SÉLECTEUR DE DATE & RUN AROME HD -->
-    <div id="modal-date-run" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:999999; align-items:center; justify-content:center; padding:16px;">
-        <div style="background:#0f172a; border:2px solid #38bdf8; border-radius:20px; max-width:520px; width:100%; padding:24px; box-shadow:0 25px 60px rgba(0,0,0,0.9); color:#fff; position:relative;">
-            <button type="button" id="btn-close-run-modal" style="position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.1); border:none; color:#fff; font-size:18px; width:34px; height:34px; border-radius:50%; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-            
-            <h3 style="font-size:18px; font-weight:800; color:#38bdf8; display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                <i class="fa-solid fa-calendar-days"></i> Sélectionner une Date &amp; un Run
-            </h3>
-            <p style="font-size:13px; color:#94a3b8; margin-bottom:20px;">Choisissez un jour et une sortie du modèle AROME pour rejouer l'ensemble des cartes :</p>
-            
-            <!-- 1. Choix de la Date -->
-            <label style="display:block; font-size:13px; font-weight:700; color:#f1f5f9; margin-bottom:8px;">1. Date de la prévision :</label>
-            <input type="date" id="run-picker-date" style="width:100%; background:#1e293b; border:1px solid #475569; color:#fff; padding:10px 14px; border-radius:10px; font-size:14px; font-weight:700; outline:none; margin-bottom:18px;">
-
-            <!-- 2. Choix du Run (8 runs) -->
-            <label style="display:block; font-size:13px; font-weight:700; color:#f1f5f9; margin-bottom:8px;">2. Sortie du modèle AROME (8 runs quotidiens) :</label>
-            <div id="runs-pills-grid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:24px;">
-                <button type="button" class="run-pill-btn" data-run="00">🌙 00z (02h)</button>
-                <button type="button" class="run-pill-btn" data-run="03">🌅 03z (05h)</button>
-                <button type="button" class="run-pill-btn" data-run="06">☕ 06z (08h)</button>
-                <button type="button" class="run-pill-btn" data-run="09">☀️ 09z (11h)</button>
-                <button type="button" class="run-pill-btn" data-run="12">🍽️ 12z (14h)</button>
-                <button type="button" class="run-pill-btn" data-run="15">☕ 15z (17h)</button>
-                <button type="button" class="run-pill-btn" data-run="18">🌆 18z (20h)</button>
-                <button type="button" class="run-pill-btn active" data-run="21" style="background:#0284c7; border-color:#38bdf8; color:#fff;">🔴 21z (Direct)</button>
-            </div>
-
-            <!-- Actions -->
-            <div style="display:flex; gap:10px;">
-                <button type="button" id="btn-apply-run-change" style="flex:1; background:linear-gradient(135deg, #00d2ff, #0077ff); color:#070b14; border:none; border-radius:12px; padding:12px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 0 15px rgba(0,210,255,0.4);">
-                    <i class="fa-solid fa-play"></i> Charger ce Run sur la Carte
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        .run-pill-btn {
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #cbd5e1;
-            padding: 8px 4px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .run-pill-btn:hover {
-            background: rgba(56, 189, 248, 0.15);
-            border-color: #38bdf8;
-            color: #38bdf8;
-        }
-        .run-pill-btn.active {
-            background: #0284c7 !important;
-            border-color: #38bdf8 !important;
-            color: #fff !important;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
-        }
-    </style>
-
-    <script>
-        (function() {
-            var modal = document.getElementById('modal-date-run');
-            var btnOpen = document.getElementById('btn-open-run-modal');
-            var btnClose = document.getElementById('btn-close-run-modal');
-            var btnApply = document.getElementById('btn-apply-run-change');
-            var dateInput = document.getElementById('run-picker-date');
-            var labelEl = document.getElementById('current-run-label');
-            var selectedRunCode = '21';
-
-            // Init date to today
-            if (dateInput) {
-                var todayStr = new Date().toISOString().split('T')[0];
-                dateInput.value = todayStr;
-                dateInput.max = todayStr;
-            }
-
-            if (btnOpen && modal) {
-                btnOpen.addEventListener('click', function() {
-                    modal.style.display = 'flex';
-                });
-            }
-            if (btnClose && modal) {
-                btnClose.addEventListener('click', function() {
-                    modal.style.display = 'none';
-                });
-            }
-            if (modal) {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) modal.style.display = 'none';
-                });
-            }
-
-            var pillBtns = document.querySelectorAll('.run-pill-btn');
-            pillBtns.forEach(function(b) {
-                b.addEventListener('click', function() {
-                    pillBtns.forEach(function(p) { p.classList.remove('active'); });
-                    this.classList.add('active');
-                    selectedRunCode = this.getAttribute('data-run');
-                });
-            });
-
-            if (btnApply) {
-                btnApply.addEventListener('click', function() {
-                    var dVal = dateInput.value;
-                    var dFormatted = dVal.split('-').reverse().join('/').slice(0, 5);
-                    if (labelEl) {
-                        labelEl.textContent = '🕒 ' + dFormatted + ' ' + selectedRunCode + 'z';
-                    }
-                    modal.style.display = 'none';
-                    // Recharger la carte si fonction disponible
-                    if (typeof window.switchArchiveRun === 'function') {
-                        window.switchArchiveRun(dVal, selectedRunCode);
-                    }
-                });
-            }
-        })();
-    </script>
-
-</body>
+    </body>
 </html>
 
 
