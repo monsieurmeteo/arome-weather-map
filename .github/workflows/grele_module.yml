@@ -24,6 +24,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: "grele-module"
@@ -78,3 +79,11 @@ jobs:
             git commit -m "Module Grêle : couches convectives AROME 0,025° [$(date -u +'%Y-%m-%d %H:%MZ')]"
             git push origin main
           fi
+
+      - name: Déclencher le déploiement GitHub Pages
+        # NB : un push fait par GITHUB_TOKEN ne déclenche PAS les workflows
+        # `on: push` (limitation GitHub) → on lance explicitement le déploiement.
+        run: |
+          gh workflow run deploy-pages.yml --repo monsieurmeteo/arome-weather-map --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}
