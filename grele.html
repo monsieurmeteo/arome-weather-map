@@ -7,15 +7,15 @@
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Prévision Grêle par Code Postal — AROME HD Météo-France | Météo-Climat Pro</title>
-    <meta name="description" content="Outil officiel de prévision du risque et diamètre de grêle heure par heure (0-51h) par code postal basé sur le modèle AROME Météo-France et les algorithmes MESH / ICE3.">
+    <meta name="description" content="Outil officiel de prévision des indices de potentiel orageux, de grêle et tornadique (IPO, IPG, IPT /100) heure par heure (0-51h) par commune, basé sur le modèle AROME 2,5 km Météo-France.">
     <meta name="theme-color" content="#070b14">
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <script src="js/chart.umd.min.js"></script>
+    <script src="js/pako.min.js"></script>
 
     <style>
         :root {
@@ -329,6 +329,277 @@
             border-top: 1px solid var(--border);
             margin-top: 40px;
         }
+    
+        
+        /* ── CADRE CARTE AVEC ZOOM RÉGION & PIN VILLE ── */
+        .map-frame-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto;
+            aspect-ratio: 2200 / 1640;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #060913;
+            border: 1.5px solid rgba(0, 210, 255, 0.4);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+        }
+        .map-viewport-inner {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: 50% 50%;
+        }
+        .map-img-bg,
+        .map-img-layer,
+        .map-img-borders {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            pointer-events: none;
+        }
+        .map-city-pin {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #00d2ff;
+            border: 2.5px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px #00d2ff, 0 0 30px #00d2ff;
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+            animation: pulse-pin 1.5s infinite;
+        }
+        .map-city-label {
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(7, 11, 20, 0.95);
+            border: 1px solid #00d2ff;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        }
+        @keyframes pulse-pin {
+            0% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.7); }
+            70% { box-shadow: 0 0 0 14px rgba(0, 210, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0); }
+        }
+        .map-region-select {
+            background: rgba(4, 7, 13, 0.85);
+            border: 1px solid rgba(0, 210, 255, 0.4);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+        }
+        .map-region-select:focus {
+            border-color: #00d2ff;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+        }
+
+        /* ── SECTION CARTES NATIONALES ORAGES, GRÊLE & TORNADES ── */
+        .convective-maps-card {
+            background: var(--bg-card, rgba(13, 20, 36, 0.85));
+            border: 1.5px solid var(--border-accent, rgba(0, 210, 255, 0.4));
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 210, 255, 0.15);
+        }
+        .maps-nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 12px;
+        }
+        .maps-main-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .map-tab-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #94a3b8;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .map-tab-btn:hover {
+            background: rgba(0, 210, 255, 0.15);
+            color: #fff;
+            border-color: #00d2ff;
+        }
+        .map-tab-btn.active {
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.35), rgba(2, 132, 199, 0.45));
+            border-color: #00d2ff;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.35);
+        }
+        .maps-period-pills {
+            display: flex;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .period-pill {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .period-pill:hover { color: #fff; }
+        .period-pill.active {
+            background: #00d2ff;
+            color: #070b14;
+            font-weight: 800;
+        }
+
+        .map-frame-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto;
+            aspect-ratio: 2200 / 1640;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #060913;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+        }
+        .map-img-bg,
+        .map-img-layer,
+        .map-img-borders {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            pointer-events: none;
+        }
+        .map-img-layer {
+            transition: opacity 0.15s ease;
+        }
+        .map-info-overlay {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: rgba(7, 11, 20, 0.88);
+            border: 1px solid rgba(0, 210, 255, 0.4);
+            border-radius: 10px;
+            padding: 8px 14px;
+            color: #fff;
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .map-info-title { font-size: 14px; font-weight: 800; color: #00d2ff; }
+        .map-info-time { font-size: 12px; font-weight: 700; color: #f1f5f9; margin-top: 2px; }
+
+        .map-controls-bar {
+            max-width: 960px;
+            margin: 14px auto 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(4, 7, 13, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 16px;
+        }
+        .map-play-btn {
+            background: #00d2ff;
+            color: #070b14;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+            flex-shrink: 0;
+        }
+        .map-play-btn:hover { transform: scale(1.06); box-shadow: 0 0 12px #00d2ff; }
+        .map-slider-input {
+            flex: 1;
+            accent-color: #00d2ff;
+            cursor: pointer;
+            height: 6px;
+        }
+        .map-slider-label {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #00d2ff;
+            min-width: 140px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .map-legend-row {
+            max-width: 960px;
+            margin: 12px auto 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .legend-scale-boxes {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .legend-box {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+        .legend-box-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -339,7 +610,7 @@
             <a href="index.html" class="hail-brand" title="Retour aux cartes AROME HD">
                 <img src="logo.png" alt="Météo-Climat Pro" class="hail-logo">
                 <span class="hail-title">Météo-Climat Pro <span>Grêle</span></span>
-                <span class="hail-badge"><i class="fa-solid fa-bolt"></i> AROME MESH/ICE3</span>
+                <span class="hail-badge"><i class="fa-solid fa-bolt"></i> AROME 2,5 km</span>
             </a>
             <div class="hail-nav-links">
                 <a href="index.html" class="hail-nav-btn"><i class="fa-solid fa-map"></i> Cartes HD</a>
@@ -354,7 +625,7 @@
         <!-- Hero & Recherche -->
         <section class="hail-hero">
             <h1>Centre d’Alerte Orages, Foudre, Grêle &amp; Tornades par Code Postal</h1>
-            <p>Calcul haute précision heure par heure (0 à 51h) basé sur le modèle AROME 1,3 km, la réflectivité radar et les algorithmes officiels MESH / ICE3.</p>
+            <p>Calcul haute précision heure par heure (0 à 51h) basé sur le modèle AROME 2,5 km : indices diagnostiques de potentiel orageux, grêle et tornadique (/100) à partir de la réflectivité radar simulée, du MUCAPE, du graupel et du cisaillement.</p>
 
             <div class="search-box">
                 <div class="search-input-wrap">
@@ -365,37 +636,165 @@
             </div>
         </section>
 
-        <!-- Cartouche d'Alerte Synthèse -->
+        <!-- Cartouche d'Alerte Synthèse Scientifique -->
         <section class="summary-card" id="summary-card" style="display:none;">
             <div class="summary-left">
                 <h2 class="summary-place" id="sum-place">Lille (59000)</h2>
-                <div class="summary-timing" id="sum-timing"><i class="fa-solid fa-clock"></i> Échéance : H+00 à H+51</div>
-                <p class="summary-desc" id="sum-desc">Analyse convective en cours...</p>
+                <div class="summary-timing" id="sum-timing"><i class="fa-solid fa-clock"></i> Échéance : H+00 à H+51 (AROME 2,5 km)</div>
+                <p class="summary-desc" id="sum-desc">Analyse des champs convectifs AROME en cours...</p>
+                <div style="font-size:11.5px; color:#64748b; margin-top:4px;">
+                    <i class="fa-solid fa-circle-info"></i> Résolution du modèle ≈ 2,5 km (0,025°). Les scores ci-dessous sont des indices de potentiel (/100) et non des probabilités.
+                </div>
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                <!-- 1. Indice Potentiel Orageux (IPO) -->
                 <div class="risk-gauge-box">
-                    <div class="risk-indicator" id="sum-indicator" style="background:var(--risk-0);">0</div>
+                    <div class="risk-indicator" id="sum-orage-ind" style="background:#10b981; font-size:18px; font-weight:900;">0</div>
                     <div>
-                        <div class="risk-meta-title">Risque Grêle Max</div>
-                        <div class="risk-meta-val" id="sum-level">Risque Nul</div>
-                        <div style="font-size:12px; color:var(--accent); font-weight:700;" id="sum-diam">Diamètre : Aucun</div>
+                        <div class="risk-meta-title">Potentiel Orageux (IPO)</div>
+                        <div class="risk-meta-val" id="sum-orage-lvl">0/100 — Très faible</div>
+                        <div style="font-size:12px; color:#38bdf8; font-weight:700;" id="sum-orage-meta">MUCAPE : 0 J/kg</div>
                     </div>
                 </div>
+
+                <!-- 2. Indice Potentiel Grêle (IPG) & Taille Indicative -->
                 <div class="risk-gauge-box">
-                    <div class="risk-indicator" id="sum-orage-ind" style="background:var(--risk-0); font-size:18px;">⚡</div>
+                    <div class="risk-indicator" id="sum-indicator" style="background:#10b981; font-size:18px; font-weight:900;">0</div>
                     <div>
-                        <div class="risk-meta-title">Risque Orage &amp; Foudre</div>
-                        <div class="risk-meta-val" id="sum-orage-lvl">Calme</div>
-                        <div style="font-size:12px; color:#38bdf8; font-weight:700;" id="sum-foudre">Foudre : 0 écl/km²/h</div>
+                        <div class="risk-meta-title">Potentiel Grêle (IPG)</div>
+                        <div class="risk-meta-val" id="sum-level">0/100 — Très faible</div>
+                        <div style="font-size:12px; color:#00d2ff; font-weight:700;" id="sum-diam">Niveau : Aucun signal significatif</div>
                     </div>
                 </div>
+
+                <!-- 3. Environnement & Rafales Convectives -->
                 <div class="risk-gauge-box">
-                    <div class="risk-indicator" id="sum-tor-ind" style="background:var(--risk-0); font-size:18px;">🌪️</div>
+                    <div class="risk-indicator" id="sum-tor-ind" style="background:#10b981; font-size:18px;">💨</div>
                     <div>
-                        <div class="risk-meta-title">Risque Tornade (STP)</div>
-                        <div class="risk-meta-val" id="sum-tor-lvl">Nul</div>
-                        <div style="font-size:12px; color:#c084fc; font-weight:700;" id="sum-stp">Indice STP : 0.0</div>
+                        <div class="risk-meta-title">Rafales &amp; Proxy LCL</div>
+                        <div class="risk-meta-val" id="sum-tor-lvl">Rafales max : 0 km/h</div>
+                        <div style="font-size:12px; color:#c084fc; font-weight:700;" id="sum-stp">LCL indicatif : 0 m</div>
                     </div>
+                </div>
+
+                <!-- 4. Indice Potentiel Tornadique (IPT) -->
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-ipt-ind" style="background:#10b981; font-size:18px; font-weight:900;">0</div>
+                    <div>
+                        <div class="risk-meta-title">Potentiel Tornadique (IPT)</div>
+                        <div class="risk-meta-val" id="sum-ipt-lvl">0/100 — Nul</div>
+                        <div style="font-size:12px; color:#a855f7; font-weight:700;" id="sum-ipt-meta">Cisaillement &amp; LCL</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        
+        <!-- 🗺️ SECTION CARTES NATIONALES ORAGES, GRÊLE & TORNADES -->
+        <section class="convective-maps-card" id="convective-maps-card">
+            <div class="maps-nav-header">
+                <div class="maps-main-tabs">
+                    <button type="button" class="map-tab-btn active" data-layer="ipo">
+                        <i class="fa-solid fa-bolt" style="color:#facc15;"></i> ⚡ Potentiel Orageux (IPO)
+                    </button>
+                    <button type="button" class="map-tab-btn" data-layer="orages_simules">
+                        <i class="fa-solid fa-cloud-bolt" style="color:#38bdf8;"></i> ⛈️ Orages Simulés
+                    </button>
+                    <button type="button" class="map-tab-btn" data-layer="ipg">
+                        <i class="fa-solid fa-cloud-meatball" style="color:#fb923c;"></i> 🌩️ Potentiel Grêle (IPG)
+                    </button>
+                    <button type="button" class="map-tab-btn" data-layer="rafales_convectives">
+                        <i class="fa-solid fa-wind" style="color:#a855f7;"></i> 💨 Rafales Convectives
+                    </button>
+                    <button type="button" class="map-tab-btn" data-layer="instabilite">
+                        <i class="fa-solid fa-fire" style="color:#ef4444;"></i> ⚡ Instabilité (CAPE)
+                    </button>
+                    <button type="button" class="map-tab-btn" data-layer="ipt">
+                        <i class="fa-solid fa-tornado" style="color:#a855f7;"></i> 🌪️ Potentiel Tornadique (IPT)
+                    </button>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <button type="button" id="btn-download-hd" class="btn-download-hd" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #00d2ff, #0077ff); color:#070b14; font-weight:900; font-size:12.5px; padding:7px 15px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 0 15px rgba(0,210,255,0.4); transition:all 0.2s;">
+                        <i class="fa-solid fa-download"></i> Télécharger Carte HD (PNG)
+                    </button>
+                    <select class="map-region-select" id="map-region-select" aria-label="Zoomer sur une région">
+                        <option value="france" selected>🇫🇷 France Entière</option>
+                        <option value="hdf">🏘️ Hauts-de-France</option>
+                        <option value="normandie">🍏 Normandie</option>
+                        <option value="idf">🗼 Île-de-France</option>
+                        <option value="grandest">🥨 Grand Est</option>
+                        <option value="bretagne">⛵ Bretagne</option>
+                        <option value="pdl">⚓ Pays de la Loire</option>
+                        <option value="cvl">🏰 Centre-Val de Loire</option>
+                        <option value="bfc">🍇 Bourgogne-Franche-Comté</option>
+                        <option value="naq">🌊 Nouvelle-Aquitaine</option>
+                        <option value="ara">⛰️ Auvergne-Rhône-Alpes</option>
+                        <option value="occitanie">🌞 Occitanie</option>
+                        <option value="paca">☀️ PACA</option>
+                        <option value="corse">🏝️ Corse</option>
+                    </select>
+
+                    <div class="maps-period-pills">
+                        <button type="button" class="period-pill active" data-period="hourly">⏱️ Heure par Heure</button>
+                        <button type="button" class="period-pill" data-period="j0">📅 Synthèse Aujourd'hui (J0)</button>
+                        <button type="button" class="period-pill" data-period="j1">📅 Synthèse Demain (J+1)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cadre d'Affichage Haute Résolution de la Carte -->
+            <div class="map-frame-wrapper">
+                <div class="map-viewport-inner" id="map-viewport-inner">
+                    <img src="output/arome/maps/fond.webp" alt="Fond de carte" class="map-img-bg">
+                    <img id="convective-map-layer" src="output/arome/maps/ipo/000.webp" alt="Calque météo" class="map-img-layer">
+                    <img src="output/arome/maps/frontieres.svg" alt="Frontières" class="map-img-borders">
+
+                    <!-- Pointeur de Ville Dynamique -->
+                    <div class="map-city-pin" id="map-city-pin">
+                        <div class="map-city-label" id="map-city-label">Lille</div>
+                    </div>
+                </div>
+
+                <div class="map-info-overlay">
+                    <div class="map-info-title" id="map-info-title">⚡ Carte Convective AROME HD — Indices /100</div>
+                    <div class="map-info-time" id="map-info-time">Échéance H+00 • AROME HD 2,5 km</div>
+                </div>
+            </div>
+
+            <!-- Contrôles Temporels (Timeline & Play) -->
+            <div class="map-controls-bar" id="map-controls-bar">
+                <button type="button" class="map-play-btn" id="convective-play-btn" title="Lecture de l'animation (Espace)">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+                <input type="range" class="map-slider-input" id="convective-slider" min="0" max="51" value="0" step="1">
+                <div class="map-slider-label" id="convective-slider-label">H+00 (Départ)</div>
+            </div>
+
+            <!-- Légende Dynamique -->
+            <div class="map-legend-row">
+                <span id="map-legend-title" style="font-weight:700;color:#fff;">Échelle d'intensité :</span>
+                <div class="legend-scale-boxes" id="map-legend-boxes">
+                    <!-- Rempli en JS selon le calque -->
+                </div>
+            </div>
+        </section>
+
+        
+        <!-- 🔬 MODE DÉVELOPPEUR & INSPECTEUR CONVECTIF SCIENTIFIQUE -->
+        <section class="chart-card" id="debug-inspector-card" style="margin-top:20px; border-color:rgba(0,210,255,0.3); background:rgba(7,11,20,0.95);">
+            <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" id="debug-toggle-btn">
+                <h3 class="chart-title" style="margin-bottom:0; color:#00d2ff;">
+                    <i class="fa-solid fa-microscope"></i> Inspecteur Scientifique &amp; Diagnostic Numérique AROME
+                </h3>
+                <span style="font-size:12px; color:#94a3b8; font-weight:700;">Afficher / Masquer les détails <i class="fa-solid fa-chevron-down"></i></span>
+            </div>
+            <div id="debug-content-box" style="margin-top:16px; display:block;">
+                <p style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+                    Décomposition mathématique transparente des contributions et variables physiques AROME pour l'échéance sélectionnée.
+                </p>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;" id="debug-grid-container">
+                    <!-- Rempli dynamiquement en JS -->
                 </div>
             </div>
         </section>
@@ -415,17 +814,17 @@
                     <tr>
                         <th>H+</th>
                         <th>Date</th>
-                        <th>⚡ Orage</th>
-                        <th>🌧️ Pluie</th>
-                        <th>⚡ Foudre</th>
-                        <th>🌩️ Grêle</th>
-                        <th>🔴 Diam.</th>
-                        <th>🌪️ STP</th>
+                        <th>⚡ Potentiel Orageux (IPO)</th>
+                        <th>🌩️ Potentiel Grêle (IPG)</th>
+                        <th>🌪️ Potentiel Tornadique (IPT)</th>
+                        <th>🔴 Niveau Potentiel Grêle</th>
                         <th>📡 Radar</th>
-                        <th>CAPE</th>
-                        <th>🧊 Grésil</th>
+                        <th>⚡ MUCAPE</th>
+                        <th>🌧️ Pluie 1h</th>
+                        <th>🧊 Graupel</th>
                         <th>🌡️ T2m</th>
                         <th>💨 Rafales</th>
+                        <th>🔍 Analyse</th>
                     </tr>
                 </thead>
                 <tbody id="hail-tbody">
@@ -440,7 +839,7 @@
                 <i class="fa-solid fa-car tip-icon"></i>
                 <div>
                     <h4>Véhicules & Carrosseries</h4>
-                    <p>Dès le niveau 🟠 Modéré (grêlons > 1-2 cm), stationnez les véhicules sous abri ou protégez-les avec une bâche anti-grêle.</p>
+                    <p>Dès le niveau 🟠 Modéré (grêle significative possible), stationnez les véhicules sous abri ou protégez-les avec une bâche anti-grêle.</p>
                 </div>
             </div>
             <div class="tip-card">
@@ -462,135 +861,213 @@
     </main>
 
     <footer class="hail-footer">
-        <p>Météo-Climat Pro — Données officielles AROME 0,01° (1,3 km) Météo-France • Modélisation microphysique ICE3 & Algorithme Radar MESH / Witt.</p>
+        <p>Météo-Climat Pro — Données officielles AROME 0,025° (2,5 km) Météo-France • Indices diagnostiques de potentiel orageux, grêle et tornadique (/100).</p>
     </footer>
 
     <script>
     (function () {
         'use strict';
 
+        // ── VARIABLES GLOBALES DE L'INTERFACE ──
         var searchInput = document.getElementById('hail-search');
         var searchResults = document.getElementById('search-results');
         var summaryCard = document.getElementById('summary-card');
         var chartCard = document.getElementById('chart-card');
         var tableCard = document.getElementById('table-card');
         var hailTbody = document.getElementById('hail-tbody');
-
         var hailChart = null;
-
-        // Auto-complétion Commune / Code Postal via geo.api.gouv.fr
-        var debounceTimer = null;
-        var currentResultsList = [];
-
-        function doSearch(q) {
-            clearTimeout(debounceTimer);
-            if (!q || q.length < 2) {
-                searchResults.style.display = 'none';
-                return;
-            }
-            debounceTimer = setTimeout(function () {
-                var isZip = /^\d+$/.test(q);
-                var url = isZip
-                    ? 'https://geo.api.gouv.fr/communes?codePostal=' + encodeURIComponent(q) + '&fields=nom,code,centre,codeDepartement,codesPostaux,population&boost=population&limit=8'
-                    : 'https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(q) + '&fields=nom,code,centre,codeDepartement,codesPostaux,population&boost=population&limit=8';
-
-                fetch(url)
-                    .then(function (r) { return r.json(); })
-                    .then(function (list) {
-                        currentResultsList = list || [];
-                        if (!list || !list.length) {
-                            searchResults.innerHTML = '<div style="padding:10px 14px;color:#94a3b8;font-size:13px;">Aucune commune trouvée</div>';
-                            searchResults.style.display = 'block';
-                            return;
-                        }
-                        searchResults.innerHTML = list.map(function (c, idx) {
-                            var zip = (c.codesPostaux && c.codesPostaux[0]) ? c.codesPostaux[0] : '';
-                            var dep = c.codeDepartement || (c.code ? c.code.substring(0, 2) : '');
-                            return '<div class="search-item" data-idx="' + idx + '" style="cursor:pointer; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05);">' +
-                                   '<strong>' + c.nom + '</strong> <span style="color:#94a3b8;">(' + zip + ' - Dép. ' + dep + ')</span>' +
-                                   '</div>';
-                        }).join('');
-                        searchResults.style.display = 'block';
-                    })
-                    .catch(function () {
-                        searchResults.style.display = 'none';
-                    });
-            }, 200);
-        }
-
-        searchInput.addEventListener('input', function (e) {
-            doSearch(e.target.value.trim());
-        });
-
-        function selectCity(c) {
-            if (!c) return;
-            var nom = c.nom;
-            var zip = (c.codesPostaux && c.codesPostaux[0]) ? c.codesPostaux[0] : '';
-            var dep = c.codeDepartement || (c.code ? c.code.substring(0, 2) : (zip ? zip.substring(0, 2) : '59'));
-            var lat = (c.centre && c.centre.coordinates) ? c.centre.coordinates[1] : 48.8566;
-            var lon = (c.centre && c.centre.coordinates) ? c.centre.coordinates[0] : 2.3522;
-
-            searchInput.value = nom + (zip ? ' (' + zip + ')' : '');
-            searchResults.style.display = 'none';
-            loadHailForecast(nom, zip, dep, lat, lon);
-        }
-
-        searchResults.addEventListener('click', function (e) {
-            var item = e.target.closest('.search-item');
-            if (!item) return;
-            var idx = parseInt(item.dataset.idx, 10);
-            if (!isNaN(idx) && currentResultsList[idx]) {
-                selectCity(currentResultsList[idx]);
-            }
-        });
-
-        searchInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (currentResultsList && currentResultsList.length > 0) {
-                    selectCity(currentResultsList[0]);
-                } else {
-                    var q = searchInput.value.trim();
-                    if (q.length >= 2) {
-                        var isZip = /^\d+$/.test(q);
-                        var url = isZip
-                            ? 'https://geo.api.gouv.fr/communes?codePostal=' + encodeURIComponent(q) + '&fields=nom,code,centre,codeDepartement,codesPostaux,population&boost=population&limit=1'
-                            : 'https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(q) + '&fields=nom,code,centre,codeDepartement,codesPostaux,population&boost=population&limit=1';
-                        fetch(url).then(function(r){ return r.json(); }).then(function(list){
-                            if (list && list.length > 0) selectCity(list[0]);
-                        });
-                    }
-                }
-            }
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.search-box')) {
-                searchResults.style.display = 'none';
-            }
-        });
 
         var BASE = 'output/arome/maps';
         var deptCache = {};
 
-        function gunzip(buf) {
-            if (typeof DecompressionStream !== 'undefined') {
-                return new Response(new Blob([buf]).stream()
-                    .pipeThrough(new DecompressionStream('deflate'))).arrayBuffer();
+        // ── MODULE CARTOGRAPHIQUE CONVECTIF ──
+        var activeConvectiveLayer = 'ipo';
+        var activeConvectivePeriod = 'hourly';
+        var currentConvectiveLead = 0;
+        var isConvectivePlaying = false;
+        var convectivePlayTimer = null;
+
+        var imgLayerEl = document.getElementById('convective-map-layer');
+        var infoTitleEl = document.getElementById('map-info-title');
+        var infoTimeEl = document.getElementById('map-info-time');
+        var sliderEl = document.getElementById('convective-slider');
+        var sliderLabelEl = document.getElementById('convective-slider-label');
+        var playBtnEl = document.getElementById('convective-play-btn');
+        var controlsBarEl = document.getElementById('map-controls-bar');
+        var legendBoxesEl = document.getElementById('map-legend-boxes');
+
+        var LAYER_TITLES = {
+            ipo: "⚡ Indice de Potentiel Orageux (IPO /100)",
+            orages_simules: "⛈️ Orages Simulés par AROME (Réflectivité dBZ)",
+            ipg: "🌩️ Indice de Potentiel Grêle (IPG /100)",
+            rafales_convectives: "💨 Rafales Convectives (km/h)",
+            instabilite: "⚡ Instabilité Convective MUCAPE (J/kg)",
+            ipt: "🌪️ Indice de Potentiel Tornadique (IPT /100)"
+        };
+
+        // Légendes synchronisées avec gfs-weather-map/pipeline/palettes_data.py
+        // (seuils et couleurs IDENTIQUES aux palettes Python — source unique).
+        var LAYER_LEGENDS = {
+            ipo: [
+                { color: 'transparent', text: '0–9 : Aucun signal' },
+                { color: '#22c55e', text: '10–24 : Faible' },
+                { color: '#eab308', text: '25–39 : Limité' },
+                { color: '#f97316', text: '40–54 : Modéré' },
+                { color: '#ea580c', text: '55–69 : Marqué' },
+                { color: '#dc2626', text: '70–84 : Fort' },
+                { color: '#9333ea', text: '85–100 : Très fort' }
+            ],
+            ipg: [
+                { color: 'transparent', text: '< 25 : Aucun signal significatif' },
+                { color: '#22c55e', text: '25–39 : Grésil / petite grêle possible' },
+                { color: '#eab308', text: '40–54 : Petite grêle possible' },
+                { color: '#ea580c', text: '55–69 : Grêle significative possible' },
+                { color: '#dc2626', text: '70–84 : Grêle forte possible' },
+                { color: '#9333ea', text: '≥ 85 : Grêle sévère' }
+            ],
+            orages_simules: [
+                { color: 'transparent', text: '< 15 dBZ : Aucun écho' },
+                { color: '#64c8ff', text: '15–24 dBZ' },
+                { color: '#00ffc8', text: '25–34 dBZ' },
+                { color: '#00e600', text: '35–41 dBZ' },
+                { color: '#ffe600', text: '42–49 dBZ' },
+                { color: '#ff8c00', text: '50–56 dBZ' },
+                { color: '#ff1e1e', text: '57–64 dBZ' },
+                { color: '#c800c8', text: '65–79 dBZ' },
+                { color: '#ffffff', text: '≥ 80 dBZ' }
+            ],
+            rafales_convectives: [
+                { color: 'transparent', text: '< 60 km/h' },
+                { color: '#facc15', text: '60–89 km/h (Marginal)' },
+                { color: '#f97316', text: '90–119 km/h (Modéré)' },
+                { color: '#ef4444', text: '120–149 km/h (Fort)' },
+                { color: '#a855f7', text: '≥ 150 km/h (Violent/Extrême)' }
+            ],
+            instabilite: [
+                { color: 'transparent', text: '< 100 J/kg' },
+                { color: '#6496ff', text: '100–299 J/kg' },
+                { color: '#00c8ff', text: '300–499 J/kg' },
+                { color: '#00dc64', text: '500–749 J/kg' },
+                { color: '#b4e632', text: '750–999 J/kg' },
+                { color: '#ffe600', text: '1000–1499 J/kg' },
+                { color: '#ff8c00', text: '1500–1999 J/kg' },
+                { color: '#ff3200', text: '2000–2499 J/kg' },
+                { color: '#dc0050', text: '2500–3499 J/kg' },
+                { color: '#b400b4', text: '≥ 3500 J/kg' }
+            ],
+            ipt: [
+                { color: 'transparent', text: '0–9 : Nul' },
+                { color: '#84cc16', text: '10–24 : Faible' },
+                { color: '#facc15', text: '25–44 : Limité' },
+                { color: '#f97316', text: '45–64 : Modéré' },
+                { color: '#ef4444', text: '65–79 : Marqué' },
+                { color: '#a855f7', text: '80–100 : Sévère' }
+            ]
+        };
+
+        var REGION_CONFIG = {
+            europe:     { isFrance: false, latitude: 49.0, longitude: 8.0, scale: 1.0 },
+            france:     { isFrance: true,  reset: true },
+            hdf:        { isFrance: true,  latitude: 49.85, longitude: 2.82, scale: 2.65 },
+            normandie:  { isFrance: true,  latitude: 48.95, longitude: -0.07, scale: 2.85 },
+            idf:        { isFrance: true,  latitude: 48.65, longitude: 2.50, scale: 4.20 },
+            grandest:   { isFrance: true,  latitude: 48.65, longitude: 5.80, scale: 2.25 },
+            bretagne:   { isFrance: true,  latitude: 48.00, longitude: -3.08, scale: 2.80 },
+            pdl:        { isFrance: true,  latitude: 47.30, longitude: -0.85, scale: 2.75 },
+            cvl:        { isFrance: true,  latitude: 47.45, longitude: 1.60, scale: 2.55 },
+            bfc:        { isFrance: true,  latitude: 47.10, longitude: 5.00, scale: 2.65 },
+            naq:        { isFrance: true,  latitude: 44.95, longitude: 0.40, scale: 1.85 },
+            ara:        { isFrance: true,  latitude: 45.30, longitude: 4.65, scale: 2.25 },
+            occitanie:  { isFrance: true,  latitude: 43.50, longitude: 2.25, scale: 2.25 },
+            paca:       { isFrance: true,  latitude: 43.85, longitude: 6.00, scale: 2.85 },
+            corse:      { isFrance: true,  latitude: 42.10, longitude: 9.05, scale: 4.20 },
+            belgique:   { isFrance: true,  latitude: 50.25, longitude: 4.40, scale: 3.10 }
+        };
+
+        function mercatorProj(lat) {
+            var r = (lat * Math.PI) / 180;
+            return Math.log(Math.tan(Math.PI / 4 + r / 2));
+        }
+
+        function projectCoordsMercator(lat, lon) {
+            var bounds = { south: 39.5, west: -8.5, north: 52.5, east: 13.5 };
+            var ny = mercatorProj(bounds.north);
+            var sy = mercatorProj(bounds.south);
+            var u = (lon - bounds.west) / (bounds.east - bounds.west);
+            var v = (ny - mercatorProj(lat)) / (ny - sy);
+            return { u: u, v: v };
+        }
+
+        function updateCityPin(nom, lat, lon) {
+            var pin = document.getElementById('map-city-pin');
+            var label = document.getElementById('map-city-label');
+            if (!pin) return;
+            var proj = projectCoordsMercator(lat, lon);
+            pin.style.left = (proj.u * 100).toFixed(2) + '%';
+            pin.style.top = (proj.v * 100).toFixed(2) + '%';
+            pin.style.display = 'block';
+            if (label) label.textContent = nom;
+        }
+
+        function applyRegionZoom(regKey) {
+            var viewportInner = document.getElementById('map-viewport-inner');
+            if (!viewportInner) return;
+            var cfg = (typeof REGION_CONFIG !== 'undefined' && REGION_CONFIG[regKey]) ? REGION_CONFIG[regKey] : { reset: true };
+
+            viewportInner.style.transformOrigin = '0 0';
+            if (cfg.reset || !cfg.scale || cfg.scale <= 1.0) {
+                viewportInner.style.transform = 'translate(0px, 0px) scale(1)';
+            } else {
+                var proj = projectCoordsMercator(cfg.latitude, cfg.longitude);
+                var tx = 50.0 - (proj.u * 100.0 * cfg.scale);
+                var ty = 50.0 - (proj.v * 100.0 * cfg.scale) + 4.0;
+                viewportInner.style.transform = 'translate(' + tx.toFixed(2) + '%, ' + ty.toFixed(2) + '%) scale(' + cfg.scale + ')';
             }
-            if (typeof pako !== 'undefined') {
-                return Promise.resolve(pako.inflate(new Uint8Array(buf)).buffer);
+        }
+
+        // ── DÉCOMPRESSION BINAIRE ROBUSTE ──
+        function gunzip(buf) {
+            if (typeof window !== 'undefined' && window.pako && typeof window.pako.inflate === 'function') {
+                try {
+                    var inflated = window.pako.inflate(new Uint8Array(buf));
+                    return Promise.resolve(inflated.buffer.slice(inflated.byteOffset, inflated.byteOffset + inflated.byteLength));
+                } catch (err) {
+                    console.warn('Pako inflate error:', err);
+                }
+            }
+            if (typeof pako !== 'undefined' && typeof pako.inflate === 'function') {
+                try {
+                    var inflated2 = pako.inflate(new Uint8Array(buf));
+                    return Promise.resolve(inflated2.buffer.slice(inflated2.byteOffset, inflated2.byteOffset + inflated2.byteLength));
+                } catch (err2) {
+                    console.warn('Pako inflate error:', err2);
+                }
+            }
+            var u8 = new Uint8Array(buf);
+            var slice = (u8.length > 6 && u8[0] === 0x78) ? u8.slice(2, u8.length - 4) : u8;
+            if (typeof DecompressionStream !== 'undefined') {
+                return new Response(new Blob([slice]).stream()
+                    .pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()
+                    .catch(function () {
+                        return new Response(new Blob([u8]).stream()
+                            .pipeThrough(new DecompressionStream('deflate'))).arrayBuffer();
+                    });
             }
             return Promise.reject(new Error('Décompression non supportée'));
         }
 
         function loadDepartment(dept) {
             if (deptCache[dept]) return Promise.resolve(deptCache[dept]);
-            var url = BASE + '/communes/' + dept + '.bin.gz';
-            return fetch(url, { cache: 'default' })
+            var localUrl = BASE + '/communes/' + dept + '.bin.gz';
+            var remoteUrl = 'https://monsieurmeteo.github.io/arome-weather-map/output/arome/maps/communes/' + dept + '.bin.gz';
+
+            return fetch(localUrl, { cache: 'default' })
                 .then(function (r) {
-                    if (!r.ok) throw new Error('Fichier département ' + dept + ' indisponible');
-                    return r.arrayBuffer();
+                    if (r.ok) return r.arrayBuffer();
+                    return fetch(remoteUrl).then(function (r2) {
+                        if (!r2.ok) throw new Error('Fichier département ' + dept + ' indisponible');
+                        return r2.arrayBuffer();
+                    });
                 })
                 .then(gunzip)
                 .then(function (buf) {
@@ -614,6 +1091,7 @@
                 run += String.fromCharCode(c);
             }
             var off = 50;
+            var textDecoder = (typeof TextDecoder !== 'undefined') ? new TextDecoder('utf-8') : null;
             var communes = [];
             for (var k = 0; k < n; k++) {
                 var code = '';
@@ -625,7 +1103,11 @@
                 off += 5;
                 var nl = dv.getUint8(off); off += 1;
                 var nom = '';
-                for (var j2 = 0; j2 < nl; j2++) nom += String.fromCharCode(dv.getUint8(off + j2));
+                if (textDecoder) {
+                    nom = textDecoder.decode(new Uint8Array(buf, off, nl));
+                } else {
+                    for (var j2 = 0; j2 < nl; j2++) nom += String.fromCharCode(dv.getUint8(off + j2));
+                }
                 off += nl;
                 var lat = dv.getFloat32(off, true); off += 4;
                 var lon = dv.getFloat32(off, true); off += 4;
@@ -651,35 +1133,432 @@
             var colIndex = {};
             colNames.forEach(function (nm, idx) { colIndex[nm] = idx; });
             var data = new Int16Array(buf, off, n * nleads * ncols);
-            var shape = { n: n, nleads: nleads, ncols: ncols };
-            return { communes: communes, leads: leads, colIndex: colIndex,
-                     colScale: colScale, colOffset: colOffset, data: data, shape: shape, run: run };
+            return {
+                run: run,
+                shape: { ncommunes: n, nleads: nleads, ncols: ncols },
+                communes: communes,
+                leads: leads,
+                colScale: colScale,
+                colOffset: colOffset,
+                colNames: colNames,
+                colIndex: colIndex,
+                data: data
+            };
         }
 
+        // Layout exact de la matrice AROME : [commune][lead][col]
         function getValue(deptData, pointIdx, leadPos, colName) {
             var ci = deptData.colIndex[colName];
             if (ci === undefined) return null;
-            var q = deptData.data[pointIdx * deptData.shape.nleads * deptData.shape.ncols
-                                 + leadPos * deptData.shape.ncols + ci];
-            if (q === -32768) return null;
+            var idx = pointIdx * (deptData.shape.nleads * deptData.shape.ncols)
+                    + leadPos * deptData.shape.ncols + ci;
+            var q = deptData.data[idx];
+            if (q === -32768 || q === undefined) return null;
             return q * deptData.colScale[ci] - deptData.colOffset[ci];
         }
 
-        // Chargement et calcul de la prévision réelle de grêle
+        // ── NOUVEAUX ALGORITHMES SCIENTIFIQUES IPO & IPG (AROME 2,5 KM) ──
+        var MUCAPE_TH_IPO = [0.0, 100.0, 300.0, 500.0, 750.0, 1000.0, 1500.0, 2000.0];
+        var CTERM_VAL_IPO = [0.0,  0.05,  0.25,  0.45,  0.65,   0.80,   0.95,   1.00];
+
+        var MUCAPE_TH_IPG = [0.0, 300.0, 500.0, 750.0, 1000.0, 1500.0, 2000.0, 2500.0];
+        var CTERM_VAL_IPG = [0.0,  0.05,  0.20,  0.40,   0.60,   0.80,   0.95,   1.00];
+
+        function interpLinear(val, xArr, yArr) {
+            var v = Math.max(0, val);
+            if (v <= xArr[0]) return yArr[0];
+            if (v >= xArr[xArr.length - 1]) return yArr[yArr.length - 1];
+            for (var i = 0; i < xArr.length - 1; i++) {
+                if (v >= xArr[i] && v <= xArr[i + 1]) {
+                    var t = (v - xArr[i]) / (xArr[i + 1] - xArr[i]);
+                    return yArr[i] + t * (yArr[i + 1] - yArr[i]);
+                }
+            }
+            return yArr[yArr.length - 1];
+        }
+
+        function calculateIPO(cape, refl, graupel, rain1h) {
+            var cterm = interpLinear(cape, MUCAPE_TH_IPO, CTERM_VAL_IPO);
+            var zterm = Math.min(1.0, Math.max(0.0, (refl - 20.0) / 35.0));
+            var gterm = Math.min(1.0, Math.max(0.0, graupel / 2.0));
+            var rterm = Math.min(1.0, Math.max(0.0, (rain1h - 0.2) / 14.8));
+
+            var ipo_base = 100.0 * (0.35 * cterm + 0.40 * zterm + 0.15 * gterm + 0.10 * rterm);
+
+            var bonus = 0;
+            if (cape >= 500.0 && refl >= 35.0) bonus += 5;
+            if (cape >= 750.0 && refl >= 40.0) bonus += 5;
+            if (refl >= 40.0 && graupel >= 0.5) bonus += 5;
+            if (cape >= 1000.0 && refl >= 45.0 && graupel > 0.0) bonus += 5;
+
+            var ipo_raw = Math.min(100.0, Math.max(0.0, ipo_base + bonus));
+
+            // Verrou CAS 1 : Aucune convection simulée
+            if (refl < 20.0 && rain1h < 0.2 && graupel === 0.0) {
+                var maxCap = 100;
+                if (cape < 300.0) maxCap = 5;
+                else if (cape < 500.0) maxCap = 15;
+                else if (cape < 750.0) maxCap = 25;
+                else if (cape < 1000.0) maxCap = 30;
+                else if (cape < 1500.0) maxCap = 35;
+                else maxCap = 40;
+                ipo_raw = Math.min(ipo_raw, maxCap);
+            }
+
+            return {
+                score: Math.round(ipo_raw),
+                cterm: cterm,
+                zterm: zterm,
+                gterm: gterm,
+                rterm: rterm,
+                bonus: bonus
+            };
+        }
+
+        function calculateIPG(cape, refl, graupel) {
+            var cgrele = interpLinear(cape, MUCAPE_TH_IPG, CTERM_VAL_IPG);
+            // zgrele v2 : adapté à la réflectivité Marshall-Palmer (35→55 dBZ)
+            var zgrele = Math.min(1.0, Math.max(0.0, (refl - 35.0) / 20.0));
+            var ggrele = Math.min(1.0, Math.max(0.0, graupel / 2.0));
+
+            var ipg_raw = 100.0 * (0.45 * zgrele + 0.30 * cgrele + 0.25 * ggrele);
+
+            // Verrous IPG v2 (adaptés réflectivité Marshall-Palmer)
+            if (refl < 30.0) ipg_raw = Math.min(ipg_raw, 15.0);
+            if (refl < 35.0 && graupel === 0.0) ipg_raw = Math.min(ipg_raw, 10.0);
+            if (cape < 300.0 && graupel === 0.0) ipg_raw = Math.min(ipg_raw, 10.0);
+
+            if (!((refl >= 45.0 && cape >= 500.0) || graupel >= 0.5)) {
+                ipg_raw = Math.min(ipg_raw, 69.0);
+            }
+
+            return {
+                score: Math.round(Math.min(100.0, Math.max(0.0, ipg_raw))),
+                cgrele: cgrele,
+                zgrele: zgrele,
+                ggrele: ggrele
+            };
+        }
+
+        // ── IPT (Indice de Potentiel Tornadique /100) ─────────────────────
+        // Formule STRICTEMENT identique à arome_open_data_remote.py
+        // (compute_fields) : cisaillement estimé (km/h) + LCL + MUCAPE +
+        // réflectivité. Recalibrage v2 : LCL borné [0,1] (STP), réflectivité
+        // bornée [0,1], cisaillement /20 (proxy rafales [5,45] km/h),
+        // diviseur 2,5 (max théorique ≈ 65/100).
+        function calculateIPT(cape, refl, lcl, shearKmh) {
+            var shearFactor = Math.min(2.5, Math.max(0.0, shearKmh / 20.0));
+            var lclFactor = Math.min(1.0, Math.max(0.0, (2000.0 - lcl) / 1000.0));
+            var capeFactor = Math.min(2.0, Math.max(0.0, cape / 1500.0));
+            var reflFactor = Math.min(1.0, Math.max(0.0, refl / 65.0));
+            var raw_ipt = (100.0 * (0.35 * shearFactor + 0.30 * lclFactor + 0.20 * capeFactor + 0.15 * reflFactor)) / 2.5;
+            var hasStorm = (refl >= 32.0 && cape >= 350.0);
+            if (!hasStorm) return 0;
+            return Math.round(Math.min(100.0, Math.max(0.0, raw_ipt)));
+        }
+
+        function getIPTInfo(score) {
+            if (score <= 9) {
+                return { label: 'Nul', color: '#94a3b8', badge: 'badge-risk-0', desc: 'Aucun signal tornadique significatif.' };
+            } else if (score <= 24) {
+                return { label: 'Faible', color: '#84cc16', badge: 'badge-risk-0', desc: 'Environnement marginalement favorable aux rotations sous les cellules.' };
+            } else if (score <= 44) {
+                return { label: 'Limité', color: '#facc15', badge: 'badge-risk-1', desc: 'Rotation faible possible sous les cellules les plus actives.' };
+            } else if (score <= 64) {
+                return { label: 'Modéré', color: '#f97316', badge: 'badge-risk-2', desc: 'Cisaillement et hélicité favorables à des tubas ou rotations.' };
+            } else if (score <= 79) {
+                return { label: 'Marqué', color: '#ef4444', badge: 'badge-risk-3', desc: 'Conditions favorables aux supercellules et rotations significatives.' };
+            } else {
+                return { label: 'Sévère', color: '#a855f7', badge: 'badge-risk-4', desc: 'Environnement très favorable aux tornades (hélicité élevée).' };
+            }
+        }
+
+        function getIPOInfo(score) {
+            if (score <= 9) {
+                return { label: 'Très faible', color: '#94a3b8', badge: 'badge-risk-0', desc: 'Aucun signal orageux significatif.' };
+            } else if (score <= 24) {
+                return { label: 'Faible', color: '#22c55e', badge: 'badge-risk-0', desc: 'Instabilité ou signal convectif limité. Orage peu probable localement.' };
+            } else if (score <= 39) {
+                return { label: 'Limité', color: '#eab308', badge: 'badge-risk-1', desc: 'Convection possible. Quelques cellules peuvent se développer.' };
+            } else if (score <= 54) {
+                return { label: 'Modéré', color: '#f97316', badge: 'badge-risk-2', desc: 'Potentiel orageux notable. Développement d’orages possible.' };
+            } else if (score <= 69) {
+                return { label: 'Marqué', color: '#ea580c', badge: 'badge-risk-3', desc: 'Environnement favorable aux orages. Cellules potentiellement actives.' };
+            } else if (score <= 84) {
+                return { label: 'Fort', color: '#dc2626', badge: 'badge-risk-3', desc: 'Fort potentiel orageux. Orages actifs ou fortement favorisés par le modèle.' };
+            } else {
+                return { label: 'Très fort', color: '#9333ea', badge: 'badge-risk-4', desc: 'Signal convectif très important. Potentiel d’orages intenses.' };
+            }
+        }
+
+        function getIPGInfo(score) {
+            if (score <= 9) {
+                return { label: 'Nul à très faible', color: '#94a3b8', badge: 'badge-risk-0', desc: 'Aucun signal significatif de grêle.' };
+            } else if (score <= 24) {
+                return { label: 'Faible', color: '#22c55e', badge: 'badge-risk-0', desc: 'Processus de glace limité. Petite grêle isolée non exclue.' };
+            } else if (score <= 39) {
+                return { label: 'Limité', color: '#eab308', badge: 'badge-risk-1', desc: 'Conditions permettant localement du grésil ou de la petite grêle.' };
+            } else if (score <= 54) {
+                return { label: 'Modéré', color: '#f97316', badge: 'badge-risk-2', desc: 'Signal de grêle présent sous les cellules les plus actives.' };
+            } else if (score <= 69) {
+                return { label: 'Marqué', color: '#ea580c', badge: 'badge-risk-3', desc: 'Grêle possible sous les cellules fortes.' };
+            } else if (score <= 84) {
+                return { label: 'Fort', color: '#dc2626', badge: 'badge-risk-3', desc: 'Fort signal de grêle. Risque significatif sous les cellules les plus intenses.' };
+            } else {
+                return { label: 'Très fort', color: '#9333ea', badge: 'badge-risk-4', desc: 'Très fort potentiel de grêle sous une convection intense.' };
+            }
+        }
+
+        function getHailLevelQualitative(ipgScore) {
+            if (ipgScore < 25) {
+                return { label: 'Aucun signal significatif', color: '#94a3b8', badge: '⚪' };
+            } else if (ipgScore < 40) {
+                return { label: 'Grésil / petite grêle possible', color: '#22c55e', badge: '🟢' };
+            } else if (ipgScore < 55) {
+                return { label: 'Petite grêle possible', color: '#eab308', badge: '🟡' };
+            } else if (ipgScore < 70) {
+                return { label: 'Grêle significative possible', color: '#ea580c', badge: '🟠' };
+            } else if (ipgScore < 85) {
+                return { label: 'Grêle forte possible', color: '#dc2626', badge: '🔴' };
+            } else {
+                return { label: 'Potentiel de grêle sévère', color: '#9333ea', badge: '🟣' };
+            }
+        }
+
+        function generateConvectiveAnalysis(d) {
+            if (d.refl >= 45.0 && d.cape >= 1000.0) {
+                return 'Convection intense et organisée simulée par AROME. Fort risque orageux avec activité électrique soutenue et potentiel de grêle.';
+            } else if (d.refl >= 35.0 && d.cape >= 500.0) {
+                return 'Plusieurs paramètres AROME deviennent favorables à une activité orageuse. Le modèle simule une cellule convective active sur ce secteur.';
+            } else if (d.cape >= 500.0 && d.refl < 20.0 && d.rain1h < 0.2) {
+                return 'L’atmosphère présente une instabilité convective modérée (MUCAPE ' + d.cape + ' J/kg), mais AROME ne simule actuellement aucune cellule convective significative sur la commune.';
+            } else if (d.refl >= 30.0 && d.cape < 300.0) {
+                return 'Passage pluvieux ou averses modérées simulées par AROME, mais instabilité thermique limitée. Risque d’orage faible.';
+            } else {
+                return 'Conditions calmes et stables modélisées par AROME. Aucun signal orageux ou de grêle significatif.';
+            }
+        }
+
+        var globalHoursData = [];
+
+        window.openDetailModal = function (type, stepIndex) {
+            var modal = document.getElementById('convective-detail-modal');
+            var body = document.getElementById('modal-content-body');
+            if (!modal || !body || !globalHoursData.length) return;
+
+            var d = (typeof stepIndex === 'number' && globalHoursData[stepIndex])
+                ? globalHoursData[stepIndex]
+                : globalHoursData.reduce(function (p, c) { return (c.ipo > p.ipo) ? c : p; }, globalHoursData[0]);
+
+            var ipoInfo = getIPOInfo(d.ipo);
+            var ipgInfo = getIPGInfo(d.ipg);
+            var hailLvl = getHailLevelQualitative(d.ipg);
+            var analysisText = generateConvectiveAnalysis(d);
+
+            var timeStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' }).format(d.date);
+
+            body.innerHTML = 
+                '<h3 style="font-size:20px; font-weight:800; margin-bottom:4px; color:#00d2ff;"><i class="fa-solid fa-chart-line"></i> Diagnostic Convectif AROME 2,5 km</h3>' +
+                '<div style="color:#94a3b8; font-size:13px; margin-bottom:16px;">Échéance H+' + String(d.step).padStart(2, '0') + ' • ' + timeStr + '</div>' +
+
+                '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">' +
+                    '<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border:1px solid ' + ipoInfo.color + ';">' +
+                        '<div style="font-size:12px; color:#94a3b8; font-weight:700;">INDICE POTENTIEL ORAGEUX</div>' +
+                        '<div style="font-size:24px; font-weight:900; color:' + ipoInfo.color + ';">' + d.ipo + ' / 100</div>' +
+                        '<div style="font-size:13px; font-weight:800; text-transform:uppercase; color:' + ipoInfo.color + ';">' + ipoInfo.label + '</div>' +
+                    '</div>' +
+                    '<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border:1px solid ' + ipgInfo.color + ';">' +
+                        '<div style="font-size:12px; color:#94a3b8; font-weight:700;">INDICE POTENTIEL GRÊLE</div>' +
+                        '<div style="font-size:24px; font-weight:900; color:' + ipgInfo.color + ';">' + d.ipg + ' / 100</div>' +
+                        '<div style="font-size:13px; font-weight:800; text-transform:uppercase; color:' + ipgInfo.color + ';">' + ipgInfo.label + '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div style="background:rgba(0,210,255,0.08); border-left:4px solid #00d2ff; padding:12px 16px; border-radius:8px; margin-bottom:16px;">' +
+                    '<div style="font-size:12px; color:#00d2ff; font-weight:800; margin-bottom:2px;"><i class="fa-solid fa-bullseye"></i> NIVEAU DE RISQUE GRÊLE :</div>' +
+                    '<div style="font-size:15px; font-weight:800; color:' + hailLvl.color + ';">' + hailLvl.badge + ' ' + hailLvl.label + '</div>' +
+                '</div>' +
+
+                '<div style="font-size:13.5px; line-height:1.5; background:rgba(0,0,0,0.4); padding:14px; border-radius:10px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.1);">' +
+                    '<div style="font-size:12px; color:#94a3b8; font-weight:700; margin-bottom:6px;"><i class="fa-solid fa-microscope"></i> ANALYSE DU MODÈLE AROME :</div>' +
+                    '<p style="color:#e2e8f0; margin:0;">' + analysisText + '</p>' +
+                '</div>' +
+
+                '<div style="font-size:12px; color:#94a3b8; font-weight:700; margin-bottom:8px;">PARAMÈTRES PHYSIQUES BRUTS AROME :</div>' +
+                '<ul style="list-style:none; padding:0; margin:0 0 16px 0; font-size:12.5px; display:grid; grid-template-columns:1fr 1fr; gap:6px;">' +
+                    '<li>⚡ <strong>MUCAPE :</strong> ' + d.cape + ' J/kg <span style="color:#64748b;">(Cterm ' + d.debug.cterm.toFixed(2) + ')</span></li>' +
+                    '<li>📡 <strong>Radar :</strong> ' + d.refl + ' dBZ <span style="color:#64748b;">(Zterm ' + d.debug.zterm.toFixed(2) + ')</span></li>' +
+                    '<li>🧊 <strong>Graupel :</strong> ' + d.tgrp + ' mm <span style="color:#64748b;">(Gterm ' + d.debug.gterm.toFixed(2) + ')</span></li>' +
+                    '<li>🌧️ <strong>Pluie 1h :</strong> ' + d.rain1h + ' mm/h <span style="color:#64748b;">(Rterm ' + d.debug.rterm.toFixed(2) + ')</span></li>' +
+                    '<li>💨 <strong>Rafales :</strong> ' + d.gust + ' km/h <span style="color:#64748b;">(Cisaillement ' + d.shear + ' km/h)</span></li>' +
+                    '<li>🎯 <strong>Bonus cohérence :</strong> +' + d.debug.bonus + ' pts</li>' +
+                    '<li>🌪️ <strong>IPT :</strong> ' + d.ipt + '/100 <span style="color:#64748b;">(Indice de Potentiel Tornadique)</span></li>' +
+                    '<li>🎯 <strong>LCL :</strong> ' + d.lcl + ' m <span style="color:#64748b;">(hauteur base nuageuse)</span></li>' +
+                '</ul>' +
+
+                '<div style="font-size:11px; color:#64748b; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">' +
+                    '<i class="fa-solid fa-circle-info"></i> Les indices IPO et IPG sont des indices diagnostiques calculés à partir des paramètres du modèle AROME. Ils ne constituent pas des probabilités statistiques d’occurrence.' +
+                '</div>';
+
+            modal.style.display = 'flex';
+        };
+
+        window.closeDetailModal = function () {
+            var modal = document.getElementById('convective-detail-modal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        function displayResults(data) {
+            globalHoursData = data;
+            var maxIPO = data.reduce(function (p, c) { return (c.ipo > p.ipo) ? c : p; }, data[0]);
+            var maxIPG = data.reduce(function (p, c) { return (c.ipg > p.ipg) ? c : p; }, data[0]);
+            var maxIPT = data.reduce(function (p, c) { return (c.ipt > p.ipt) ? c : p; }, data[0]);
+            var maxGust = data.reduce(function (p, c) { return (c.gust > p.gust) ? c : p; }, data[0]);
+            var minLCL = data.reduce(function (p, c) { return (c.lcl < p.lcl && c.lcl > 0) ? c : p; }, data[0]);
+            var maxLCL = minLCL;
+
+            var ipoCls = getIPOInfo(maxIPO.ipo);
+            var ipgCls = getIPGInfo(maxIPG.ipg);
+            var iptCls = getIPTInfo(maxIPT.ipt);
+            var hailLvlMax = getHailLevelQualitative(maxIPG.ipg);
+
+            // 1. Synthèse IPO
+            var elIpoInd = document.getElementById('sum-orage-ind');
+            var elIpoLvl = document.getElementById('sum-orage-lvl');
+            var elIpoMeta = document.getElementById('sum-orage-meta');
+            if (elIpoInd) { elIpoInd.textContent = maxIPO.ipo; elIpoInd.style.background = ipoCls.color; }
+            if (elIpoLvl) { elIpoLvl.textContent = maxIPO.ipo + '/100 — ' + ipoCls.label; elIpoLvl.style.color = ipoCls.color; }
+            if (elIpoMeta) { elIpoMeta.textContent = 'MUCAPE Max : ' + maxIPO.cape + ' J/kg • Radar : ' + maxIPO.refl + ' dBZ'; }
+
+            // 2. Synthèse IPG & Niveau Qualitatif
+            var elIpgInd = document.getElementById('sum-indicator');
+            var elIpgLvl = document.getElementById('sum-level');
+            var elIpgDiam = document.getElementById('sum-diam');
+            if (elIpgInd) { elIpgInd.textContent = maxIPG.ipg; elIpgInd.style.background = ipgCls.color; }
+            if (elIpgLvl) { elIpgLvl.textContent = maxIPG.ipg + '/100 — ' + ipgCls.label; elIpgLvl.style.color = ipgCls.color; }
+            if (elIpgDiam) { elIpgDiam.textContent = 'Niveau : ' + hailLvlMax.label; }
+
+            // 3. Synthèse IPT
+            var elIptInd = document.getElementById('sum-ipt-ind');
+            var elIptLvl = document.getElementById('sum-ipt-lvl');
+            var elIptMeta = document.getElementById('sum-ipt-meta');
+            if (elIptInd) { elIptInd.textContent = maxIPT.ipt; elIptInd.style.background = iptCls.color; }
+            if (elIptLvl) { elIptLvl.textContent = maxIPT.ipt + '/100 — ' + iptCls.label; elIptLvl.style.color = iptCls.color; }
+            if (elIptMeta) { elIptMeta.textContent = 'Cisaillement max : ' + maxIPT.shear + ' km/h • LCL min : ' + minLCL.lcl + ' m'; }
+
+            // 4. Synthèse Rafales & Proxy LCL
+            var elTorLvl = document.getElementById('sum-tor-lvl');
+            var elStp = document.getElementById('sum-stp');
+            if (elTorLvl) { elTorLvl.textContent = 'Rafales max : ' + maxGust.gust + ' km/h'; }
+            if (elStp) { elStp.textContent = 'LCL bas (meilleure convection) : ' + maxLCL.lcl + ' m'; }
+
+            // Description dynamique
+            var elDesc = document.getElementById('sum-desc');
+            if (elDesc) {
+                if (maxIPG.ipg >= 55 || maxIPO.ipo >= 55) {
+                    var dStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(maxIPO.date);
+                    elDesc.innerHTML = '<strong style="color:#ea580c;"><i class="fa-solid fa-triangle-exclamation"></i> Potentiel Convectif Marqué :</strong> Signal orageux/grêle maximal modélisé le <strong>' + dStr + '</strong> (IPO ' + maxIPO.ipo + '/100).';
+                } else if (maxIPO.ipo >= 25 || maxIPG.ipg >= 25) {
+                    elDesc.innerHTML = '<strong style="color:#eab308;"><i class="fa-solid fa-cloud-bolt"></i> Potentiel Convectif Limité à Modéré :</strong> Quelques cellules instables modélisées localement par AROME.';
+                } else {
+                    elDesc.innerHTML = '<strong style="color:#22c55e;"><i class="fa-solid fa-circle-check"></i> Situation Convective Calme :</strong> Aucun signal orageux ou de grêle significatif modélisé par AROME sur les 51 prochaines heures.';
+                }
+            }
+
+            // Tableau
+            if (hailTbody) {
+                var rowsHtml = data.map(function (d, idx) {
+                    var timeStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: '2-digit', hour: '2-digit' }).format(d.date);
+                    var oCls = getIPOInfo(d.ipo);
+                    var gCls = getIPGInfo(d.ipg);
+                    var tCls = getIPTInfo(d.ipt);
+                    var hLvl = getHailLevelQualitative(d.ipg);
+
+                    var rainBadge = parseFloat(d.rain1h) >= 10.0
+                        ? '<strong style="color:#ef4444;font-weight:900;">🌧️ ' + d.rain1h + ' mm</strong>'
+                        : (parseFloat(d.rain1h) > 0.0
+                            ? '<span style="color:#38bdf8;font-weight:700;">💧 ' + d.rain1h + ' mm</span>'
+                            : '<span style="color:#64748b;">0.0 mm</span>');
+
+                    return '<tr style="cursor:pointer;" onclick="openDetailModal(\'ipo\', ' + idx + ')">' +
+                           '<td><span style="color:#94a3b8;font-weight:700;">H+' + String(d.step).padStart(2, '0') + '</span></td>' +
+                           '<td><strong>' + timeStr + '</strong></td>' +
+                           '<td><span class="badge-risk ' + oCls.badge + '" style="color:' + oCls.color + ';">⚡ ' + d.ipo + '/100 (' + oCls.label + ')</span></td>' +
+                           '<td><span class="badge-risk ' + gCls.badge + '" style="color:' + gCls.color + ';">🌩️ ' + d.ipg + '/100 (' + gCls.label + ')</span></td>' +
+                           '<td><span class="badge-risk ' + tCls.badge + '" style="color:' + tCls.color + ';">🌪️ ' + d.ipt + '/100 (' + tCls.label + ')</span></td>' +
+                           '<td><strong style="color:' + hLvl.color + ';">' + hLvl.badge + ' ' + hLvl.label + '</strong></td>' +
+                           '<td>' + (d.refl >= 40 ? '<strong style="color:#f87171;">' + d.refl + ' dBZ</strong>' : d.refl + ' dBZ') + '</td>' +
+                           '<td>' + (d.cape >= 1000 ? '<strong style="color:#fb923c;">' + d.cape + ' J/kg</strong>' : d.cape + ' J/kg') + '</td>' +
+                           '<td>' + rainBadge + '</td>' +
+                           '<td>' + (d.tgrp > 0 ? '<strong style="color:#38bdf8;">' + d.tgrp + ' mm</strong>' : '0 mm') + '</td>' +
+                           '<td>' + d.t2m + '°C</td>' +
+                           '<td>' + d.gust + ' km/h</td>' +
+                           '<td><button type="button" style="background:rgba(0,210,255,0.15); border:1px solid #00d2ff; color:#00d2ff; padding:2px 8px; border-radius:4px; font-size:10.5px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-magnifying-glass"></i> Détails</button></td>' +
+                           '</tr>';
+                }).join('');
+                hailTbody.innerHTML = rowsHtml;
+            }
+
+            renderChart(data);
+        }
+
+        function renderChart(data) {
+            try {
+                var chartCanvas = document.getElementById('hail-chart');
+                if (!chartCanvas) return;
+                var labels = data.map(function (d) { return '+' + d.step + 'h (' + d.date.getHours() + 'h)'; });
+                var ipoData = data.map(function (d) { return d.ipo; });
+                var ipgData = data.map(function (d) { return d.ipg; });
+                var iptData = data.map(function (d) { return d.ipt; });
+                var reflData = data.map(function (d) { return d.refl; });
+
+                if (hailChart) hailChart.destroy();
+                var ctx = chartCanvas.getContext('2d');
+                hailChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Indice Potentiel Orageux (IPO /100)', data: ipoData, borderColor: '#facc15', backgroundColor: 'rgba(250, 204, 21, 0.15)', fill: true, tension: 0.35, borderWidth: 2, yAxisID: 'y' },
+                            { label: 'Indice Potentiel Grêle (IPG /100)', data: ipgData, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', fill: true, tension: 0.35, borderWidth: 2.5, yAxisID: 'y' },
+                            { label: 'Indice Potentiel Tornadique (IPT /100)', data: iptData, borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.10)', fill: true, tension: 0.35, borderWidth: 1.5, yAxisID: 'y' },
+                            { label: 'Réflectivité Radar (dBZ)', data: reflData, borderColor: '#00d2ff', borderDash: [4, 4], tension: 0.3, borderWidth: 1.5, pointRadius: 0, yAxisID: 'y1' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                            y: { min: 0, max: 100, grid: { color: 'rgba(255, 255, 255, 0.08)' }, ticks: { color: '#94a3b8', callback: function (v) { return v + '/100'; } }, title: { display: true, text: 'Indices /100', color: '#94a3b8' } },
+                            y1: { min: 0, max: 80, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#00d2ff', callback: function (v) { return v + ' dBZ'; } }, title: { display: true, text: 'Radar (dBZ)', color: '#00d2ff' } }
+                        },
+                        plugins: {
+                            legend: { labels: { color: '#fff', font: { size: 12, weight: 'bold' } } }
+                        }
+                    }
+                });
+            } catch (err) {
+                console.warn('Chart error:', err);
+            }
+        }
+
         function loadHailForecast(nom, zip, dep, lat, lon) {
-            summaryCard.style.display = 'flex';
-            chartCard.style.display = 'block';
-            tableCard.style.display = 'block';
+            if (summaryCard) summaryCard.style.display = 'flex';
+            if (chartCard) chartCard.style.display = 'block';
+            if (tableCard) tableCard.style.display = 'block';
 
-            document.getElementById('sum-place').textContent = nom + (zip ? ' (' + zip + ')' : '');
-            document.getElementById('sum-desc').textContent = 'Analyse des données officielles AROME 1,3 km...';
+            var elPlace = document.getElementById('sum-place');
+            var elDesc = document.getElementById('sum-desc');
+            if (elPlace) elPlace.textContent = nom + (zip ? ' (' + zip + ')' : '');
+            if (elDesc) elDesc.textContent = 'Analyse des champs physiques AROME 2,5 km...';
 
-            var depCode = dep ? String(dep).padStart(2, '0') : (zip ? zip.substring(0, 2) : '59');
+            var depCode = dep ? String(dep).padStart(2, '0') : (zip ? String(zip).substring(0, 2) : '59');
             if (depCode.length === 1) depCode = '0' + depCode;
 
             loadDepartment(depCode)
                 .then(function (deptData) {
-                    // Trouver la commune la plus proche
                     var target = null;
                     var minDist = Infinity;
                     deptData.communes.forEach(function (c) {
@@ -691,274 +1570,493 @@
                     });
                     if (!target) target = deptData.communes[0];
 
+                    var now = new Date();
                     var hoursData = [];
-                    var baseRun = new Date(deptData.run.replace('Z', '+00:00') || Date.now());
 
                     for (var l = 0; l < deptData.leads.length; l++) {
-                        var lh = deptData.leads[l];
-                        var vt = new Date(baseRun.getTime() + lh * 3600000);
+                        var step = deptData.leads[l];
+                        var stepDate = new Date(now.getTime() + step * 3600 * 1000);
 
                         var t2m = getValue(deptData, target.idx, l, 'temperature_c') || 20.0;
+                        var dew = getValue(deptData, target.idx, l, 'dewpoint_c') || 14.0;
                         var cape = Math.max(0, getValue(deptData, target.idx, l, 'cape_jkg') || 0);
                         var refl = Math.max(0, getValue(deptData, target.idx, l, 'reflectivity_dbz') || 0);
                         var tgrp = Math.max(0, getValue(deptData, target.idx, l, 'graupel_mm') || 0);
-                        var gust = Math.max(0, getValue(deptData, target.idx, l, 'wind_gust_kmh') || 20);
-
-                        // Calculs scientifiques AROME : Orages, Foudre, Grêle, Tornades
-                        var d2m = getValue(deptData, target.idx, l, 'dewpoint_c') || (t2m - 5.0);
-                        var shear = getValue(deptData, target.idx, l, 'wind_shear_kmh') || 20.0;
+                        var gust = getValue(deptData, target.idx, l, 'wind_gust_kmh') || 0;
                         var rain1h = getValue(deptData, target.idx, l, 'precipitation_mm') || 0.0;
+                        var shearKmh = Math.max(0, getValue(deptData, target.idx, l, 'wind_shear_kmh') || 0);
 
-                        // 1. Orages & Foudre couplés à la Pluie et au Radar (Physique AROME)
-                        var thunderCode = 0;
-                        var isTriggered = (rain1h >= 0.2 || refl >= 25 || tgrp > 0);
+                        // 1. Calcul Officiel IPO (Indice de Potentiel Orageux /100)
+                        var ipoObj = calculateIPO(cape, refl, tgrp, rain1h);
+                        var ipo = ipoObj.score;
 
-                        if (refl >= 55 || (cape >= 1500 && (rain1h >= 5.0 || refl >= 48))) {
-                            thunderCode = 4; // Violent (100%)
-                        } else if (refl >= 42 || (cape >= 800 && (rain1h >= 1.5 || refl >= 36))) {
-                            thunderCode = 3; // Fort (80%)
-                        } else if (refl >= 30 || (cape >= 300 && (rain1h >= 0.3 || refl >= 26))) {
-                            thunderCode = 2; // Modéré (50%)
-                        } else if (isTriggered && (cape >= 100 || refl >= 20)) {
-                            thunderCode = 1; // Faible (25%)
-                        } else if (cape >= 300 && !isTriggered) {
-                            // Instabilité présente en altitude mais absence de déclenchement au sol (pas de pluie)
-                            thunderCode = 1; // Risque limité / potentiel sec
-                        }
+                        // 2. Calcul Officiel IPG (Indice de Potentiel Grêle /100)
+                        var ipgObj = calculateIPG(cape, refl, tgrp);
+                        var ipg = ipgObj.score;
 
-                        var thunderLabels = ['Nul', 'Faible / Limité', 'Modéré', 'Fort', 'Violent'];
-                        var thunderProbs = [0, isTriggered ? 30 : 15, 60, 80, 100];
-                        var probOrage = thunderProbs[thunderCode];
-                        var thunderLabel = thunderLabels[thunderCode];
+                        // 3. Niveau Qualitatif de Grêle (sans diamètre cm)
+                        var hailLevel = getHailLevelQualitative(ipg);
 
-                        // Foudre : 0 si aucune précipitation ni écho radar actif
-                        var foudreScore = 0;
-                        if (isTriggered) {
-                            foudreScore = Math.min(100, Math.max(0, Math.round((cape / 35.0) + Math.max(0, refl - 25.0) * 1.6 + Math.min(20, rain1h * 2.0))));
-                        }
+                        // 4. Proxy LCL 2m (même borne 0-5000 m que le pipeline Python)
+                        var lcl_proxy = Math.min(5000, Math.max(0, Math.round(125.0 * (t2m - dew))));
 
-                        // 2. Grêle & Diamètre MESH
-                        var probGrele = 0;
-                        var diamGrele = 0;
-                        var levelGrele = 0;
-                        if (refl >= 40) {
-                            var capeF = Math.min(2.5, Math.sqrt(Math.max(100, cape) / 1000.0));
-                            var reflF = (refl - 38.0) / 22.0;
-                            probGrele = Math.min(100, Math.max(0, Math.round(reflF * capeF * 75.0 + tgrp * 10.0)));
-                            diamGrele = parseFloat((2.54 * Math.pow(Math.max(0, refl - 42) / 18.0, 1.3) * Math.sqrt(Math.max(200, cape) / 1200.0)).toFixed(1));
-                            if (tgrp > 0 && diamGrele < 0.5) diamGrele = 0.5;
-
-                            if (probGrele < 15) levelGrele = 0;
-                            else if (probGrele < 45 || diamGrele < 1.0) levelGrele = 1;
-                            else if (probGrele < 70 || diamGrele < 3.0) levelGrele = 2;
-                            else if (probGrele < 85 || diamGrele < 5.0) levelGrele = 3;
-                            else levelGrele = 4;
-                        }
-
-                        // 3. Tornades (STP)
-                        var lcl_m = Math.min(3000, Math.max(50, 125.0 * Math.max(0, t2m - d2m)));
-                        var lcl_f = Math.min(1.5, Math.max(0, (2000.0 - lcl_m) / 1000.0));
-                        var cape_f = Math.min(4.0, cape / 1500.0);
-                        var shear_f = Math.min(2.0, shear / 20.0);
-                        var srh_f = Math.min(3.0, (shear * Math.sqrt(Math.max(10, cape)) * 0.12) / 100.0);
-                        var stp = (cape >= 200 && refl >= 38) ? parseFloat((cape_f * lcl_f * srh_f * shear_f).toFixed(1)) : 0.0;
-                        var probTor = (stp > 0.3) ? Math.min(100, Math.round(stp * 22.0)) : 0;
+                        // 5. Calcul Officiel IPT (Indice de Potentiel Tornadique /100)
+                        var ipt = calculateIPT(cape, refl, lcl_proxy, shearKmh);
 
                         hoursData.push({
-                            step: lh,
-                            date: vt,
-                            probOrage: probOrage,
-                            rain1h: rain1h.toFixed(1),
-                            foudre: foudreScore,
-                            prob: probGrele,
-                            diam: diamGrele,
-                            level: levelGrele,
-                            stp: stp,
-                            probTor: probTor,
+                            step: step,
+                            date: stepDate,
+                            ipo: ipo,
+                            ipg: ipg,
+                            ipt: ipt,
+                            hailLevel: hailLevel,
                             refl: Math.round(refl),
                             cape: Math.round(cape),
-                            tgrp: tgrp.toFixed(1),
-                            t2m: t2m.toFixed(1),
-                            gust: Math.round(gust)
+                            tgrp: Math.round(tgrp * 10) / 10,
+                            rain1h: rain1h.toFixed(1),
+                            t2m: Math.round(t2m * 10) / 10,
+                            dew: Math.round(dew * 10) / 10,
+                            gust: Math.round(gust),
+                            shear: Math.round(shearKmh),
+                            lcl: lcl_proxy,
+                            debug: {
+                                cterm: ipoObj.cterm,
+                                zterm: ipoObj.zterm,
+                                gterm: ipoObj.gterm,
+                                rterm: ipoObj.rterm,
+                                bonus: ipoObj.bonus,
+                                cgrele: ipgObj.cgrele,
+                                zgrele: ipgObj.zgrele,
+                                ggrele: ipgObj.ggrele
+                            }
                         });
                     }
 
                     displayResults(hoursData);
+                    updateCityPin(target.nom, target.lat, target.lon);
                 })
                 .catch(function (err) {
-                    console.warn('Fallback : ' + err.message);
-                    console.warn("Erreur chargement:", err.message);
+                    console.error('Erreur chargement commune:', err);
+                    if (elDesc) elDesc.textContent = 'Données du département indisponibles momentanément.';
                 });
         }
 
-        function displayResults(data) {
-            // Calcul des Maximums
-            var maxGrele = data.reduce(function (p, c) { return (c.prob > p.prob) ? c : p; }, data[0]);
-            var maxOrage = data.reduce(function (p, c) { return (c.probOrage > p.probOrage) ? c : p; }, data[0]);
-            var maxTor = data.reduce(function (p, c) { return (c.stp > p.stp) ? c : p; }, data[0]);
+        // ── AUTO-COMPLÉTION COMMUNES VIA API GOUV ──
+        var debounceTimer = null;
+        var currentResultsList = [];
 
-            var levelLabels = [
-                'Risque Nul',
-                'Risque Faible (Grésil < 1 cm)',
-                'Risque Modéré (1 à 3 cm)',
-                'Grêle Destructrice (3 à 5 cm)',
-                'Grêlons Géants (> 5 cm)'
-            ];
-            var levelColors = ['var(--risk-0)', 'var(--risk-1)', 'var(--risk-2)', 'var(--risk-3)', 'var(--risk-4)'];
-
-            // 1. Synthèse Grêle
-            document.getElementById('sum-indicator').textContent = maxGrele.level;
-            document.getElementById('sum-indicator').style.background = levelColors[maxGrele.level];
-            document.getElementById('sum-level').textContent = levelLabels[maxGrele.level];
-            document.getElementById('sum-level').style.color = levelColors[maxGrele.level];
-            document.getElementById('sum-diam').textContent = maxGrele.diam > 0 ? 'Diamètre Max : ~' + maxGrele.diam + ' cm' : 'Aucun grêlon significatif';
-
-            // 2. Synthèse Orage
-            var orageLvlText = maxOrage.probOrage >= 75 ? 'Violent' : (maxOrage.probOrage >= 50 ? 'Fort' : (maxOrage.probOrage >= 25 ? 'Modéré' : (maxOrage.probOrage > 0 ? 'Faible' : 'Calme')));
-            var orageColor = maxOrage.probOrage >= 75 ? 'var(--risk-3)' : (maxOrage.probOrage >= 50 ? 'var(--risk-2)' : (maxOrage.probOrage > 0 ? 'var(--risk-1)' : 'var(--risk-0)'));
-            var orageEl = document.getElementById('sum-orage-lvl');
-            if (orageEl) {
-                orageEl.textContent = orageLvlText + ' (' + maxOrage.probOrage + ' %)';
-                orageEl.style.color = orageColor;
-                document.getElementById('sum-orage-ind').style.background = orageColor;
-                document.getElementById('sum-foudre').textContent = 'Indice Foudre : ' + maxOrage.foudre + ' /100';
+        function doSearch(q) {
+            clearTimeout(debounceTimer);
+            if (!q || q.length < 2) {
+                if (searchResults) searchResults.style.display = 'none';
+                return;
             }
-
-            // 3. Synthèse Tornade
-            var torLvlText = maxTor.stp >= 4.0 ? 'Extrême' : (maxTor.stp >= 2.5 ? 'Sévère' : (maxTor.stp >= 1.0 ? 'Modéré' : (maxTor.stp >= 0.5 ? 'Faible' : 'Nul')));
-            var torColor = maxTor.stp >= 2.5 ? 'var(--risk-3)' : (maxTor.stp >= 1.0 ? 'var(--risk-2)' : (maxTor.stp >= 0.5 ? 'var(--risk-1)' : 'var(--risk-0)'));
-            var torEl = document.getElementById('sum-tor-lvl');
-            if (torEl) {
-                torEl.textContent = torLvlText;
-                torEl.style.color = torColor;
-                document.getElementById('sum-tor-ind').style.background = torColor;
-                document.getElementById('sum-stp').textContent = 'Indice STP Max : ' + maxTor.stp;
-            }
-
-            if (maxGrele.level >= 2 || maxOrage.probOrage >= 60 || maxTor.stp >= 1.0) {
-                var dStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(maxGrele.date);
-                document.getElementById('sum-desc').innerHTML = '<strong style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> ALERTE MÉTÉO SÉVÈRE :</strong> Risque orageux maximal attendu le <strong>' + dStr + '</strong>.';
-            } else {
-                document.getElementById('sum-desc').innerHTML = '<strong style="color:#10b981;"><i class="fa-solid fa-circle-check"></i> Situation Calme :</strong> Aucun orage sévère, chute de grêle ni risque tornadique prévus sur 51 heures.';
-            }
-
-            // 4. Remplissage Tableau
-            var rowsHtml = data.map(function (d) {
-                var timeStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: '2-digit', hour: '2-digit' }).format(d.date);
-                var badgeClass = 'badge-risk-' + d.level;
-                var badgeText = d.level === 0 ? '🟢 Nul' : (d.level === 1 ? '🟡 Faible' : (d.level === 2 ? '🟠 Modéré' : (d.level === 3 ? '🔴 Sévère' : '🟣 Géant')));
-
-                var torBadge = d.stp >= 2.5 ? '<span style="color:#ef4444;font-weight:800;">🌪️ ' + d.stp + '</span>' : (d.stp >= 1.0 ? '<span style="color:#fb923c;font-weight:800;">' + d.stp + '</span>' : (d.stp > 0 ? '<span style="color:#facc15;">' + d.stp + '</span>' : '<span style="color:#64748b;">0.0</span>'));
-
-                var rainBadge = parseFloat(d.rain1h) >= 10.0
-                    ? '<strong style="color:#ef4444;font-weight:900;">🌧️ ' + d.rain1h + ' mm</strong>'
-                    : (parseFloat(d.rain1h) > 0.0
-                        ? '<span style="color:#38bdf8;font-weight:700;">💧 ' + d.rain1h + ' mm</span>'
-                        : '<span style="color:#64748b;">0.0 mm</span>');
-
-                return '<tr>' +
-                       '<td><span style="color:var(--text-muted);font-weight:700;">H+' + String(d.step).padStart(2, '0') + '</span></td>' +
-                       '<td><strong>' + timeStr + '</strong></td>' +
-                       '<td>' + (d.probOrage > 0 ? '<strong style="color:#facc15;">⚡ ' + d.probOrage + ' %</strong>' : '<span style="color:#64748b;">0 %</span>') + '</td>' +
-                       '<td>' + rainBadge + '</td>' +
-                       '<td>' + (d.foudre > 0 ? '<span style="color:#38bdf8;font-weight:800;">' + d.foudre + '</span>' : '<span style="color:#64748b;">0</span>') + '</td>' +
-                       '<td><span class="badge-risk ' + badgeClass + '">' + badgeText + '</span></td>' +
-                       '<td>' + (d.diam > 0 ? '<strong style="color:var(--accent);">' + d.diam + ' cm</strong>' : '<span style="color:#64748b;">—</span>') + '</td>' +
-                       '<td>' + torBadge + '</td>' +
-                       '<td>' + (d.refl >= 45 ? '<span style="color:#f87171;font-weight:800;">' + d.refl + ' dBZ</span>' : d.refl + ' dBZ') + '</td>' +
-                       '<td>' + (d.cape >= 1000 ? '<span style="color:#fb923c;font-weight:800;">' + d.cape + ' J/kg</span>' : d.cape + ' J/kg') + '</td>' +
-                       '<td>' + (d.tgrp > 0 ? '<span style="color:#38bdf8;font-weight:800;">' + d.tgrp + ' mm</span>' : '0 mm') + '</td>' +
-                       '<td>' + d.t2m + ' °C</td>' +
-                       '<td>' + (d.gust >= 80 ? '<span style="color:#ef4444;font-weight:800;">' + d.gust + ' km/h</span>' : d.gust + ' km/h') + '</td>' +
-                       '</tr>';
-            }).join('');
-
-            hailTbody.innerHTML = rowsHtml;
-
-            // 3. Graphique Chart.js
-            var labels = data.map(function (d) {
-                return '+' + d.step + 'h (' + d.date.getHours() + 'h)';
-            });
-            var probData = data.map(function (d) { return d.prob; });
-            var reflData = data.map(function (d) { return d.refl; });
-
-            if (hailChart) hailChart.destroy();
-
-            try {
-                var ctx = document.getElementById('hail-chart').getContext('2d');
-                hailChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Risque Grêle (%)',
-                            data: probData,
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                            fill: true,
-                            tension: 0.35,
-                            borderWidth: 2.5,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Réflectivité Radar (dBZ)',
-                            data: reflData,
-                            borderColor: '#00d2ff',
-                            borderDash: [4, 4],
-                            tension: 0.3,
-                            borderWidth: 1.5,
-                            pointRadius: 0,
-                            yAxisID: 'y1'
+            debounceTimer = setTimeout(function () {
+                var url = 'https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(q) + '&fields=nom,code,codesPostaux,codeDepartement,centre&boost=population&limit=7';
+                if (/^\d+$/.test(q)) {
+                    url = 'https://geo.api.gouv.fr/communes?codePostal=' + encodeURIComponent(q) + '&fields=nom,code,codesPostaux,codeDepartement,centre&limit=7';
+                }
+                fetch(url)
+                    .then(function (r) { return r.json(); })
+                    .then(function (res) {
+                        currentResultsList = res;
+                        if (!res || !res.length) {
+                            if (searchResults) searchResults.style.display = 'none';
+                            return;
                         }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    scales: {
-                        x: {
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#94a3b8', maxTicksLimit: 14 }
-                        },
-                        y: {
-                            min: 0,
-                            max: 100,
-                            title: { display: true, text: 'Probabilité (%)', color: '#ef4444' },
-                            grid: { color: 'rgba(255,255,255,0.08)' },
-                            ticks: { color: '#ef4444' }
-                        },
-                        y1: {
-                            min: 0,
-                            max: 75,
-                            position: 'right',
-                            title: { display: true, text: 'Radar (dBZ)', color: '#00d2ff' },
-                            grid: { drawOnChartArea: false },
-                            ticks: { color: '#00d2ff' }
+                        var html = res.map(function (c, idx) {
+                            var zip = (c.codesPostaux && c.codesPostaux[0]) || '';
+                            return '<div class="search-item" data-idx="' + idx + '">' +
+                                   '<strong>' + c.nom + '</strong> <span style="color:#64748b;">(' + zip + ' - Dép ' + c.codeDepartement + ')</span>' +
+                                   '</div>';
+                        }).join('');
+                        if (searchResults) {
+                            searchResults.innerHTML = html;
+                            searchResults.style.display = 'block';
                         }
-                    },
-                    plugins: {
-                        legend: { labels: { color: '#f1f5f9', font: { weight: 700 } } }
-                    }
+                    })
+                    .catch(function () {
+                        if (searchResults) searchResults.style.display = 'none';
+                    });
+            }, 250);
+        }
+
+        function selectCity(c) {
+            var zip = (c.codesPostaux && c.codesPostaux[0]) || '';
+            if (searchInput) searchInput.value = c.nom + (zip ? ' (' + zip + ')' : '');
+            if (searchResults) searchResults.style.display = 'none';
+            var lat = (c.centre && c.centre.coordinates) ? c.centre.coordinates[1] : 48.85;
+            var lon = (c.centre && c.centre.coordinates) ? c.centre.coordinates[0] : 2.35;
+            loadHailForecast(c.nom, zip, c.codeDepartement, lat, lon);
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () { doSearch(this.value.trim()); });
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && currentResultsList.length > 0) {
+                    selectCity(currentResultsList[0]);
                 }
             });
-            } catch (chartErr) {
-                console.warn('Chart render fallback:', chartErr);
+        }
+
+        if (searchResults) {
+            searchResults.addEventListener('click', function (e) {
+                var item = e.target.closest('.search-item');
+                if (item) {
+                    var idx = parseInt(item.getAttribute('data-idx'), 10);
+                    if (currentResultsList[idx]) selectCity(currentResultsList[idx]);
+                }
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            if (searchResults && !e.target.closest('.search-box')) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // ── MODULE CARTES CONVECTIVES 2D ──
+        function updateConvectiveLegend() {
+            if (!legendBoxesEl) return;
+            var items = LAYER_LEGENDS[activeConvectiveLayer] || LAYER_LEGENDS.ipo;
+            var html = '';
+            for (var i = 0; i < items.length; i++) {
+                var it = items[i];
+                var sw = (it.color === 'transparent')
+                    ? 'background:rgba(255,255,255,0.06); border:1px dashed #64748b;'
+                    : 'background:' + it.color + ';';
+                html += '<div class="legend-box"><span class="legend-box-color" style="' + sw + '"></span> ' + it.text + '</div>';
+            }
+            legendBoxesEl.innerHTML = html;
+        }
+
+        function updateConvectiveMap() {
+            if (!imgLayerEl) return;
+            if (infoTitleEl) {
+                infoTitleEl.textContent = LAYER_TITLES[activeConvectiveLayer] || 'Carte Convective AROME';
+            }
+
+            if (activeConvectivePeriod === 'hourly') {
+                var leadStr = String(currentConvectiveLead).padStart(3, '0');
+                imgLayerEl.src = 'output/arome/maps/' + activeConvectiveLayer + '/' + leadStr + '.webp?v=' + Date.now();
+                if (sliderLabelEl) {
+                    sliderLabelEl.textContent = 'H+' + String(currentConvectiveLead).padStart(2, '0');
+                }
+                if (sliderEl) {
+                    sliderEl.value = currentConvectiveLead;
+                }
+                if (infoTimeEl) {
+                    var now = new Date();
+                    var stepDate = new Date(now.getTime() + currentConvectiveLead * 3600 * 1000);
+                    var dateStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(stepDate).replace(':', 'h00');
+                    infoTimeEl.textContent = 'Échéance H+' + String(currentConvectiveLead).padStart(2, '0') + ' • ' + dateStr + ' • AROME HD 2,5 km';
+                }
+            } else {
+                var dayStr = activeConvectivePeriod;
+                var dayName = dayStr === 'j0' ? "Aujourd'hui (Jour J)" : "Demain (Jour J+1)";
+                imgLayerEl.src = 'output/arome/maps/' + activeConvectiveLayer + '_24h_' + dayStr + '.webp?v=' + Date.now();
+                if (infoTimeEl) {
+                    infoTimeEl.textContent = 'Synthèse 24h Max : ' + dayName + ' • AROME HD 2,5 km';
+                }
+            }
+            updateConvectiveLegend();
+        }
+
+        function startConvectivePlay() {
+            isConvectivePlaying = true;
+            if (playBtnEl) playBtnEl.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            convectivePlayTimer = setInterval(function () {
+                currentConvectiveLead = (currentConvectiveLead + 1) % 52;
+                if (sliderEl) sliderEl.value = currentConvectiveLead;
+                updateConvectiveMap();
+            }, 600);
+        }
+
+        function stopConvectivePlay() {
+            isConvectivePlaying = false;
+            if (playBtnEl) playBtnEl.innerHTML = '<i class="fa-solid fa-play"></i>';
+            if (convectivePlayTimer) {
+                clearInterval(convectivePlayTimer);
+                convectivePlayTimer = null;
             }
         }
 
-        // Chargement automatique au démarrage (Lille / 59000 par défaut)
+        // ── EXPORT & TÉLÉCHARGEMENT HD DESIGN TV (IMAGE 2) ──
+        var imgOfficialLogo = new Image();
+        imgOfficialLogo.src = 'logo.png';
+
+        function downloadConvectiveHD() {
+            var btn = document.getElementById('btn-download-hd');
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Génération HD...';
+
+            var outW = 2200;
+            var outH = 1640;
+            var canvas = document.createElement('canvas');
+            canvas.width = outW;
+            canvas.height = outH;
+            var ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#0b1220';
+            ctx.fillRect(0, 0, outW, outH);
+
+            var fondEl = document.querySelector('.map-img-bg');
+            var frontEl = document.querySelector('.map-img-borders');
+            var layerEl = document.getElementById('convective-map-layer');
+
+            var regionSelect = document.getElementById('map-region-select');
+            var regKey = regionSelect ? regionSelect.value : 'france';
+            var cfg = REGION_CONFIG[regKey] || { reset: true };
+
+            ctx.save();
+            if (!cfg.reset && cfg.scale > 1.0) {
+                var proj = projectCoordsMercator(cfg.latitude, cfg.longitude);
+                var scale = cfg.scale;
+                var offX = outW / 2 - proj.u * outW * scale;
+                var offY = outH / 2 - proj.v * outH * scale + (outH * 0.04);
+                ctx.translate(offX, offY);
+                ctx.scale(scale, scale);
+            }
+
+            if (fondEl && fondEl.complete) {
+                try { ctx.drawImage(fondEl, 0, 0, outW, outH); } catch (e) {}
+            }
+            if (layerEl && layerEl.complete) {
+                try { ctx.drawImage(layerEl, 0, 0, outW, outH); } catch (e) {}
+            }
+            if (frontEl && frontEl.complete) {
+                try { ctx.drawImage(frontEl, 0, 0, outW, outH); } catch (e) {}
+            }
+
+            // NB : le marqueur de ville recherchée n'est PAS dessiné sur la
+            // carte téléchargée (France comme région) — uniquement à l'écran.
+
+            ctx.restore(); // Fin zoom
+
+            // 1. Cartouche TV
+            var paramTitle = LAYER_TITLES[activeConvectiveLayer] || 'Carte Convective AROME';
+            var modelAndRun = 'AROME France 0,025° • Modèle Météo-France';
+            var now = new Date();
+            var stepDate = new Date(now.getTime() + currentConvectiveLead * 3600 * 1000);
+            var dateStr = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(stepDate).replace(':', 'h00');
+            var dateText = activeConvectivePeriod === 'hourly'
+                ? (dateStr + ' (H+' + String(currentConvectiveLead).padStart(2, '0') + ')')
+                : ('Synthèse 24h Max (' + (activeConvectivePeriod === 'j0' ? "Jour J" : "Jour J+1") + ')');
+
+            ctx.font = '700 36px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var w1 = ctx.measureText(paramTitle).width;
+            ctx.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var w2 = ctx.measureText(modelAndRun).width;
+            ctx.font = '800 32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            var w3 = ctx.measureText(dateText).width;
+            var cartW = Math.max(w1, w2, w3) + 52;
+            var cartH = 175;
+            var cartX = 24;
+            var cartY = 24;
+
+            ctx.fillStyle = 'rgba(7, 11, 20, 0.95)';
+            ctx.beginPath();
+            if (typeof ctx.roundRect === 'function') {
+                ctx.roundRect(cartX, cartY, cartW, cartH, 16);
+            } else {
+                ctx.rect(cartX, cartY, cartW, cartH);
+            }
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0, 210, 255, 0.85)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '700 36px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillText(paramTitle, cartX + 24, cartY + 48);
+
+            ctx.fillStyle = '#00d2ff';
+            ctx.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            ctx.fillText(modelAndRun, cartX + 24, cartY + 90);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            ctx.fillText(dateText, cartX + 24, cartY + 142);
+
+            // 2. Logo Météo-Climat Pro
+            var margin = 28;
+            if (imgOfficialLogo && imgOfficialLogo.complete && imgOfficialLogo.naturalWidth) {
+                var logoW = 380;
+                var logoH = Math.round(logoW * imgOfficialLogo.naturalHeight / imgOfficialLogo.naturalWidth);
+                var lx = outW - margin - logoW;
+                var ly = 24;
+                ctx.save();
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+                ctx.shadowBlur = 12;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+                ctx.drawImage(imgOfficialLogo, lx, ly, logoW, logoH);
+                ctx.restore();
+            }
+
+            // 3. Barre de légende en bas
+            var legendW = 1100;
+            var legendH = 96;
+            var legendX = (outW - legendW) / 2;
+            var legendY = outH - legendH - 24;
+
+            ctx.fillStyle = 'rgba(7, 11, 20, 0.95)';
+            ctx.beginPath();
+            if (typeof ctx.roundRect === 'function') {
+                ctx.roundRect(legendX - 22, legendY - 10, legendW + 44, legendH + 24, 18);
+            } else {
+                ctx.rect(legendX - 22, legendY - 10, legendW + 44, legendH + 24);
+            }
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0, 210, 255, 0.75)';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(paramTitle, legendX + legendW / 2, legendY + 22);
+
+            var legItems = LAYER_LEGENDS[activeConvectiveLayer] || LAYER_LEGENDS.ipo;
+
+            var segW = legendW / legItems.length;
+            for (var i = 0; i < legItems.length; i++) {
+                var bx = legendX + i * segW + 6;
+                var by = legendY + 36;
+                var bw = segW - 12;
+
+                if (legItems[i].color === 'transparent') {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+                    ctx.fillRect(bx, by, bw, 20);
+                    ctx.strokeStyle = '#94a3b8';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeRect(bx, by, bw, 20);
+                    ctx.setLineDash([]);
+                } else {
+                    ctx.fillStyle = legItems[i].color;
+                    ctx.fillRect(bx, by, bw, 20);
+                }
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(legItems[i].text, bx + bw / 2, by + 40);
+            }
+
+            try {
+                var dataUrl = canvas.toDataURL('image/png');
+                var a = document.createElement('a');
+                a.href = dataUrl;
+                var slug = activeConvectiveLayer + '_' + (activeConvectivePeriod === 'hourly' ? 'H' + currentConvectiveLead : activeConvectivePeriod);
+                if (regKey !== 'france') slug += '_' + regKey;
+                a.download = 'MeteoClimatPro_AROME_HD_' + slug + '_' + Date.now() + '.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (err) {
+                console.error('Export dataURL fallback blob:', err);
+                canvas.toBlob(function (blob) {
+                    if (blob) {
+                        var a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        var slug = activeConvectiveLayer + '_' + (activeConvectivePeriod === 'hourly' ? 'H' + currentConvectiveLead : activeConvectivePeriod);
+                        if (regKey !== 'france') slug += '_' + regKey;
+                        a.download = 'MeteoClimatPro_AROME_HD_' + slug + '_' + Date.now() + '.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+                }, 'image/png');
+            }
+
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-download"></i> Télécharger Carte HD (PNG)';
+        }
+
+        // ── RACCORDEMENT ÉCOUTEURS D'ÉVÉNEMENTS ──
+        var btnDownloadHD = document.getElementById('btn-download-hd');
+        if (btnDownloadHD) {
+            btnDownloadHD.addEventListener('click', downloadConvectiveHD);
+        }
+
+        document.querySelectorAll('.map-tab-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.map-tab-btn').forEach(function (b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                activeConvectiveLayer = this.getAttribute('data-layer') || 'ipo';
+                updateConvectiveMap();
+            });
+        });
+
+        document.querySelectorAll('.period-pill').forEach(function (pill) {
+            pill.addEventListener('click', function () {
+                if (this.disabled) return; // J0/J1 désactivés (synthèses non régénérées)
+                document.querySelectorAll('.period-pill').forEach(function (p) { p.classList.remove('active'); });
+                this.classList.add('active');
+                activeConvectivePeriod = this.getAttribute('data-period') || 'hourly';
+                if (activeConvectivePeriod === 'hourly') {
+                    if (controlsBarEl) controlsBarEl.style.display = 'flex';
+                } else {
+                    stopConvectivePlay();
+                    if (controlsBarEl) controlsBarEl.style.display = 'none';
+                }
+                updateConvectiveMap();
+            });
+        });
+
+        if (sliderEl) {
+            sliderEl.addEventListener('input', function () {
+                currentConvectiveLead = parseInt(this.value, 10) || 0;
+                updateConvectiveMap();
+            });
+        }
+
+        if (playBtnEl) {
+            playBtnEl.addEventListener('click', function () {
+                if (isConvectivePlaying) {
+                    stopConvectivePlay();
+                } else {
+                    startConvectivePlay();
+                }
+            });
+        }
+
+        var regionSelectEl = document.getElementById('map-region-select');
+        if (regionSelectEl) {
+            regionSelectEl.addEventListener('change', function () {
+                var regKey = this.value;
+                applyRegionZoom(regKey);
+            });
+        }
+
+        // ── CHARGEMENT INITIAL ──
+        updateConvectiveMap();
+
         var defaultNom = 'Lille';
         var defaultZip = '59000';
         var defaultDep = '59';
-        var defaultLat = 50.633;
-        var defaultLon = 3.058;
-        
-        searchInput.value = defaultNom + ' (' + defaultZip + ')';
+        var defaultLat = 50.63;
+        var defaultLon = 3.06;
+
+        if (searchInput) {
+            searchInput.value = defaultNom + ' (' + defaultZip + ')';
+        }
         loadHailForecast(defaultNom, defaultZip, defaultDep, defaultLat, defaultLon);
 
     })();
-    </script>
+
+</script>
+
+    <!-- Modal Diagnostic Convectif Détaillé AROME -->
+    <div id="convective-detail-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:99999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#0f172a; border:1.5px solid #00d2ff; border-radius:18px; max-width:620px; width:100%; padding:24px; box-shadow:0 20px 50px rgba(0,0,0,0.9); color:#fff; position:relative; max-height:90vh; overflow-y:auto;">
+            <button type="button" onclick="closeDetailModal()" style="position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.1); border:none; color:#fff; font-size:18px; width:36px; height:36px; border-radius:50%; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            <div id="modal-content-body">
+                <!-- Rempli dynamiquement -->
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

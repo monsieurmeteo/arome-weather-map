@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PROGRAMME NEUF v2 — Tuiles AROME HD + Prévisions par commune
+PROGRAMME NEUF v3 — Tuiles AROME HD + Prévisions par commune
 ==============================================================
-  Données   : paquets GRIB2 AROME 0,01° (open data Météo-France, data.gouv.fr)
+  Données   : paquets GRIB2 AROME 0,025° (open data Météo-France, data.gouv.fr),
+              SP1+SP2 par chunks de 7 h (00H06H … 49H51H), échéances horaires 0→51 h
   Décodage  : eccodes (contrôle total des champs)
   Projection: Mercator (2200×1640) — France non étirée
   Couleurs  : palettes météociel (vives)
@@ -11,14 +12,20 @@ PROGRAMME NEUF v2 — Tuiles AROME HD + Prévisions par commune
               de chaque commune (34 746) + fichiers binaires int16/zlib
               par département (beaucoup plus léger que le JSON de référence)
 
+v3 (bascule 0,025°) :
+  - Les paquets 0,01° ne publient plus les champs convectifs (réflectivité,
+    graupel, pluie, nuages, rafales) → passage au produit 0,025° complet.
+  - Réflectivité simulée recalculée par Marshall-Palmer (Z=200·R^1,6) à
+    partir de la pluie horaire (champ direct 16.193 plus publié).
+  - Cisaillement 10→100 m estimé depuis les rafales (proxy, vent 100 m
+    plus publié).
+
 Corrections apportées vs v1 :
   - tirf/tsnowp/tgrp sont des CUMULS depuis le début du run
     → valeurs horaires = cumul(H+n) − cumul(H+n−1)
-  - Réflectivité DIRECTE du modèle (champ 16.193) au lieu de Marshall-Palmer
-  - Altitude réelle (SP3 H+0, shortName 'h') → pression MSL correcte
+  - Altitude réelle (SP2 H+0, shortName 'h') → pression MSL correcte
   - Neige au sol = cumul de neige fraîche (si10 n'existe pas dans les paquets)
-  - Vent à 20/50/100 m + humidité multi-niveaux (HP1) → cisaillement vertical
-    → type d'orage affiné (cellules / multicellulaires / lignes / supercellulaires)
+  - Cisaillement vertical estimé depuis les rafales → type d'orage affiné
 """
 
 import os
@@ -37,23 +44,116 @@ from PIL import Image
 
 warnings.filterwarnings("ignore")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # racine du dépôt (HARNESS)
+# Répertoire de sortie : par défaut l'output consommé par l'interface locale
+# (local_test_grele/output) — surchargeable via la variable AROME_OUT_DIR.
+OUT_BASE = os.environ.get("AROME_OUT_DIR",
+                          os.path.join(BASE_DIR, "local_test_grele", "output"))
 sys.path.insert(0, os.path.join(BASE_DIR, "pipeline"))
-from fetch_and_render_all import (  # noqa: E402
-    PALETTES, BOUNDS, WIDTH, HEIGHT, regrid, apply_palette,
+from arome_render import (  # noqa: E402
+    PALETTES, BOUNDS, WIDTH, HEIGHT, regrid, apply_palette, DISCRETE_LAYERS,
 )
 
 # ── Constantes ──────────────────────────────────────────────────────────────
-GRIB_BASE = ("https://meteofrance-pnt.s3.rbx.io.cloud.ovh.net/pnt/{run}/arome/001/"
-             "{pkg}/arome__001__{pkg}__{lead:02d}H__{run}.grib2")
-GRIB_PKGS = ["HP1", "SP1", "SP2", "SP3"]
+# Source : AROME 0,025° open data (paquets SP1+SP2 par chunks de 7 h).
+# NB : la réflectivité directe du modèle n'est plus publiée en open data ;
+# elle est recalculée par Marshall-Palmer (Z=200·R^1,6) dans compute_fields.
+GRIB_BASE = ("https://meteofrance-pnt.s3.rbx.io.cloud.ovh.net/pnt/{run}/arome/0025/"
+             "{pkg}/arome__0025__{pkg}__{chunk}__{run}.grib2")
+GRIB_PKGS = ["SP1", "SP2"]
+# Chunks de 7 h couvrant 0→51 h (00H06H, 07H12H, …, 43H48H, 49H51H)
+CHUNKS = [(0, 6), (7, 12), (13, 18), (19, 24), (25, 30), (31, 36),
+          (37, 42), (43, 48), (49, 51)]
 DATASET_API = ("https://www.data.gouv.fr/api/1/datasets/"
-               "paquets-arome-resolution-0-01deg/")
+               "paquets-arome-resolution-0-025deg/")
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
-# Grille native AROME 0,01° (regular_ll, point 0 en haut à gauche)
-NI, NJ = 2801, 1791
-LAT0, LON0, STEP = 55.4, -12.0, 0.01
+# Grille native AROME 0,025° (regular_ll, point 0 en haut à gauche)
+NI, NJ = 1121, 717
+LAT0, LON0, STEP = 55.4, -12.0, 0.025
+
+
+def _chunk_name(start, end):
+    return "%02dH%02dH" % (start, end)
+
+
+def chunk_for_lead(lead):
+    for s, e in CHUNKS:
+        if s <= lead <= e:
+            return s, e
+    return None
+
+
+# ── Synthèses 24 h J0 / J+1 ─────────────────────────────────────────────────
+# Couches convectives synthétisées : max sur la journée locale (Paris).
+SYNTH_LAYER_FIELDS = {
+    "ipo": "ipo",
+    "ipg": "ipg",
+    "ipt": "ipt",
+    "instabilite": "instabilite",
+    "orages_simules": "orages_simules",
+    "rafales_convectives": "wind_gust_kmh",
+}
+
+try:
+    from zoneinfo import ZoneInfo
+    TZ_PARIS = ZoneInfo("Europe/Paris")
+except Exception:
+    TZ_PARIS = datetime.timezone(datetime.timedelta(hours=2))  # repli été
+
+
+def synth_window(run_dt, lead):
+    """Jour local (Paris) de la validité : 'j0' (jour du run), 'j1' (lendemain)
+    ou None (au-delà)."""
+    vt = run_dt + datetime.timedelta(hours=lead)
+    try:
+        local = vt.astimezone(TZ_PARIS)
+        run_local = run_dt.astimezone(TZ_PARIS)
+    except Exception:
+        local, run_local = vt, run_dt
+    delta = (local.date() - run_local.date()).days
+    if delta == 0:
+        return "j0"
+    if delta == 1:
+        return "j1"
+    return None
+
+
+def update_synth(synth, fields, run_dt, lead):
+    """Met à jour le maximum glissant des couches convectives pour la fenêtre
+    j0/j1 de l'échéance courante (grille native, régridée une seule fois à la
+    fin)."""
+    win = synth_window(run_dt, lead)
+    if win is None:
+        return
+    for layer, fname in SYNTH_LAYER_FIELDS.items():
+        arr = fields.get(fname)
+        if arr is None:
+            continue
+        a = np.asarray(arr, dtype=np.float32)
+        cur = synth[win].get(layer)
+        synth[win][layer] = a if cur is None else np.fmax(cur, a)
+
+
+def save_syntheses(synth, out_dir):
+    """Écrit maps/{layer}_24h_{j0|j1}.webp (max de la journée, bandes
+    discrètes pour les indices)."""
+    lats = LAT0 - np.arange(NJ) * STEP
+    lons = LON0 + np.arange(NI) * STEP
+    for win in ("j0", "j1"):
+        for layer, arr in synth[win].items():
+            try:
+                data = regrid(arr, lats, lons)
+            except Exception as e:
+                print("  [synth %s %s] regrid: %s" % (layer, win, e))
+                continue
+            rgba = apply_palette(data, PALETTES.get(layer, PALETTES["temperature"]),
+                                 discrete=(layer in DISCRETE_LAYERS))
+            dst = os.path.join(out_dir, "%s_24h_%s.webp" % (layer, win))
+            Image.fromarray(rgba, "RGBA").save(dst, format="WEBP",
+                                               quality=85, method=4)
+    print("  Synthèses 24h J0/J+1 écrites (max par couche)")
+
 
 def latest_run():
     """Trouve le run AROME le plus récent disponible et vérifie sa disponibilité S3."""
@@ -79,7 +179,8 @@ def latest_run():
 
     sorted_runs = sorted(runs, reverse=True)
     for run_cand in sorted_runs:
-        test_url = GRIB_BASE.format(run=run_cand, pkg="SP1", lead=0)
+        test_url = GRIB_BASE.format(run=run_cand, pkg="SP1",
+                                    chunk=_chunk_name(*CHUNKS[0]))
         try:
             resp = requests.head(test_url, headers=HEADERS, timeout=10)
             if resp.status_code == 200:
@@ -90,31 +191,27 @@ def latest_run():
 
 
 def available_leads(run_str, max_hours=51):
-    """Détecte toutes les échéances réelles (jusqu'à 51h) directement sur le bucket S3."""
-    leads = []
-    for h in range(0, max_hours + 1):
-        url = GRIB_BASE.format(run=run_str, pkg="SP1", lead=h)
-        try:
-            r = requests.head(url, headers=HEADERS, timeout=10)
-            if r.status_code == 200:
-                leads.append(h)
-        except Exception:
-            leads.append(h)
-    if not leads:
-        leads = list(range(0, min(52, max_hours + 1)))
-    return sorted(leads)
+    """Échéances 0→51 h si le premier chunk SP1 est disponible sur le bucket S3."""
+    url = GRIB_BASE.format(run=run_str, pkg="SP1", chunk=_chunk_name(*CHUNKS[0]))
+    try:
+        r = requests.head(url, headers=HEADERS, timeout=15)
+        if r.status_code != 200:
+            print("  WARNING: chunk %s indisponible pour %s" % (_chunk_name(*CHUNKS[0]), run_str))
+            return []
+    except Exception:
+        return []
+    return list(range(0, min(52, max_hours + 1)))
 
 
-def download_packages(run_str, lead, tmpdir, with_sp3=False):
-    """Télécharge les packages. SP3 (altitude) n'est pris qu'à H+0."""
+def download_chunk(run_str, start, end, tmpdir):
+    """Télécharge SP1+SP2 d'un chunk (7 échéances)."""
+    chunk = _chunk_name(start, end)
     paths = []
     for pkg in GRIB_PKGS:
-        if pkg == "SP3" and not with_sp3:
-            continue
-        url = GRIB_BASE.format(run=run_str, pkg=pkg, lead=lead)
-        dst = os.path.join(tmpdir, "%s_%02dH.grib2" % (pkg, lead))
+        url = GRIB_BASE.format(run=run_str, pkg=pkg, chunk=chunk)
+        dst = os.path.join(tmpdir, "%s_%s.grib2" % (pkg, chunk))
         try:
-            r = requests.get(url, headers=HEADERS, timeout=300)
+            r = requests.get(url, headers=HEADERS, timeout=600)
             if r.status_code == 200 and len(r.content) > 1000:
                 with open(dst, "wb") as f:
                     f.write(r.content)
@@ -124,16 +221,26 @@ def download_packages(run_str, lead, tmpdir, with_sp3=False):
     return paths
 
 
-def read_grib(path):
-    """Lit un fichier GRIB2 avec eccodes → dict {clé: array 2D (NJ, NI)}.
+def read_grib(path, run_str=None, lead=None):
+    """Lit un fichier GRIB2 (chunk 7 h) avec eccodes → dict {clé: array 2D (NJ, NI)}.
 
-    Clés produites selon le package :
-      SP1 : t2m, r2, u10, v10, efg10, nfg10
-      SP2 : cape, refl, tgrp, sp, lcc, mcc, hcc, tirf, tsnowp
-      HP1 : u20,u50,u100, v20,v50,v100, ws20,ws50,ws100, r10,r20,r50,r100
-      SP3 : h (altitude)
+    Seuls les messages dont la validité == run + lead heures sont conservés
+    (un chunk contient 7 échéances horaires).
+
+    Clés produites (paquets SP1/SP2 0,025°) :
+      SP1 : t2m, r2, u10, v10, efg10, nfg10, tgrp, tirf, tsnowp
+      SP2 : cape, sp, lcc, mcc, hcc, h (altitude)
+    NB : la réflectivité directe n'est plus publiée — proxy Marshall-Palmer
+    calculé dans compute_fields à partir de la pluie horaire.
     """
     from eccodes import codes_grib_new_from_file, codes_get, codes_get_array, codes_release
+    import datetime as _dt
+
+    expected = None
+    if run_str and lead is not None:
+        run_dt = _dt.datetime.fromisoformat(run_str.replace("Z", "+00:00"))
+        expected = run_dt + _dt.timedelta(hours=lead)
+
     out = {}
     with open(path, "rb") as f:
         while True:
@@ -141,6 +248,14 @@ def read_grib(path):
             if gid is None:
                 break
             try:
+                if expected is not None:
+                    vdate = int(codes_get(gid, "validityDate"))
+                    vtime = int(codes_get(gid, "validityTime"))
+                    vd = _dt.datetime(vdate // 10000, (vdate // 100) % 100,
+                                      vdate % 100, vtime // 100, vtime % 100,
+                                      tzinfo=_dt.timezone.utc)
+                    if vd != expected:
+                        continue
                 short = str(codes_get(gid, "shortName"))
                 disc = int(codes_get(gid, "discipline"))
                 cat = int(codes_get(gid, "parameterCategory"))
@@ -166,6 +281,10 @@ def read_grib(path):
                     out["cape"] = arr
                 elif short == "tgrp":
                     out["tgrp"] = arr
+                elif short == "tirf":
+                    out["tirf"] = arr
+                elif short == "tsnowp":
+                    out["tsnowp"] = arr
                 elif short == "sp":
                     out["sp"] = arr
                 elif short == "lcc":
@@ -174,35 +293,8 @@ def read_grib(path):
                     out["mcc"] = arr
                 elif short == "hcc":
                     out["hcc"] = arr
-                elif short == "tirf":
-                    out["tirf"] = arr
-                elif short == "tsnowp":
-                    out["tsnowp"] = arr
                 elif short == "h":
                     out["h"] = arr
-                elif short == "u" and level == 20:
-                    out["u20"] = arr
-                elif short == "u" and level == 50:
-                    out["u50"] = arr
-                elif short == "u" and level == 100:
-                    out["u100"] = arr
-                elif short == "v" and level == 20:
-                    out["v20"] = arr
-                elif short == "v" and level == 50:
-                    out["v50"] = arr
-                elif short == "v" and level == 100:
-                    out["v100"] = arr
-                elif short == "r" and level == 10:
-                    out["r10"] = arr
-                elif short == "r" and level == 20:
-                    out["r20"] = arr
-                elif short == "r" and level == 50:
-                    out["r50"] = arr
-                elif short == "r" and level == 100:
-                    out["r100"] = arr
-                # Réflectivité directe : discipline 0, cat 16, param 193
-                elif disc == 0 and cat == 16 and num == 193:
-                    out["refl"] = arr
             except Exception:
                 pass
             codes_release(gid)
@@ -245,7 +337,9 @@ def compute_fields(raw, altitude, previous, lead_hour):
     efg_u = get("efg10")
     efg_v = get("nfg10")
     cape = np.maximum(get("cape"), 0.0)
-    refl = np.clip(get("refl"), 0, 80)
+    # Réflectivité : calculée après la pluie horaire (proxy Marshall-Palmer),
+    # car le champ direct du modèle n'est plus publié en open data.
+    refl = np.full(shape, np.nan)
     sp = _clean_sp(raw.get("sp")) * (1.0 / 100.0)         # hPa
     lcc = np.clip(get("lcc"), 0, 100)
     mcc = np.clip(get("mcc"), 0, 100)
@@ -253,7 +347,7 @@ def compute_fields(raw, altitude, previous, lead_hour):
     tgrp_cum = get("tgrp")
     tirf_cum = get("tirf")
     tsnowp_cum = get("tsnowp")
-    # Altitude réelle : fournie par l'appelant (SP3 H+0, mis en cache)
+    # Altitude réelle : fournie par l'appelant (SP2 H+0, mis en cache)
     if altitude is not None and np.any(np.isfinite(altitude)):
         h_alt = np.asarray(altitude, dtype=np.float64)
     else:
@@ -292,6 +386,16 @@ def compute_fields(raw, altitude, previous, lead_hour):
     if prev_rain is None:
         rain[~np.isfinite(rain_total)] = np.nan
 
+    # ── Réflectivité simulée (proxy Marshall-Palmer) ─────────────────────
+    # Z = 200 · R^1,6 (R en mm/h, relation standard radar) → dBZ.
+    # Pas de pluie ⇒ NaN (transparent sur la carte « Orages Simulés »,
+    # et traité comme 0 dans les indices via nan_to_num).
+    rain_hr = np.maximum(np.nan_to_num(rain, nan=0.0), 0.0)
+    refl = np.where(rain_hr > 0.05,
+                    10.0 * np.log10(200.0 * np.power(rain_hr, 1.6)),
+                    np.nan)
+    refl = np.clip(refl, 0, 80)
+
     # ── Vent ─────────────────────────────────────────────────────────────
     ws10 = np.hypot(np.nan_to_num(u10, nan=0.0), np.nan_to_num(v10, nan=0.0)) * 3.6
     ws10[~np.isfinite(u10) | ~np.isfinite(v10)] = np.nan
@@ -301,17 +405,13 @@ def compute_fields(raw, altitude, previous, lead_hour):
                                       -np.nan_to_num(v10, nan=0.0))) % 360.0)
     wind_dir[~np.isfinite(u10) | ~np.isfinite(v10)] = np.nan
 
-    # Vent 20/50/100 m (bonus HP1) + cisaillement vertical
+    # Cisaillement vertical 10→100 m : proxy à partir des rafales
+    # (le vent 100 m n'est plus publié en open data) :
+    # shear ≈ (rafale − vent moyen) × 0,75 + 10, borné [5, 45] km/h.
     ws100 = np.full(shape, np.nan)
-    shear = np.full(shape, np.nan)
-    if "u100" in raw and "v100" in raw:
-        ws100 = np.hypot(np.nan_to_num(raw["u100"], nan=0.0),
-                         np.nan_to_num(raw["v100"], nan=0.0)) * 3.6
-        ws100[~np.isfinite(raw["u100"]) | ~np.isfinite(raw["v100"])] = np.nan
-        du = np.nan_to_num(raw["u100"], nan=0.0) - np.nan_to_num(u10, nan=0.0)
-        dv = np.nan_to_num(raw["v100"], nan=0.0) - np.nan_to_num(v10, nan=0.0)
-        shear = np.hypot(du, dv) * 3.6
-        shear[~np.isfinite(raw["u100"]) | ~np.isfinite(u10)] = np.nan
+    shear = np.clip((np.nan_to_num(gust, nan=0.0)
+                     - np.nan_to_num(ws10, nan=0.0)) * 0.75 + 10.0, 5.0, 45.0)
+    shear[~np.isfinite(gust) | ~np.isfinite(ws10)] = np.nan
 
     # ── Point de rosée / ressenti / humidex ──────────────────────────────
     rel = np.clip(r2 / 100.0, 0.01, 1.0)
@@ -421,6 +521,73 @@ def compute_fields(raw, altitude, previous, lead_hour):
     # ── LCL (formule de Lawrence) ────────────────────────────────────────
     lcl = np.clip(125.0 * (t2m - dew), 0, 5000)
 
+    # ── IPO / IPG (mêmes formules que JS calculateIPO/calculateIPG) ──────
+    # Interpolation piecewise CAPE (cterm)
+    _cape = np.nan_to_num(cape, nan=0.0)
+    _refl = np.nan_to_num(refl, nan=0.0)
+    _grpl = np.nan_to_num(graupel, nan=0.0)
+    _rain = np.nan_to_num(rain, nan=0.0)
+
+    xp = np.array([0, 100, 300, 500, 750, 1000, 1500, 2000], dtype=np.float64)
+    fp = np.array([0, 0.05, 0.25, 0.45, 0.65, 0.80, 0.95, 1.00], dtype=np.float64)
+    cterm = np.interp(_cape, xp, fp)
+    zterm = np.clip((_refl - 20.0) / 35.0, 0, 1)
+    gterm = np.clip(_grpl / 2.0, 0, 1)
+    rterm = np.clip((_rain - 0.2) / 14.8, 0, 1)
+    ipo_base = 100.0 * (0.35 * cterm + 0.40 * zterm + 0.15 * gterm + 0.10 * rterm)
+    # Bonus cohérence convective
+    bonus = (
+        np.where((_cape >= 500) & (_refl >= 35), 5.0, 0.0) +
+        np.where((_cape >= 750) & (_refl >= 40), 5.0, 0.0) +
+        np.where((_refl >= 40) & (_grpl >= 0.5), 5.0, 0.0) +
+        np.where((_cape >= 1000) & (_refl >= 45) & (_grpl > 0), 5.0, 0.0)
+    )
+    ipo_arr = np.clip(ipo_base + bonus, 0, 100)
+    # Verrou CAS1 (pas de convection simulée)
+    no_conv = (_refl < 20) & (_rain < 0.2) & (_grpl == 0)
+    caps = np.select(
+        [_cape < 300, _cape < 500, _cape < 750, _cape < 1000, _cape < 1500],
+        [5.0, 15.0, 25.0, 30.0, 35.0], default=40.0)
+    ipo_arr = np.where(no_conv, np.minimum(ipo_arr, caps), ipo_arr)
+    # Arrondi demi-entier IDENTIQUE au JS calculateIPO (Math.round = floor(x+0.5))
+    # → cohérence absolue carte (tuiles/probes) ↔ fiche commune
+    ipo_arr = np.floor(ipo_arr + 0.5)
+
+    # IPG
+    xp_g = np.array([0, 300, 500, 750, 1000, 1500, 2000, 2500], dtype=np.float64)
+    fp_g = np.array([0, 0.05, 0.20, 0.40, 0.60, 0.80, 0.95, 1.00], dtype=np.float64)
+    cgrele = np.interp(_cape, xp_g, fp_g)
+    # zgrele v2 : adapté à la réflectivité Marshall-Palmer (35 dBZ ≈ 3 mm/h
+    # → 55 dBZ ≈ 55 mm/h), au lieu du seuil 45-60 dBZ du champ direct.
+    zgrele = np.clip((_refl - 35.0) / 20.0, 0, 1)
+    ggrele = np.clip(_grpl / 2.0, 0, 1)
+    ipg_arr = np.clip(100.0 * (0.45 * zgrele + 0.30 * cgrele + 0.25 * ggrele), 0, 100)
+    # Verrous IPG v2 (adaptés réflectivité Marshall-Palmer)
+    ipg_arr = np.where(_refl < 30, np.minimum(ipg_arr, 15.0), ipg_arr)
+    ipg_arr = np.where((_refl < 35) & (_grpl == 0), np.minimum(ipg_arr, 10.0), ipg_arr)
+    ipg_arr = np.where((_cape < 300) & (_grpl == 0), np.minimum(ipg_arr, 10.0), ipg_arr)
+    ipg_arr = np.where(~((_refl >= 45) & (_cape >= 500)) & (_grpl < 0.5),
+                       np.minimum(ipg_arr, 69.0), ipg_arr)
+    # Arrondi demi-entier IDENTIQUE au JS calculateIPG (Math.round = floor(x+0.5))
+    ipg_arr = np.floor(ipg_arr + 0.5)
+
+    # IPT (Indice de Potentiel Tornadique 0-100) — formule identique au JS
+    # calculateIPT. Recalibrage v2 aligné sur la recherche (Thompson et al. 2004,
+    # STP SPC) : facteur LCL borné [0,1] (0 si LCL > 2000 m, 1 si LCL < 1000 m),
+    # terme réflectivité borné [0,1], diviseur 2,5 (max théorique ≈ 69/100,
+    # bande « Sévère » réservée aux environnements exceptionnels).
+    _shear = np.nan_to_num(shear, nan=0.0)
+    # shear_factor v2 : renormalisé pour le proxy rafales [5,45] km/h →
+    # facteur [0,25 ; 2,25] (au lieu de /50 pensé pour le vent 100 m réel).
+    shear_factor = np.clip(_shear / 20.0, 0.0, 2.5)
+    lcl_factor = np.clip((2000.0 - lcl) / 1000.0, 0.0, 1.0)
+    cape_factor = np.clip(_cape / 1500.0, 0.0, 2.0)
+    refl_factor = np.clip(_refl / 65.0, 0.0, 1.0)
+    raw_ipt = (100.0 * (0.35 * shear_factor + 0.30 * lcl_factor + 0.20 * cape_factor + 0.15 * refl_factor)) / 2.5
+    has_storm = (_refl >= 32.0) & (_cape >= 350.0)
+    # Arrondi demi-entier IDENTIQUE au JS calculateIPT (Math.round = floor(x+0.5))
+    ipt_arr = np.where(has_storm, np.floor(np.clip(raw_ipt, 0.0, 100.0) + 0.5), 0.0)
+
     # ── Sortie ───────────────────────────────────────────────────────────
     put("temperature_c", t2m)
     put("wind_chill_c", wind_chill)
@@ -461,6 +628,11 @@ def compute_fields(raw, altitude, previous, lead_hour):
     put("snow_phase_code", snow_phase)
     put("snow_stick_risk_code", snow_stick)
     put("altitude_m", h_alt)
+    put("ipo", ipo_arr)
+    put("ipg", ipg_arr)
+    put("instabilite", _cape)     # MUCAPE brut pour carte instabilite
+    put("orages_simules", _refl)  # Réflectivité brute pour carte orages
+    put("ipt", ipt_arr)           # Indice Potentiel Tornadique
 
     state = {
         "rain_total": rain_total,
@@ -593,11 +765,13 @@ def export_probe(field, out_path):
         f.write(bytes(header) + normalized.tobytes())
 
 
-def save_probes(out_dir, lead, fields, step_files, regridded):
+def save_probes(out_dir, lead, fields, step_files, regridded, tile_fields=None):
     """Écrit maps/values/{layer}/{lead}.hkv.gz pour chaque paramètre tuilé.
     step_files["probes"] = {layer: rel_path}."""
+    if tile_fields is None:
+        tile_fields = TILE_FIELDS
     probes = {}
-    for tile_name, fname in TILE_FIELDS.items():
+    for tile_name, fname in tile_fields.items():
         data = regridded.get(tile_name)
         if data is None:
             continue
@@ -722,7 +896,10 @@ def save_tile(name, arr, lat, lon, out_dir, lead, step_files, regridded):
             print("  [%s] regrid: %s" % (name, e))
             return
     data = regridded[name]
-    rgba = apply_palette(data, PALETTES.get(name, PALETTES["temperature"]))
+    # Bandes discrètes pour les indices qualitatifs (couleurs = légendes) ;
+    # dégradé continu pour les champs physiques.
+    rgba = apply_palette(data, PALETTES.get(name, PALETTES["temperature"]),
+                         discrete=(name in DISCRETE_LAYERS))
     ddir = os.path.join(out_dir, name)
     os.makedirs(ddir, exist_ok=True)
     dst = os.path.join(ddir, "%03d.webp" % lead)
@@ -756,145 +933,197 @@ TILE_FIELDS = {
     "pression_surface": "pressure_surface_hpa",
     "mucape": "cape_jkg",
     "reflectivite": "reflectivity_dbz",
+    "ipo": "ipo",
+    "ipg": "ipg",
+    "instabilite": "instabilite",
+    "orages_simules": "orages_simules",
+    "rafales_convectives": "wind_gust_kmh",
+    "ipt": "ipt",
 }
 
+# Mode « Module Grêle » (--convective-only) : uniquement les couches du module
+# convectif, rendues depuis le produit 0,025° (répertoires disjoints des cartes
+# de base 1,3 km produites par l'automatisation habituelle).
+CONVECTIVE_ONLY_LAYERS = ("ipo", "ipg", "ipt", "instabilite",
+                          "orages_simules", "rafales_convectives")
 
-def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
-                per_lead_values, altitude_cache, **kwargs):
-    """Télécharge, décode, calcule, rend les tuiles + échantillonne les communes."""
+
+def render_chunk(run_str, start, end, out_dir, steps, previous_state,
+                 communes, per_lead_values, altitude_cache, synth=None,
+                 run_dt=None, tile_fields=None, **kwargs):
+    """Télécharge SP1+SP2 d'un chunk (7 échéances), puis décode/calcule/rend
+    chaque échéance horaire (tuiles + échantillonnage communes + sondes)."""
+    if tile_fields is None:
+        tile_fields = TILE_FIELDS
     tmp = tempfile.mkdtemp(prefix="arome_grib_")
     try:
-        paths = download_packages(run_str, lead, tmp, with_sp3=(lead == 0))
-        if len(paths) < 3:
-            print("  H+%02d: packages insuffisants (%d)" % (lead, len(paths)))
+        paths = download_chunk(run_str, start, end, tmp)
+        if len(paths) < 2:
+            print("  Chunk %02dH-%02dH: paquets insuffisants (%d)"
+                  % (start, end, len(paths)))
             return False
 
-        raw = {}
-        for p in paths:
-            raw.update(read_grib(p))
-
-        if lead == 0:
-            if "h" in raw:
-                altitude_cache["h"] = _clean(raw["h"])
-                print("  Altitude SP3 chargée (min %.0f m, max %.0f m)"
-                      % (np.nanmin(altitude_cache["h"]), np.nanmax(altitude_cache["h"])))
-            else:
-                print("  WARNING: altitude absente de SP3 H+0")
-        altitude = altitude_cache.get("h", np.zeros((NJ, NI)))
-
-        fields, state = compute_fields(raw, altitude, previous_state, lead)
-        if not fields:
-            print("  H+%02d: aucun champ calculé" % lead)
-            return False
-        # CRITIQUE : réinjecte l'état des cumuls (rain_total, snow_total,
-        # graupel_total, fresh_snow) pour que l'échéance suivante calcule les
-        # valeurs HORAIRES par différence (cumul(H+n) − cumul(H+n−1)).
-        previous_state.update(state)
-
-        # ── Tuiles ─────────────────────────────────────────────────────
         lats = LAT0 - np.arange(NJ) * STEP
         lons = LON0 + np.arange(NI) * STEP
-        regridded = {}
-        for tile_name, fname in TILE_FIELDS.items():
-            arr = fields.get(fname)
-            if arr is not None:
-                save_tile(tile_name, arr, lats, lons, out_dir, lead,
+
+        for lead in range(start, end + 1):
+            step_files = {}
+            raw = {}
+            for p in paths:
+                raw.update(read_grib(p, run_str, lead))
+
+            if lead == 0:
+                if "h" in raw:
+                    altitude_cache["h"] = _clean(raw["h"])
+                    print("  Altitude chargée (min %.0f m, max %.0f m)"
+                          % (np.nanmin(altitude_cache["h"]),
+                             np.nanmax(altitude_cache["h"])))
+                else:
+                    print("  WARNING: altitude absente H+0")
+            altitude = altitude_cache.get("h", np.zeros((NJ, NI)))
+
+            if "t2m" not in raw and "cape" not in raw:
+                print("  H+%02d: aucun champ décodé" % lead)
+                continue
+
+            fields, state = compute_fields(raw, altitude, previous_state, lead)
+            if not fields:
+                print("  H+%02d: aucun champ calculé" % lead)
+                continue
+            # CRITIQUE : réinjecte l'état des cumuls (rain_total, snow_total,
+            # graupel_total, fresh_snow) pour que l'échéance suivante calcule
+            # les valeurs HORAIRES par différence (cumul(H+n) − cumul(H+n−1)).
+            previous_state.update(state)
+
+            # Synthèses 24h J0/J+1 (max glissant sur la grille native)
+            if synth is not None and run_dt is not None:
+                update_synth(synth, fields, run_dt, lead)
+
+            # ── Tuiles ─────────────────────────────────────────────────
+            regridded = {}
+            for tile_name, fname in tile_fields.items():
+                arr = fields.get(fname)
+                if arr is not None:
+                    save_tile(tile_name, arr, lats, lons, out_dir, lead,
+                              step_files, regridded)
+
+            # Rafale max cumulée depuis le run (paramètre « rafale max échéance »).
+            # NB : à H+0 les rafales sont NaN (pas de max sur un intervalle vide) ;
+            # on initialise à 0 pour que le cumul ne soit pas pollué par NaN.
+            if "rafales_cumul" in tile_fields:
+                prev_max = previous_state.get("gust_max")
+                cur_gust = fields["wind_gust_kmh"]
+                if prev_max is None:
+                    gust_max = np.where(np.isfinite(cur_gust), cur_gust, 0.0)
+                else:
+                    gust_max = np.maximum(np.nan_to_num(prev_max, nan=0.0),
+                                          np.nan_to_num(cur_gust, nan=0.0))
+                    gust_max[~np.isfinite(prev_max) & ~np.isfinite(cur_gust)] = np.nan
+                previous_state["gust_max"] = gust_max
+                fields["wind_gust_max_kmh"] = gust_max
+                save_tile("rafales_cumul", gust_max, lats, lons, out_dir, lead,
                           step_files, regridded)
 
-        # Rafale max cumulée depuis le run (paramètre « rafale max échéance »).
-        # NB : à H+0 les rafales sont NaN (pas de max sur un intervalle vide) ;
-        # on initialise à 0 pour que le cumul ne soit pas pollué par NaN.
-        prev_max = previous_state.get("gust_max")
-        cur_gust = fields["wind_gust_kmh"]
-        if prev_max is None:
-            gust_max = np.where(np.isfinite(cur_gust), cur_gust, 0.0)
-        else:
-            gust_max = np.maximum(np.nan_to_num(prev_max, nan=0.0),
-                                  np.nan_to_num(cur_gust, nan=0.0))
-            gust_max[~np.isfinite(prev_max) & ~np.isfinite(cur_gust)] = np.nan
-        previous_state["gust_max"] = gust_max
-        fields["wind_gust_max_kmh"] = gust_max
-        save_tile("rafales_cumul", gust_max, lats, lons, out_dir, lead,
-                  step_files, regridded)
+            # ── Échantillonnage par commune ────────────────────────────
+            sampled = bilinear_sample(fields, communes)
+            per_lead_values[lead] = sampled
 
-        # ── Échantillonnage par commune ────────────────────────────────
-        sampled = bilinear_sample(fields, communes)
-        per_lead_values[lead] = sampled
+            # ── Grilles de valeurs pour la sonde au survol ─────────────
+            save_probes(out_dir, lead, fields, step_files, regridded,
+                        tile_fields=tile_fields)
 
-        # ── Grilles de valeurs pour la sonde au survol ─────────────────
-        save_probes(out_dir, lead, fields, step_files, regridded)
+            # Rendu AROME-PE (Probabilités — désactivé)
+            if "steps_pe" in kwargs:
+                try:
+                    from arome_pe_engine import render_pe_step
+                    out_pe_dir = os.path.join(OUT_BASE, "arome_pe", "maps")
+                    step_files_pe = {}
+                    # Injection des champs 24h pour le moteur de probabilités PE
+                    fields["rain_cumul_24h"] = fields.get("precipitation_total_mm", np.zeros_like(lats))
+                    fields["gust_max_24h"] = fields.get("wind_gust_max_kmh", np.zeros_like(lats))
+                    fields["tmax_24h"] = fields.get("temperature_max_24h", fields.get("temperature_c", np.zeros_like(lats)))
+                    fields["tmin_24h"] = fields.get("temperature_min_24h", fields.get("temperature_c", np.zeros_like(lats)))
+                    fields["snow_cumul_24h"] = fields.get("snow_depth_cm", np.zeros_like(lats))
 
-        # Rendu AROME-PE (Probabilités)
-        if "steps_pe" in kwargs:
-            try:
-                from arome_pe_engine import render_pe_step
-                out_pe_dir = os.path.join(BASE_DIR, "output", "arome_pe", "maps")
-                step_files_pe = {}
-                # Injection des champs 24h pour le moteur de probabilités PE
-                fields["rain_cumul_24h"] = fields.get("precipitation_total_mm", np.zeros_like(lats))
-                fields["gust_max_24h"] = fields.get("wind_gust_max_kmh", np.zeros_like(lats))
-                fields["tmax_24h"] = fields.get("temperature_max_24h", fields.get("temperature_c", np.zeros_like(lats)))
-                fields["tmin_24h"] = fields.get("temperature_min_24h", fields.get("temperature_c", np.zeros_like(lats)))
-                fields["snow_cumul_24h"] = fields.get("snow_depth_cm", np.zeros_like(lats))
+                    # render_pe_step(fields, lead, out_pe_dir, step_files_pe, lats, lons)  # PE desactive
+                    if step_files_pe:
+                        vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
+                            + datetime.timedelta(hours=lead)
+                        kwargs["steps_pe"].append({
+                            "lead_hour": lead,
+                            "valid_time": vt.isoformat(),
+                            "files": step_files_pe.get("files", {}),
+                            "probes": step_files_pe.get("probes", {})
+                        })
+                except Exception as e:
+                    print("  WARNING: AROME-PE non rendu H+%02d (%s)" % (lead, e))
 
-                # render_pe_step(fields, lead, out_pe_dir, step_files_pe, lats, lons)  # PE desactive
-                if step_files_pe:
-                    vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
-                        + datetime.timedelta(hours=lead)
-                    kwargs["steps_pe"].append({
-                        "lead_hour": lead,
-                        "valid_time": vt.isoformat(),
-                        "files": step_files_pe.get("files", {}),
-                        "probes": step_files_pe.get("probes", {})
-                    })
-            except Exception as e:
-                print("  WARNING: AROME-PE non rendu H+%02d (%s)" % (lead, e))
-
-        print("  H+%02d: %d champs, %d tuiles, %d probes, %d communes échantillonnées"
-              % (lead, len(fields), len(step_files.get("files", {})),
-                 len(step_files.get("probes", {})), len(communes)))
+            if step_files:
+                vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
+                    + datetime.timedelta(hours=lead)
+                steps.append({"lead_hour": lead, "valid_time": vt.isoformat(),
+                              "files": step_files.get("files", {}),
+                              "probes": step_files.get("probes", {})})
+                print("  H+%02d: %d champs, %d tuiles, %d probes, %d communes échantillonnées"
+                      % (lead, len(fields), len(step_files.get("files", {})),
+                         len(step_files.get("probes", {})), len(communes)))
         return True
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def run(max_hours=51):
-    """Génère tuiles AROME + prévisions par commune + manifeste."""
+def run(max_hours=51, convective_only=False):
+    """Génère les tuiles AROME + prévisions par commune + synthèses.
+
+    convective_only=True : « Module Grêle » — uniquement les 6 couches
+    convectives (IPO, IPG, IPT, Instabilité, Orages simulés, Rafales) +
+    synthèses 24h J0/J1 + fichiers communaux. SANS manifeste ni cartes de
+    base (produites par l'automatisation 1,3 km habituelle)."""
     run_str = latest_run()
     leads = available_leads(run_str)
     print("Run AROME: %s | échéances disponibles: %s" % (run_str, len(leads)))
-    out_dir = os.path.join(BASE_DIR, "output", "arome", "maps")
+    out_dir = os.path.join(OUT_BASE, "arome", "maps")
     os.makedirs(out_dir, exist_ok=True)
 
     communes = load_communes()
     print("Communes chargées: %d" % len(communes))
+
+    tile_fields = TILE_FIELDS
+    if convective_only:
+        tile_fields = {k: v for k, v in TILE_FIELDS.items()
+                       if k in CONVECTIVE_ONLY_LAYERS}
+        print("Mode MODULE GRÊLE : %d couches convectives (source 0,025°)"
+              % len(tile_fields))
 
     steps = []
     steps_pe = []
     previous_state = {}
     per_lead_values = {}
     altitude_cache = {}
-    for lh in sorted(leads):
-        if lh > max_hours:
+    run_dt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00"))
+    synth = {"j0": {}, "j1": {}}
+    for s, e in CHUNKS:
+        if s > max_hours:
             break
-        step_files = {}
-        ok = render_lead(run_str, lh, out_dir, step_files, previous_state,
-                         communes, per_lead_values, altitude_cache, steps_pe=steps_pe)
-        if ok and step_files:
-            vt = datetime.datetime.fromisoformat(run_str.replace("Z", "+00:00")) \
-                + datetime.timedelta(hours=lh)
-            steps.append({"lead_hour": lh, "valid_time": vt.isoformat(),
-                          "files": step_files.get("files", {}),
-                          "probes": step_files.get("probes", {})})
+        render_chunk(run_str, s, e, out_dir, steps, previous_state,
+                     communes, per_lead_values, altitude_cache,
+                     steps_pe=steps_pe, synth=synth, run_dt=run_dt,
+                     tile_fields=tile_fields)
 
-    # Fichiers par département : DÉSACTIVÉ — les données communales MCV2 sont
-    # désormais produites par le « Module Grêle » (arome_open_data_remote.py,
-    # source 0,025° complète). L'ancien pipeline (0,01°) ne doit pas écraser
-    # ces fichiers avec des champs convectifs manquants (réflectivité,
-    # graupel, pluie = absents des paquets 0,01° actuels).
-    # write_department_files(out_dir, run_str,
-    #                        [s["lead_hour"] for s in steps],
-    #                        per_lead_values, communes)
+    # Synthèses 24h J0 / J+1 (max de la journée locale)
+    save_syntheses(synth, out_dir)
+
+    # Fichiers par département + index
+    write_department_files(out_dir, run_str,
+                           [s["lead_hour"] for s in steps],
+                           per_lead_values, communes)
+
+    if convective_only:
+        # Le manifeste index.json appartient à l'automatisation habituelle
+        # (cartes de base 1,3 km) — on n'y touche pas en mode module.
+        print("OK Module Grêle : %d échéances, %d communes (sans manifeste)"
+              % (len(steps), len(communes)))
+        return
 
     # Fond de carte (pays voisins inclus) + masque France (bornes correctes)
     try:
@@ -904,14 +1133,14 @@ def run(max_hours=51):
         print("WARNING: fond de carte non généré (%s)" % e)
 
     from fetch_and_render_all import write_manifest
-    meta = {"name": "AROME HD (1,3 km)", "provider": "Meteo-France",
-            "resolution": "1,3 km (0.01°)", "run_time": run_str}
+    meta = {"name": "AROME HD (2,5 km)", "provider": "Meteo-France",
+            "resolution": "2,5 km (0.025°)", "run_time": run_str}
     write_manifest(out_dir, steps, meta)
 
     # Manifest AROME-PE
     try:
         from arome_pe_engine import write_pe_manifest
-        out_pe_dir = os.path.join(BASE_DIR, "output", "arome_pe", "maps")
+        out_pe_dir = os.path.join(OUT_BASE, "arome_pe", "maps")
         write_pe_manifest(out_pe_dir, steps_pe, run_str)
     except Exception as e:
         print("WARNING: AROME-PE Manifest non écrit (%s)" % e)
@@ -920,4 +1149,12 @@ def run(max_hours=51):
 
 
 if __name__ == "__main__":
-    run()
+    import argparse
+    ap = argparse.ArgumentParser(description="Pipeline AROME 0,025° (Module Grêle)")
+    ap.add_argument("--max-hours", type=int, default=51,
+                    help="Échéance max (0-51)")
+    ap.add_argument("--convective-only", action="store_true",
+                    help="Module Grêle : seulement les 6 couches convectives "
+                         "+ communes + synthèses (sans manifeste)")
+    args = ap.parse_args()
+    run(max_hours=args.max_hours, convective_only=args.convective_only)
