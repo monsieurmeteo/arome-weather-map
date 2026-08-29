@@ -18,7 +18,7 @@ jobs:
       - name: Recuperation du depot
         uses: actions/checkout@v4
 
-      - name: Compression des cartes du jour
+      - name: Compression des images du jour (Option 2 : Images pures sans binaires)
         id: compress
         run: |
           DATE_STR=$(date -u +'%Y-%m-%d')
@@ -30,10 +30,13 @@ jobs:
           echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
 
           if [ -d "output/arome/maps" ]; then
-            echo "Compression de output/arome/maps vers ${ZIP_NAME}..."
-            zip -q -r "${ZIP_NAME}" output/arome/maps
+            echo "Selection et compression des images WebP / PNG / SVG uniquement..."
+            # Inclut toutes les images 52h et syntheses 24h, exclut communes et values
+            find output/arome/maps -type f \( -name "*.webp" -o -name "*.png" -o -name "*.svg" \) ! -path "*/communes/*" ! -path "*/values/*" | zip -q "${ZIP_NAME}" -@
+            
             ZIP_SIZE=$(du -h "${ZIP_NAME}" | cut -f1)
-            echo "Archive creee : ${ZIP_NAME} (${ZIP_SIZE})"
+            FILE_COUNT=$(unzip -l "${ZIP_NAME}" | tail -n 1 | awk '{print $2}')
+            echo "Archive creee : ${ZIP_NAME} (${ZIP_SIZE}, ${FILE_COUNT} fichiers d'images)"
           else
             echo "WARNING: Dossier output/arome/maps introuvable !"
             exit 1
@@ -46,7 +49,7 @@ jobs:
           # 1. Creer la release mensuelle si elle n'existe pas
           if ! gh release view "${MONTH_TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             echo "Creation de la release mensuelle ${MONTH_TAG}..."
-            gh release create "${MONTH_TAG}"               --repo "${{ github.repository }}"               --title "Archives Cartes AROME — $(date -u +'%B %Y')"               --notes "Archives quotidiennes automatiques de l'ensemble des cartes et calques météo du modèle AROME."
+            gh release create "${MONTH_TAG}"               --repo "${{ github.repository }}"               --title "Archives Cartes AROME — $(date -u +'%B %Y')"               --notes "Archives quotidiennes automatiques de l'ensemble des images et calques météo AROME (Option 2 : Images pures)."
           fi
 
           # 2. Uploader l'archive du jour dans la release mensuelle (remplace si deja existant)
