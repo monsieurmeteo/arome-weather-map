@@ -515,17 +515,17 @@
             transition: opacity 0.15s ease;
         }
         .map-info-overlay {
-            position: absolute;
-            top: 14px;
-            left: 14px;
-            background: rgba(7, 11, 20, 0.88);
-            border: 1px solid rgba(0, 210, 255, 0.4);
-            border-radius: 10px;
-            padding: 8px 14px;
+            position: static;
+            background: transparent;
+            border: none;
+            border-right: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 0;
+            padding: 2px 14px 2px 4px;
             color: #fff;
-            backdrop-filter: blur(10px);
+            text-align: left;
+            flex-shrink: 1;
+            min-width: 0;
             pointer-events: none;
-            z-index: 5;
         }
         .map-info-title { font-size: 14px; font-weight: 800; color: #00d2ff; }
         .map-info-time { font-size: 12px; font-weight: 700; color: #f1f5f9; margin-top: 2px; }
@@ -792,6 +792,10 @@
 
             <!-- Contrôles Temporels (Timeline & Play) -->
             <div class="map-controls-bar" id="map-controls-bar">
+                <div class="map-info-overlay">
+                    <div class="map-info-title" id="map-info-title">⚡ Carte Convective AROME HD — Indices /100</div>
+                    <div class="map-info-time" id="map-info-time">Échéance H+00 • AROME HD 2,5 km</div>
+                </div>
                 <button type="button" class="map-play-btn" id="convective-play-btn" title="Lecture de l'animation (Espace)">
                     <i class="fa-solid fa-play"></i>
                 </button>
@@ -814,10 +818,7 @@
                     </div>
                 </div>
 
-                <div class="map-info-overlay">
-                    <div class="map-info-title" id="map-info-title">⚡ Carte Convective AROME HD — Indices /100</div>
-                    <div class="map-info-time" id="map-info-time">Échéance H+00 • AROME HD 2,5 km</div>
-                </div>
+                
             </div>
 
             
