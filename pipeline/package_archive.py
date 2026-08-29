@@ -1,18 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-package_archive.py — Générateur d'archive ZIP optimisée (~30 Mo) des cartes AROME HD
-=====================================================================================
-Structure claire et sans doublons :
-- 00_FRANCE_ENTIERE (30 paramètres en 5 catégories en ultra-haute définition 2200x1640)
-- 01_SYNTHESES_QUOTIDIENNES_24H (Max Grêle, Cumul Pluie, Rafales Max)
-- LISEZ-MOI_INDEX.txt (Guide d'utilisation, unités et barèmes des indices)
-"""
-
 import os
 import shutil
 import zipfile
 from datetime import datetime
+from PIL import Image
 
 CATEGORIES = {
     "01_ORAGES_ET_GRELE": {
@@ -53,26 +43,20 @@ CATEGORIES = {
     }
 }
 
-README_CONTENT = """===============================================================================
-ARCHIVES METEO HAUTE RESOLUTION — MODELE AROME METEO-FRANCE
+# Pas de temps tri-horaire officiel (Méthode Météociel standard)
+TRI_HOURLY_STEPS = {f"{h:03d}" for h in range(0, 52, 3)}
+
+README_METEOCIEL = """===============================================================================
+ARCHIVES METEO COMPACTES (METHODE METEOCIEL) — MODELE AROME METEO-FRANCE
 ===============================================================================
 Date de l'archive : {date_str}
-Resolution : Haute Definition 2200 x 1640 px (Couvre France Entiere et les 13 Regions)
-Echeances : H+00 a H+51 heure par heure + Syntheses 24h
+Format : Standard Web Météo (1100 x 820 px optimisé ~15 Ko/image)
+Échéances : Pas tri-horaire de référence (H+00, H+03, H+06, H+09, H+12... H+48, H+51)
+Synthèses : 24h maximales (Grêle Max, Orages Max, Cumul Pluie, Rafales Max)
 
-STRUCTURE DU DOSSIER :
-- 00_FRANCE_ENTIERE/
-    * 01_ORAGES_ET_GRELE (IPO, IPG, Radar dBZ, CAPE J/kg, Rafales, IPT)
-    * 02_TEMPERATURES_ET_CONFORT (T2m, Ressentie, Rosee, Humidex, Humidite)
-    * 03_PRECIPITATIONS_ET_NEIGE (Pluie 1h, Cumuls, Neige 1h, Neige sol, Gresil)
-    * 04_VENTS_ET_RAFALES (Vent moyen 10m, Rafales, Rafales max cumulees)
-    * 05_NUAGES_ET_PRESSION (Nebulosite, Nuages bas/brouillard, Isobares MSLP)
-
-- 01_SYNTHESES_QUOTIDIENNES_24H/
-    * Synthese_Grele_Max_J0.webp & J1.webp
-    * Synthese_Orages_Max_J0.webp & J1.webp
-    * Synthese_Pluie_Cumul_J0.webp & J1.webp
-    * Synthese_Rafales_Max_J0.webp & J1.webp
+ORGANISATION :
+- 00_FRANCE_ENTIERE/ (Les 30 paramètres météo classés en 5 catégories)
+- 01_SYNTHESES_QUOTIDIENNES_24H/ (Les cartes résumés J0 et J+1)
 ===============================================================================
 """
 
@@ -85,15 +69,17 @@ def package_daily_archive(maps_dir="output/arome/maps", out_zip_name=None):
     if not out_zip_name:
         out_zip_name = f"arome_cartes_{date_str}.zip"
 
-    temp_root = f"temp_archive_{date_str}"
+    temp_root = f"temp_archive_meteociel_{date_str}"
     if os.path.exists(temp_root):
         shutil.rmtree(temp_root)
     os.makedirs(temp_root, exist_ok=True)
 
-    print(f"📦 Structuration de l'archive légère pour {date_str}...")
+    print(f"📦 Génération de l'archive légère Méthode Météociel pour {date_str}...")
 
-    # 1. Cartes France Entière classées par catégories
+    # 1. Cartes France au format optimisé Météociel (1100x820, pas de 3h)
     france_dir = os.path.join(temp_root, "00_FRANCE_ENTIERE")
+    img_count = 0
+    
     for cat_name, layer_map in CATEGORIES.items():
         cat_dir = os.path.join(france_dir, cat_name)
         for layer_key, clean_name in layer_map.items():
@@ -102,20 +88,40 @@ def package_daily_archive(maps_dir="output/arome/maps", out_zip_name=None):
                 dst_layer = os.path.join(cat_dir, clean_name)
                 os.makedirs(dst_layer, exist_ok=True)
                 for f in os.listdir(src_layer):
-                    if f.endswith((".webp", ".png", ".svg")):
-                        shutil.copy2(os.path.join(src_layer, f), os.path.join(dst_layer, f))
+                    base_name, ext = os.path.splitext(f)
+                    if ext.lower() in [".webp", ".png"] and (base_name in TRI_HOURLY_STEPS or len(base_name) != 3):
+                        src_f = os.path.join(src_layer, f)
+                        dst_f = os.path.join(dst_layer, f)
+                        try:
+                            with Image.open(src_f) as img:
+                                # Redimensionner proprement à 1100x820 (divisé par 2)
+                                w, h = img.size
+                                img_small = img.resize((w // 2, h // 2), Image.Resampling.LANCZOS)
+                                img_small.save(dst_f, "WEBP", quality=75, method=6)
+                                img_count += 1
+                        except Exception:
+                            shutil.copy2(src_f, dst_f)
+                            img_count += 1
 
     # 2. Synthèses 24h
     synth_dir = os.path.join(temp_root, "01_SYNTHESES_QUOTIDIENNES_24H")
     os.makedirs(synth_dir, exist_ok=True)
     for f in os.listdir(maps_dir):
         if "_24h_" in f and f.endswith((".webp", ".png")):
-            shutil.copy2(os.path.join(maps_dir, f), os.path.join(synth_dir, f))
+            src_f = os.path.join(maps_dir, f)
+            dst_f = os.path.join(synth_dir, f)
+            try:
+                with Image.open(src_f) as img:
+                    w, h = img.size
+                    img_small = img.resize((w // 2, h // 2), Image.Resampling.LANCZOS)
+                    img_small.save(dst_f, "WEBP", quality=75, method=6)
+            except Exception:
+                shutil.copy2(src_f, dst_f)
 
     # 3. README_INDEX.txt
     readme_path = os.path.join(temp_root, "LISEZ-MOI_INDEX.txt")
     with open(readme_path, "w", encoding="utf-8") as rf:
-        rf.write(README_CONTENT.format(date_str=date_str))
+        rf.write(README_METEOCIEL.format(date_str=date_str))
 
     # 4. Compression ZIP
     print(f"🗜️ Compression vers {out_zip_name}...")
@@ -128,7 +134,7 @@ def package_daily_archive(maps_dir="output/arome/maps", out_zip_name=None):
 
     shutil.rmtree(temp_root)
     zip_size_mb = os.path.getsize(out_zip_name) / (1024 * 1024)
-    print(f"✅ Archive légère {out_zip_name} créée avec succès ({zip_size_mb:.1f} Mo) !")
+    print(f"✅ Archive Méthode Météociel {out_zip_name} créée : {zip_size_mb:.2f} Mo ({img_count} cartes) !")
     return out_zip_name
 
 if __name__ == "__main__":
