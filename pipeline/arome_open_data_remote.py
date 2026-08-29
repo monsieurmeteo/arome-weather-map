@@ -44,9 +44,16 @@ from PIL import Image
 
 warnings.filterwarnings("ignore")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # racine du dépôt (HARNESS)
+# Racine du dépôt : le script vit soit à la racine (poste local HARNESS),
+# soit dans pipeline/ (dépôt GitHub arome-weather-map) — on détecte.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if os.path.exists(os.path.join(_HERE, "config", "communes-compact.json")):
+    BASE_DIR = _HERE                 # local : HARNESS/
+else:
+    BASE_DIR = os.path.dirname(_HERE)  # GitHub : racine du dépôt
 # Répertoire de sortie : par défaut l'output consommé par l'interface locale
-# (local_test_grele/output) — surchargeable via la variable AROME_OUT_DIR.
+# (local_test_grele/output) — surchargeable via la variable AROME_OUT_DIR
+# (utilisée par le workflow GitHub : output/ du dépôt).
 OUT_BASE = os.environ.get("AROME_OUT_DIR",
                           os.path.join(BASE_DIR, "local_test_grele", "output"))
 sys.path.insert(0, os.path.join(BASE_DIR, "pipeline"))
