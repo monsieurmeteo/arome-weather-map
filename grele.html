@@ -602,6 +602,102 @@
             height: 14px;
             border-radius: 3px;
         }
+
+        /* ══════════════════════════════════════════════════════════════
+           POLISH UX PROFESSIONNEL — présentation & interactions uniquement
+           (aucune modification des formules, données ou fonctionnalités)
+           ══════════════════════════════════════════════════════════════ */
+        ::selection { background: rgba(0, 210, 255, 0.35); color: #fff; }
+        * { scrollbar-width: thin; scrollbar-color: rgba(0, 210, 255, 0.35) rgba(255, 255, 255, 0.05); }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.04); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 210, 255, 0.3); border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 210, 255, 0.55); }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+        html { scroll-behavior: smooth; }
+
+        /* Notifications toast */
+        .toast-container {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 99999; display: flex; flex-direction: column; gap: 10px;
+            align-items: center; pointer-events: none;
+        }
+        .toast {
+            background: rgba(10, 16, 30, 0.96); border: 1px solid var(--border-accent);
+            color: var(--text-main); padding: 12px 18px; border-radius: 12px;
+            font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px);
+            animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto; max-width: min(92vw, 480px);
+        }
+        .toast.error { border-color: rgba(239, 68, 68, 0.6); }
+        .toast.success { border-color: rgba(16, 185, 129, 0.6); }
+        .toast.info { border-color: rgba(0, 210, 255, 0.6); }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        .toast.hide { animation: toast-out 0.25s forwards; }
+        @keyframes toast-out { to { opacity: 0; transform: translateY(14px); } }
+
+        /* Chargement des tuiles cartographiques */
+        .map-loading-overlay {
+            position: absolute; inset: 0; z-index: 8; display: flex; align-items: center;
+            justify-content: center; background: rgba(6, 9, 19, 0.55);
+            opacity: 0; pointer-events: none; transition: opacity 0.25s; border-radius: 12px;
+        }
+        .map-loading-overlay.visible { opacity: 1; }
+        .map-spinner {
+            width: 42px; height: 42px; border-radius: 50%;
+            border: 3px solid rgba(0, 210, 255, 0.2); border-top-color: var(--accent);
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Squelette de chargement (fiche commune) */
+        .skeleton {
+            position: relative; overflow: hidden; background: rgba(255, 255, 255, 0.06); border-radius: 8px;
+        }
+        .skeleton::after {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+            animation: shimmer 1.4s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        /* Recherche : bouton effacer + état chargement + navigation clavier */
+        .search-clear-btn {
+            background: none; border: none; color: #64748b; cursor: pointer; font-size: 14px;
+            padding: 4px 8px; border-radius: 6px; display: none;
+        }
+        .search-clear-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.08); }
+        .search-input-wrap.loading .fa-magnifying-glass { display: none; }
+        .search-input-wrap.loading::after {
+            content: ""; width: 14px; height: 14px; border-radius: 50%;
+            border: 2px solid rgba(0, 210, 255, 0.25); border-top-color: var(--accent);
+            animation: spin 0.8s linear infinite; margin-left: 6px; flex-shrink: 0;
+        }
+        .search-item.active { background: rgba(0, 210, 255, 0.18); color: var(--accent); }
+
+        /* Jauges de risque : micro-interaction */
+        .risk-gauge-box { transition: transform 0.18s ease, border-color 0.18s ease; }
+        .risk-gauge-box:hover { transform: translateY(-2px); border-color: var(--border-accent); }
+
+        /* Tableau : lignes alternées + survol */
+        .hail-table tbody tr:nth-child(even) td { background: rgba(255, 255, 255, 0.015); }
+        .hail-table tbody tr { transition: background 0.15s; }
+        .hail-table tbody tr:hover td { background: rgba(0, 210, 255, 0.06); }
+
+        /* Modal : ouverture animée */
+        #convective-detail-modal > div { animation: modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes modal-in { from { opacity: 0; transform: scale(0.96) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        /* Divers : onglets actifs, cartes, légendes */
+        .map-tab-btn { transition: all 0.18s; }
+        .map-tab-btn.active { box-shadow: 0 0 14px var(--accent-glow); }
+        .legend-box-color { box-shadow: 0 0 4px rgba(0, 0, 0, 0.4); }
+        .summary-card, .chart-card, .table-card { transition: border-color 0.2s; }
+        .summary-card:hover, .chart-card:hover, .table-card:hover { border-color: rgba(0, 210, 255, 0.2); }
+        .map-play-btn:active { transform: scale(0.95); }
+        .btn-download-hd { transition: all 0.2s; }
+        .btn-download-hd:hover { box-shadow: 0 0 22px rgba(0, 210, 255, 0.6); transform: translateY(-1px); }
     </style>
 </head>
 <body>
@@ -630,9 +726,10 @@
             <p>Calcul haute précision heure par heure (0 à 51h) basé sur le modèle AROME 2,5 km : indices diagnostiques de potentiel orageux, grêle et tornadique (/100) à partir de la réflectivité radar simulée, du MUCAPE, du graupel et du cisaillement.</p>
 
             <div class="search-box">
-                <div class="search-input-wrap">
+                <div class="search-input-wrap" id="search-input-wrap">
                     <i class="fa-solid fa-magnifying-glass" style="color:#64748b;"></i>
                     <input type="text" id="hail-search" class="search-input" placeholder="Entrez un code postal (ex: 59000, 75001) ou une ville..." autocomplete="off">
+                    <button type="button" class="search-clear-btn" id="search-clear-btn" title="Effacer la recherche" aria-label="Effacer la recherche"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div id="search-results" class="search-results"></div>
             </div>
@@ -751,6 +848,9 @@
                     <img src="output/arome/maps/fond.webp" alt="Fond de carte" class="map-img-bg">
                     <img id="convective-map-layer" src="output/arome/maps/ipo/000.webp" alt="Calque météo" class="map-img-layer">
                     <img src="output/arome/maps/frontieres.svg" alt="Frontières" class="map-img-borders">
+
+                    <!-- Indicateur de chargement des tuiles -->
+                    <div class="map-loading-overlay" id="map-loading-overlay"><div class="map-spinner"></div></div>
 
                     <!-- Pointeur de Ville Dynamique -->
                     <div class="map-city-pin" id="map-city-pin">
@@ -897,6 +997,51 @@
         var playBtnEl = document.getElementById('convective-play-btn');
         var controlsBarEl = document.getElementById('map-controls-bar');
         var legendBoxesEl = document.getElementById('map-legend-boxes');
+
+        // ── HELPERS UX (toasts, chargement carte) ────────────────────────
+        var toastContainerEl = document.getElementById('toast-container');
+        function showToast(message, type) {
+            if (!toastContainerEl) return;
+            var t = document.createElement('div');
+            t.className = 'toast ' + (type || 'info');
+            var icon = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info');
+            var color = type === 'success' ? '#34d399' : (type === 'error' ? '#f87171' : '#00d2ff');
+            t.innerHTML = '<i class="fa-solid ' + icon + '" style="color:' + color + ';"></i><span>' + message + '</span>';
+            toastContainerEl.appendChild(t);
+            setTimeout(function () {
+                t.classList.add('hide');
+                setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 260);
+            }, 3400);
+        }
+        var mapLoadingOverlay = document.getElementById('map-loading-overlay');
+        function setMapLoading(on) {
+            if (!mapLoadingOverlay) return;
+            if (on) mapLoadingOverlay.classList.add('visible');
+            else mapLoadingOverlay.classList.remove('visible');
+        }
+        if (imgLayerEl) {
+            imgLayerEl.addEventListener('load', function () { setMapLoading(false); });
+            imgLayerEl.addEventListener('error', function () {
+                setMapLoading(false);
+                showToast('Tuile indisponible pour cette échéance (données manquantes).', 'error');
+            });
+        }
+        // Compteur animé pour les jauges (/100)
+        function animateCount(el, target, suffix) {
+            if (!el) return;
+            var start = parseInt(el.textContent, 10) || 0;
+            var t0 = null;
+            var dur = 650;
+            function frame(ts) {
+                if (!t0) t0 = ts;
+                var p = Math.min(1, (ts - t0) / dur);
+                p = 1 - Math.pow(1 - p, 3); // easing
+                var v = Math.round(start + (target - start) * p);
+                el.textContent = v + (suffix || '');
+                if (p < 1) requestAnimationFrame(frame);
+            }
+            requestAnimationFrame(frame);
+        }
 
         var LAYER_TITLES = {
             ipo: "⚡ Indice de Potentiel Orageux (IPO /100)",
@@ -1410,6 +1555,20 @@
             if (modal) modal.style.display = 'none';
         };
 
+        // Fermeture du modal : touche Échap + clic sur le fond
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                var modal = document.getElementById('convective-detail-modal');
+                if (modal && modal.style.display === 'flex') closeDetailModal();
+            }
+        });
+        var detailModalEl = document.getElementById('convective-detail-modal');
+        if (detailModalEl) {
+            detailModalEl.addEventListener('click', function (e) {
+                if (e.target === detailModalEl) closeDetailModal();
+            });
+        }
+
         function displayResults(data) {
             globalHoursData = data;
             var maxIPO = data.reduce(function (p, c) { return (c.ipo > p.ipo) ? c : p; }, data[0]);
@@ -1428,7 +1587,7 @@
             var elIpoInd = document.getElementById('sum-orage-ind');
             var elIpoLvl = document.getElementById('sum-orage-lvl');
             var elIpoMeta = document.getElementById('sum-orage-meta');
-            if (elIpoInd) { elIpoInd.textContent = maxIPO.ipo; elIpoInd.style.background = ipoCls.color; }
+            if (elIpoInd) { animateCount(elIpoInd, maxIPO.ipo); elIpoInd.style.background = ipoCls.color; }
             if (elIpoLvl) { elIpoLvl.textContent = maxIPO.ipo + '/100 — ' + ipoCls.label; elIpoLvl.style.color = ipoCls.color; }
             if (elIpoMeta) { elIpoMeta.textContent = 'MUCAPE Max : ' + maxIPO.cape + ' J/kg • Radar : ' + maxIPO.refl + ' dBZ'; }
 
@@ -1436,7 +1595,7 @@
             var elIpgInd = document.getElementById('sum-indicator');
             var elIpgLvl = document.getElementById('sum-level');
             var elIpgDiam = document.getElementById('sum-diam');
-            if (elIpgInd) { elIpgInd.textContent = maxIPG.ipg; elIpgInd.style.background = ipgCls.color; }
+            if (elIpgInd) { animateCount(elIpgInd, maxIPG.ipg); elIpgInd.style.background = ipgCls.color; }
             if (elIpgLvl) { elIpgLvl.textContent = maxIPG.ipg + '/100 — ' + ipgCls.label; elIpgLvl.style.color = ipgCls.color; }
             if (elIpgDiam) { elIpgDiam.textContent = 'Niveau : ' + hailLvlMax.label; }
 
@@ -1444,7 +1603,7 @@
             var elIptInd = document.getElementById('sum-ipt-ind');
             var elIptLvl = document.getElementById('sum-ipt-lvl');
             var elIptMeta = document.getElementById('sum-ipt-meta');
-            if (elIptInd) { elIptInd.textContent = maxIPT.ipt; elIptInd.style.background = iptCls.color; }
+            if (elIptInd) { animateCount(elIptInd, maxIPT.ipt); elIptInd.style.background = iptCls.color; }
             if (elIptLvl) { elIptLvl.textContent = maxIPT.ipt + '/100 — ' + iptCls.label; elIptLvl.style.color = iptCls.color; }
             if (elIptMeta) { elIptMeta.textContent = 'Cisaillement max : ' + maxIPT.shear + ' km/h • LCL min : ' + minLCL.lcl + ' m'; }
 
@@ -1640,6 +1799,7 @@
                 .catch(function (err) {
                     console.error('Erreur chargement commune:', err);
                     if (elDesc) elDesc.textContent = 'Données du département indisponibles momentanément.';
+                    showToast('Données du département indisponibles : le fichier n\'est pas encore généré pour ce run.', 'error');
                 });
         }
 
@@ -1647,13 +1807,21 @@
         var debounceTimer = null;
         var currentResultsList = [];
 
+        var searchIndex = -1; // navigation clavier dans les résultats
+
         function doSearch(q) {
             clearTimeout(debounceTimer);
+            var wrap = document.getElementById('search-input-wrap');
+            var clearBtn = document.getElementById('search-clear-btn');
+            if (clearBtn) clearBtn.style.display = (q && q.length > 0) ? 'block' : 'none';
             if (!q || q.length < 2) {
                 if (searchResults) searchResults.style.display = 'none';
+                if (wrap) wrap.classList.remove('loading');
+                searchIndex = -1;
                 return;
             }
             debounceTimer = setTimeout(function () {
+                if (wrap) wrap.classList.add('loading');
                 var url = 'https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(q) + '&fields=nom,code,codesPostaux,codeDepartement,centre&boost=population&limit=7';
                 if (/^\d+$/.test(q)) {
                     url = 'https://geo.api.gouv.fr/communes?codePostal=' + encodeURIComponent(q) + '&fields=nom,code,codesPostaux,codeDepartement,centre&limit=7';
@@ -1661,7 +1829,9 @@
                 fetch(url)
                     .then(function (r) { return r.json(); })
                     .then(function (res) {
-                        currentResultsList = res;
+                        if (wrap) wrap.classList.remove('loading');
+                        currentResultsList = res || [];
+                        searchIndex = -1;
                         if (!res || !res.length) {
                             if (searchResults) searchResults.style.display = 'none';
                             return;
@@ -1678,15 +1848,26 @@
                         }
                     })
                     .catch(function () {
+                        if (wrap) wrap.classList.remove('loading');
                         if (searchResults) searchResults.style.display = 'none';
+                        showToast('Recherche indisponible (service géographique injoignable).', 'error');
                     });
             }, 250);
+        }
+
+        function highlightSearchItem(idx) {
+            if (!searchResults) return;
+            var items = searchResults.querySelectorAll('.search-item');
+            items.forEach(function (it, i) { it.classList.toggle('active', i === idx); });
+            if (idx >= 0 && items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
         }
 
         function selectCity(c) {
             var zip = (c.codesPostaux && c.codesPostaux[0]) || '';
             if (searchInput) searchInput.value = c.nom + (zip ? ' (' + zip + ')' : '');
             if (searchResults) searchResults.style.display = 'none';
+            var wrap = document.getElementById('search-input-wrap');
+            if (wrap) wrap.classList.remove('loading');
             var lat = (c.centre && c.centre.coordinates) ? c.centre.coordinates[1] : 48.85;
             var lon = (c.centre && c.centre.coordinates) ? c.centre.coordinates[0] : 2.35;
             loadHailForecast(c.nom, zip, c.codeDepartement, lat, lon);
@@ -1695,9 +1876,36 @@
         if (searchInput) {
             searchInput.addEventListener('input', function () { doSearch(this.value.trim()); });
             searchInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && currentResultsList.length > 0) {
-                    selectCity(currentResultsList[0]);
+                if (e.key === 'ArrowDown' && currentResultsList.length > 0) {
+                    e.preventDefault();
+                    searchIndex = (searchIndex + 1) % currentResultsList.length;
+                    highlightSearchItem(searchIndex);
+                } else if (e.key === 'ArrowUp' && currentResultsList.length > 0) {
+                    e.preventDefault();
+                    searchIndex = (searchIndex - 1 + currentResultsList.length) % currentResultsList.length;
+                    highlightSearchItem(searchIndex);
+                } else if (e.key === 'Enter') {
+                    if (currentResultsList.length > 0) {
+                        e.preventDefault();
+                        var pick = (searchIndex >= 0 && currentResultsList[searchIndex]) ? currentResultsList[searchIndex] : currentResultsList[0];
+                        selectCity(pick);
+                    }
+                } else if (e.key === 'Escape') {
+                    if (searchResults) searchResults.style.display = 'none';
                 }
+            });
+        }
+
+        var searchClearBtn = document.getElementById('search-clear-btn');
+        if (searchClearBtn) {
+            searchClearBtn.addEventListener('click', function () {
+                if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+                if (searchResults) searchResults.style.display = 'none';
+                var wrap = document.getElementById('search-input-wrap');
+                if (wrap) wrap.classList.remove('loading');
+                this.style.display = 'none';
+                currentResultsList = [];
+                searchIndex = -1;
             });
         }
 
@@ -1734,6 +1942,7 @@
 
         function updateConvectiveMap() {
             if (!imgLayerEl) return;
+            setMapLoading(true); // indicateur de chargement des tuiles
             if (infoTitleEl) {
                 infoTitleEl.textContent = LAYER_TITLES[activeConvectiveLayer] || 'Carte Convective AROME';
             }
@@ -1742,7 +1951,7 @@
                 var leadStr = String(currentConvectiveLead).padStart(3, '0');
                 imgLayerEl.src = 'output/arome/maps/' + activeConvectiveLayer + '/' + leadStr + '.webp?v=' + Date.now();
                 if (sliderLabelEl) {
-                    sliderLabelEl.textContent = 'H+' + String(currentConvectiveLead).padStart(2, '0');
+                    sliderLabelEl.textContent = currentConvectiveLead === 0 ? 'H+00 (Maintenant)' : 'H+' + String(currentConvectiveLead).padStart(2, '0');
                 }
                 if (sliderEl) {
                     sliderEl.value = currentConvectiveLead;
@@ -1974,6 +2183,7 @@
             }
 
             if (btn) btn.innerHTML = '<i class="fa-solid fa-download"></i> Télécharger Carte HD (PNG)';
+            showToast('Carte HD téléchargée (2200 × 1640 px) — ' + (LAYER_TITLES[activeConvectiveLayer] || 'Carte'), 'success');
         }
 
         // ── RACCORDEMENT ÉCOUTEURS D'ÉVÉNEMENTS ──
@@ -2059,6 +2269,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Notifications Toast -->
+    <div class="toast-container" id="toast-container"></div>
 
 </body>
 </html>
