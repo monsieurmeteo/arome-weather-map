@@ -332,10 +332,12 @@
     
         
         /* ── CADRE CARTE AVEC ZOOM RÉGION & PIN VILLE ── */
+        /* NB : la taille AFFICHÉE est réduite pour la navigation ; l'export
+           HD (downloadConvectiveHD) reste en 2200×1640, indépendant du CSS. */
         .map-frame-wrapper {
             position: relative;
             width: 100%;
-            max-width: 960px;
+            max-width: 760px;
             margin: 0 auto;
             aspect-ratio: 2200 / 1640;
             border-radius: 12px;
@@ -490,7 +492,7 @@
         .map-frame-wrapper {
             position: relative;
             width: 100%;
-            max-width: 960px;
+            max-width: 760px;
             margin: 0 auto;
             aspect-ratio: 2200 / 1640;
             border-radius: 12px;
