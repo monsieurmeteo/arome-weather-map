@@ -2053,8 +2053,6 @@
             });
         }
 
-}
-
         function stopAnimation() {
             if (timer !== null) {
                 window.clearInterval(timer);
