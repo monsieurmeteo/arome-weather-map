@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -1166,14 +1166,10 @@
         }
 
         function updateCityPin(nom, lat, lon) {
+            // Marqueur de ville DÉSACTIVÉ sur la carte (retiré à la demande).
+            // La recherche par commune affiche la fiche en dessous, sans pointeur.
             var pin = document.getElementById('map-city-pin');
-            var label = document.getElementById('map-city-label');
-            if (!pin) return;
-            var proj = projectCoordsMercator(lat, lon);
-            pin.style.left = (proj.u * 100).toFixed(2) + '%';
-            pin.style.top = (proj.v * 100).toFixed(2) + '%';
-            pin.style.display = 'block';
-            if (label) label.textContent = nom;
+            if (pin) pin.style.display = 'none';
         }
 
         function applyRegionZoom(regKey) {
