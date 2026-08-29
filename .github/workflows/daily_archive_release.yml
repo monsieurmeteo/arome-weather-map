@@ -1,0 +1,55 @@
+name: "Archivage Quotidien Automatique des Cartes (GitHub Releases)"
+
+on:
+  schedule:
+    # Tous les soirs à 23h55 UTC (01h55 heure de Paris) après le dernier run
+    - cron: '55 23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  archive-daily-maps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Recuperation du depot
+        uses: actions/checkout@v4
+
+      - name: Compression des cartes du jour
+        id: compress
+        run: |
+          DATE_STR=$(date -u +'%Y-%m-%d')
+          MONTH_TAG="archives-$(date -u +'%Y-%m')"
+          ZIP_NAME="arome_cartes_${DATE_STR}.zip"
+          
+          echo "DATE_STR=${DATE_STR}" >> $GITHUB_ENV
+          echo "MONTH_TAG=${MONTH_TAG}" >> $GITHUB_ENV
+          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
+
+          if [ -d "output/arome/maps" ]; then
+            echo "Compression de output/arome/maps vers ${ZIP_NAME}..."
+            zip -q -r "${ZIP_NAME}" output/arome/maps
+            ZIP_SIZE=$(du -h "${ZIP_NAME}" | cut -f1)
+            echo "Archive creee : ${ZIP_NAME} (${ZIP_SIZE})"
+          else
+            echo "WARNING: Dossier output/arome/maps introuvable !"
+            exit 1
+          fi
+
+      - name: Publication dans GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 1. Creer la release mensuelle si elle n'existe pas
+          if ! gh release view "${MONTH_TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Creation de la release mensuelle ${MONTH_TAG}..."
+            gh release create "${MONTH_TAG}"               --repo "${{ github.repository }}"               --title "Archives Cartes AROME — $(date -u +'%B %Y')"               --notes "Archives quotidiennes automatiques de l'ensemble des cartes et calques météo du modèle AROME."
+          fi
+
+          # 2. Uploader l'archive du jour dans la release mensuelle (remplace si deja existant)
+          echo "Upload de ${ZIP_NAME} dans ${MONTH_TAG}..."
+          gh release upload "${MONTH_TAG}" "${ZIP_NAME}" --repo "${{ github.repository }}" --clobber
+          echo "Archive ${ZIP_NAME} publiee avec succes !"
