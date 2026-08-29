@@ -735,60 +735,6 @@
             </div>
         </section>
 
-        <!-- Cartouche d'Alerte Synthèse Scientifique -->
-        <section class="summary-card" id="summary-card" style="display:none;">
-            <div class="summary-left">
-                <h2 class="summary-place" id="sum-place">Lille (59000)</h2>
-                <div class="summary-timing" id="sum-timing"><i class="fa-solid fa-clock"></i> Échéance : H+00 à H+51 (AROME 2,5 km)</div>
-                <p class="summary-desc" id="sum-desc">Analyse des champs convectifs AROME en cours...</p>
-                <div style="font-size:11.5px; color:#64748b; margin-top:4px;">
-                    <i class="fa-solid fa-circle-info"></i> Résolution du modèle ≈ 2,5 km (0,025°). Les scores ci-dessous sont des indices de potentiel (/100) et non des probabilités.
-                </div>
-            </div>
-            <div style="display:flex; flex-wrap:wrap; gap:12px;">
-                <!-- 1. Indice Potentiel Orageux (IPO) -->
-                <div class="risk-gauge-box">
-                    <div class="risk-indicator" id="sum-orage-ind" style="background:#10b981; font-size:18px; font-weight:900;">0</div>
-                    <div>
-                        <div class="risk-meta-title">Potentiel Orageux (IPO)</div>
-                        <div class="risk-meta-val" id="sum-orage-lvl">0/100 — Très faible</div>
-                        <div style="font-size:12px; color:#38bdf8; font-weight:700;" id="sum-orage-meta">MUCAPE : 0 J/kg</div>
-                    </div>
-                </div>
-
-                <!-- 2. Indice Potentiel Grêle (IPG) & Taille Indicative -->
-                <div class="risk-gauge-box">
-                    <div class="risk-indicator" id="sum-indicator" style="background:#10b981; font-size:18px; font-weight:900;">0</div>
-                    <div>
-                        <div class="risk-meta-title">Potentiel Grêle (IPG)</div>
-                        <div class="risk-meta-val" id="sum-level">0/100 — Très faible</div>
-                        <div style="font-size:12px; color:#00d2ff; font-weight:700;" id="sum-diam">Niveau : Aucun signal significatif</div>
-                    </div>
-                </div>
-
-                <!-- 3. Environnement & Rafales Convectives -->
-                <div class="risk-gauge-box">
-                    <div class="risk-indicator" id="sum-tor-ind" style="background:#10b981; font-size:18px;">💨</div>
-                    <div>
-                        <div class="risk-meta-title">Rafales &amp; Proxy LCL</div>
-                        <div class="risk-meta-val" id="sum-tor-lvl">Rafales max : 0 km/h</div>
-                        <div style="font-size:12px; color:#c084fc; font-weight:700;" id="sum-stp">LCL indicatif : 0 m</div>
-                    </div>
-                </div>
-
-                <!-- 4. Indice Potentiel Tornadique (IPT) -->
-                <div class="risk-gauge-box">
-                    <div class="risk-indicator" id="sum-ipt-ind" style="background:#10b981; font-size:18px; font-weight:900;">0</div>
-                    <div>
-                        <div class="risk-meta-title">Potentiel Tornadique (IPT)</div>
-                        <div class="risk-meta-val" id="sum-ipt-lvl">0/100 — Nul</div>
-                        <div style="font-size:12px; color:#a855f7; font-weight:700;" id="sum-ipt-meta">Cisaillement &amp; LCL</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        
         <!-- 🗺️ SECTION CARTES NATIONALES ORAGES, GRÊLE & TORNADES -->
         <section class="convective-maps-card" id="convective-maps-card">
             <div class="maps-nav-header">
@@ -881,6 +827,60 @@
                 </div>
             </div>
         </section>
+
+        <!-- Cartouche d'Alerte Synthèse Scientifique -->
+        <section class="summary-card" id="summary-card" style="display:none;">
+            <div class="summary-left">
+                <h2 class="summary-place" id="sum-place">Lille (59000)</h2>
+                <div class="summary-timing" id="sum-timing"><i class="fa-solid fa-clock"></i> Échéance : H+00 à H+51 (AROME 2,5 km)</div>
+                <p class="summary-desc" id="sum-desc">Analyse des champs convectifs AROME en cours...</p>
+                <div style="font-size:11.5px; color:#64748b; margin-top:4px;">
+                    <i class="fa-solid fa-circle-info"></i> Résolution du modèle ≈ 2,5 km (0,025°). Les scores ci-dessous sont des indices de potentiel (/100) et non des probabilités.
+                </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                <!-- 1. Indice Potentiel Orageux (IPO) -->
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-orage-ind" style="background:#10b981; font-size:18px; font-weight:900;">0</div>
+                    <div>
+                        <div class="risk-meta-title">Potentiel Orageux (IPO)</div>
+                        <div class="risk-meta-val" id="sum-orage-lvl">0/100 — Très faible</div>
+                        <div style="font-size:12px; color:#38bdf8; font-weight:700;" id="sum-orage-meta">MUCAPE : 0 J/kg</div>
+                    </div>
+                </div>
+
+                <!-- 2. Indice Potentiel Grêle (IPG) & Taille Indicative -->
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-indicator" style="background:#10b981; font-size:18px; font-weight:900;">0</div>
+                    <div>
+                        <div class="risk-meta-title">Potentiel Grêle (IPG)</div>
+                        <div class="risk-meta-val" id="sum-level">0/100 — Très faible</div>
+                        <div style="font-size:12px; color:#00d2ff; font-weight:700;" id="sum-diam">Niveau : Aucun signal significatif</div>
+                    </div>
+                </div>
+
+                <!-- 3. Environnement & Rafales Convectives -->
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-tor-ind" style="background:#10b981; font-size:18px;">💨</div>
+                    <div>
+                        <div class="risk-meta-title">Rafales &amp; Proxy LCL</div>
+                        <div class="risk-meta-val" id="sum-tor-lvl">Rafales max : 0 km/h</div>
+                        <div style="font-size:12px; color:#c084fc; font-weight:700;" id="sum-stp">LCL indicatif : 0 m</div>
+                    </div>
+                </div>
+
+                <!-- 4. Indice Potentiel Tornadique (IPT) -->
+                <div class="risk-gauge-box">
+                    <div class="risk-indicator" id="sum-ipt-ind" style="background:#10b981; font-size:18px; font-weight:900;">0</div>
+                    <div>
+                        <div class="risk-meta-title">Potentiel Tornadique (IPT)</div>
+                        <div class="risk-meta-val" id="sum-ipt-lvl">0/100 — Nul</div>
+                        <div style="font-size:12px; color:#a855f7; font-weight:700;" id="sum-ipt-meta">Cisaillement &amp; LCL</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
 
         
         <!-- 🔬 MODE DÉVELOPPEUR & INSPECTEUR CONVECTIF SCIENTIFIQUE -->
