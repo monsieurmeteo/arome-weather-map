@@ -478,31 +478,34 @@
 
         // Auto-complétion Commune / Code Postal via geo.api.gouv.fr
         var debounceTimer = null;
-        searchInput.addEventListener('input', function (e) {
-            var q = e.target.value.trim();
+        var currentResultsList = [];
+
+        function doSearch(q) {
             clearTimeout(debounceTimer);
-            if (q.length < 2) {
+            if (!q || q.length < 2) {
                 searchResults.style.display = 'none';
                 return;
             }
             debounceTimer = setTimeout(function () {
                 var isZip = /^\d+$/.test(q);
                 var url = isZip
-                    ? 'https://geo.api.gouv.fr/communes?codePostal=' + encodeURIComponent(q) + '&fields=nom,code,centre,departement,codesPostaux&limit=8'
-                    : 'https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(q) + '&fields=nom,code,centre,departement,codesPostaux&boost=population&limit=8';
+                    ? 'https://geo.api.gouv.fr/communes?codePostal=' + encodeURIComponent(q) + '&fields=nom,code,centre,codeDepartement,codesPostaux,population&boost=population&limit=8'
+                    : 'https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(q) + '&fields=nom,code,centre,codeDepartement,codesPostaux,population&boost=population&limit=8';
 
                 fetch(url)
                     .then(function (r) { return r.json(); })
                     .then(function (list) {
+                        currentResultsList = list || [];
                         if (!list || !list.length) {
                             searchResults.innerHTML = '<div style="padding:10px 14px;color:#94a3b8;font-size:13px;">Aucune commune trouvée</div>';
                             searchResults.style.display = 'block';
                             return;
                         }
-                        searchResults.innerHTML = list.map(function (c) {
+                        searchResults.innerHTML = list.map(function (c, idx) {
                             var zip = (c.codesPostaux && c.codesPostaux[0]) ? c.codesPostaux[0] : '';
-                            return '<div class="search-item" data-code="' + c.code + '" data-dep="' + (c.departement ? c.departement.code : '') + '" data-lat="' + c.centre.coordinates[1] + '" data-lon="' + c.centre.coordinates[0] + '" data-nom="' + c.nom + '" data-zip="' + zip + '">' +
-                                   '<strong>' + c.nom + '</strong> <span>(' + zip + ')</span>' +
+                            var dep = c.codeDepartement || (c.code ? c.code.substring(0, 2) : '');
+                            return '<div class="search-item" data-idx="' + idx + '" style="cursor:pointer; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05);">' +
+                                   '<strong>' + c.nom + '</strong> <span style="color:#94a3b8;">(' + zip + ' - Dép. ' + dep + ')</span>' +
                                    '</div>';
                         }).join('');
                         searchResults.style.display = 'block';
@@ -510,21 +513,53 @@
                     .catch(function () {
                         searchResults.style.display = 'none';
                     });
-            }, 250);
+            }, 200);
+        }
+
+        searchInput.addEventListener('input', function (e) {
+            doSearch(e.target.value.trim());
         });
+
+        function selectCity(c) {
+            if (!c) return;
+            var nom = c.nom;
+            var zip = (c.codesPostaux && c.codesPostaux[0]) ? c.codesPostaux[0] : '';
+            var dep = c.codeDepartement || (c.code ? c.code.substring(0, 2) : (zip ? zip.substring(0, 2) : '59'));
+            var lat = (c.centre && c.centre.coordinates) ? c.centre.coordinates[1] : 48.8566;
+            var lon = (c.centre && c.centre.coordinates) ? c.centre.coordinates[0] : 2.3522;
+
+            searchInput.value = nom + (zip ? ' (' + zip + ')' : '');
+            searchResults.style.display = 'none';
+            loadHailForecast(nom, zip, dep, lat, lon);
+        }
 
         searchResults.addEventListener('click', function (e) {
             var item = e.target.closest('.search-item');
             if (!item) return;
-            var nom = item.dataset.nom;
-            var zip = item.dataset.zip;
-            var lat = parseFloat(item.dataset.lat);
-            var lon = parseFloat(item.dataset.lon);
-            var dep = item.dataset.dep;
+            var idx = parseInt(item.dataset.idx, 10);
+            if (!isNaN(idx) && currentResultsList[idx]) {
+                selectCity(currentResultsList[idx]);
+            }
+        });
 
-            searchInput.value = nom + ' (' + zip + ')';
-            searchResults.style.display = 'none';
-            loadHailForecast(nom, zip, dep, lat, lon);
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentResultsList && currentResultsList.length > 0) {
+                    selectCity(currentResultsList[0]);
+                } else {
+                    var q = searchInput.value.trim();
+                    if (q.length >= 2) {
+                        var isZip = /^\d+$/.test(q);
+                        var url = isZip
+                            ? 'https://geo.api.gouv.fr/communes?codePostal=' + encodeURIComponent(q) + '&fields=nom,code,centre,codeDepartement,codesPostaux,population&boost=population&limit=1'
+                            : 'https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(q) + '&fields=nom,code,centre,codeDepartement,codesPostaux,population&boost=population&limit=1';
+                        fetch(url).then(function(r){ return r.json(); }).then(function(list){
+                            if (list && list.length > 0) selectCity(list[0]);
+                        });
+                    }
+                }
+            }
         });
 
         document.addEventListener('click', function (e) {
@@ -533,8 +568,6 @@
             }
         });
 
-        
-        
         var BASE = 'output/arome/maps';
         var deptCache = {};
 
