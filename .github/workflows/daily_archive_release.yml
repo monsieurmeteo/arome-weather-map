@@ -18,8 +18,16 @@ jobs:
       - name: Recuperation du depot
         uses: actions/checkout@v4
 
-      - name: Compression des images du jour (Option 2 : Images pures sans binaires)
-        id: compress
+      - name: Configuration de Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installation Pillow
+        run: pip install pillow
+
+      - name: Generation de l'archive structuree (France + 13 Regions + 30 Parametres)
+        id: package
         run: |
           DATE_STR=$(date -u +'%Y-%m-%d')
           MONTH_TAG="archives-$(date -u +'%Y-%m')"
@@ -29,18 +37,7 @@ jobs:
           echo "MONTH_TAG=${MONTH_TAG}" >> $GITHUB_ENV
           echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
 
-          if [ -d "output/arome/maps" ]; then
-            echo "Selection et compression des images WebP / PNG / SVG uniquement..."
-            # Inclut toutes les images 52h et syntheses 24h, exclut communes et values
-            find output/arome/maps -type f \( -name "*.webp" -o -name "*.png" -o -name "*.svg" \) ! -path "*/communes/*" ! -path "*/values/*" | zip -q "${ZIP_NAME}" -@
-            
-            ZIP_SIZE=$(du -h "${ZIP_NAME}" | cut -f1)
-            FILE_COUNT=$(unzip -l "${ZIP_NAME}" | tail -n 1 | awk '{print $2}')
-            echo "Archive creee : ${ZIP_NAME} (${ZIP_SIZE}, ${FILE_COUNT} fichiers d'images)"
-          else
-            echo "WARNING: Dossier output/arome/maps introuvable !"
-            exit 1
-          fi
+          python pipeline/package_archive.py
 
       - name: Publication dans GitHub Releases
         env:
@@ -49,10 +46,10 @@ jobs:
           # 1. Creer la release mensuelle si elle n'existe pas
           if ! gh release view "${MONTH_TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             echo "Creation de la release mensuelle ${MONTH_TAG}..."
-            gh release create "${MONTH_TAG}"               --repo "${{ github.repository }}"               --title "Archives Cartes AROME — $(date -u +'%B %Y')"               --notes "Archives quotidiennes automatiques de l'ensemble des images et calques météo AROME (Option 2 : Images pures)."
+            gh release create "${MONTH_TAG}"               --repo "${{ github.repository }}"               --title "Archives Cartes AROME — $(date -u +'%B %Y')"               --notes "Archives quotidiennes automatiques et structurees (France entiere + 13 Regions francaises + 30 parametres complets)."
           fi
 
-          # 2. Uploader l'archive du jour dans la release mensuelle (remplace si deja existant)
+          # 2. Uploader l'archive du jour dans la release mensuelle
           echo "Upload de ${ZIP_NAME} dans ${MONTH_TAG}..."
           gh release upload "${MONTH_TAG}" "${ZIP_NAME}" --repo "${{ github.repository }}" --clobber
           echo "Archive ${ZIP_NAME} publiee avec succes !"
