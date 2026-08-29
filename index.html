@@ -930,13 +930,24 @@
                     <a href="previsions.html" class="amfm-btn amfm-btn-commune" aria-label="Prévisions détaillées par commune ou code postal" title="Prévisions par commune">
                         <i class="fa-solid fa-house-chimney" aria-hidden="true"></i> <span>Commune</span>
                     </a>
-                    <a href="archives.html" class="amfm-btn" style="background:rgba(168,85,247,0.18); border:1px solid rgba(168,85,247,0.4); color:#c084fc; font-size:12px; padding:3px 8px;" title="Archives & Téléchargement ZIP">
-                        <i class="fa-solid fa-box-archive" aria-hidden="true"></i> <span>Archives</span>
-                    </a>
+                    
                 </div>
 
                                                                 <!-- Centre : Calque Météo + Sélecteur de Région -->
                 <div class="amfm-nav-controls">
+                    <!-- Sélecteur de Run AROME HD (Direct & Archives) -->
+                    <select id="select-run" class="amfm-select-region" style="border-color:#38bdf8; color:#38bdf8; font-weight:800; min-width:140px;" aria-label="Sélectionner le run AROME">
+                        <option value="latest" selected>🔴 Direct (Actuel)</option>
+                        <option value="20260829_18">🕒 Run 29/08 18z</option>
+                        <option value="20260829_15">🕒 Run 29/08 15z</option>
+                        <option value="20260829_12">🕒 Run 29/08 12z</option>
+                        <option value="20260829_09">🕒 Run 29/08 09z</option>
+                        <option value="20260829_06">🕒 Run 29/08 06z</option>
+                        <option value="20260829_03">🕒 Run 29/08 03z</option>
+                        <option value="20260829_00">🕒 Run 29/08 00z</option>
+                        <option value="20260828_18">🕒 Run 28/08 18z</option>
+                        <option value="20260828_12">🕒 Run 28/08 12z</option>
+                    </select>
                     <!-- Sélecteur Direct de Calque Météo AROME HD Standard -->
                     <select id="direct-layer-select" class="amfm-select-layer" aria-label="Sélection du paramètre météorologique">
                         <!-- 🌡️ TEMPÉRATURES -->
