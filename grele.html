@@ -698,6 +698,15 @@
         .map-play-btn:active { transform: scale(0.95); }
         .btn-download-hd { transition: all 0.2s; }
         .btn-download-hd:hover { box-shadow: 0 0 22px rgba(0, 210, 255, 0.6); transform: translateY(-1px); }
+
+        /* Section « Prévisions par Commune » (sous la carte) */
+        .commune-search-section {
+            max-width: 640px;
+            margin: 0 auto 26px;
+            text-align: center;
+        }
+        .commune-search-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; color: var(--text-main); }
+        .commune-search-hint { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; }
     </style>
 </head>
 <body>
@@ -725,14 +734,7 @@
             <h1>Centre d’Alerte Orages, Foudre, Grêle &amp; Tornades par Code Postal</h1>
             <p>Calcul haute précision heure par heure (0 à 51h) basé sur le modèle AROME 2,5 km : indices diagnostiques de potentiel orageux, grêle et tornadique (/100) à partir de la réflectivité radar simulée, du MUCAPE, du graupel et du cisaillement.</p>
 
-            <div class="search-box">
-                <div class="search-input-wrap" id="search-input-wrap">
-                    <i class="fa-solid fa-magnifying-glass" style="color:#64748b;"></i>
-                    <input type="text" id="hail-search" class="search-input" placeholder="Entrez un code postal (ex: 59000, 75001) ou une ville..." autocomplete="off">
-                    <button type="button" class="search-clear-btn" id="search-clear-btn" title="Effacer la recherche" aria-label="Effacer la recherche"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div id="search-results" class="search-results"></div>
-            </div>
+            
         </section>
 
         <!-- 🗺️ SECTION CARTES NATIONALES ORAGES, GRÊLE & TORNADES -->
@@ -828,7 +830,22 @@
             </div>
         </section>
 
-        <!-- Cartouche d'Alerte Synthèse Scientifique -->
+        
+
+        <!-- 📍 PRÉVISIONS PAR COMMUNE -->
+        <section class="commune-search-section">
+            <div class="commune-search-title"><i class="fa-solid fa-location-dot" style="color:#00d2ff;"></i> Prévisions par Commune</div>
+            <p class="commune-search-hint">Recherchez une ville ou un code postal pour afficher les indices orageux, grêle et tornadique heure par heure.</p>
+<div class="search-box">
+                <div class="search-input-wrap" id="search-input-wrap">
+                    <i class="fa-solid fa-magnifying-glass" style="color:#64748b;"></i>
+                    <input type="text" id="hail-search" class="search-input" placeholder="Entrez un code postal (ex: 59000, 75001) ou une ville..." autocomplete="off">
+                    <button type="button" class="search-clear-btn" id="search-clear-btn" title="Effacer la recherche" aria-label="Effacer la recherche"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="search-results" class="search-results"></div>
+            </div>
+        </section>
+<!-- Cartouche d'Alerte Synthèse Scientifique -->
         <section class="summary-card" id="summary-card" style="display:none;">
             <div class="summary-left">
                 <h2 class="summary-place" id="sum-place">Lille (59000)</h2>
