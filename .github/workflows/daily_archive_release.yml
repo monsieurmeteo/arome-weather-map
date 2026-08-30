@@ -1,16 +1,18 @@
-name: "Archivage Quotidien Automatique des Cartes (GitHub Releases)"
+name: "Archivage Automatique des Cartes (Runs 00Z & 12Z — France + Hauts-de-France)"
 
 on:
   schedule:
-    # Tous les soirs à 23h55 UTC (01h55 heure de Paris) après le dernier run
-    - cron: '55 23 * * *'
+    # 1. Après le Run 00Z (04h30 UTC = 06h30 heure de Paris)
+    - cron: '30 4 * * *'
+    # 2. Après le Run 12Z (16h30 UTC = 18h30 heure de Paris)
+    - cron: '30 16 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  archive-daily-maps:
+  archive-maps:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -26,16 +28,11 @@ jobs:
       - name: Installation Pillow
         run: pip install pillow
 
-      - name: Generation de l'archive structuree (France + 13 Regions + 30 Parametres)
+      - name: Generation de l'archive Photos d'antenne (France + Hauts-de-France)
         id: package
         run: |
-          DATE_STR=$(date -u +'%Y-%m-%d')
           MONTH_TAG="archives-$(date -u +'%Y-%m')"
-          ZIP_NAME="arome_cartes_${DATE_STR}.zip"
-          
-          echo "DATE_STR=${DATE_STR}" >> $GITHUB_ENV
           echo "MONTH_TAG=${MONTH_TAG}" >> $GITHUB_ENV
-          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
 
           python pipeline/package_archive.py
 
@@ -46,10 +43,17 @@ jobs:
           # 1. Creer la release mensuelle si elle n'existe pas
           if ! gh release view "${MONTH_TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             echo "Creation de la release mensuelle ${MONTH_TAG}..."
-            gh release create "${MONTH_TAG}"               --repo "${{ github.repository }}"               --title "Archives Cartes AROME — $(date -u +'%B %Y')"               --notes "Archives quotidiennes automatiques et structurees (France entiere + 13 Regions francaises + 30 parametres complets)."
+            gh release create "${MONTH_TAG}" \
+              --repo "${{ github.repository }}" \
+              --title "Archives Cartes AROME — $(date -u +'%B %Y')" \
+              --notes "Archives officielles des runs 00Z et 12Z (France Entière + Hauts-de-France)."
           fi
 
-          # 2. Uploader l'archive du jour dans la release mensuelle
-          echo "Upload de ${ZIP_NAME} dans ${MONTH_TAG}..."
-          gh release upload "${MONTH_TAG}" "${ZIP_NAME}" --repo "${{ github.repository }}" --clobber
-          echo "Archive ${ZIP_NAME} publiee avec succes !"
+          # 2. Trouver le fichier zip genere et l'uploader
+          for z in arome_*.zip; do
+            if [ -f "$z" ]; then
+              echo "Upload de $z dans ${MONTH_TAG}..."
+              gh release upload "${MONTH_TAG}" "$z" --repo "${{ github.repository }}" --clobber
+              echo "Archive $z publiee avec succes !"
+            fi
+          done
