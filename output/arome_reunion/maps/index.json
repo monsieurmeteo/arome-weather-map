@@ -7,10 +7,10 @@
   "run": "2026-09-04T12:00:00Z",
   "run_time": "04/09/2026 12:00 UTC",
   "bounds": {
-    "south": -25.5,
-    "west": 51.5,
-    "north": -17.5,
-    "east": 60.0
+    "south": -25.9,
+    "west": 32.75,
+    "north": -3.45,
+    "east": 67.6
   },
   "layers": {
     "temperature": {
