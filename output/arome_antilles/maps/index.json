@@ -523,6 +523,6 @@
   "places": "maps/communes.json",
   "overlay": "maps/frontieres.svg",
   "fond": "maps/fond.webp",
-  "mask": "maps/mask_france.png",
+  "mask": null,
   "generated_at": "2026-09-04T12:00:00Z"
 }
