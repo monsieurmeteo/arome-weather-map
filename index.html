@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -1297,13 +1297,11 @@
                 }
             };
         }
+        // La page de connexion reste toujours fixée à 100% sur le logo Météo-Climat Pro officiel
         if (authLogo) {
-            authLogo.src = cfg.src;
-            authLogo.onerror = function() {
-                if (cfg.fallback && this.src !== cfg.fallback) {
-                    this.src = cfg.fallback;
-                }
-            };
+            authLogo.src = "logo.png";
+            authLogo.alt = "Météo-Climat Pro";
+            authLogo.onerror = function() { this.src = "https://alertes-meteo.com/assets/logo_meteo_climat_pro.png"; };
         }
         if (badge) badge.innerHTML = cfg.badge;
         if (actionText) actionText.textContent = cfg.actionText;
