@@ -266,6 +266,8 @@
 
         var timer = null;
 
+        var maxScale = 32.0;
+
         var transform = { scale: 1, x: 0, y: 0 };
 
         var activePointers = new Map();
@@ -4056,7 +4058,17 @@
 
                 corse: { latitude: 42.10, longitude: 9.05, scale: 4.20 },
 
-                belgique: { latitude: 50.25, longitude: 4.40, scale: 3.10 }
+                belgique: { latitude: 50.25, longitude: 4.40, scale: 3.10 },
+
+                guadeloupe: { latitude: 16.25, longitude: -61.55, scale: 6.50 },
+
+                martinique: { latitude: 14.65, longitude: -61.02, scale: 6.50 },
+
+                stmartin: { latitude: 18.05, longitude: -63.05, scale: 8.50 },
+
+                ile_reunion: { latitude: -21.12, longitude: 55.53, scale: 6.50 },
+
+                mayotte: { latitude: -12.83, longitude: 45.15, scale: 7.50 }
 
             };
 
@@ -4070,13 +4082,33 @@
 
                 // Gestion Outre-Mer (AROME-OM)
 
-                if (val === 'antilles') {
+                if (val === 'antilles' || val === 'guadeloupe' || val === 'martinique' || val === 'stmartin') {
 
-                    transform = { scale: 1, x: 0, y: 0 };
+                    var isSub = (val !== 'antilles');
 
-                    switchModel('arome_antilles');
+                    var targetMod = 'arome_antilles';
 
-                    resetView();
+                    if (currentModel !== targetMod) {
+
+                        switchModel(targetMod);
+
+                    }
+
+                    if (isSub) {
+
+                        var omCfg = REGION_CONFIG[val];
+
+                        if (omCfg && typeof focusLocation === 'function') {
+
+                            focusLocation(omCfg);
+
+                        }
+
+                    } else {
+
+                        resetView();
+
+                    }
 
                     updateUrl();
 
@@ -4084,13 +4116,33 @@
 
                 }
 
-                if (val === 'reunion') {
+                if (val === 'reunion' || val === 'ile_reunion' || val === 'mayotte') {
 
-                    transform = { scale: 1, x: 0, y: 0 };
+                    var isSubR = (val !== 'reunion');
 
-                    switchModel('arome_reunion');
+                    var targetModR = 'arome_reunion';
 
-                    resetView();
+                    if (currentModel !== targetModR) {
+
+                        switchModel(targetModR);
+
+                    }
+
+                    if (isSubR) {
+
+                        var omCfgR = REGION_CONFIG[val];
+
+                        if (omCfgR && typeof focusLocation === 'function') {
+
+                            focusLocation(omCfgR);
+
+                        }
+
+                    } else {
+
+                        resetView();
+
+                    }
 
                     updateUrl();
 
@@ -6044,13 +6096,15 @@
 
                 // Même base que computeMapRect : s = max(w/2200, h/1640)
 
-                var s = Math.max(w / 2200.0, h / 1640.0);
+                var natH = isOmDomain() ? (currentModel === 'arome_reunion' ? 1480.0 : 1320.0) : 1640.0;
+
+                var s = Math.max(w / 2200.0, h / natH);
 
                 var totalScale = s * transform.scale;
 
                 var rasterW = 2200.0 * totalScale;
 
-                var rasterH = 1640.0 * totalScale;
+                var rasterH = natH * totalScale;
 
                 // On empêche de sortir du raster (au plus un demi-viewport de débord)
 
