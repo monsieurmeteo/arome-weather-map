@@ -4029,173 +4029,111 @@
             // la région ENTIÈRE dans le viewport sans excès de zoom.
 
             var REGION_CONFIG = {
-
                 france: { reset: true },
-
                 hdf: { latitude: 49.85, longitude: 2.82, scale: 2.65 },
-
                 normandie: { latitude: 48.95, longitude: -0.07, scale: 2.85 },
-
                 idf: { latitude: 48.65, longitude: 2.50, scale: 4.20 },
-
                 grandest: { latitude: 48.65, longitude: 5.80, scale: 2.25 },
-
                 bretagne: { latitude: 48.00, longitude: -3.08, scale: 2.80 },
-
                 pdl: { latitude: 47.30, longitude: -0.85, scale: 2.75 },
-
                 cvl: { latitude: 47.45, longitude: 1.60, scale: 2.55 },
-
                 bfc: { latitude: 47.10, longitude: 5.00, scale: 2.65 },
-
                 naq: { latitude: 44.95, longitude: 0.40, scale: 1.85 },
-
                 ara: { latitude: 45.30, longitude: 4.65, scale: 2.25 },
-
                 occitanie: { latitude: 43.50, longitude: 2.25, scale: 2.25 },
-
                 paca: { latitude: 43.85, longitude: 6.00, scale: 2.85 },
-
                 corse: { latitude: 42.10, longitude: 9.05, scale: 4.20 },
-
                 belgique: { latitude: 50.25, longitude: 4.40, scale: 3.10 },
-
-                guadeloupe: { latitude: 16.25, longitude: -61.55, scale: 6.50 },
-
-                martinique: { latitude: 14.65, longitude: -61.02, scale: 6.50 },
-
-                stmartin: { latitude: 18.05, longitude: -63.05, scale: 8.50 },
-
-                ile_reunion: { latitude: -21.12, longitude: 55.53, scale: 6.50 },
-
-                mayotte: { latitude: -12.83, longitude: 45.15, scale: 7.50 }
-
+                reunion: { latitude: -21.12, longitude: 55.53, scale: 9.0 },
+                reunion_globale: { reset: true },
+                mayotte: { latitude: -12.83, longitude: 45.16, scale: 11.0 },
+                antilles: { reset: true },
+                guadeloupe: { latitude: 16.25, longitude: -61.55, scale: 8.5 },
+                martinique: { latitude: 14.65, longitude: -61.02, scale: 9.0 },
+                stmartin: { latitude: 18.05, longitude: -63.05, scale: 14.0 }
             };
 
-
-
             regionSelect.addEventListener('change', function (e) {
-
                 var val = e.target.value || 'france';
 
-
-
-                // Gestion Outre-Mer (AROME-OM)
-
-                if (val === 'antilles' || val === 'guadeloupe' || val === 'martinique' || val === 'stmartin') {
-
-                    var isSub = (val !== 'antilles');
-
-                    var targetMod = 'arome_antilles';
-
-                    if (currentModel !== targetMod) {
-
-                        switchModel(targetMod);
-
-                    }
-
-                    if (isSub) {
-
-                        var omCfg = REGION_CONFIG[val];
-
-                        if (omCfg && typeof focusLocation === 'function') {
-
-                            focusLocation(omCfg);
-
-                        }
-
-                    } else {
-
-                        resetView();
-
-                    }
-
-                    updateUrl();
-
-                    return;
-
-                }
-
-                if (val === 'reunion' || val === 'ile_reunion' || val === 'mayotte') {
-
-                    var isSubR = (val !== 'reunion');
-
+                // Cas Océan Indien (La Réunion & Mayotte)
+                if (val === 'reunion' || val === 'reunion_globale' || val === 'mayotte') {
                     var targetModR = 'arome_reunion';
-
+                    var cfgR = REGION_CONFIG[val];
                     if (currentModel !== targetModR) {
-
-                        switchModel(targetModR);
-
-                    }
-
-                    if (isSubR) {
-
-                        var omCfgR = REGION_CONFIG[val];
-
-                        if (omCfgR && typeof focusLocation === 'function') {
-
-                            focusLocation(omCfgR);
-
-                        }
-
+                        switchModel(targetModR, null, function () {
+                            if (cfgR && !cfgR.reset && typeof focusLocation === 'function') {
+                                focusLocation(cfgR);
+                            } else {
+                                resetView();
+                            }
+                        });
                     } else {
-
-                        resetView();
-
+                        if (cfgR && !cfgR.reset && typeof focusLocation === 'function') {
+                            focusLocation(cfgR);
+                        } else {
+                            resetView();
+                        }
                     }
-
                     updateUrl();
-
                     return;
-
                 }
 
+                // Cas Antilles (Guadeloupe, Martinique, Saint-Martin)
+                if (val === 'antilles' || val === 'guadeloupe' || val === 'martinique' || val === 'stmartin') {
+                    var targetModA = 'arome_antilles';
+                    var cfgA = REGION_CONFIG[val];
+                    if (currentModel !== targetModA) {
+                        switchModel(targetModA, null, function () {
+                            if (cfgA && !cfgA.reset && typeof focusLocation === 'function') {
+                                focusLocation(cfgA);
+                            } else {
+                                resetView();
+                            }
+                        });
+                    } else {
+                        if (cfgA && !cfgA.reset && typeof focusLocation === 'function') {
+                            focusLocation(cfgA);
+                        } else {
+                            resetView();
+                        }
+                    }
+                    updateUrl();
+                    return;
+                }
 
-
-                // Retour métropole si on était sur un domaine Outre-Mer
-
+                // Retour métropole si on était sur Outre-Mer
                 if (currentModel === 'arome_antilles' || currentModel === 'arome_reunion') {
-
                     transform = { scale: 1, x: 0, y: 0 };
-
-                    switchModel('arome');
-
+                    var cfgM = REGION_CONFIG[val];
+                    switchModel('arome', null, function () {
+                        if (cfgM && !cfgM.reset && cfgM.latitude !== undefined) {
+                            focusLocation(cfgM);
+                        } else {
+                            resetView();
+                        }
+                    });
+                    updateUrl();
+                    return;
                 }
-
-
 
                 var cfg = REGION_CONFIG[val];
-
                 if (val === 'france' || (cfg && cfg.reset)) {
-
                     resetView();
-
                     updateUrl();
-
                     return;
-
                 }
 
                 if (cfg && cfg.latitude !== undefined) {
-
                     focusLocation({
-
                         latitude: cfg.latitude,
-
                         longitude: cfg.longitude,
-
                         scale: cfg.scale
-
                     });
-
                 } else {
-
                     resetView();
-
                 }
-
                 updateUrl();
-
             });
 
         }
@@ -4218,7 +4156,7 @@
 
 
 
-        function switchModel(modelKey, initialLayer) {
+        function switchModel(modelKey, initialLayer, onComplete) {
 
             var modelMap = {
 
@@ -4419,6 +4357,12 @@
                     renderStep(0);
 
                     updateUrl();
+
+                    if (typeof onComplete === 'function') {
+                        onComplete();
+                    } else if (pendingFocus && typeof focusLocation === 'function') {
+                        focusLocation(pendingFocus);
+                    }
 
                 })
 
@@ -5416,11 +5360,14 @@
 
                 var scale = Math.min(width / 2200.0, height / natH) * t.scale;
 
+                // Remonter la vue globale Océan Indien pour bien dégager La Réunion et Mayotte
+                var yOffset = (currentModel === 'arome_reunion' && t.scale <= 1.25) ? (-0.13 * natH * scale) : 0;
+
                 return {
 
                     x: width / 2 + t.x - 1100.0 * scale,
 
-                    y: height / 2 + t.y - (natH / 2.0) * scale,
+                    y: height / 2 + t.y - (natH / 2.0) * scale + yOffset,
 
                     w: 2200.0 * scale,
 
@@ -5540,7 +5487,7 @@
 
         function visiblePlaces(width, height, bounds, northY, mercatorSpan, density) {
 
-            if (transform.scale < 1.35 || !placeBuckets.size) {
+            if (places.length < 200 || transform.scale < 1.35 || !placeBuckets.size) {
 
                 return places;
 
@@ -6314,23 +6261,15 @@
 
             var scale = clamp(Number(pendingFocus.scale) || 2, 1.16, maxScale);
 
-            // Même baseScale que computeMapRect et applyTransform pour cohérence totale
+            var natH = isOmDomain() ? (currentModel === 'arome_reunion' ? 1480.0 : 1320.0) : 1640.0;
 
-            var s = Math.max(width / 2200.0, height / 1640.0);
+            var s = Math.max(width / 2200.0, height / natH);
 
             transform.scale = scale;
 
-            // Le raster est centré en (width/2 + tx, height/2 + ty) dans computeMapRect.
-
-            // On veut que le point (u,v) soit au centre de l'écran :
-
-            //   width/2 + tx + (u - 0.5) * 2200 * s * scale = width/2
-
-            // → tx = (0.5 - u) * 2200 * s * scale
-
             transform.x = 2200.0 * s * scale * (0.5 - u);
 
-            transform.y = 1640.0 * s * scale * (0.5 - v) + (height * 0.04);
+            transform.y = natH * s * scale * (0.5 - v);
 
             pendingFocus = null;
 
