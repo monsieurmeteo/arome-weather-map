@@ -6,12 +6,12 @@
   "resolution": "0.025° (~2.5 km)",
   "run": "2026-09-04T12:00:00Z",
   "run_time": "04/09/2026 12:00 UTC",
-  "bounds": [
-    -25.5,
-    51.5,
-    -17.5,
-    60.0
-  ],
+  "bounds": {
+    "south": -25.5,
+    "west": 51.5,
+    "north": -17.5,
+    "east": 60.0
+  },
   "layers": {
     "temperature": {
       "label": "Temperature"
