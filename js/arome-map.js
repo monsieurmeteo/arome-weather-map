@@ -1637,9 +1637,6 @@
                 return null;
 
             }
-
-
-
             var outW, outH, hScale, vScale, offX, offY;
             var natH = isOmDomain() ? ((currentModel === 'arome_reunion') ? 1480.0 : 1320.0) : 1640.0;
 
@@ -1653,90 +1650,61 @@
                 vScale = (mapRect.h / natH) * ratio;
                 offX = mapRect.x * ratio;
                 offY = mapRect.y * ratio;
-            } else if (isOmDomain()) {
-                // Domaines Outre-Mer : export complet pleine résolution native
+            } else if (transform.scale > 1.08) {
+                // 🌟 Vue zoomée (qu'on soit en France ou en Outre-Mer : Zoom Réunion, Mayotte, Guadeloupe, région métropole, etc.)
                 outW = 2200;
                 outH = Math.round(natH);
-                hScale = 1.0;
-                vScale = 1.0;
-                offX = 0;
-                offY = 0;
-            } else if (transform.scale <= 1.15) {
-
-                // Vue France entière : boîte Météo-NPDC (West: -5.8°, East: +10.2°, North: 51.6°, South: 41.1°)
-
-                outW = 2200;
-
-                outH = 1640;
-
-                var fx0 = 270;  // Ouest Bretagne
-
-                var fx1 = 1870; // Est Corse
-
-                var fy0 = 125;  // Nord Mer du Nord / Sud Angleterre
-
-                var fy1 = 1460; // Sud Bonifacio
-
-                var fw = fx1 - fx0; // 1600
-
-                var fh = fy1 - fy0; // 1335
-
-                var scale = Math.min(outW / fw, outH / fh);
-
-                hScale = scale;
-
-                vScale = scale;
-
-                var cx = (fx0 + fx1) / 2; // 1070
-
-                var cy = (fy0 + fy1) / 2; // 792.5
-
-                offX = outW / 2 - cx * scale;
-
-                offY = outH / 2 - cy * scale;
-
-            } else {
-
-                // Vue zoomée (région/département) : remplit 100% du canvas 2200×1640 en cover (zéro bande noire)
-
-                outW = 2200;
-
-                outH = 1640;
-
                 var viewRect = computeMapRect(vw, vh);
-
                 var u0 = (0 - viewRect.x) / viewRect.w;
-
                 var u1 = (vw - viewRect.x) / viewRect.w;
-
                 var v0 = (0 - viewRect.y) / viewRect.h;
-
                 var v1 = (vh - viewRect.y) / viewRect.h;
-
                 var vueW = Math.max(0.01, u1 - u0);
-
                 var vueH = Math.max(0.01, v1 - v0);
-
-                var k = Math.max(outW / (vueW * 2200.0), outH / (vueH * 1640.0));
-
+                var k = Math.max(outW / (vueW * 2200.0), outH / (vueH * natH));
                 hScale = k;
-
                 vScale = k;
-
                 var uc = (u0 + u1) / 2;
-
                 var vc = (v0 + v1) / 2;
-
                 offX = outW / 2 - uc * 2200.0 * k;
-
-                offY = outH / 2 - vc * 1640.0 * k;
-
+                offY = outH / 2 - vc * natH * k;
+            } else if (isOmDomain()) {
+                // Domaines Outre-Mer en vue globale : export complet pleine résolution native
+                outW = 2200;
+                outH = Math.round(natH);
+                if (currentModel === 'arome_reunion') {
+                    // Remonter l'image du bassin Océan Indien (~110px) pour bien dégager La Réunion et Maurice au-dessus de la légende
+                    var sBasin = 1.08;
+                    hScale = sBasin;
+                    vScale = sBasin;
+                    offX = (outW - 2200.0 * sBasin) / 2;
+                    offY = -110;
+                } else {
+                    hScale = 1.0;
+                    vScale = 1.0;
+                    offX = 0;
+                    offY = 0;
+                }
+            } else {
+                // Vue France entière par défaut
+                outW = 2200;
+                outH = 1640;
+                var fx0 = 270;
+                var fx1 = 1870;
+                var fy0 = 125;
+                var fy1 = 1460;
+                var fw = fx1 - fx0;
+                var fh = fy1 - fy0;
+                var scale = Math.min(outW / fw, outH / fh);
+                hScale = scale;
+                vScale = scale;
+                var cx = (fx0 + fx1) / 2;
+                var cy = (fy0 + fy1) / 2;
+                offX = outW / 2 - cx * scale;
+                offY = outH / 2 - cy * scale;
             }
 
-
-
             var output = document.createElement('canvas');
-
             output.width = outW;
 
             output.height = outH;
@@ -2347,7 +2315,7 @@
 
                         tempS.width = customImage.naturalWidth || 2200;
 
-                        tempS.height = customImage.naturalHeight || 1640;
+                        tempS.height = customImage.naturalHeight || natH;
 
                         var tempCtx = tempS.getContext('2d', { willReadFrequently: true });
 
@@ -2361,7 +2329,7 @@
 
                     for (var gy = stepGrid / 2; gy < output.height - 20; gy += stepGrid) {
 
-                        var gv = (gy - offY) / (1640 * vScale);
+                        var gv = (gy - offY) / (natH * vScale);
 
                         if (gv < 0 || gv > 1) continue;
 
