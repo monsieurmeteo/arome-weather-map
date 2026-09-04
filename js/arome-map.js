@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
     'use strict';
 
     function whenReady(callback) {
@@ -144,7 +144,11 @@
         var currentWeatherImage = null;
         var logoImage = new Image();
         logoImage.crossOrigin = 'anonymous';
-        logoImage.src = app.dataset.logo || 'logo.png';
+        logoImage.src = (app && app.dataset && app.dataset.logo) ? app.dataset.logo : 'logo.png';
+        window.amfmSetLogo = function (src) {
+            if (logoImage) logoImage.src = src;
+            if (app) app.dataset.logo = src;
+        };
         var franceMaskImage = new Image();
         franceMaskImage.crossOrigin = 'anonymous';
         franceMaskImage.src = resolvePath('maps/mask_france.png');
@@ -922,16 +926,18 @@
             var bannerH = 135;
 
             context.save();
-            if (logoImage && logoImage.complete && logoImage.naturalWidth) {
-                var logoTargetW = 380;
-                var logoTargetH = Math.round(logoTargetW * logoImage.naturalHeight / logoImage.naturalWidth);
+            var curLogo = document.getElementById('amfm-logo-navbar') || logoImage;
+            if (curLogo && curLogo.complete && curLogo.naturalWidth) {
+                var isSquare = (curLogo.naturalWidth / curLogo.naturalHeight) < 1.4;
+                var logoTargetH = isSquare ? 120 : Math.round(340 * curLogo.naturalHeight / curLogo.naturalWidth);
+                var logoTargetW = isSquare ? 120 : 340;
                 var lx = output.width - margin - logoTargetW;
                 var ly = bannerY + (bannerH - logoTargetH) / 2;
                 context.shadowColor = 'rgba(0, 0, 0, 0.75)';
                 context.shadowBlur = 12;
                 context.shadowOffsetX = 2;
                 context.shadowOffsetY = 2;
-                context.drawImage(logoImage, lx, ly, logoTargetW, logoTargetH);
+                context.drawImage(curLogo, lx, ly, logoTargetW, logoTargetH);
             } else {
                 context.textAlign = 'right';
                 context.textBaseline = 'top';
@@ -1248,7 +1254,7 @@
                     .normalize('NFD').replace(/[̀-ͯ]/g, '')
                     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
                 link.href = url;
-                link.download = 'MeteoClimatPro_' + (manifest ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME') + '_' + (slug || 'carte') + (isLandscape ? '_paysage_16x9' : '') + '_' + Date.now() + '.' + ext;
+                link.download = ((document.getElementById('amfm-logo-navbar') && document.getElementById('amfm-logo-navbar').src.indexOf('mm') !== -1) ? 'MonsieurMeteo_' : 'MeteoClimatPro_') + (manifest ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME') + '_' + (slug || 'carte') + (isLandscape ? '_paysage_16x9' : '') + '_' + Date.now() + '.' + ext;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
