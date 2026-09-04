@@ -1,4 +1,4 @@
-﻿(function () {
+﻿﻿(function () {
     'use strict';
 
     function whenReady(callback) {
@@ -929,8 +929,8 @@
             var curLogo = document.getElementById('amfm-logo-navbar') || logoImage;
             if (curLogo && curLogo.complete && curLogo.naturalWidth) {
                 var isSquare = (curLogo.naturalWidth / curLogo.naturalHeight) < 1.4;
-                var logoTargetH = isSquare ? 120 : Math.round(340 * curLogo.naturalHeight / curLogo.naturalWidth);
-                var logoTargetW = isSquare ? 120 : 340;
+                var logoTargetH = isSquare ? 150 : Math.round(340 * curLogo.naturalHeight / curLogo.naturalWidth);
+                var logoTargetW = isSquare ? 150 : 340;
                 var lx = output.width - margin - logoTargetW;
                 var ly = bannerY + (bannerH - logoTargetH) / 2;
                 context.shadowColor = 'rgba(0, 0, 0, 0.75)';
