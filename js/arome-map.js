@@ -5497,7 +5497,7 @@
 
         function visiblePlaces(width, height, bounds, northY, mercatorSpan, density) {
 
-            if (transform.scale < 1.35 || !placeBuckets.size) {
+            if (places.length < 200 || transform.scale < 1.35 || !placeBuckets.size) {
 
                 return places;
 
