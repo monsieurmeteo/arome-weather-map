@@ -5200,9 +5200,11 @@
 
             var mapRect = computeMapRect(width, height);
 
+            var natH = isOmDomain() ? (currentModel === 'arome_reunion' ? 1480.0 : 1320.0) : 1640.0;
+
             var horizontalScale = mapRect.w / 2200.0;
 
-            var verticalScale = mapRect.h / 1640.0;
+            var verticalScale = mapRect.h / natH;
 
             vectorContext.setTransform(
 
@@ -6128,17 +6130,17 @@
 
         function resetView() {
 
-            // Vue initiale : cadrage automatique (computeMapRect) — la France
-
-            // remplit le viewport sans zones vides, avec le léger décalage
-
-            // qui compense le header flottant.
+            // Vue initiale : cadrage automatique (computeMapRect) — centrage propre
 
             transform = { scale: 1, x: 0, y: 0 };
 
             var regSel = document.getElementById('select-region');
 
-            if (regSel) regSel.value = 'france';
+            if (regSel && !isOmDomain()) {
+
+                regSel.value = 'france';
+
+            }
 
             applyTransform();
 
