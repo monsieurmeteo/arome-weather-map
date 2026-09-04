@@ -5,7 +5,7 @@
     <!-- Auto-purge du cache navigateur pour la version 20260904-5 -->
     <script>
     (function() {
-        var APP_BUILD = '20260904-6';
+        var APP_BUILD = '20260904-7';
         var stored = localStorage.getItem('amfm_app_build');
         if (stored !== APP_BUILD) {
             localStorage.setItem('amfm_app_build', APP_BUILD);
@@ -978,6 +978,114 @@
             border-color: #f59e0b !important;
             color: #fde047 !important;
         }
+    
+        /* 🌟 NOUVEAU LAYOUT NAVBAR FLUIDE ET TOUJOURS VISIBLE */
+        .amfm-navbar {
+            pointer-events: auto;
+            background: var(--amfm-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--amfm-border);
+            border-radius: 12px;
+            padding: 4px 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            min-height: 46px;
+        }
+        .amfm-nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .amfm-nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            justify-content: center;
+            flex-wrap: nowrap;
+        }
+        .amfm-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .amfm-tools-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(0, 210, 255, 0.08);
+            border: 1px solid rgba(0, 210, 255, 0.28);
+            border-radius: 8px;
+            padding: 2px 4px;
+            flex-shrink: 0;
+        }
+        .amfm-btn-toggle {
+            height: 34px !important;
+            padding: 0 9px !important;
+            font-size: 12px !important;
+            font-weight: 800 !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.16) !important;
+            color: #e2e8f0 !important;
+        }
+        .amfm-btn-toggle.is-active {
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.35), rgba(2, 132, 199, 0.35)) !important;
+            border-color: #00d2ff !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.4) !important;
+        }
+        .amfm-btn-toggle.is-active i {
+            color: #00d2ff !important;
+        }
+        .amfm-btn-compact {
+            padding: 0 7px !important;
+            height: 34px !important;
+        }
+        .amfm-select-layer {
+            height: 34px !important;
+            min-width: 150px !important;
+            max-width: 220px !important;
+            font-size: 12px !important;
+        }
+        .amfm-select-region {
+            height: 34px !important;
+            min-width: 140px !important;
+            max-width: 200px !important;
+            font-size: 12px !important;
+        }
+        .amfm-select-sea {
+            height: 34px !important;
+            min-width: 88px !important;
+            max-width: 105px !important;
+            font-size: 11.5px !important;
+            padding: 0 6px !important;
+        }
+        .amfm-btn {
+            height: 34px;
+            font-size: 12px;
+        }
+        .amfm-btn-icon {
+            width: 34px !important;
+            height: 34px !important;
+        }
+        @media (max-width: 1450px) {
+            .amfm-headline { display: none; }
+        }
+        @media (max-width: 1250px) {
+            .amfm-hide-tablet { display: none; }
+            .amfm-title-text { display: none; }
+        }
+        @media (max-width: 1050px) {
+            .amfm-navbar { flex-wrap: wrap; }
+            .amfm-nav-controls { order: 3; width: 100%; }
+        }
+
     </style>
 </head>
 <body>
@@ -1070,9 +1178,9 @@
          data-animation="1">
         
         <!-- Header Supérieur : Barre Unique Ultra-Compacte (~48 px) -->
-        <header class="amfm-header" role="banner">
+                <header class="amfm-header" role="banner">
             <div class="amfm-navbar" role="region" aria-label="Contrôles de la carte">
-                <!-- Gauche : Marque + Modèle + Commune -->
+                <!-- 1. Gauche : Marque + Modèle -->
                 <div class="amfm-nav-brand">
                     <button type="button" id="amfm-logo-toggle" class="amfm-brand-btn" title="Cliquer pour basculer : Météo-Climat Pro ⟷ Monsieur Météo" aria-label="Basculer le logo du site">
                         <img src="logo.png" alt="Météo-Climat Pro" class="amfm-logo" id="amfm-logo-navbar">
@@ -1080,47 +1188,38 @@
                     </button>
                     <span class="amfm-title-text">AROME HD</span>
                     <span class="amfm-badge">1,3 km</span>
-                    <a href="alerte-grele.html" class="amfm-btn" style="background:linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(168, 85, 247, 0.35)); border:1px solid rgba(239, 68, 68, 0.6); color:#fca5a5; font-weight:800;" aria-label="Prévision du risque et diamètre de grêle" title="Prévision Grêle par Code Postal">
-                        <i class="fa-solid fa-bolt" aria-hidden="true"></i> <span>Grêle ⚡</span>
+                    <a href="alerte-grele.html" class="amfm-btn amfm-btn-compact" style="background:rgba(239, 68, 68, 0.2); border-color:rgba(239, 68, 68, 0.5); color:#fca5a5;" aria-label="Prévision du risque et diamètre de grêle" title="Prévision Grêle">
+                        <i class="fa-solid fa-bolt" aria-hidden="true"></i> <span class="amfm-hide-tablet">Grêle</span>
                     </a>
-                    <a href="previsions.html" class="amfm-btn amfm-btn-commune" aria-label="Prévisions détaillées par commune ou code postal" title="Prévisions par commune">
-                        <i class="fa-solid fa-house-chimney" aria-hidden="true"></i> <span>Commune</span>
+                    <a href="previsions.html" class="amfm-btn amfm-btn-commune amfm-btn-compact" aria-label="Prévisions détaillées par commune" title="Prévisions par commune">
+                        <i class="fa-solid fa-house-chimney" aria-hidden="true"></i> <span class="amfm-hide-tablet">Commune</span>
                     </a>
                 </div>
 
-                                                                <!-- Centre : Calque Météo + Sélecteur de Région -->
+                <!-- 2. Centre : Calque + Zone + Outils Carte (VILLES, VALEURS, RECENTRER) -->
                 <div class="amfm-nav-controls">
-                    <!-- Sélecteur Direct de Calque Météo AROME HD Standard -->
+                    <!-- Sélecteur de Calque Météo -->
                     <select id="direct-layer-select" class="amfm-select-layer" aria-label="Sélection du paramètre météorologique">
-                        <!-- 🌡️ TEMPÉRATURES -->
                         <optgroup label="🌡️ Températures">
                             <option value="temperature" selected>🌡️ Température à 2 m (°C)</option>
                             <option value="temperature_ressentie">❄️ Température ressentie (°C)</option>
                             <option value="point_rosee">💧 Point de rosée (°C)</option>
                             <option value="humidex">🔥 Indice Humidex</option>
                         </optgroup>
-
-                        <!-- 🌧️ PRÉCIPITATIONS & PLUIE -->
                         <optgroup label="🌧️ Précipitations &amp; Pluie">
                             <option value="pluie_1h">🌧️ Pluie horaire (mm/h)</option>
                             <option value="pluie_cumul">📊 Précipitations cumulées (mm)</option>
                             <option value="reflectivite">📡 Réflectivité Radar Doppler (dBZ)</option>
                             <option value="graupel">🧊 Graupel / Grésil au sol (mm)</option>
                         </optgroup>
-
-                        <!-- ⚡ INSTABILITÉ & ORAGES -->
                         <optgroup label="⚡ Instabilité convective">
                             <option value="mucape">⚡ MUCAPE convective (J/kg)</option>
                         </optgroup>
-
-                        <!-- 💨 VENT & TEMPÊTES -->
                         <optgroup label="💨 Vent &amp; Tempêtes">
                             <option value="vent">💨 Vent moyen à 10 m (km/h)</option>
                             <option value="rafales">⚡ Rafales maximales (km/h)</option>
                             <option value="rafales_cumul">🌪️ Rafales max cumulées (km/h)</option>
                         </optgroup>
-
-                        <!-- ☁️ NUAGES & HUMIDITÉ -->
                         <optgroup label="☁️ Nuages &amp; Ciel">
                             <option value="nebulosite">☁️ Nébulosité totale (%)</option>
                             <option value="nuages_bas">🌫️ Nuages bas / Brouillard (%)</option>
@@ -1128,23 +1227,18 @@
                             <option value="nuages_eleves">🌤️ Nuages élevés / Voile (%)</option>
                             <option value="humidite">🌫️ Humidité relative (%)</option>
                         </optgroup>
-
-                        <!-- ❄️ NEIGE & GRAND FROID -->
                         <optgroup label="❄️ Neige &amp; Hiver">
                             <option value="neige">❄️ Chutes de neige (cm/h)</option>
                             <option value="neige_au_sol">🏔️ Épaisseur neige au sol (cm)</option>
                             <option value="equivalent_eau_neige">💧 Cumul neigeux équiv. eau (mm)</option>
                         </optgroup>
-
-                        <!-- 🧭 PRESSION -->
                         <optgroup label="🧭 Pression &amp; Atmosphère">
                             <option value="pression">🧭 Pression niveau mer (hPa)</option>
                             <option value="pression_surface">⛰️ Pression au sol (hPa)</option>
                         </optgroup>
                     </select>
 
-                    <!-- Sélecteur de Zone (France Entière + 13 Régions) -->
-                    <!-- Sélecteur de Zone (France Entière + 13 Régions + Outre-Mer) -->
+                    <!-- Sélecteur de Région / Zoom -->
                     <select id="select-region" data-amfm-region-select class="amfm-select-region" aria-label="Zoomer sur une région de France ou Outre-Mer">
                         <optgroup label="🇫🇷 France &amp; Régions">
                             <option value="france">🇫🇷 France Entière</option>
@@ -1167,47 +1261,48 @@
                             <option value="reunion">🇷🇪 Île de La Réunion (Zoom HD)</option>
                             <option value="reunion_globale">🌋 Océan Indien (Réunion + Mayotte)</option>
                             <option value="mayotte">🇾🇹 Mayotte (Zoom HD)</option>
-                            <option value="antilles">🏝️ Arc Antillais &amp; Caraïbes (Vue d'ensemble)</option>
+                            <option value="antilles">🏝️ Arc Antillais &amp; Caraïbes</option>
                             <option value="guadeloupe">🇬🇵 Guadeloupe (Zoom HD)</option>
                             <option value="martinique">🇲🇶 Martinique (Zoom HD)</option>
                             <option value="stmartin">🇸🇽 Saint-Martin &amp; Saint-Barth (Zoom HD)</option>
                         </optgroup>
                     </select>
-                </div>
 
-                <div class="amfm-nav-actions">
-                    <!-- 🌟 OUTILS CARTE ESSENTIELS (VILLES, VALEURS, RECENTRER) : TOUJOURS AU PREMIER PLAN -->
-                    <div class="amfm-btn-group amfm-tools-primary" style="display:inline-flex; align-items:center; gap:4px; background:rgba(0,210,255,0.08); padding:2px 4px; border-radius:9px; border:1px solid rgba(0,210,255,0.25);">
-                        <button type="button" class="amfm-btn amfm-btn-toggle is-active" data-amfm-toggle-cities aria-pressed="true" aria-label="Afficher ou masquer les villes" title="Afficher/Masquer les noms des villes sur la carte" style="font-weight:800;">
-                            <i class="fa-solid fa-city" aria-hidden="true" style="color:#00d2ff;"></i> <span>Villes</span>
+                    <!-- 🌟 BOUTONS VILLES, VALEURS ET RECENTRER : PLACÉS ICI DIRECTEMENT, IMPOSSIBLE À MASQUER ! -->
+                    <div class="amfm-tools-primary">
+                        <button type="button" class="amfm-btn amfm-btn-toggle is-active" data-amfm-toggle-cities aria-pressed="true" aria-label="Afficher ou masquer les villes" title="Afficher/Masquer les noms des villes sur la carte">
+                            <i class="fa-solid fa-city" aria-hidden="true"></i> <span>Villes</span>
                         </button>
-                        <button type="button" class="amfm-btn amfm-btn-toggle" data-amfm-toggle-values aria-pressed="false" aria-label="Afficher ou masquer la grille de valeurs météo" title="Afficher/Masquer les valeurs météo sur la carte" style="font-weight:800;">
+                        <button type="button" class="amfm-btn amfm-btn-toggle" data-amfm-toggle-values aria-pressed="false" aria-label="Afficher ou masquer les valeurs météo" title="Afficher/Masquer les valeurs météo sur la carte">
                             <i class="fa-solid fa-hashtag" aria-hidden="true"></i> <span>Valeurs</span>
                         </button>
                         <button type="button" class="amfm-btn amfm-btn-icon" data-amfm-reset aria-label="Recentrer la carte météo" title="Recentrer la carte">
                             <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
                         </button>
                     </div>
+                </div>
 
-                    <!-- Sélecteur Mode Terre / Mer -->
+                <!-- 3. Droite : Filtre Mer + Exports + Déconnexion -->
+                <div class="amfm-nav-actions">
                     <select class="amfm-select-sea" data-amfm-select-sea aria-label="Filtrer l'affichage des valeurs en mer et littoral" title="Zone d'affichage des valeurs météo">
                         <option value="none" selected>🌊 Partout</option>
                         <option value="land">🌲 Terres</option>
                         <option value="coast">🏖️ Littoral</option>
                     </select>
 
-                    <button type="button" id="amfm-logo-action-btn" class="amfm-btn amfm-btn-logo-switch" title="Changer de logo : Météo-Climat Pro ⟷ Monsieur Météo" aria-label="Changer de logo">
-                        <i class="fa-solid fa-repeat" aria-hidden="true"></i> <span id="amfm-logo-action-text">Monsieur Météo</span>
+                    <button type="button" id="amfm-logo-action-btn" class="amfm-btn amfm-btn-icon" title="Basculer le logo (Météo-Climat Pro / Monsieur Météo)" aria-label="Changer de logo">
+                        <i class="fa-solid fa-repeat" aria-hidden="true"></i>
+                        <span id="amfm-logo-action-text" style="display:none;">Monsieur Météo</span>
                     </button>
 
-                    <div class="amfm-btn-group amfm-btn-downloads">
-                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture aria-label="Télécharger en PNG 4:3" title="Télécharger la carte en PNG HD (4:3 Standard)">
+                    <div class="amfm-btn-group">
+                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture aria-label="Télécharger en PNG" title="Télécharger la carte en PNG HD">
                             <i class="fa-solid fa-download" aria-hidden="true"></i> <span>PNG</span>
                         </button>
-                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-screen aria-label="Capture d'écran HD fidèle" title="Télécharger la Capture d'Écran HD exacte">
+                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-screen aria-label="Capture d'écran HD" title="Télécharger la Capture d'Écran HD exacte">
                             <i class="fa-solid fa-camera" aria-hidden="true"></i> <span>Écran</span>
                         </button>
-                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-gif aria-label="Télécharger l'animation GIF" title="Télécharger le GIF animé">
+                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-gif aria-label="Télécharger le GIF animé" title="Télécharger l'animation GIF">
                             <i class="fa-solid fa-film" aria-hidden="true"></i> <span>GIF</span>
                         </button>
                     </div>
@@ -1216,7 +1311,7 @@
                         <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
                     </button>
 
-                    <div class="amfm-headline" <div class="amfm-headline" data-amfm-headline aria-live="polite">
+                    <div class="amfm-headline" data-amfm-headline aria-live="polite">
                         <span class="amfm-headline-layer">Température à 2 m (°C) — </span>Chargement…
                     </div>
                 </div>
@@ -1348,7 +1443,7 @@
     <script src="js/palettes.js?v=1788039598"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="js/regions.js?v=1.0.0"></script>
-    <script src="js/arome-map.js?v=20260904-6"></script>
+    <script src="js/arome-map.js?v=20260904-7"></script>
 <script>
 (function() {
     var MM_FALLBACK = "https://lh3.googleusercontent.com/aida-public/AB6AXuBOx1F1TSaVo-90uMYKn9COfMPmjAX0T-pDidLIG3dPGDOY8KZaze-h0L3XqQFBQYd2hOHF3ncMJUSafxVsBVCsa_nG_lc6fpJuY9v9GDCYja_y7Yp7cY-R3DVGTOnpn-SMdrNqECFBDa-E-v0VnHWzB7gvt3J4SIGkNfDhO17usu8WyVxYhbXh6JJyqEE715ISXChoGvFwKoKxk4_INHavYh_JUKzTUvJFsg7VX9fkzGTJOPZFY4SKNUATMB_IUPKDfX3Cwx4Gz5g";
