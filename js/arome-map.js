@@ -4044,7 +4044,7 @@
                 paca: { latitude: 43.85, longitude: 6.00, scale: 2.85 },
                 corse: { latitude: 42.10, longitude: 9.05, scale: 4.20 },
                 belgique: { latitude: 50.25, longitude: 4.40, scale: 3.10 },
-                reunion: { latitude: -21.12, longitude: 55.53, scale: 9.0 },
+                reunion: { latitude: -21.12, longitude: 55.53, scale: 9.5 },
                 reunion_globale: { reset: true },
                 mayotte: { latitude: -12.83, longitude: 45.16, scale: 11.0 },
                 antilles: { reset: true },
@@ -5220,7 +5220,9 @@
 
             vectorDefinition.paths.forEach(function (entry) {
 
-                vectorContext.strokeStyle = entry.colour || '#0d1117';
+                vectorContext.strokeStyle = isOmDomain() ? '#ffffff' : (entry.colour || '#0d1117');
+                vectorContext.shadowColor = 'rgba(0,0,0,0.8)';
+                vectorContext.shadowBlur = isOmDomain() ? 3 : 0;
 
                 vectorContext.globalAlpha = 1.0;
 
