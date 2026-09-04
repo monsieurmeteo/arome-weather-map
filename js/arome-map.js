@@ -1641,29 +1641,26 @@
 
 
             var outW, outH, hScale, vScale, offX, offY;
-
-
+            var natH = isOmDomain() ? ((currentModel === 'arome_reunion') ? 1480.0 : 1320.0) : 1640.0;
 
             if (isScreen) {
-
                 // Capture d'écran HD EXACTE : reproduction au pixel près de la vue affichée à l'écran (x2 pour netteté Retina/4K)
-
                 var ratio = 2.0;
-
                 outW = Math.round(vw * ratio);
-
                 outH = Math.round(vh * ratio);
-
                 var mapRect = computeMapRect(vw, vh);
-
                 hScale = (mapRect.w / 2200.0) * ratio;
-
-                vScale = (mapRect.h / 1640.0) * ratio;
-
+                vScale = (mapRect.h / natH) * ratio;
                 offX = mapRect.x * ratio;
-
                 offY = mapRect.y * ratio;
-
+            } else if (isOmDomain()) {
+                // Domaines Outre-Mer : export complet pleine résolution native
+                outW = 2200;
+                outH = Math.round(natH);
+                hScale = 1.0;
+                vScale = 1.0;
+                offX = 0;
+                offY = 0;
             } else if (transform.scale <= 1.15) {
 
                 // Vue France entière : boîte Météo-NPDC (West: -5.8°, East: +10.2°, North: 51.6°, South: 41.1°)
@@ -2208,7 +2205,7 @@
 
             // Villes sur la carte (respecte citiesVisible et se masque automatiquement si valuesVisible est actif)
 
-            if (citiesVisible && !valuesVisible && manifest && manifest.bounds && places && places.length) {
+            if (citiesVisible && manifest && manifest.bounds && places && places.length) {
 
                 try {
 
@@ -2225,10 +2222,8 @@
                     if (longitudeSpan && mercatorSpan) {
 
                         var exportScale = hScale;
-
-                        // Alignement exact sur la densité du site (vue France = métropoles régionales clés ~95k hab, max 32)
-
-                        var popMin = exportScale < 1.35 ? 95000 : (exportScale < 2.25 ? 45000 : (exportScale < 3.5 ? 15000 : 5000));
+                    var natHPlaces = isOmDomain() ? ((currentModel === 'arome_reunion') ? 1480.0 : 1320.0) : 1640.0;
+                    var popMin = isOmDomain() ? 1000 : (exportScale < 1.35 ? 95000 : (exportScale < 2.25 ? 45000 : (exportScale < 3.5 ? 15000 : 5000)));
 
                         var maxLabels = exportScale < 1.35 ? 32 : (exportScale < 2.25 ? 50 : 80);
 
@@ -2266,7 +2261,7 @@
 
                             var sx = u * 2200 * hScale + offX;
 
-                            var sy = v * 1640 * vScale + offY;
+                            var sy = v * natHPlaces * vScale + offY;
 
                             if (sx < 25 || sx > output.width - 25 || sy < 25 || sy > output.height - 25) {
 
@@ -5489,9 +5484,10 @@
         function visiblePlaces(width, height, bounds, northY, mercatorSpan, density) {
 
             if (places.length < 200 || transform.scale < 1.35 || !placeBuckets.size) {
-
-                return places;
-
+                var sorted = places.slice().sort(function (a, b) {
+                    return Number(b[1]) - Number(a[1]);
+                });
+                return sorted;
             }
 
             // Projection UNIQUE (computeMapRect) : même fenêtre que le raster.
@@ -5650,7 +5646,7 @@
 
             labelsContext.clearRect(0, 0, width, height);
 
-            if (!citiesVisible || valuesVisible || !places.length || !manifest.bounds) {
+            if (!citiesVisible || !places.length || !manifest.bounds) {
 
                 return;
 
@@ -5732,7 +5728,7 @@
 
                 if (Number(place[1]) < density.population) {
 
-                    break;
+                    continue;
 
                 }
 
