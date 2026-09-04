@@ -5355,28 +5355,27 @@
 
 
             // Domaines Outre-Mer (Antilles 2200x1320, Réunion 2200x1480) : centrage plein écran propre
-
             if (isOmDomain()) {
-
                 var natH = (currentModel === 'arome_reunion') ? 1480.0 : 1320.0;
-
-                var scale = Math.min(width / 2200.0, height / natH) * t.scale;
-
-                // Remonter la vue globale Océan Indien pour bien dégager La Réunion et Mayotte
-                var yOffset = (currentModel === 'arome_reunion' && t.scale <= 1.25) ? (-0.13 * natH * scale) : 0;
-
+                // Vue d'ensemble (scale <= 1.05) : contain pour voir l'ensemble du bassin
+                if (t.scale <= 1.05) {
+                    var sContain = Math.min(width / 2200.0, height / natH) * t.scale;
+                    var yOffset = (currentModel === 'arome_reunion') ? (-0.13 * natH * sContain) : 0;
+                    return {
+                        x: width / 2 + t.x - 1100.0 * sContain,
+                        y: height / 2 + t.y - (natH / 2.0) * sContain + yOffset,
+                        w: 2200.0 * sContain,
+                        h: natH * sContain
+                    };
+                }
+                // Mode Zoom (> 1.05) : cover unifié avec focusLocation et applyTransform
+                var sCover = Math.max(width / 2200.0, height / natH) * t.scale;
                 return {
-
-                    x: width / 2 + t.x - 1100.0 * scale,
-
-                    y: height / 2 + t.y - (natH / 2.0) * scale + yOffset,
-
-                    w: 2200.0 * scale,
-
-                    h: natH * scale
-
+                    x: width / 2 + t.x - 1100.0 * sCover,
+                    y: height / 2 + t.y - (natH / 2.0) * sCover,
+                    w: 2200.0 * sCover,
+                    h: natH * sCover
                 };
-
             }
 
 
