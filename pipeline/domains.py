@@ -27,6 +27,20 @@ DOMAINS = {
         "width": 2200, "height": 1640,
         "label": "France",
     },
+
+    "antilles": {
+        "projection": "mercator",
+        "south": 9.7, "west": -75.3, "north": 22.9, "east": -51.7,
+        "width": 2200, "height": 1320,
+        "label": "Arc Antillais (AROME-OM)",
+    },
+
+    "reunion": {
+        "projection": "mercator",
+        "south": -25.9, "west": 32.75, "north": -3.45, "east": 67.6,
+        "width": 2200, "height": 1480,
+        "label": "La Réunion & Mayotte (AROME-OM)",
+    },
 }
 
 
@@ -178,3 +192,5 @@ class Domain:
 # Instances partagées
 EUROPE = Domain("europe")
 FRANCE = Domain("france")
+ANTILLES = Domain("antilles")
+REUNION = Domain("reunion")
