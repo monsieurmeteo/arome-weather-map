@@ -10,8 +10,7 @@
     "south": -25.9,
     "west": 32.75,
     "north": -3.45,
-    "east": 67.6,
-    "projection": "mercator"
+    "east": 67.6
   },
   "layers": {
     "temperature": {
@@ -51,254 +50,292 @@
       "hour": 0,
       "date": "2026-09-04 12:00 UTC",
       "files": {
-        "temperature": "temperature/000.webp",
-        "point_rosee": "point_rosee/000.webp",
-        "humidite": "humidite/000.webp",
-        "vent": "vent/000.webp",
-        "rafales": "rafales/000.webp",
-        "pression": "pression/000.webp"
-      }
+        "temperature": "maps/temperature/000.webp",
+        "point_rosee": "maps/point_rosee/000.webp",
+        "humidite": "maps/humidite/000.webp",
+        "vent": "maps/vent/000.webp",
+        "rafales": "maps/rafales/000.webp",
+        "pression": "maps/pression/000.webp"
+      },
+      "lead_hour": 0,
+      "valid_time": "2026-09-04T12:00:00+00:00"
     },
     {
       "step": 1,
       "hour": 1,
       "date": "2026-09-04 13:00 UTC",
       "files": {
-        "temperature": "temperature/001.webp",
-        "point_rosee": "point_rosee/001.webp",
-        "humidite": "humidite/001.webp",
-        "vent": "vent/001.webp",
-        "rafales": "rafales/001.webp",
-        "pluie_cumul": "pluie_cumul/001.webp",
-        "pluie_1h": "pluie_1h/001.webp",
-        "pression": "pression/001.webp"
-      }
+        "temperature": "maps/temperature/001.webp",
+        "point_rosee": "maps/point_rosee/001.webp",
+        "humidite": "maps/humidite/001.webp",
+        "vent": "maps/vent/001.webp",
+        "rafales": "maps/rafales/001.webp",
+        "pluie_cumul": "maps/pluie_cumul/001.webp",
+        "pluie_1h": "maps/pluie_1h/001.webp",
+        "pression": "maps/pression/001.webp"
+      },
+      "lead_hour": 1,
+      "valid_time": "2026-09-04T13:00:00+00:00"
     },
     {
       "step": 2,
       "hour": 2,
       "date": "2026-09-04 14:00 UTC",
       "files": {
-        "temperature": "temperature/002.webp",
-        "point_rosee": "point_rosee/002.webp",
-        "humidite": "humidite/002.webp",
-        "vent": "vent/002.webp",
-        "rafales": "rafales/002.webp",
-        "pluie_cumul": "pluie_cumul/002.webp",
-        "pluie_1h": "pluie_1h/002.webp",
-        "pression": "pression/002.webp"
-      }
+        "temperature": "maps/temperature/002.webp",
+        "point_rosee": "maps/point_rosee/002.webp",
+        "humidite": "maps/humidite/002.webp",
+        "vent": "maps/vent/002.webp",
+        "rafales": "maps/rafales/002.webp",
+        "pluie_cumul": "maps/pluie_cumul/002.webp",
+        "pluie_1h": "maps/pluie_1h/002.webp",
+        "pression": "maps/pression/002.webp"
+      },
+      "lead_hour": 2,
+      "valid_time": "2026-09-04T14:00:00+00:00"
     },
     {
       "step": 3,
       "hour": 3,
       "date": "2026-09-04 15:00 UTC",
       "files": {
-        "temperature": "temperature/003.webp",
-        "point_rosee": "point_rosee/003.webp",
-        "humidite": "humidite/003.webp",
-        "vent": "vent/003.webp",
-        "rafales": "rafales/003.webp",
-        "pluie_cumul": "pluie_cumul/003.webp",
-        "pluie_1h": "pluie_1h/003.webp",
-        "pression": "pression/003.webp"
-      }
+        "temperature": "maps/temperature/003.webp",
+        "point_rosee": "maps/point_rosee/003.webp",
+        "humidite": "maps/humidite/003.webp",
+        "vent": "maps/vent/003.webp",
+        "rafales": "maps/rafales/003.webp",
+        "pluie_cumul": "maps/pluie_cumul/003.webp",
+        "pluie_1h": "maps/pluie_1h/003.webp",
+        "pression": "maps/pression/003.webp"
+      },
+      "lead_hour": 3,
+      "valid_time": "2026-09-04T15:00:00+00:00"
     },
     {
       "step": 4,
       "hour": 4,
       "date": "2026-09-04 16:00 UTC",
       "files": {
-        "temperature": "temperature/004.webp",
-        "point_rosee": "point_rosee/004.webp",
-        "humidite": "humidite/004.webp",
-        "vent": "vent/004.webp",
-        "rafales": "rafales/004.webp",
-        "pluie_cumul": "pluie_cumul/004.webp",
-        "pluie_1h": "pluie_1h/004.webp",
-        "pression": "pression/004.webp"
-      }
+        "temperature": "maps/temperature/004.webp",
+        "point_rosee": "maps/point_rosee/004.webp",
+        "humidite": "maps/humidite/004.webp",
+        "vent": "maps/vent/004.webp",
+        "rafales": "maps/rafales/004.webp",
+        "pluie_cumul": "maps/pluie_cumul/004.webp",
+        "pluie_1h": "maps/pluie_1h/004.webp",
+        "pression": "maps/pression/004.webp"
+      },
+      "lead_hour": 4,
+      "valid_time": "2026-09-04T16:00:00+00:00"
     },
     {
       "step": 5,
       "hour": 5,
       "date": "2026-09-04 17:00 UTC",
       "files": {
-        "temperature": "temperature/005.webp",
-        "point_rosee": "point_rosee/005.webp",
-        "humidite": "humidite/005.webp",
-        "vent": "vent/005.webp",
-        "rafales": "rafales/005.webp",
-        "pluie_cumul": "pluie_cumul/005.webp",
-        "pluie_1h": "pluie_1h/005.webp",
-        "pression": "pression/005.webp"
-      }
+        "temperature": "maps/temperature/005.webp",
+        "point_rosee": "maps/point_rosee/005.webp",
+        "humidite": "maps/humidite/005.webp",
+        "vent": "maps/vent/005.webp",
+        "rafales": "maps/rafales/005.webp",
+        "pluie_cumul": "maps/pluie_cumul/005.webp",
+        "pluie_1h": "maps/pluie_1h/005.webp",
+        "pression": "maps/pression/005.webp"
+      },
+      "lead_hour": 5,
+      "valid_time": "2026-09-04T17:00:00+00:00"
     },
     {
       "step": 6,
       "hour": 6,
       "date": "2026-09-04 18:00 UTC",
       "files": {
-        "temperature": "temperature/006.webp",
-        "point_rosee": "point_rosee/006.webp",
-        "humidite": "humidite/006.webp",
-        "vent": "vent/006.webp",
-        "rafales": "rafales/006.webp",
-        "pluie_cumul": "pluie_cumul/006.webp",
-        "pluie_1h": "pluie_1h/006.webp",
-        "pression": "pression/006.webp"
-      }
+        "temperature": "maps/temperature/006.webp",
+        "point_rosee": "maps/point_rosee/006.webp",
+        "humidite": "maps/humidite/006.webp",
+        "vent": "maps/vent/006.webp",
+        "rafales": "maps/rafales/006.webp",
+        "pluie_cumul": "maps/pluie_cumul/006.webp",
+        "pluie_1h": "maps/pluie_1h/006.webp",
+        "pression": "maps/pression/006.webp"
+      },
+      "lead_hour": 6,
+      "valid_time": "2026-09-04T18:00:00+00:00"
     },
     {
       "step": 7,
       "hour": 7,
       "date": "2026-09-04 19:00 UTC",
       "files": {
-        "temperature": "temperature/007.webp",
-        "point_rosee": "point_rosee/007.webp",
-        "humidite": "humidite/007.webp",
-        "vent": "vent/007.webp",
-        "rafales": "rafales/007.webp",
-        "pluie_cumul": "pluie_cumul/007.webp",
-        "pluie_1h": "pluie_1h/007.webp",
-        "pression": "pression/007.webp"
-      }
+        "temperature": "maps/temperature/007.webp",
+        "point_rosee": "maps/point_rosee/007.webp",
+        "humidite": "maps/humidite/007.webp",
+        "vent": "maps/vent/007.webp",
+        "rafales": "maps/rafales/007.webp",
+        "pluie_cumul": "maps/pluie_cumul/007.webp",
+        "pluie_1h": "maps/pluie_1h/007.webp",
+        "pression": "maps/pression/007.webp"
+      },
+      "lead_hour": 7,
+      "valid_time": "2026-09-04T19:00:00+00:00"
     },
     {
       "step": 8,
       "hour": 8,
       "date": "2026-09-04 20:00 UTC",
       "files": {
-        "temperature": "temperature/008.webp",
-        "point_rosee": "point_rosee/008.webp",
-        "humidite": "humidite/008.webp",
-        "vent": "vent/008.webp",
-        "rafales": "rafales/008.webp",
-        "pluie_cumul": "pluie_cumul/008.webp",
-        "pluie_1h": "pluie_1h/008.webp",
-        "pression": "pression/008.webp"
-      }
+        "temperature": "maps/temperature/008.webp",
+        "point_rosee": "maps/point_rosee/008.webp",
+        "humidite": "maps/humidite/008.webp",
+        "vent": "maps/vent/008.webp",
+        "rafales": "maps/rafales/008.webp",
+        "pluie_cumul": "maps/pluie_cumul/008.webp",
+        "pluie_1h": "maps/pluie_1h/008.webp",
+        "pression": "maps/pression/008.webp"
+      },
+      "lead_hour": 8,
+      "valid_time": "2026-09-04T20:00:00+00:00"
     },
     {
       "step": 9,
       "hour": 9,
       "date": "2026-09-04 21:00 UTC",
       "files": {
-        "temperature": "temperature/009.webp",
-        "point_rosee": "point_rosee/009.webp",
-        "humidite": "humidite/009.webp",
-        "vent": "vent/009.webp",
-        "rafales": "rafales/009.webp",
-        "pluie_cumul": "pluie_cumul/009.webp",
-        "pluie_1h": "pluie_1h/009.webp",
-        "pression": "pression/009.webp"
-      }
+        "temperature": "maps/temperature/009.webp",
+        "point_rosee": "maps/point_rosee/009.webp",
+        "humidite": "maps/humidite/009.webp",
+        "vent": "maps/vent/009.webp",
+        "rafales": "maps/rafales/009.webp",
+        "pluie_cumul": "maps/pluie_cumul/009.webp",
+        "pluie_1h": "maps/pluie_1h/009.webp",
+        "pression": "maps/pression/009.webp"
+      },
+      "lead_hour": 9,
+      "valid_time": "2026-09-04T21:00:00+00:00"
     },
     {
       "step": 10,
       "hour": 10,
       "date": "2026-09-04 22:00 UTC",
       "files": {
-        "temperature": "temperature/010.webp",
-        "point_rosee": "point_rosee/010.webp",
-        "humidite": "humidite/010.webp",
-        "vent": "vent/010.webp",
-        "rafales": "rafales/010.webp",
-        "pluie_cumul": "pluie_cumul/010.webp",
-        "pluie_1h": "pluie_1h/010.webp",
-        "pression": "pression/010.webp"
-      }
+        "temperature": "maps/temperature/010.webp",
+        "point_rosee": "maps/point_rosee/010.webp",
+        "humidite": "maps/humidite/010.webp",
+        "vent": "maps/vent/010.webp",
+        "rafales": "maps/rafales/010.webp",
+        "pluie_cumul": "maps/pluie_cumul/010.webp",
+        "pluie_1h": "maps/pluie_1h/010.webp",
+        "pression": "maps/pression/010.webp"
+      },
+      "lead_hour": 10,
+      "valid_time": "2026-09-04T22:00:00+00:00"
     },
     {
       "step": 11,
       "hour": 11,
       "date": "2026-09-04 23:00 UTC",
       "files": {
-        "temperature": "temperature/011.webp",
-        "point_rosee": "point_rosee/011.webp",
-        "humidite": "humidite/011.webp",
-        "vent": "vent/011.webp",
-        "rafales": "rafales/011.webp",
-        "pluie_cumul": "pluie_cumul/011.webp",
-        "pluie_1h": "pluie_1h/011.webp",
-        "pression": "pression/011.webp"
-      }
+        "temperature": "maps/temperature/011.webp",
+        "point_rosee": "maps/point_rosee/011.webp",
+        "humidite": "maps/humidite/011.webp",
+        "vent": "maps/vent/011.webp",
+        "rafales": "maps/rafales/011.webp",
+        "pluie_cumul": "maps/pluie_cumul/011.webp",
+        "pluie_1h": "maps/pluie_1h/011.webp",
+        "pression": "maps/pression/011.webp"
+      },
+      "lead_hour": 11,
+      "valid_time": "2026-09-04T23:00:00+00:00"
     },
     {
       "step": 12,
       "hour": 12,
       "date": "2026-09-05 00:00 UTC",
       "files": {
-        "temperature": "temperature/012.webp",
-        "point_rosee": "point_rosee/012.webp",
-        "humidite": "humidite/012.webp",
-        "vent": "vent/012.webp",
-        "rafales": "rafales/012.webp",
-        "pluie_cumul": "pluie_cumul/012.webp",
-        "pluie_1h": "pluie_1h/012.webp",
-        "pression": "pression/012.webp"
-      }
+        "temperature": "maps/temperature/012.webp",
+        "point_rosee": "maps/point_rosee/012.webp",
+        "humidite": "maps/humidite/012.webp",
+        "vent": "maps/vent/012.webp",
+        "rafales": "maps/rafales/012.webp",
+        "pluie_cumul": "maps/pluie_cumul/012.webp",
+        "pluie_1h": "maps/pluie_1h/012.webp",
+        "pression": "maps/pression/012.webp"
+      },
+      "lead_hour": 12,
+      "valid_time": "2026-09-04T24:00:00+00:00"
     },
     {
       "step": 13,
       "hour": 13,
       "date": "2026-09-05 01:00 UTC",
       "files": {
-        "temperature": "temperature/013.webp",
-        "point_rosee": "point_rosee/013.webp",
-        "humidite": "humidite/013.webp",
-        "vent": "vent/013.webp",
-        "rafales": "rafales/013.webp",
-        "pluie_cumul": "pluie_cumul/013.webp",
-        "pluie_1h": "pluie_1h/013.webp",
-        "pression": "pression/013.webp"
-      }
+        "temperature": "maps/temperature/013.webp",
+        "point_rosee": "maps/point_rosee/013.webp",
+        "humidite": "maps/humidite/013.webp",
+        "vent": "maps/vent/013.webp",
+        "rafales": "maps/rafales/013.webp",
+        "pluie_cumul": "maps/pluie_cumul/013.webp",
+        "pluie_1h": "maps/pluie_1h/013.webp",
+        "pression": "maps/pression/013.webp"
+      },
+      "lead_hour": 13,
+      "valid_time": "2026-09-04T25:00:00+00:00"
     },
     {
       "step": 14,
       "hour": 14,
       "date": "2026-09-05 02:00 UTC",
       "files": {
-        "temperature": "temperature/014.webp",
-        "point_rosee": "point_rosee/014.webp",
-        "humidite": "humidite/014.webp",
-        "vent": "vent/014.webp",
-        "rafales": "rafales/014.webp",
-        "pluie_cumul": "pluie_cumul/014.webp",
-        "pluie_1h": "pluie_1h/014.webp",
-        "pression": "pression/014.webp"
-      }
+        "temperature": "maps/temperature/014.webp",
+        "point_rosee": "maps/point_rosee/014.webp",
+        "humidite": "maps/humidite/014.webp",
+        "vent": "maps/vent/014.webp",
+        "rafales": "maps/rafales/014.webp",
+        "pluie_cumul": "maps/pluie_cumul/014.webp",
+        "pluie_1h": "maps/pluie_1h/014.webp",
+        "pression": "maps/pression/014.webp"
+      },
+      "lead_hour": 14,
+      "valid_time": "2026-09-04T26:00:00+00:00"
     },
     {
       "step": 15,
       "hour": 15,
       "date": "2026-09-05 03:00 UTC",
       "files": {
-        "temperature": "temperature/015.webp",
-        "point_rosee": "point_rosee/015.webp",
-        "humidite": "humidite/015.webp",
-        "vent": "vent/015.webp",
-        "rafales": "rafales/015.webp",
-        "pluie_cumul": "pluie_cumul/015.webp",
-        "pluie_1h": "pluie_1h/015.webp",
-        "pression": "pression/015.webp"
-      }
+        "temperature": "maps/temperature/015.webp",
+        "point_rosee": "maps/point_rosee/015.webp",
+        "humidite": "maps/humidite/015.webp",
+        "vent": "maps/vent/015.webp",
+        "rafales": "maps/rafales/015.webp",
+        "pluie_cumul": "maps/pluie_cumul/015.webp",
+        "pluie_1h": "maps/pluie_1h/015.webp",
+        "pression": "maps/pression/015.webp"
+      },
+      "lead_hour": 15,
+      "valid_time": "2026-09-04T27:00:00+00:00"
     },
     {
       "step": 16,
       "hour": 16,
       "date": "2026-09-05 04:00 UTC",
       "files": {
-        "temperature": "temperature/016.webp",
-        "point_rosee": "point_rosee/016.webp",
-        "humidite": "humidite/016.webp",
-        "vent": "vent/016.webp",
-        "rafales": "rafales/016.webp",
-        "pluie_cumul": "pluie_cumul/016.webp",
-        "pluie_1h": "pluie_1h/016.webp",
-        "pression": "pression/016.webp"
-      }
+        "temperature": "maps/temperature/016.webp",
+        "point_rosee": "maps/point_rosee/016.webp",
+        "humidite": "maps/humidite/016.webp",
+        "vent": "maps/vent/016.webp",
+        "rafales": "maps/rafales/016.webp",
+        "pluie_cumul": "maps/pluie_cumul/016.webp",
+        "pluie_1h": "maps/pluie_1h/016.webp",
+        "pression": "maps/pression/016.webp"
+      },
+      "lead_hour": 16,
+      "valid_time": "2026-09-04T28:00:00+00:00"
     }
   ],
-  "places": "communes.json"
+  "places": "maps/communes.json",
+  "overlay": "maps/frontieres.svg",
+  "fond": "maps/fond.webp",
+  "mask": "maps/mask_france.png",
+  "generated_at": "2026-09-04T12:00:00Z"
 }
