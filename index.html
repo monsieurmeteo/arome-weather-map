@@ -261,6 +261,19 @@
             width: 36px;
             padding: 0;
         }
+        
+        .amfm-btn-toggle {
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .amfm-btn-toggle.is-active {
+            background: rgba(0, 210, 255, 0.22) !important;
+            border-color: var(--amfm-accent) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.35) !important;
+        }
+
         .amfm-btn.is-active {
             background: rgba(0, 210, 255, 0.2);
             border-color: var(--amfm-accent);
@@ -1088,8 +1101,13 @@
                             <option value="belgique">🇧🇪 Belgique</option>
                         </optgroup>
                         <optgroup label="🌴 Outre-Mer (AROME-OM 2,5 km)">
-                            <option value="antilles">🏝️ Arc Antillais &amp; Caraïbes (2,5 km)</option>
-                            <option value="reunion">🌋 La Réunion &amp; Mayotte (2,5 km)</option>
+                            <option value="reunion">🇷🇪 Île de La Réunion (Zoom HD)</option>
+                            <option value="reunion_globale">🌋 Océan Indien (Réunion + Mayotte)</option>
+                            <option value="mayotte">🇾🇹 Mayotte (Zoom HD)</option>
+                            <option value="antilles">🏝️ Arc Antillais &amp; Caraïbes (Vue d'ensemble)</option>
+                            <option value="guadeloupe">🇬🇵 Guadeloupe (Zoom HD)</option>
+                            <option value="martinique">🇲🇶 Martinique (Zoom HD)</option>
+                            <option value="stmartin">🇸🇽 Saint-Martin &amp; Saint-Barth (Zoom HD)</option>
                         </optgroup>
                     </select>
                 </div>
@@ -1117,12 +1135,12 @@
                         <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
                     </button>
 
-                    <button type="button" class="amfm-btn amfm-btn-icon is-active" data-amfm-toggle-cities aria-pressed="true" aria-label="Afficher ou masquer les villes" title="Afficher/Masquer les villes">
-                        <i class="fa-solid fa-city" aria-hidden="true"></i>
+                    <button type="button" class="amfm-btn amfm-btn-toggle is-active" data-amfm-toggle-cities aria-pressed="true" aria-label="Afficher ou masquer les villes" title="Afficher/Masquer les villes">
+                        <i class="fa-solid fa-city" aria-hidden="true"></i> <span>Villes</span>
                     </button>
 
-                    <button type="button" class="amfm-btn amfm-btn-icon" data-amfm-toggle-values aria-pressed="false" aria-label="Afficher ou masquer la grille de valeurs météo" title="Afficher/Masquer les valeurs météo sur la carte">
-                        <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
+                    <button type="button" class="amfm-btn amfm-btn-toggle" data-amfm-toggle-values aria-pressed="false" aria-label="Afficher ou masquer la grille de valeurs météo" title="Afficher/Masquer les valeurs météo">
+                        <i class="fa-solid fa-hashtag" aria-hidden="true"></i> <span>Valeurs</span>
                     </button>
 
                     <!-- Sélecteur Mode Terre / Mer -->
