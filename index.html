@@ -1,6 +1,23 @@
 ﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
+
+    <!-- Auto-purge du cache navigateur pour la version 20260904-5 -->
+    <script>
+    (function() {
+        var APP_BUILD = '20260904-5';
+        var stored = localStorage.getItem('amfm_app_build');
+        if (stored !== APP_BUILD) {
+            localStorage.setItem('amfm_app_build', APP_BUILD);
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    names.forEach(function(name) { caches.delete(name); });
+                });
+            }
+        }
+    })();
+    </script>
+
     <meta charset="UTF-8">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -117,13 +134,31 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--amfm-border);
             border-radius: 12px;
-            padding: 5px 12px;
+            padding: 4px 10px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 8px;
             min-height: 48px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .amfm-navbar::-webkit-scrollbar { display: none; }
+        .amfm-btn-toggle {
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 800 !important;
+            letter-spacing: 0.2px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #e2e8f0;
+        }
+        .amfm-btn-toggle.is-active {
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.28), rgba(2, 132, 199, 0.28)) !important;
+            border-color: #00d2ff !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.45) !important;
         }
 
         /* Bloc Gauche : Marque + Modèle + Commune */
@@ -691,10 +726,38 @@
         /* 📱 RESPONSIVE */
         @media (max-width: 1024px) {
             .amfm-navbar {
-                flex-wrap: wrap;
-                gap: 8px;
-                padding: 8px 10px;
-            }
+            pointer-events: auto;
+            background: var(--amfm-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--amfm-border);
+            border-radius: 12px;
+            padding: 4px 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 48px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .amfm-navbar::-webkit-scrollbar { display: none; }
+        .amfm-btn-toggle {
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 800 !important;
+            letter-spacing: 0.2px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #e2e8f0;
+        }
+        .amfm-btn-toggle.is-active {
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.28), rgba(2, 132, 199, 0.28)) !important;
+            border-color: #00d2ff !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.45) !important;
+        }
             .amfm-nav-controls {
                 order: 3;
                 width: 100%;
@@ -1113,48 +1176,47 @@
                 </div>
 
                 <div class="amfm-nav-actions">
+                    <!-- 🌟 OUTILS CARTE ESSENTIELS (VILLES, VALEURS, RECENTRER) : TOUJOURS AU PREMIER PLAN -->
+                    <div class="amfm-btn-group amfm-tools-primary" style="display:inline-flex; align-items:center; gap:4px; background:rgba(0,210,255,0.08); padding:2px 4px; border-radius:9px; border:1px solid rgba(0,210,255,0.25);">
+                        <button type="button" class="amfm-btn amfm-btn-toggle is-active" data-amfm-toggle-cities aria-pressed="true" aria-label="Afficher ou masquer les villes" title="Afficher/Masquer les noms des villes sur la carte" style="font-weight:800;">
+                            <i class="fa-solid fa-city" aria-hidden="true" style="color:#00d2ff;"></i> <span>Villes</span>
+                        </button>
+                        <button type="button" class="amfm-btn amfm-btn-toggle" data-amfm-toggle-values aria-pressed="false" aria-label="Afficher ou masquer la grille de valeurs météo" title="Afficher/Masquer les valeurs météo sur la carte" style="font-weight:800;">
+                            <i class="fa-solid fa-hashtag" aria-hidden="true"></i> <span>Valeurs</span>
+                        </button>
+                        <button type="button" class="amfm-btn amfm-btn-icon" data-amfm-reset aria-label="Recentrer la carte météo" title="Recentrer la carte">
+                            <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <!-- Sélecteur Mode Terre / Mer -->
+                    <select class="amfm-select-sea" data-amfm-select-sea aria-label="Filtrer l'affichage des valeurs en mer et littoral" title="Zone d'affichage des valeurs météo">
+                        <option value="none" selected>🌊 Partout</option>
+                        <option value="land">🌲 Terres</option>
+                        <option value="coast">🏖️ Littoral</option>
+                    </select>
+
                     <button type="button" id="amfm-logo-action-btn" class="amfm-btn amfm-btn-logo-switch" title="Changer de logo : Météo-Climat Pro ⟷ Monsieur Météo" aria-label="Changer de logo">
                         <i class="fa-solid fa-repeat" aria-hidden="true"></i> <span id="amfm-logo-action-text">Monsieur Météo</span>
                     </button>
-                    <div class="amfm-btn-group">
+
+                    <div class="amfm-btn-group amfm-btn-downloads">
                         <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture aria-label="Télécharger en PNG 4:3" title="Télécharger la carte en PNG HD (4:3 Standard)">
                             <i class="fa-solid fa-download" aria-hidden="true"></i> <span>PNG</span>
                         </button>
-                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-screen aria-label="Capture d'écran HD fidèle" title="Télécharger la Capture d'Écran HD exacte (reproduction 100% fidèle au cadrage actuel)">
+                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-screen aria-label="Capture d'écran HD fidèle" title="Télécharger la Capture d'Écran HD exacte">
                             <i class="fa-solid fa-camera" aria-hidden="true"></i> <span>Écran</span>
-                        </button>
-                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-jpeg aria-label="Télécharger en JPEG" title="Télécharger en JPEG">
-                            <i class="fa-solid fa-image" aria-hidden="true"></i> <span>JPEG</span>
                         </button>
                         <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-gif aria-label="Télécharger l'animation GIF" title="Télécharger le GIF animé">
                             <i class="fa-solid fa-film" aria-hidden="true"></i> <span>GIF</span>
                         </button>
                     </div>
 
-                    <button type="button" class="amfm-btn amfm-btn-icon" data-amfm-reset aria-label="Recentrer la carte météo" title="Recentrer sur la France">
-                        <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
-                    </button>
-
-                    <button type="button" class="amfm-btn amfm-btn-toggle is-active" data-amfm-toggle-cities aria-pressed="true" aria-label="Afficher ou masquer les villes" title="Afficher/Masquer les villes">
-                        <i class="fa-solid fa-city" aria-hidden="true"></i> <span>Villes</span>
-                    </button>
-
-                    <button type="button" class="amfm-btn amfm-btn-toggle" data-amfm-toggle-values aria-pressed="false" aria-label="Afficher ou masquer la grille de valeurs météo" title="Afficher/Masquer les valeurs météo">
-                        <i class="fa-solid fa-hashtag" aria-hidden="true"></i> <span>Valeurs</span>
-                    </button>
-
-                    <!-- Sélecteur Mode Terre / Mer -->
-                    <select class="amfm-select-sea" data-amfm-select-sea aria-label="Filtrer l'affichage des valeurs en mer et littoral" title="Zone d'affichage des valeurs météo">
-                        <option value="none" selected>🌊 Partout (Mer comprise)</option>
-                        <option value="land">🌲 Terres seules</option>
-                        <option value="coast">🏖️ Terres + Bord de mer</option>
-                    </select>
-
                     <button type="button" class="amfm-btn amfm-btn-icon" onclick="localStorage.removeItem('amfm_auth_token'); if('caches' in window){caches.keys().then(function(k){k.forEach(function(n){caches.delete(n);});});} window.location.reload(true);" aria-label="Déconnexion et vider le cache" title="Vider le cache et Déconnexion">
                         <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
                     </button>
 
-                    <div class="amfm-headline" data-amfm-headline aria-live="polite">
+                    <div class="amfm-headline" <div class="amfm-headline" data-amfm-headline aria-live="polite">
                         <span class="amfm-headline-layer">Température à 2 m (°C) — </span>Chargement…
                     </div>
                 </div>
@@ -1286,7 +1348,7 @@
     <script src="js/palettes.js?v=1788039598"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="js/regions.js?v=1.0.0"></script>
-    <script src="js/arome-map.js?v=20260904-4"></script>
+    <script src="js/arome-map.js?v=20260904-5"></script>
 <script>
 (function() {
     var MM_FALLBACK = "https://lh3.googleusercontent.com/aida-public/AB6AXuBOx1F1TSaVo-90uMYKn9COfMPmjAX0T-pDidLIG3dPGDOY8KZaze-h0L3XqQFBQYd2hOHF3ncMJUSafxVsBVCsa_nG_lc6fpJuY9v9GDCYja_y7Yp7cY-R3DVGTOnpn-SMdrNqECFBDa-E-v0VnHWzB7gvt3J4SIGkNfDhO17usu8WyVxYhbXh6JJyqEE715ISXChoGvFwKoKxk4_INHavYh_JUKzTUvJFsg7VX9fkzGTJOPZFY4SKNUATMB_IUPKDfX3Cwx4Gz5g";
