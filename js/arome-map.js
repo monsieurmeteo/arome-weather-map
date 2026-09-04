@@ -4136,16 +4136,6 @@
                 updateUrl();
             });
 
-                } else {
-
-                    resetView();
-
-                }
-
-                updateUrl();
-
-            });
-
         }
 
 
