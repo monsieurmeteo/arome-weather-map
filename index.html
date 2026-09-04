@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -834,7 +834,7 @@
     <!-- 🔒 Écran d'Authentification Sécurisé -->
     <div id="amfm-auth-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-title">
         <div class="amfm-auth-card">
-            <img src="logo.png" alt="Météo-Climat Pro" class="amfm-auth-logo" onerror="this.src='https://alertes-meteo.com/assets/logo_meteo_climat_pro.png'">
+            <img src="logo.png" alt="Météo-Climat Pro" class="amfm-auth-logo" id="amfm-logo-auth" onerror="this.src='https://alertes-meteo.com/assets/logo_meteo_climat_pro.png'">
             <div class="amfm-auth-title" id="auth-title">Espace Professionnel</div>
             <div class="amfm-auth-subtitle">Veuillez vous identifier pour accéder aux modèles haute résolution</div>
             <form id="amfm-auth-form" class="amfm-auth-form" onsubmit="return false;">
@@ -924,7 +924,7 @@
             <div class="amfm-navbar" role="region" aria-label="Contrôles de la carte">
                 <!-- Gauche : Marque + Modèle + Commune -->
                 <div class="amfm-nav-brand">
-                    <img src="logo.png" alt="Météo-Climat Pro" class="amfm-logo" aria-hidden="false">
+                    <img src="logo.png" alt="Météo-Climat Pro" class="amfm-logo" id="amfm-logo-navbar" aria-hidden="false">
                     <span class="amfm-title-text">AROME HD</span>
                     <span class="amfm-badge">1,3 km</span>
                     <a href="alerte-grele.html" class="amfm-btn" style="background:linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(168, 85, 247, 0.35)); border:1px solid rgba(239, 68, 68, 0.6); color:#fca5a5; font-weight:800;" aria-label="Prévision du risque et diamètre de grêle" title="Prévision Grêle par Code Postal">
@@ -1010,7 +1010,7 @@
                     </select>
                 </div>
 
-                <div class="amfm-nav-actions">
+                <div class="amfm-nav-actions"><button type="button" id="amfm-logo-toggle" class="amfm-btn" title="Logo : Météo-Climat Pro / Monsieur Météo" style="padding:0 8px;font-size:11px;gap:4px;flex-shrink:0;"><i class="fa-solid fa-repeat" aria-hidden="true"></i> <span id="amfm-logo-toggle-label">MM</span></button>
                     <div class="amfm-btn-group">
                         <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture aria-label="Télécharger en PNG 4:3" title="Télécharger la carte en PNG HD (4:3 Standard)">
                             <i class="fa-solid fa-download" aria-hidden="true"></i> <span>PNG</span>
@@ -1182,7 +1182,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="js/regions.js?v=1.0.0"></script>
     <script src="js/arome-map.js?v=1788039598"></script>
-</body>
+<script>(function(){var L={mcp:{src:"logo.png",alt:"Météo-Climat Pro",lb:"MM"},mm:{src:"logo_mm.png",alt:"Monsieur Météo",lb:"MCP"}};var K="amfm_logo_pref";var c=localStorage.getItem(K)||"mcp";function a(k){var l=L[k];var n=document.getElementById("amfm-logo-navbar");var u=document.getElementById("amfm-logo-auth");var b=document.getElementById("amfm-logo-toggle-label");if(n){n.src=l.src;n.alt=l.alt;}if(u){u.src=l.src;u.alt=l.alt;}if(b)b.textContent=l.lb;}document.addEventListener("DOMContentLoaded",function(){a(c);var btn=document.getElementById("amfm-logo-toggle");if(btn)btn.addEventListener("click",function(){c=(c==="mcp")?"mm":"mcp";localStorage.setItem(K,c);a(c);});});})()</script></body>
 </html>
 
 
