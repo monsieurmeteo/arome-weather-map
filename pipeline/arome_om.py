@@ -269,7 +269,7 @@ def render_domain(dom_key, max_hours=48, target_run=None):
         "run": run_str,
         "run_time": run_dt.isoformat(),
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "bounds": dom.bounds,
+        "bounds": {"south": dom.bounds[0], "west": dom.bounds[1], "north": dom.bounds[2], "east": dom.bounds[3]},
         "overlay": "maps/frontieres.svg",
         "fond": "maps/fond.webp",
         "mask": "maps/mask_france.png",
