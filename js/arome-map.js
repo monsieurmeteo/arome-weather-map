@@ -2032,6 +2032,29 @@
 
             regionSelect.addEventListener('change', function (e) {
                 var val = e.target.value || 'france';
+
+                // Gestion Outre-Mer (AROME-OM)
+                if (val === 'antilles') {
+                    transform = { scale: 1, x: 0, y: 0 };
+                    switchModel('arome_antilles');
+                    resetView();
+                    updateUrl();
+                    return;
+                }
+                if (val === 'reunion') {
+                    transform = { scale: 1, x: 0, y: 0 };
+                    switchModel('arome_reunion');
+                    resetView();
+                    updateUrl();
+                    return;
+                }
+
+                // Retour métropole si on était sur un domaine Outre-Mer
+                if (currentModel === 'arome_antilles' || currentModel === 'arome_reunion') {
+                    transform = { scale: 1, x: 0, y: 0 };
+                    switchModel('arome');
+                }
+
                 var cfg = REGION_CONFIG[val];
                 if (val === 'france' || (cfg && cfg.reset)) {
                     resetView();
@@ -2062,6 +2085,8 @@
         function switchModel(modelKey, initialLayer) {
             var modelMap = {
                 arome: { path: 'output/arome', name: 'AROME HD', badge: '1,3 KM' },
+                arome_antilles: { path: 'output/arome_antilles', name: 'AROME-OM Arc Antillais', badge: '2,5 KM' },
+                arome_reunion: { path: 'output/arome_reunion', name: 'AROME-OM La Réunion & Mayotte', badge: '2,5 KM' },
                 arome_pe: { path: 'output/arome_pe', name: 'AROME-PE (Probabilités)', badge: 'ENSEMBLE' },
                 arpege: { path: 'output/arpege', name: 'ARPEGE Europe', badge: '5 KM' },
                 icon: { path: 'output/icon', name: 'ICON-EU', badge: '7 KM' },
@@ -2605,8 +2630,25 @@
         // Le header flotte AU-DESSUS de la carte (translucide) : la carte
         // remplit donc tout le viewport, sans zone réservée.
         // ────────────────────────────────────────────────────────────────────
+        function isOmDomain() {
+            return (currentModel === 'arome_antilles' || currentModel === 'arome_reunion');
+        }
+
         function computeMapRect(width, height, t) {
             t = t || transform;
+
+            // Domaines Outre-Mer (Antilles 2200x1320, Réunion 2200x1480) : centrage plein écran propre
+            if (isOmDomain()) {
+                var natH = (currentModel === 'arome_reunion') ? 1480.0 : 1320.0;
+                var scale = Math.min(width / 2200.0, height / natH) * t.scale;
+                return {
+                    x: width / 2 + t.x - 1100.0 * scale,
+                    y: height / 2 + t.y - (natH / 2.0) * scale,
+                    w: 2200.0 * scale,
+                    h: natH * scale
+                };
+            }
+
             // Échelle de base UNIQUE : cover du viewport par le raster 2200×1640.
             // Tous les calculs (pan, zoom roue, pinch, focusLocation) utilisent
             // cette même valeur pour rester cohérents.
