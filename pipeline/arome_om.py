@@ -246,10 +246,11 @@ def render_domain(dom_key, max_hours=48, target_run=None):
             # Date échéance
             valid_dt = run_dt + datetime.timedelta(hours=lead)
             rendered_steps.append({
+                "lead_hour": lead,
                 "step": lead,
-                "hour": lead,
+                "valid_time": valid_dt.isoformat(),
                 "date": valid_dt.strftime("%Y-%m-%d %H:%M UTC"),
-                "files": {lay: f"{lay}/{lead:03d}.webp" for lay in fields if lay in PALETTES}
+                "files": {lay: f"maps/{lay}/{lead:03d}.webp" for lay in fields if lay in PALETTES}
             })
 
             print(f"[{dom_key}] H+{lead:02d} rendu avec succès ({len(fields)} couches).", flush=True)
@@ -266,11 +267,15 @@ def render_domain(dom_key, max_hours=48, target_run=None):
         "provider": "Météo-France",
         "resolution": "0.025° (~2.5 km)",
         "run": run_str,
-        "run_time": run_dt.strftime("%d/%m/%Y %H:%M UTC"),
+        "run_time": run_dt.isoformat(),
+        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "bounds": dom.bounds,
+        "overlay": "maps/frontieres.svg",
+        "fond": "maps/fond.webp",
+        "mask": "maps/mask_france.png",
+        "places": "maps/communes.json",
         "layers": {lay: {"label": lay.capitalize()} for lay in LAYERS},
-        "steps": rendered_steps,
-        "places": "communes.json"
+        "steps": rendered_steps
     }
     with open(os.path.join(out_dir, "index.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)
@@ -293,3 +298,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
