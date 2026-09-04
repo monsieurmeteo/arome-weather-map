@@ -1673,12 +1673,11 @@
                 outW = 2200;
                 outH = Math.round(natH);
                 if (currentModel === 'arome_reunion') {
-                    // Remonter l'image du bassin Océan Indien (~110px) pour bien dégager La Réunion et Maurice au-dessus de la légende
-                    var sBasin = 1.08;
-                    hScale = sBasin;
-                    vScale = sBasin;
-                    offX = (outW - 2200.0 * sBasin) / 2;
-                    offY = -110;
+                    // Remonter la carte de l'Océan Indien (-180px) pour que Madagascar, La Réunion et Maurice soient 100% au-dessus de la légende
+                    hScale = 1.0;
+                    vScale = 1.0;
+                    offX = 0;
+                    offY = -180;
                 } else {
                     hScale = 1.0;
                     vScale = 1.0;
@@ -1738,7 +1737,9 @@
                 context.transform(hScale, 0, 0, vScale, offX, offY);
 
                 context.drawImage(fondImageElement, 0, 0);
-
+                if (offY < 0 && fondImageElement.naturalHeight) {
+                    context.drawImage(fondImageElement, 0, fondImageElement.naturalHeight - 2, fondImageElement.naturalWidth, 2, 0, fondImageElement.naturalHeight, fondImageElement.naturalWidth, -offY + 30);
+                }
                 context.restore();
 
             } else {
@@ -1766,7 +1767,10 @@
             weatherCtx.transform(hScale, 0, 0, vScale, offX, offY);
 
             weatherCtx.drawImage(activeImg, 0, 0);
-
+            if (offY < 0 && activeImg.naturalHeight) {
+                // Prolongement parfait de la couleur océanique tout en bas jusqu'au bord
+                weatherCtx.drawImage(activeImg, 0, activeImg.naturalHeight - 2, activeImg.naturalWidth, 2, 0, activeImg.naturalHeight, activeImg.naturalWidth, -offY + 30);
+            }
             weatherCtx.restore();
 
             context.drawImage(weatherMasked, 0, 0);
@@ -2031,7 +2035,7 @@
 
                 try {
 
-                    legendW = 1100;
+                    legendW = isOmDomain() ? 920 : 1100;
 
                     legendH = 96;
 
