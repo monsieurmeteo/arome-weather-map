@@ -350,10 +350,18 @@
             setTimeout(function () {
                 var btn = document.querySelector('[data-hrw-export-cartouche]');
                 if (!btn) { document.title = 'EXPORT_ERR:no_button'; return; }
-                renderExport(document.querySelector('.hrw-card'), function (err) {
+                document.title = 'EXPORT_START';
+                var done = false;
+                var finish = function (err) {
+                    if (done) return;
+                    done = true;
                     document.title = err ? ('EXPORT_ERR:' + err.message) : 'EXPORT_OK';
-                });
-            }, 4000);
+                };
+                try {
+                    renderExport(document.querySelector('.hrw-card'), finish);
+                } catch (e) { finish(e); }
+            }, 6000);
+            setTimeout(function () { if (document.title === 'EXPORT_START') document.title = 'EXPORT_PENDING'; }, 25000);
         }
     });
 })();
