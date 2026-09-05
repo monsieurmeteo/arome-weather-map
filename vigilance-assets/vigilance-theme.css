@@ -164,3 +164,40 @@
     border-radius: 10px;
 }
 .hrw-plugin-version { color: #5f7391; }
+
+
+/* ============================================================================
+   Corrections ergonomiques (retour utilisateur) :
+   carte moins haute, chrome compact, tout reste visible sans grand scroll.
+   ========================================================================== */
+.hrw-card { max-width: 1400px; }
+
+/* La carte garde son ratio carré mais sa taille est plafonnée à ~78 % de la
+   hauteur d'écran (et jamais plus large que son conteneur) : plus besoin de
+   descendre pour voir/interagir avec la France entière. */
+.hrw-card .hrw-map {
+    width: min(100%, 78vh) !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    display: block;
+    margin-inline: auto;
+}
+
+/* Chrome compact : header, onglets, carte, détail */
+.hrw-card .hrw-header { padding: 12px 18px 6px; }
+.hrw-card .hrw-header h2 { font-size: 1.2rem; margin-bottom: 2px; }
+.hrw-card .hrw-kicker { font-size: 0.66rem; margin-bottom: 2px; }
+.hrw-card .hrw-locate-button { margin-top: 8px; padding: 7px 14px; font-size: .85rem; }
+.hrw-card .hrw-meta { font-size: .8rem; }
+.hrw-card .hrw-toolbar { padding: 10px 18px; }
+.hrw-card .hrw-tab { padding: 6px 11px; font-size: .76rem; }
+.hrw-card .hrw-map-wrap { padding: 10px 14px; }
+.hrw-card .hrw-legend { margin-top: 8px; gap: 7px; }
+.hrw-card .hrw-legend-title { padding: 6px 10px; font-size: .88rem; }
+.hrw-card .hrw-detail { min-height: 220px; padding: 10px; }
+.hrw-card .hrw-footer { padding: 9px 18px; font-size: .7rem; }
+
+/* Deux colonnes (carte + détail) dès 980 px pour réduire la hauteur totale. */
+@media (min-width: 980px) {
+    .hrw-card .hrw-body { grid-template-columns: minmax(0, 2.2fr) minmax(300px, 1fr) !important; }
+}
