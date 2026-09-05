@@ -168,6 +168,15 @@
 
         var hazard = activeTabText(card, '.hrw-hazard-tabs') || 'Vigilance';
         var day = activeTabText(card, '.hrw-day-tabs') || '';
+        // CLÉ technique de l'aléa (dataset.hazard : 'orages', 'pluie_inondation'…)
+        // — la lecture du libellé seul empêchait la reconnaissance des pictos.
+        var hazardBtn = card.querySelector('.hrw-hazard-tabs .hrw-tab.is-active');
+        var hazardKey = hazardBtn ? String(hazardBtn.getAttribute('data-hazard') || '').toLowerCase() : '';
+        if (!hazardKey && hazard) {
+            var labelToKey = { 'vent': 'vent', 'pluie-inondation': 'pluie_inondation', 'orages': 'orages', 'grêle': 'grele', 'chaleur': 'chaleur', 'froid': 'froid', 'neige': 'neige', 'verglas': 'verglas', 'brouillard': 'brouillard', 'littoral': 'littoral', 'feu': 'feu' };
+            hazardKey = labelToKey[hazard.toLowerCase()] || '';
+        }
+        var hasOfficial = Object.prototype.hasOwnProperty.call(PICTO_SVG, hazardKey);
         var legendTitle = ((card.querySelector('[data-hrw-legend-title]') || {}).textContent || hazard).trim();
 
         var items = Array.prototype.map.call(
@@ -182,7 +191,7 @@
         var levelByColor = {};
         items.forEach(function (it, idx) { levelByColor[rgbKey(it.color)] = idx; });
 
-        var hasOfficial = Object.prototype.hasOwnProperty.call(PICTO_SVG, hazard);
+        var hasOfficialKey = hasOfficial;
         var vb = svg.viewBox.baseVal || { width: 1000, height: 1000 };
 
         loadImage(LOGO_CANDIDATES, 0, function (logo) {
