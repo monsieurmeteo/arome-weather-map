@@ -16,7 +16,8 @@
     var PICTO_SVG = {
         vent: 'Vent.svg', pluie_inondation: 'Pluie.svg', orages: 'Orages.svg',
         neige: 'Neige.svg', verglas: 'Pluie verglaçante.svg', chaleur: 'Canicule.svg',
-        froid: 'froid.svg', brouillard: 'Brouillard-givrant.svg', littoral: 'vague.svg'
+        froid: 'froid.svg', brouillard: 'Brouillard-givrant.svg', littoral: 'vague.svg',
+        feu: 'Feu.svg'
     };
     var IDF_SKIP = ['75', '77', '78', '91', '92', '93', '94', '95'];
 
