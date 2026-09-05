@@ -344,5 +344,16 @@
             if (!card) { clearInterval(timer); return; }
             if (card.querySelector('.hrw-legend-item')) { injectButton(card); clearInterval(timer); }
         }, 800);
+        // Diagnostic / test automatique : /...?auto=1 déclenche un export
+        // quelques secondes après le chargement et expose le résultat.
+        if (/[?&]auto=1/.test(location.search)) {
+            setTimeout(function () {
+                var btn = document.querySelector('[data-hrw-export-cartouche]');
+                if (!btn) { document.title = 'EXPORT_ERR:no_button'; return; }
+                renderExport(document.querySelector('.hrw-card'), function (err) {
+                    document.title = err ? ('EXPORT_ERR:' + err.message) : 'EXPORT_OK';
+                });
+            }, 4000);
+        }
     });
 })();
