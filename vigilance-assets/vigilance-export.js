@@ -104,6 +104,28 @@
         }
         inlineStyles(svg);
 
+        // Export « pictogrammes transparents » : on retire le rond blanc
+        // (badge) et on agrandit le pictogramme — rendu proche des symboles
+        // Météo-France posés sur la carte, fond transparent.
+        clone.querySelectorAll('circle.hrw-dept-icon-badge').forEach(function (c) {
+            c.remove();
+        });
+        clone.querySelectorAll('g.hrw-dept-icon').forEach(function (g) {
+            var t = g.getAttribute('transform') || '';
+            var m = t.match(/translate\(([\d.+-]+),([\d.+-]+)\) scale\(([\d.]+)\)/);
+            if (m) {
+                var scale = parseFloat(m[3]) * 2.6;
+                g.setAttribute('transform', 'translate(' + m[1] + ',' + m[2] + ') scale(' + scale.toFixed(3) + ')');
+            }
+        });
+        // Halo blanc autour du pictogramme : lisible sur n'importe quel palier.
+        clone.querySelectorAll('g.hrw-dept-icon path, g.hrw-dept-icon circle, g.hrw-dept-icon rect').forEach(function (p) {
+            p.setAttribute('stroke', 'rgba(255,255,255,0.92)');
+            p.setAttribute('stroke-width', '2.6');
+            p.setAttribute('paint-order', 'stroke');
+            p.setAttribute('stroke-linejoin', 'round');
+        });
+
         clone.querySelectorAll('path').forEach(function (p) {
             if (!p.getAttribute('fill')) { p.setAttribute('fill', '#31aa35'); }
             // Bordures départementales : uniquement les chemins « département »
