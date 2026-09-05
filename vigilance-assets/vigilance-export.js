@@ -11,8 +11,13 @@
     'use strict';
 
     var LOGO_CANDIDATES = ['assets/logo.png', 'vigilance-assets/logo.png', 'logo.png'];
-    var PICTO_BASES = ['assets/mf-pictos/', 'vigilance-assets/mf-pictos/'];
-    var PICTO_IDS = { vent: '1', pluie_inondation: '2', orages: '3', chaleur: '6', froid: '7', neige: '5' };
+    var PICTO_BASES = ['assets/mf-vigiciel/', 'vigilance-assets/mf-vigiciel/'];
+    // Série vigiciel (silhouettes Météo-France) — 9 aléas sur 11.
+    var PICTO_SVG = {
+        vent: 'Vent.svg', pluie_inondation: 'Pluie.svg', orages: 'Orages.svg',
+        neige: 'Neige.svg', verglas: 'Pluie verglaçante.svg', chaleur: 'Canicule.svg',
+        froid: 'froid.svg', brouillard: 'Brouillard-givrant.svg', littoral: 'vague.svg'
+    };
     var IDF_SKIP = ['75', '77', '78', '91', '92', '93', '94', '95'];
 
     var W = 2200;
@@ -35,14 +40,28 @@
         img.src = urls[index];
     }
 
-    function loadPicto(letter, id) {
-        var key = letter + id;
-        if (pictoCache[key]) return pictoCache[key];
-        var urls = PICTO_BASES.map(function (b) { return b + key + '.png'; });
-        pictoCache[key] = new Promise(function (resolve) {
-            loadImage(urls, 0, function (img) { resolve(img); });
+    function loadPicto(hazard) {
+        if (pictoCache[hazard]) return pictoCache[hazard];
+        var name = PICTO_SVG[hazard];
+        var urls = PICTO_BASES.map(function (b) { return b + encodeURIComponent(name); });
+        pictoCache[hazard] = new Promise(function (resolve) {
+            (function tryFetch(i) {
+                if (i >= urls.length) { resolve(null); return; }
+                fetch(urls[i], { cache: 'force-cache' }).then(function (r) {
+                    if (!r.ok) throw new Error('http ' + r.status);
+                    return r.text();
+                }).then(function (svgText) {
+                    // Silhouette noire -> blanche (transparent), comme sur la carte MF
+                    var white = svgText.replace(/#000000/gi, '#ffffff');
+                    var blob = new Blob([white], { type: 'image/svg+xml;charset=utf-8' });
+                    var img = new Image();
+                    img.onload = function () { resolve(img); };
+                    img.onerror = function () { resolve(null); };
+                    img.src = URL.createObjectURL(blob);
+                }).catch(function () { tryFetch(i + 1); });
+            })(0);
         });
-        return pictoCache[key];
+        return pictoCache[hazard];
     }
 
     function node(selector) {
@@ -162,7 +181,7 @@
         var levelByColor = {};
         items.forEach(function (it, idx) { levelByColor[rgbKey(it.color)] = idx; });
 
-        var hasOfficial = Object.prototype.hasOwnProperty.call(PICTO_IDS, hazard);
+        var hasOfficial = Object.prototype.hasOwnProperty.call(PICTO_SVG, hazard);
         var vb = svg.viewBox.baseVal || { width: 1000, height: 1000 };
 
         loadImage(LOGO_CANDIDATES, 0, function (logo) {
@@ -176,7 +195,7 @@
             var mapSize = H - 20;
             var mapX = (W - mapSize) / 2;
 
-            drawSvgImage(ctx, svg, Math.round(mapX), 10, mapSize, hasOfficial).then(function () {
+            drawSvgImage(ctx, svg, Math.round(mapX), 10, mapSize, true).then(function () {
                 // Pictogrammes officiels sur les départements colorés (hors Paris / IDF)
                 var pictos = [];
                 if (hasOfficial) {
@@ -185,17 +204,15 @@
                         if (!code || code === '75' || IDF_SKIP.indexOf(code) !== -1) return;
                         var level = levelByColor[rgbKey(path.getAttribute('fill'))];
                         if (level === undefined || level <= 0) return;
-                        var letter = level >= Math.ceil(maxIdx * 0.62) ? 'R' : 'O';
                         var bb = path.getBBox();
                         if (!bb || !bb.width) return;
                         var cxp = mapX + ((bb.x + bb.width / 2) / (vb.width || 1000)) * mapSize;
                         var cyp = 10 + ((bb.y + bb.height / 2) / (vb.height || 1000)) * mapSize;
-                        pictos.push({ key: letter + PICTO_IDS[hazard], x: cxp, y: cyp });
+                        pictos.push({ x: cxp, y: cyp });
                     });
                 }
                 var iconSize = Math.round(mapSize * 0.024);
-                var loads = pictos.map(function (p) { return loadPicto(p.key.charAt(0), p.key.slice(1)); });
-                Promise.all(loads).then(function (imgs) {
+                loadPicto(hazard).then(function (hazardImg) {
                     // Encart Île-de-France
                     if (insetSvg) {
                         var panelW = 470, panelH = 560, px = W - MARGIN - panelW, py = 400;
@@ -208,7 +225,7 @@
                         ctx.fillStyle = '#93a5bf'; ctx.font = '500 24px ' + FONT;
                         ctx.fillText('zoom — ' + hazard + (day ? ' · ' + day : ''), px + panelW / 2, py + 88);
                         ctx.textAlign = 'left';
-                        drawSvgImage(ctx, insetSvg, px + 18, py + 110, panelW - 36, false);
+                        drawSvgImage(ctx, insetSvg, px + 18, py + 110, panelW - 36, !hasOfficial);
                     }
 
                     // Logo haut droite
@@ -271,14 +288,13 @@
                     });
                     ctx.textAlign = 'left';
 
-                    // Pictogrammes officiels Météo-France sur les départements
-                    pictos.forEach(function (p, i) {
-                        var img = imgs[i];
-                        if (!img) return;
+                    // Pictogrammes officiels Météo-France (série vigiciel) sur les départements colorés
+                    pictos.forEach(function (p) {
+                        if (!hazardImg) return;
                         var s = iconSize;
                         ctx.save();
                         ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6;
-                        ctx.drawImage(img, p.x - s / 2, p.y - s / 2, s, s);
+                        ctx.drawImage(hazardImg, p.x - s / 2, p.y - s / 2, s, s);
                         ctx.restore();
                     });
 
