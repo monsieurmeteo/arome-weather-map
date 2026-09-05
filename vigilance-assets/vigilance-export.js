@@ -74,11 +74,45 @@
         var clone = svg.cloneNode(true);
         clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+        // Inlinise les styles calculés : une SVG isolée dans une <img> n'applique
+        // PAS la feuille de style externe — sans cette étape, badges blancs et
+        // pictos colorés retombaient en noir (« ronds noirs » à l'export).
+        function inlineStyles(originalRoot) {
+            var walk = function (orig, cop) {
+                if (orig && cop && orig.nodeType === 1 && cop.nodeType === 1) {
+                    var s = window.getComputedStyle(orig);
+                    var copyProp = function (prop, attr) {
+                        var v = s.getPropertyValue(prop);
+                        if (v && v !== '' && v !== 'none') { cop.setAttribute(attr, v); }
+                    };
+                    copyProp('fill', 'fill');
+                    copyProp('fill-opacity', 'fill-opacity');
+                    copyProp('stroke', 'stroke');
+                    copyProp('stroke-width', 'stroke-width');
+                    copyProp('stroke-opacity', 'stroke-opacity');
+                    copyProp('opacity', 'opacity');
+                    if (s.getPropertyValue('display') === 'none') { cop.setAttribute('display', 'none'); }
+                }
+                var origChildren = orig ? orig.children : [];
+                var copChildren = cop ? cop.children : [];
+                for (var i = 0; i < copChildren.length; i++) {
+                    walk(origChildren[i], copChildren[i]);
+                }
+            };
+            walk(originalRoot, clone);
+        }
+        inlineStyles(svg);
+
         clone.querySelectorAll('path').forEach(function (p) {
             if (!p.getAttribute('fill')) { p.setAttribute('fill', '#31aa35'); }
-            p.setAttribute('stroke', '#05080c');
-            p.setAttribute('stroke-width', '2.4');
-            p.setAttribute('stroke-linejoin', 'round');
+            // Bordures départementales : uniquement les chemins « département »
+            // (les pictos ont déjà leur style inline, ne pas les écraser).
+            if (p.getAttribute('data-code')) {
+                p.setAttribute('stroke', '#05080c');
+                p.setAttribute('stroke-width', '2.4');
+                p.setAttribute('stroke-linejoin', 'round');
+            }
         });
         return new XMLSerializer().serializeToString(clone);
     }
