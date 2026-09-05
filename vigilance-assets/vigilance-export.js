@@ -1,12 +1,17 @@
 /* ============================================================================
-   Vigilance — Téléchargement PNG « cartouche pro »
-   (titre + légende + logo), cohérent avec les exports des cartes AROME HD.
-
-   Fonctionne PAR-DESSUS le widget (aucune modification de son code) :
-   - lit la carte SVG affichée ([data-hrw-map]), l'onglet aléa/jour actif,
-     la légende en cours (.hrw-legend-item) et la date du run ;
-   - recompose une image PNG haute résolution avec logo, titre, légende et
-     mentions, puis la télécharge.
+   Vigilance — Téléchargement PNG « comme les cartes AROME HD »
+   Composition calquée sur l'export de monsieurmeteo.github.io/arome-weather-map
+   (js/arome-map.js) :
+     • canevas 2200×1640, fond #0b1220 ;
+     • cartouche « antenne » en haut à GAUCHE (boîte sombre arrondie, liseré
+       cyan) : titre du paramètre (blanc, gras), modèle + run (cyan), date en
+       grand (blanc) ;
+     • LOGO en haut à DROITE (image centrée sur la hauteur du bandeau) ;
+     • LÉGENDE en dessous, centrée en bas (boîte sombre arrondie liseré cyan,
+       étiquette + barre colorée par paliers avec libellés) ;
+     • la carte (SVG affiché, icônes comprises) occupe tout le canevas, les
+       cartouches se posant par-dessus — comme sur vos exports météo.
+   Aucune modification du code du widget : module externe d'amélioration.
    ========================================================================== */
 (function () {
     'use strict';
@@ -16,9 +21,14 @@
         'vigilance-assets/logo.png',
         'logo.png'
     ];
-    var W = 2200;              // largeur export (haute résolution)
-    var PAD = 72;              // marge externe
-    var FONT = '"Segoe UI", Roboto, Arial, sans-serif';
+
+    // Dimensions et constantes calquées sur arome-map.js
+    var W = 2200;
+    var H = 1640;
+    var MARGIN = 24;
+    var BANNER_Y = 24;
+    var BANNER_H = 175;
+    var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
     function ready(fn) {
         if (document.readyState !== 'loading') { fn(); }
@@ -36,13 +46,22 @@
     }
 
     function pickSvgNode() {
-        var svg = document.querySelector('.hrw-card [data-hrw-map]');
-        return svg || document.querySelector('[data-hrw-map]');
+        return document.querySelector('.hrw-card [data-hrw-map]') || document.querySelector('[data-hrw-map]');
     }
 
     function activeTabText(root, selector) {
         var node = root.querySelector(selector + ' .hrw-tab.is-active');
         return node ? (node.textContent || '').trim() : '';
+    }
+
+    function roundRectPath(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
     }
 
     function exportFilename(hazard, day) {
@@ -56,46 +75,13 @@
         var clone = svg.cloneNode(true);
         clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-        // Bordures départementales lisibles sur fond sombre.
         clone.querySelectorAll('path').forEach(function (p) {
             if (!p.getAttribute('fill')) { p.setAttribute('fill', '#31aa35'); }
-            p.setAttribute('stroke', '#0a1424');
-            p.setAttribute('stroke-width', '1');
+            p.setAttribute('stroke', '#0b1220');
+            p.setAttribute('stroke-width', '1.4');
             p.setAttribute('stroke-linejoin', 'round');
         });
         return new XMLSerializer().serializeToString(clone);
-    }
-
-    function drawLegend(ctx, items, x, y, maxWidth, rowHeight, fontPx) {
-        var row = 0, xCursor = x;
-        ctx.font = '600 ' + fontPx + 'px ' + FONT;
-        ctx.textBaseline = 'middle';
-        items.forEach(function (item) {
-            var labelW = ctx.measureText(item.label).width;
-            var boxW = 34 + 10 + labelW + 18;
-            if (xCursor + boxW > x + maxWidth && xCursor > x) {
-                row += 1;
-                xCursor = x;
-            }
-            var cy = y + row * rowHeight + fontPx;
-            ctx.fillStyle = item.color;
-            roundRect(ctx, xCursor, cy - fontPx * 0.75, 30, fontPx * 1.5, 6);
-            ctx.fill();
-            ctx.fillStyle = '#e8eef6';
-            ctx.fillText(item.label, xCursor + 44, cy + 1);
-            xCursor += boxW;
-        });
-        return row;
-    }
-
-    function roundRect(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + w, y, x + w, y + h, r);
-        ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r);
-        ctx.arcTo(x, y, x + w, y, r);
-        ctx.closePath();
     }
 
     function renderExport(card, callback) {
@@ -103,9 +89,8 @@
         if (!svg) { callback(new Error('Carte non trouvée')); return; }
 
         var hazard = activeTabText(card, '.hrw-hazard-tabs') || 'Vigilance';
-        var day = activeTabText(card, '.hrw-day-tabs') || 'J0';
-        var runText = (card.querySelector('[data-hrw-run]') || {}).textContent || '';
-        var legendTitle = (card.querySelector('[data-hrw-legend-title]') || {}).textContent || (hazard + ' — ' + day);
+        var day = activeTabText(card, '.hrw-day-tabs') || '';
+        var legendTitle = (card.querySelector('[data-hrw-legend-title]') || {}).textContent || hazard;
 
         var items = Array.prototype.map.call(
             card.querySelectorAll('.hrw-legend .hrw-legend-item'),
@@ -118,97 +103,133 @@
         if (!items.length) { items = [{ color: '#31aa35', label: 'Nul' }]; }
 
         loadImage(LOGO_CANDIDATES, 0, function (logo) {
-            var svgText = serializeSvg(svg);
-            var svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+            var svgBlob = new Blob([serializeSvg(svg)], { type: 'image/svg+xml;charset=utf-8' });
             var svgUrl = URL.createObjectURL(svgBlob);
             var mapImg = new Image();
             mapImg.onload = function () {
                 URL.revokeObjectURL(svgUrl);
-                var vb = svg.viewBox.baseVal || { x: 0, y: 0, width: 1000, height: 1000 };
-                var mapW = W - 2 * PAD;
-                var mapH = mapW * (vb.height / vb.width);
-
-                var topH = 240;                       // bandeau titre + logo
-                var legFont = 46;
-                var legRowH = 110;
-                var legMaxRows = 3;
-                var footH = 96;
-                var H = Math.round(topH + mapH + legRowH * legMaxRows + footH);
 
                 var canvas = document.createElement('canvas');
                 canvas.width = W;
                 canvas.height = H;
                 var ctx = canvas.getContext('2d');
 
-                // Fond dégradé sombre (cohérent UI Météo-Climat Pro).
-                var grad = ctx.createLinearGradient(0, 0, 0, H);
-                grad.addColorStop(0, '#0d1930');
-                grad.addColorStop(0.5, '#0b1322');
-                grad.addColorStop(1, '#070d18');
-                ctx.fillStyle = grad;
+                // --- Fond sombre (identique aux exports AROME HD) ---
+                ctx.fillStyle = '#0b1220';
                 ctx.fillRect(0, 0, W, H);
 
-                // --- Logo (gauche, haut) ---
-                var logoSize = 150;
-                if (logo) {
-                    ctx.save();
-                    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                    ctx.shadowBlur = 24;
-                    ctx.drawImage(logo, PAD + 10, 40, logoSize, logoSize);
-                    ctx.restore();
-                }
+                // --- Carte pleine zone (carré centré, cartouches par-dessus) ---
+                var mapSize = H - 20;
+                var mapX = (W - mapSize) / 2;
+                ctx.drawImage(mapImg, Math.round(mapX), 10, mapSize, mapSize);
 
-                // --- Titre (droite) ---
-                ctx.textBaseline = 'alphabetic';
-                ctx.fillStyle = '#7dd3fc';
+                // --- LOGO en haut à DROITE (centré sur le bandeau) ---
+                var logoTargetW = 150;
+                var lx = W - MARGIN - logoTargetW;
+                var ly = BANNER_Y + (BANNER_H - logoTargetW) / 2;
+                ctx.save();
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+                ctx.shadowBlur = 12;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+                if (logo) {
+                    ctx.drawImage(logo, lx, ly, logoTargetW, logoTargetW);
+                } else {
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'top';
+                    ctx.font = '800 38px ' + FONT;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText('MÉTÉO-CLIMAT', W - MARGIN, BANNER_Y + 20);
+                    ctx.font = '900 32px ' + FONT;
+                    ctx.fillStyle = '#00d2ff';
+                    ctx.fillText('PRO', W - MARGIN, BANNER_Y + 68);
+                    ctx.textAlign = 'left';
+                }
+                ctx.restore();
+
+                // --- Cartouche « antenne » en haut à GAUCHE ---
+                var paramTitle = hazard;
+                var modelAndRun = 'AROME HD (Météo-France) — vigilance non officielle';
+                var dateText = day;
+
+                ctx.font = '700 38px ' + FONT;
+                var w1 = ctx.measureText(paramTitle).width;
+                ctx.font = '700 26px ' + FONT;
+                var w2 = ctx.measureText(modelAndRun).width;
                 ctx.font = '800 34px ' + FONT;
-                ctx.fillText('VIGILANCE MÉTÉO 48H — NON OFFICIELLE', W - PAD - 10, 62);
-                ctx.textAlign = 'right';
+                var w3 = ctx.measureText(dateText).width;
+                var bannerW = Math.max(w1, w2, w3) + 48;
+
+                ctx.fillStyle = 'rgba(7, 11, 20, 0.94)';
+                roundRectPath(ctx, MARGIN, BANNER_Y, bannerW, BANNER_H, 16);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0, 210, 255, 0.8)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '700 38px ' + FONT;
+                ctx.fillText(paramTitle, MARGIN + 24, BANNER_Y + 48);
+
+                ctx.fillStyle = '#00d2ff';
+                ctx.font = '700 26px ' + FONT;
+                ctx.fillText(modelAndRun, MARGIN + 24, BANNER_Y + 88);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = '800 92px ' + FONT;
-                var title = hazard + (day ? ' · ' + day : '');
-                ctx.fillText(title, W - PAD - 10, 168);
+                ctx.font = '800 34px ' + FONT;
+                ctx.fillText(dateText, MARGIN + 24, BANNER_Y + 140);
 
-                ctx.fillStyle = '#93a5bf';
-                ctx.font = '500 38px ' + FONT;
-                ctx.fillText((runText || '').replace(/\s+/g, ' ').trim(), W - PAD - 10, 224);
-                ctx.textAlign = 'left';
+                // --- Légende en dessous, centrée (même style que les exports) ---
+                var legendW = 1100;
+                var legendH = 128;
+                var legendBottom = 20;
+                var legendX = (W - legendW) / 2;
+                var legendY = H - legendH - legendBottom;
 
-                // --- Carte ---
-                var mapY = topH;
-                ctx.save();
-                ctx.shadowColor = 'rgba(0,0,0,0.6)';
-                ctx.shadowBlur = 40;
-                ctx.fillStyle = '#05090f';
-                roundRect(ctx, PAD - 14, mapY - 14, mapW + 28, mapH + 28, 26);
+                ctx.fillStyle = 'rgba(7, 11, 20, 0.96)';
+                roundRectPath(ctx, legendX - 22, legendY - 16, legendW + 44, legendH + 46, 18);
                 ctx.fill();
-                ctx.restore();
-                ctx.drawImage(mapImg, PAD, mapY, mapW, mapH);
-
-                // --- Légende (bas) ---
-                var legY = mapY + mapH + 46;
-                ctx.textAlign = 'left';
-                ctx.fillStyle = '#9fdcff';
-                ctx.font = '700 44px ' + FONT;
-                ctx.fillText('Légende — ' + legendTitle, PAD, legY + 6);
-                var rows = drawLegend(ctx, items, PAD, legY + 60, mapW, legRowH, legFont);
-
-                // --- Pied ---
-                var footY = legY + legRowH * legMaxRows;
-                ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(PAD, footY + 6);
-                ctx.lineTo(W - PAD, footY + 6);
+                ctx.strokeStyle = 'rgba(0, 210, 255, 0.7)';
+                ctx.lineWidth = 2.5;
                 ctx.stroke();
-                ctx.fillStyle = '#7c8db0';
-                ctx.font = '500 30px ' + FONT;
-                ctx.fillText(
-                    'Vigilance non officielle dérivée du modèle AROME (Météo-France) via monsieurmeteo/arome-weather-map — ne remplace pas la vigilance Météo-France. ' +
-                    'Cartes téléchargeables : © Météo-Climat Pro.',
-                    PAD, footY + 62
-                );
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '700 30px ' + FONT;
+                ctx.fillText('Légende — ' + legendTitle, W / 2, legendY + 28);
+
+                var barY = legendY + 46;
+                var segX = legendX;
+                var segW = legendW / items.length;
+                items.forEach(function (item) {
+                    ctx.fillStyle = item.color;
+                    ctx.beginPath();
+                    ctx.rect(segX, barY, segW - 2, 26);
+                    ctx.fill();
+                    segX += segW;
+                });
+
+                // Libellés de paliers sous la barre
+                var labelFont = items.length > 7 ? 17 : 20;
+                ctx.fillStyle = '#c7d3e4';
+                ctx.font = '600 ' + labelFont + 'px ' + FONT;
+                items.forEach(function (item, idx) {
+                    ctx.textAlign = 'center';
+                    var cx = legendX + segW * (idx + 0.5);
+                    var text = item.label;
+                    if (ctx.measureText(text).width > segW - 8) {
+                        // Tronque élégamment les libellés trop longs (ex. « (≥ 150 km/h) »)
+                        while (ctx.measureText(text + '…').width > segW - 8 && text.length > 2) {
+                            text = text.slice(0, -1);
+                        }
+                        text += '…';
+                    }
+                    ctx.fillText(text, cx, barY + 58);
+                });
+                ctx.textAlign = 'left';
 
                 canvas.toBlob(function (blob) {
                     if (!blob) { callback(new Error('Export impossible')); return; }
@@ -218,10 +239,7 @@
                     a.download = exportFilename(hazard, day);
                     document.body.appendChild(a);
                     a.click();
-                    setTimeout(function () {
-                        URL.revokeObjectURL(url);
-                        a.remove();
-                    }, 1200);
+                    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1200);
                     callback(null, blob);
                 }, 'image/png');
             };
@@ -239,15 +257,15 @@
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.setAttribute('data-hrw-export-cartouche', '1');
-        btn.title = 'Télécharger la carte avec titre, légende et logo';
-        btn.textContent = '⬇️ Télécharger (titre + légende + logo)';
+        btn.title = 'Télécharger la carte (2200×1640) avec titre, date, légende et logo — comme les exports AROME HD';
+        btn.textContent = '⬇️ Télécharger (titre + date + légende + logo)';
         btn.style.cssText = 'background:linear-gradient(135deg,rgba(0,210,255,.25),rgba(2,132,199,.22));' +
             'border:1px solid rgba(0,210,255,.55);color:#fff;border-radius:9px;padding:6px 10px;' +
             'font-weight:800;font-size:12px;cursor:pointer;';
         btn.addEventListener('click', function () {
             btn.disabled = true;
             var old = btn.textContent;
-            btn.textContent = 'Génération…';
+            btn.textContent = 'Génération 2200×1640…';
             renderExport(card, function (err) {
                 btn.disabled = false;
                 btn.textContent = old;
@@ -261,7 +279,6 @@
         var timer = setInterval(function () {
             var card = document.querySelector('.hrw-card[data-hrw-app]');
             if (!card) { clearInterval(timer); return; }
-            // Le bouton n'est ajouté qu'une fois la carte chargée (légende présente).
             if (card.querySelector('.hrw-legend-item')) {
                 injectButton(card);
                 clearInterval(timer);

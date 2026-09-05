@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    Thème « Météo-Climat Pro » pour la carte de Vigilance 48h (11 aléas).
    Design propre et distinct du site d'origine ; FONCTIONNALITÉS IDENTIQUES
    (la logique et le DOM du widget ne sont pas modifiés — seule la couche
@@ -170,13 +170,13 @@
    Corrections ergonomiques (retour utilisateur) :
    carte moins haute, chrome compact, tout reste visible sans grand scroll.
    ========================================================================== */
-.hrw-card { max-width: 1400px; }
+.hrw-card { max-width: 1280px; }
 
 /* La carte garde son ratio carré mais sa taille est plafonnée à ~78 % de la
    hauteur d'écran (et jamais plus large que son conteneur) : plus besoin de
    descendre pour voir/interagir avec la France entière. */
 .hrw-card .hrw-map {
-    width: min(100%, 78vh) !important;
+    width: min(100%, 64vh) !important;
     height: auto !important;
     aspect-ratio: 1 / 1 !important;
     display: block;

@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
     'use strict';
 
     var COMMUNES_API = 'https://geo.api.gouv.fr/communes';
@@ -14,7 +14,7 @@
         '66', '11', '34', '30', '13', '83', '06',
         '2A', '2B'
     ];
-    var ICON_MIN_LEVEL = 2;
+    var ICON_MIN_LEVEL = 1;
 
     // Icônes vectorielles épurées (monochromes, viewBox 24x24, dessinées à
     // la main — pas d'emoji, ni de dépendance externe). Chaque primitive
