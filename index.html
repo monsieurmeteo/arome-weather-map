@@ -1087,6 +1087,20 @@
         }
 
     </style>
+
+<style id="vw-navfix">
+/* Vigilance : garde-fou responsive — tous les boutons du header restent
+   visibles et cliquables quelle que soit la largeur. Le groupe de gauche
+   (logo, modèle, Grêle, Vigilance, Commune) passe à la ligne À L'INTÉRIEUR
+   de son bloc dès qu'il manque de place, au lieu de déborder à droite hors
+   de l'écran (aucune barre de défilement visible n'existait). */
+.amfm-nav-brand { flex-wrap: wrap; row-gap: 4px; max-width: 100%; }
+.amfm-nav-brand > * { flex: 0 0 auto; }
+.amfm-navbar { overflow-x: visible; }
+@media (max-width: 1024px) {
+  .amfm-navbar { overflow-x: visible; }
+}
+</style>
 </head>
 <body>
     <!-- 🔒 Écran d'Authentification Sécurisé -->
