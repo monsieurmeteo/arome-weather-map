@@ -1,26 +1,19 @@
 /* ============================================================================
    Vigilance — Téléchargement PNG « comme les cartes AROME HD »
-   Composition calquée sur l'export de monsieurmeteo.github.io/arome-weather-map
-   (js/arome-map.js) :
-     • canevas 2200×1640, fond #0b1220 ;
-     • cartouche « antenne » haut GAUCHE : titre (blanc gras), modèle+run
-       (cyan), date en grand (blanc) ;
-     • LOGO haut DROITE ;
-     • LÉGENDE centrée en bas (étiquette + barre de paliers + libellés) ;
-     • la carte France occupe tout le canevas, cartouches par-dessus ;
-     • ENCARTS : l'Île-de-France (carte détaillée) est ajoutée sur l'export
-       (panneau à droite) — comme sur l'écran, pour identifier les
-       départements IDF non symbolisés sur la carte principale.
-   Module externe : ne modifie pas le code du widget.
+   2200×1640, cartouche haut gauche (titre + modèle + date), logo haut droite,
+   légende en bas centrée, encart Île-de-France à droite.
+   Icônes : pictogrammes OFFICIELS Météo-France (PNG O/R) posés au centre des
+   départements colorés (sauf Paris), niveaux forts => R, sinon => O.
+   Pour les aléas sans picto officiel (grêle, verglas, brouillard, feu,
+   littoral), pictogramme vectoriel transparent avec halo.
    ========================================================================== */
 (function () {
     'use strict';
 
-    var LOGO_CANDIDATES = [
-        'assets/logo.png',
-        'vigilance-assets/logo.png',
-        'logo.png'
-    ];
+    var LOGO_CANDIDATES = ['assets/logo.png', 'vigilance-assets/logo.png', 'logo.png'];
+    var PICTO_BASES = ['assets/mf-pictos/', 'vigilance-assets/mf-pictos/'];
+    var PICTO_IDS = { vent: '1', pluie_inondation: '2', orages: '3', chaleur: '6', froid: '7', neige: '5' };
+    var IDF_SKIP = ['75', '77', '78', '91', '92', '93', '94', '95'];
 
     var W = 2200;
     var H = 1640;
@@ -28,11 +21,9 @@
     var BANNER_Y = 24;
     var BANNER_H = 175;
     var FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    var pictoCache = {};
 
-    function ready(fn) {
-        if (document.readyState !== 'loading') { fn(); }
-        else { document.addEventListener('DOMContentLoaded', fn); }
-    }
+    function ready(fn) { if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
 
     function loadImage(urls, index, done) {
         index = index || 0;
@@ -42,6 +33,16 @@
         img.onload = function () { done(img); };
         img.onerror = function () { loadImage(urls, index + 1, done); };
         img.src = urls[index];
+    }
+
+    function loadPicto(letter, id) {
+        var key = letter + id;
+        if (pictoCache[key]) return pictoCache[key];
+        var urls = PICTO_BASES.map(function (b) { return b + key + '.png'; });
+        pictoCache[key] = new Promise(function (resolve) {
+            loadImage(urls, 0, function (img) { resolve(img); });
+        });
+        return pictoCache[key];
     }
 
     function node(selector) {
@@ -64,72 +65,62 @@
     }
 
     function exportFilename(hazard, day) {
-        var safe = function (s) {
-            return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'carte';
-        };
+        var safe = function (s) { return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'carte'; };
         return 'vigilance-' + safe(hazard) + '-' + safe(day) + '.png';
     }
 
-    function serializeSvg(svg) {
+    function rgbKey(color) {
+        if (!color) return '';
+        color = String(color).trim();
+        var m = color.match(/^#([0-9a-f]{6})$/i);
+        if (m) {
+            var n = parseInt(m[1], 16);
+            return (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
+        }
+        m = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+        if (m) return m[1] + ',' + m[2] + ',' + m[3];
+        return '';
+    }
+
+    function serializeSvg(svg, removeAllIcons) {
         var clone = svg.cloneNode(true);
         clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-
-        // Inlinise les styles calculés : une SVG isolée dans une <img> n'applique
-        // PAS la feuille de style externe — sans cette étape, badges blancs et
-        // pictos colorés retombaient en noir (« ronds noirs » à l'export).
-        function inlineStyles(originalRoot) {
-            var walk = function (orig, cop) {
-                if (orig && cop && orig.nodeType === 1 && cop.nodeType === 1) {
-                    var s = window.getComputedStyle(orig);
-                    var copyProp = function (prop, attr) {
-                        var v = s.getPropertyValue(prop);
-                        if (v && v !== '' && v !== 'none') { cop.setAttribute(attr, v); }
-                    };
-                    copyProp('fill', 'fill');
-                    copyProp('fill-opacity', 'fill-opacity');
-                    copyProp('stroke', 'stroke');
-                    copyProp('stroke-width', 'stroke-width');
-                    copyProp('stroke-opacity', 'stroke-opacity');
-                    copyProp('opacity', 'opacity');
-                    if (s.getPropertyValue('display') === 'none') { cop.setAttribute('display', 'none'); }
+        // Inlinise les styles calculés (sinon : ronds noirs à l'export).
+        (function inlineStyles(orig) {
+            var walk = function (a, b) {
+                if (a && b && a.nodeType === 1) {
+                    var s = window.getComputedStyle(a);
+                    var cp = function (prop, attr) { var v = s.getPropertyValue(prop); if (v && v !== '' && v !== 'none') b.setAttribute(attr, v); };
+                    cp('fill', 'fill'); cp('fill-opacity', 'fill-opacity'); cp('stroke', 'stroke');
+                    cp('stroke-width', 'stroke-width'); cp('stroke-opacity', 'stroke-opacity'); cp('opacity', 'opacity');
+                    if (s.getPropertyValue('display') === 'none') b.setAttribute('display', 'none');
                 }
-                var origChildren = orig ? orig.children : [];
-                var copChildren = cop ? cop.children : [];
-                for (var i = 0; i < copChildren.length; i++) {
-                    walk(origChildren[i], copChildren[i]);
-                }
+                var ac = a ? a.children : [], bc = b ? b.children : [];
+                for (var i = 0; i < bc.length; i++) walk(ac[i], bc[i]);
             };
-            walk(originalRoot, clone);
+            walk(orig, clone);
+        })(svg);
+
+        if (removeAllIcons) {
+            clone.querySelectorAll('g.hrw-dept-icon-wrap').forEach(function (g) { g.remove(); });
+        } else {
+            // Pictogrammes vectoriels « transparents » (aléas sans PNG officiel)
+            clone.querySelectorAll('circle.hrw-dept-icon-badge').forEach(function (c) { c.remove(); });
+            clone.querySelectorAll('g.hrw-dept-icon').forEach(function (g) {
+                var t = g.getAttribute('transform') || '';
+                var m = t.match(/translate\(([\d.+-]+),([\d.+-]+)\) scale\(([\d.]+)\)/);
+                if (m) g.setAttribute('transform', 'translate(' + m[1] + ',' + m[2] + ') scale(' + (parseFloat(m[3]) * 2.6).toFixed(3) + ')');
+            });
+            clone.querySelectorAll('g.hrw-dept-icon path, g.hrw-dept-icon circle, g.hrw-dept-icon rect').forEach(function (p) {
+                p.setAttribute('stroke', 'rgba(255,255,255,0.92)');
+                p.setAttribute('stroke-width', '2.6');
+                p.setAttribute('paint-order', 'stroke');
+                p.setAttribute('stroke-linejoin', 'round');
+            });
         }
-        inlineStyles(svg);
-
-        // Export « pictogrammes transparents » : on retire le rond blanc
-        // (badge) et on agrandit le pictogramme — rendu proche des symboles
-        // Météo-France posés sur la carte, fond transparent.
-        clone.querySelectorAll('circle.hrw-dept-icon-badge').forEach(function (c) {
-            c.remove();
-        });
-        clone.querySelectorAll('g.hrw-dept-icon').forEach(function (g) {
-            var t = g.getAttribute('transform') || '';
-            var m = t.match(/translate\(([\d.+-]+),([\d.+-]+)\) scale\(([\d.]+)\)/);
-            if (m) {
-                var scale = parseFloat(m[3]) * 2.6;
-                g.setAttribute('transform', 'translate(' + m[1] + ',' + m[2] + ') scale(' + scale.toFixed(3) + ')');
-            }
-        });
-        // Halo blanc autour du pictogramme : lisible sur n'importe quel palier.
-        clone.querySelectorAll('g.hrw-dept-icon path, g.hrw-dept-icon circle, g.hrw-dept-icon rect').forEach(function (p) {
-            p.setAttribute('stroke', 'rgba(255,255,255,0.92)');
-            p.setAttribute('stroke-width', '2.6');
-            p.setAttribute('paint-order', 'stroke');
-            p.setAttribute('stroke-linejoin', 'round');
-        });
-
         clone.querySelectorAll('path').forEach(function (p) {
-            if (!p.getAttribute('fill')) { p.setAttribute('fill', '#31aa35'); }
-            // Bordures départementales : uniquement les chemins « département »
-            // (les pictos ont déjà leur style inline, ne pas les écraser).
+            if (!p.getAttribute('fill')) p.setAttribute('fill', '#31aa35');
             if (p.getAttribute('data-code')) {
                 p.setAttribute('stroke', '#05080c');
                 p.setAttribute('stroke-width', '2.4');
@@ -139,17 +130,13 @@
         return new XMLSerializer().serializeToString(clone);
     }
 
-    function drawSvgImage(ctx, svg, x, y, size) {
+    function drawSvgImage(ctx, svg, x, y, size, removeAllIcons) {
         return new Promise(function (resolve) {
-            var blob = new Blob([serializeSvg(svg)], { type: 'image/svg+xml;charset=utf-8' });
+            var blob = new Blob([serializeSvg(svg, removeAllIcons)], { type: 'image/svg+xml;charset=utf-8' });
             var url = URL.createObjectURL(blob);
             var img = new Image();
-            img.onload = function () {
-                ctx.drawImage(img, x, y, size, size);
-                URL.revokeObjectURL(url);
-                resolve(true);
-            };
-            img.onerror = function () { URL.revokeObjectURL(url); resolve(false); };
+            img.onload = function () { ctx.drawImage(img, x, y, size, size); URL.revokeObjectURL(url); resolve(); };
+            img.onerror = function () { URL.revokeObjectURL(url); resolve(); };
             img.src = url;
         });
     }
@@ -167,176 +154,160 @@
             card.querySelectorAll('.hrw-legend .hrw-legend-item'),
             function (el) {
                 var swatch = el.querySelector('.hrw-legend-swatch');
-                return {
-                    color: (swatch && swatch.style.backgroundColor) || '#888888',
-                    label: (el.textContent || '').trim()
-                };
+                return { color: (swatch && swatch.style.backgroundColor) || '#31aa35', label: (el.textContent || '').trim() };
             }
         );
-        if (!items.length) { items = [{ color: '#31aa35', label: 'Nul' }]; }
+        if (!items.length) items = [{ color: '#31aa35', label: 'Nul' }];
+        var maxIdx = items.length - 1;
+        var levelByColor = {};
+        items.forEach(function (it, idx) { levelByColor[rgbKey(it.color)] = idx; });
+
+        var hasOfficial = Object.prototype.hasOwnProperty.call(PICTO_IDS, hazard);
+        var vb = svg.viewBox.baseVal || { width: 1000, height: 1000 };
 
         loadImage(LOGO_CANDIDATES, 0, function (logo) {
             var canvas = document.createElement('canvas');
             canvas.width = W;
             canvas.height = H;
             var ctx = canvas.getContext('2d');
-
             ctx.fillStyle = '#0b1220';
             ctx.fillRect(0, 0, W, H);
 
             var mapSize = H - 20;
             var mapX = (W - mapSize) / 2;
-            drawSvgImage(ctx, svg, Math.round(mapX), 10, mapSize).then(function () {
-                // --- EncarÎ Île-de-France (carte détaillée) à droite ---
-                if (insetSvg) {
-                    var panelW = 470;
-                    var panelH = 560;
-                    var px = W - MARGIN - panelW;
-                    var py = 400;
-                    ctx.fillStyle = 'rgba(7, 11, 20, 0.95)';
-                    roundRectPath(ctx, px, py, panelW, panelH, 18);
-                    ctx.fill();
-                    ctx.strokeStyle = 'rgba(0, 210, 255, 0.6)';
-                    ctx.lineWidth = 2.5;
-                    ctx.stroke();
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'alphabetic';
-                    ctx.fillStyle = '#9fdcff';
-                    ctx.font = '800 34px ' + FONT;
-                    ctx.fillText('Île-de-France', px + panelW / 2, py + 52);
-                    ctx.fillStyle = '#93a5bf';
-                    ctx.font = '500 24px ' + FONT;
-                    ctx.fillText('zoom — ' + hazard + (day ? ' · ' + day : ''), px + panelW / 2, py + 88);
-                    ctx.textAlign = 'left';
-                    drawSvgImage(ctx, insetSvg, px + 18, py + 110, panelW - 36);
+
+            drawSvgImage(ctx, svg, Math.round(mapX), 10, mapSize, hasOfficial).then(function () {
+                // Pictogrammes officiels sur les départements colorés (hors Paris / IDF)
+                var pictos = [];
+                if (hasOfficial) {
+                    Array.prototype.forEach.call(svg.querySelectorAll('path[data-code]'), function (path) {
+                        var code = path.getAttribute('data-code');
+                        if (!code || code === '75' || IDF_SKIP.indexOf(code) !== -1) return;
+                        var level = levelByColor[rgbKey(path.getAttribute('fill'))];
+                        if (level === undefined || level <= 0) return;
+                        var letter = level >= Math.ceil(maxIdx * 0.62) ? 'R' : 'O';
+                        var bb = path.getBBox();
+                        if (!bb || !bb.width) return;
+                        var cxp = mapX + ((bb.x + bb.width / 2) / (vb.width || 1000)) * mapSize;
+                        var cyp = 10 + ((bb.y + bb.height / 2) / (vb.height || 1000)) * mapSize;
+                        pictos.push({ key: letter + PICTO_IDS[hazard], x: cxp, y: cyp });
+                    });
                 }
-
-                // --- LOGO en haut à droite ---
-                var logoTargetW = 150;
-                var lx = W - MARGIN - logoTargetW;
-                var ly = BANNER_Y + (BANNER_H - logoTargetW) / 2;
-                ctx.save();
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
-                ctx.shadowBlur = 12;
-                ctx.shadowOffsetX = 2;
-                ctx.shadowOffsetY = 2;
-                if (logo) {
-                    ctx.drawImage(logo, lx, ly, logoTargetW, logoTargetW);
-                } else {
-                    ctx.textAlign = 'right';
-                    ctx.textBaseline = 'top';
-                    ctx.font = '800 38px ' + FONT;
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillText('MÉTÉO-CLIMAT', W - MARGIN, BANNER_Y + 20);
-                    ctx.font = '900 32px ' + FONT;
-                    ctx.fillStyle = '#00d2ff';
-                    ctx.fillText('PRO', W - MARGIN, BANNER_Y + 68);
-                    ctx.textAlign = 'left';
-                }
-                ctx.restore();
-
-                // --- Cartouche « antenne » haut gauche ---
-                var paramTitle = hazard;
-                var modelAndRun = 'AROME HD (Météo-France) — vigilance non officielle';
-                var dateText = day;
-
-                ctx.font = '700 38px ' + FONT;
-                var w1 = ctx.measureText(paramTitle).width;
-                ctx.font = '700 26px ' + FONT;
-                var w2 = ctx.measureText(modelAndRun).width;
-                ctx.font = '800 34px ' + FONT;
-                var w3 = ctx.measureText(dateText).width;
-                var bannerW = Math.max(w1, w2, w3) + 48;
-
-                ctx.fillStyle = 'rgba(7, 11, 20, 0.94)';
-                roundRectPath(ctx, MARGIN, BANNER_Y, bannerW, BANNER_H, 16);
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(0, 210, 255, 0.8)';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'alphabetic';
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '700 38px ' + FONT;
-                ctx.fillText(paramTitle, MARGIN + 24, BANNER_Y + 48);
-                ctx.fillStyle = '#00d2ff';
-                ctx.font = '700 26px ' + FONT;
-                ctx.fillText(modelAndRun, MARGIN + 24, BANNER_Y + 88);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '800 34px ' + FONT;
-                ctx.fillText(dateText, MARGIN + 24, BANNER_Y + 140);
-
-                // --- Légende basse centrée ---
-                var legendW = 1180;
-                var legendH = 132;
-                var legendBottom = 18;
-                var legendX = (W - legendW) / 2;
-                var legendY = H - legendH - legendBottom;
-
-                ctx.fillStyle = 'rgba(7, 11, 20, 0.96)';
-                roundRectPath(ctx, legendX - 22, legendY - 18, legendW + 44, legendH + 50, 18);
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(0, 210, 255, 0.7)';
-                ctx.lineWidth = 2.5;
-                ctx.stroke();
-
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'alphabetic';
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '700 30px ' + FONT;
-                ctx.fillText('Légende — ' + legendTitle, W / 2, legendY + 30);
-
-                var barY = legendY + 50;
-                var segW = legendW / items.length;
-                var segX = legendX;
-                items.forEach(function (item) {
-                    ctx.fillStyle = item.color;
-                    ctx.fillRect(segX, barY, segW - 2, 28);
-                    segX += segW;
-                });
-
-                var labelFont = items.length > 7 ? 17 : 20;
-                ctx.fillStyle = '#c7d3e4';
-                ctx.font = '600 ' + labelFont + 'px ' + FONT;
-                items.forEach(function (item, idx) {
-                    var cx = legendX + segW * (idx + 0.5);
-                    var text = item.label;
-                    if (ctx.measureText(text).width > segW - 8) {
-                        while (ctx.measureText(text + '…').width > segW - 8 && text.length > 2) { text = text.slice(0, -1); }
-                        text += '…';
+                var iconSize = Math.round(mapSize * 0.024);
+                var loads = pictos.map(function (p) { return loadPicto(p.key.charAt(0), p.key.slice(1)); });
+                Promise.all(loads).then(function (imgs) {
+                    // Encart Île-de-France
+                    if (insetSvg) {
+                        var panelW = 470, panelH = 560, px = W - MARGIN - panelW, py = 400;
+                        ctx.fillStyle = 'rgba(7, 11, 20, 0.95)';
+                        roundRectPath(ctx, px, py, panelW, panelH, 18); ctx.fill();
+                        ctx.strokeStyle = 'rgba(0, 210, 255, 0.6)'; ctx.lineWidth = 2.5; ctx.stroke();
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+                        ctx.fillStyle = '#9fdcff'; ctx.font = '800 34px ' + FONT;
+                        ctx.fillText('Île-de-France', px + panelW / 2, py + 52);
+                        ctx.fillStyle = '#93a5bf'; ctx.font = '500 24px ' + FONT;
+                        ctx.fillText('zoom — ' + hazard + (day ? ' · ' + day : ''), px + panelW / 2, py + 88);
+                        ctx.textAlign = 'left';
+                        drawSvgImage(ctx, insetSvg, px + 18, py + 110, panelW - 36, false);
                     }
-                    ctx.textAlign = 'center';
-                    ctx.fillText(text, cx, barY + 64);
-                });
-                ctx.textAlign = 'left';
 
-                canvas.toBlob(function (blob) {
-                    if (!blob) { callback(new Error('Export impossible')); return; }
-                    var url = URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = exportFilename(hazard, day);
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1200);
-                    callback(null, blob);
-                }, 'image/png');
+                    // Logo haut droite
+                    var logoTargetW = 150, lx = W - MARGIN - logoTargetW, ly = BANNER_Y + (BANNER_H - logoTargetW) / 2;
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.75)'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
+                    if (logo) { ctx.drawImage(logo, lx, ly, logoTargetW, logoTargetW); }
+                    else {
+                        ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+                        ctx.font = '800 38px ' + FONT; ctx.fillStyle = '#ffffff';
+                        ctx.fillText('MÉTÉO-CLIMAT', W - MARGIN, BANNER_Y + 20);
+                        ctx.font = '900 32px ' + FONT; ctx.fillStyle = '#00d2ff';
+                        ctx.fillText('PRO', W - MARGIN, BANNER_Y + 68);
+                        ctx.textAlign = 'left';
+                    }
+                    ctx.restore();
+
+                    // Cartouche antenne haut gauche
+                    var paramTitle = hazard;
+                    var modelAndRun = 'AROME HD (Météo-France) — vigilance non officielle';
+                    var dateText = day;
+                    ctx.font = '700 38px ' + FONT; var w1 = ctx.measureText(paramTitle).width;
+                    ctx.font = '700 26px ' + FONT; var w2 = ctx.measureText(modelAndRun).width;
+                    ctx.font = '800 34px ' + FONT; var w3 = ctx.measureText(dateText).width;
+                    var bannerW = Math.max(w1, w2, w3) + 48;
+                    ctx.fillStyle = 'rgba(7, 11, 20, 0.94)';
+                    roundRectPath(ctx, MARGIN, BANNER_Y, bannerW, BANNER_H, 16); ctx.fill();
+                    ctx.strokeStyle = 'rgba(0, 210, 255, 0.8)'; ctx.lineWidth = 3; ctx.stroke();
+                    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                    ctx.fillStyle = '#ffffff'; ctx.font = '700 38px ' + FONT;
+                    ctx.fillText(paramTitle, MARGIN + 24, BANNER_Y + 48);
+                    ctx.fillStyle = '#00d2ff'; ctx.font = '700 26px ' + FONT;
+                    ctx.fillText(modelAndRun, MARGIN + 24, BANNER_Y + 88);
+                    ctx.fillStyle = '#ffffff'; ctx.font = '800 34px ' + FONT;
+                    ctx.fillText(dateText, MARGIN + 24, BANNER_Y + 140);
+
+                    // Légende basse centrée
+                    var legendW = 1180, legendH = 132, legendBottom = 18;
+                    var legendX = (W - legendW) / 2, legendY = H - legendH - legendBottom;
+                    ctx.fillStyle = 'rgba(7, 11, 20, 0.96)';
+                    roundRectPath(ctx, legendX - 22, legendY - 18, legendW + 44, legendH + 50, 18); ctx.fill();
+                    ctx.strokeStyle = 'rgba(0, 210, 255, 0.7)'; ctx.lineWidth = 2.5; ctx.stroke();
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+                    ctx.fillStyle = '#ffffff'; ctx.font = '700 30px ' + FONT;
+                    ctx.fillText('Légende — ' + legendTitle, W / 2, legendY + 30);
+                    var barY = legendY + 50, segW = legendW / items.length, segX = legendX;
+                    items.forEach(function (it) {
+                        ctx.fillStyle = it.color; ctx.fillRect(segX, barY, segW - 2, 28); segX += segW;
+                    });
+                    var labelFont = items.length > 7 ? 17 : 20;
+                    ctx.fillStyle = '#c7d3e4'; ctx.font = '600 ' + labelFont + 'px ' + FONT;
+                    items.forEach(function (it, idx) {
+                        var cx = legendX + segW * (idx + 0.5), text = it.label;
+                        if (ctx.measureText(text).width > segW - 8) {
+                            while (ctx.measureText(text + '…').width > segW - 8 && text.length > 2) text = text.slice(0, -1);
+                            text += '…';
+                        }
+                        ctx.textAlign = 'center';
+                        ctx.fillText(text, cx, barY + 64);
+                    });
+                    ctx.textAlign = 'left';
+
+                    // Pictogrammes officiels Météo-France sur les départements
+                    pictos.forEach(function (p, i) {
+                        var img = imgs[i];
+                        if (!img) return;
+                        var s = iconSize;
+                        ctx.save();
+                        ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6;
+                        ctx.drawImage(img, p.x - s / 2, p.y - s / 2, s, s);
+                        ctx.restore();
+                    });
+
+                    canvas.toBlob(function (blob) {
+                        if (!blob) { callback(new Error('Export impossible')); return; }
+                        var url = URL.createObjectURL(blob);
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = exportFilename(hazard, day);
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1200);
+                        callback(null, blob);
+                    }, 'image/png');
+                });
             });
         });
     }
 
     function injectButton(card) {
         var tools = card.querySelector('.hrw-map-tools');
-        if (!tools || tools.querySelector('[data-hrw-export-cartouche]')) { return; }
+        if (!tools || tools.querySelector('[data-hrw-export-cartouche]')) return;
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.setAttribute('data-hrw-export-cartouche', '1');
-        btn.title = 'Télécharger la carte 2200×1640 : titre, date, légende, logo + encart Île-de-France';
-        btn.textContent = '⬇️ Télécharger (titre + date + légende + logo)';
+        btn.title = 'Télécharger la carte 2200×1640 avec pictos officiels Météo-France';
+        btn.textContent = '⬇️ Télécharger (pictos Météo-France)';
         btn.style.cssText = 'background:linear-gradient(135deg,rgba(0,210,255,.25),rgba(2,132,199,.22));' +
-            'border:1px solid rgba(0,210,255,.55);color:#fff;border-radius:9px;padding:6px 10px;' +
-            'font-weight:800;font-size:12px;cursor:pointer;';
+            'border:1px solid rgba(0,210,255,.55);color:#fff;border-radius:9px;padding:6px 10px;font-weight:800;font-size:12px;cursor:pointer;';
         btn.addEventListener('click', function () {
             btn.disabled = true;
             var old = btn.textContent;
@@ -344,7 +315,7 @@
             renderExport(card, function (err) {
                 btn.disabled = false;
                 btn.textContent = old;
-                if (err) { window.alert('Export : ' + err.message); }
+                if (err) window.alert('Export : ' + err.message);
             });
         });
         tools.appendChild(btn);
@@ -354,10 +325,7 @@
         var timer = setInterval(function () {
             var card = document.querySelector('.hrw-card[data-hrw-app]');
             if (!card) { clearInterval(timer); return; }
-            if (card.querySelector('.hrw-legend-item')) {
-                injectButton(card);
-                clearInterval(timer);
-            }
+            if (card.querySelector('.hrw-legend-item')) { injectButton(card); clearInterval(timer); }
         }, 800);
     });
 })();
