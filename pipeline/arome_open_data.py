@@ -79,7 +79,8 @@ def latest_run():
 
     sorted_runs = sorted(runs, reverse=True)
     for run_cand in sorted_runs:
-        test_url = GRIB_BASE.format(run=run_cand, pkg="SP1", lead=0)
+        # Vérifie que le run est COMPLET (échéance finale 51H présente sur S3)
+        test_url = GRIB_BASE.format(run=run_cand, pkg="SP1", lead=51)
         try:
             resp = requests.head(test_url, headers=HEADERS, timeout=10)
             if resp.status_code == 200:
@@ -765,7 +766,8 @@ def render_lead(run_str, lead, out_dir, step_files, previous_state, communes,
     tmp = tempfile.mkdtemp(prefix="arome_grib_")
     try:
         paths = download_packages(run_str, lead, tmp, with_sp3=(lead == 0))
-        if len(paths) < 3:
+        min_pkgs = 2 if lead >= 49 else 3
+        if len(paths) < min_pkgs:
             print("  H+%02d: packages insuffisants (%d)" % (lead, len(paths)))
             return False
 
