@@ -7,8 +7,6 @@ on:
         description: 'arome | ecmwf | icon-eu | all'
         required: false
         default: 'all'
-  schedule:
-    - cron: '30 1,4,7,10,13,16,19,22 * * *'
 
 jobs:
   pipeline:
