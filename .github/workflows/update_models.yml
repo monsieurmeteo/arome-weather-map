@@ -1,9 +1,6 @@
 name: "Mise a Jour Automatique Multi-Modeles Meteo (24/7)"
 
 on:
-  schedule:
-    # Heures ideales des runs complets Météo-France (01h05, 07h05, 11h05, 13h05, 16h05, 19h05, 22h05 heure de Paris)
-    - cron: '5 23,5,9,11,14,17,20 * * *'
   workflow_dispatch:
 
 permissions:
