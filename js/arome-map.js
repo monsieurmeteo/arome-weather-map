@@ -3395,7 +3395,25 @@
 
             return manifest.steps.filter(function (step) {
 
-                return step && step.files && step.files[currentLayer] && (step.lead_hour !== undefined && step.lead_hour !== null);
+                if (!step || !step.files || !step.files[currentLayer] || step.lead_hour === undefined || step.lead_hour === null || Number(step.lead_hour) < 0) {
+
+                    return false;
+
+                }
+
+                // ponytail: à H+00 (analyse AROME), les flux cumulés, rafales et radar Doppler sont physiquement nuls / non diagnostiqués (cartes 100% transparentes).
+                // On commence directement à la 1ère échéance active réelle (H+01).
+                var zeroEmptyLayers = [
+                    'pluie_1h', 'pluie_cumul', 'rafales', 'rafales_cumul',
+                    'reflectivite', 'neige', 'graupel', 'equivalent_eau_neige'
+                ];
+                if (zeroEmptyLayers.indexOf(currentLayer) !== -1 && Number(step.lead_hour) === 0) {
+
+                    return false;
+
+                }
+
+                return true;
 
             });
 
@@ -4423,7 +4441,7 @@
 
             }
 
-            var params = new URLSearchParams();
+            var params = new URLSearchParams(window.location.search);
 
             params.set('model', currentModel);
 
@@ -4445,7 +4463,7 @@
 
             var params = new URLSearchParams(window.location.search);
 
-            var p = params.get('parametre') || params.get('layer');
+            var p = params.get('parametre') || params.get('layer') || params.get('variable');
 
             if (p && manifest && manifest.layers[p]) {
 
@@ -6936,6 +6954,8 @@
 
                 }
 
+                applyUrlParams();
+
                 var steps = availableSteps();
 
                 currentStep = initialStep(steps);
@@ -6949,8 +6969,6 @@
                 }
 
                 renderStep(currentStep);
-
-                applyUrlParams();
 
                 var currentParams = new URLSearchParams(window.location.search);
 
