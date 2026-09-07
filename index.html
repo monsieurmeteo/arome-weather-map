@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 
@@ -1293,6 +1293,9 @@
                         <button type="button" class="amfm-btn amfm-btn-toggle" data-amfm-toggle-values aria-pressed="false" aria-label="Afficher ou masquer les valeurs météo" title="Afficher/Masquer les valeurs météo sur la carte">
                             <i class="fa-solid fa-hashtag" aria-hidden="true"></i> <span>Valeurs</span>
                         </button>
+                        <button type="button" class="amfm-btn amfm-btn-toggle is-active" data-amfm-toggle-sea aria-pressed="true" aria-label="Masquer la mer" title="Masquer la mer (afficher les températures uniquement sur terre avec mer en bleu)">
+                            <i class="fa-solid fa-square-check" data-amfm-sea-check aria-hidden="true"></i> <span>Masquer la mer</span>
+                        </button>
                         <button type="button" class="amfm-btn amfm-btn-icon" data-amfm-reset aria-label="Recentrer la carte météo" title="Recentrer la carte">
                             <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
                         </button>
@@ -1301,10 +1304,10 @@
 
                 <!-- 3. Droite : Filtre Mer + Exports + Déconnexion -->
                 <div class="amfm-nav-actions">
-                    <select class="amfm-select-sea" data-amfm-select-sea aria-label="Filtrer l'affichage des valeurs en mer et littoral" title="Zone d'affichage des valeurs météo">
-                        <option value="none" selected>🌊 Partout</option>
-                        <option value="land">🌲 Terres</option>
-                        <option value="coast">🏖️ Littoral</option>
+                    <select class="amfm-select-sea" data-amfm-select-sea aria-label="Filtrer l'affichage des températures en mer et littoral" title="Zone d'affichage des températures (Terres / Mer)">
+                        <option value="land" selected>🌲 Terres seules (Mer bleue)</option>
+                        <option value="none">🌊 Terres &amp; Mer (Complet)</option>
+                        <option value="coast">🏖️ Terres + Bord de mer</option>
                     </select>
 
                     <button type="button" id="amfm-logo-action-btn" class="amfm-btn amfm-btn-icon" title="Basculer le logo (Météo-Climat Pro / Monsieur Météo)" aria-label="Changer de logo">
