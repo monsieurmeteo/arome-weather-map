@@ -101,36 +101,47 @@ def generate_fond(out_path):
 
 
 def generate_france_mask(out_path=None):
-    """Masque France précis (255 = France, 0 = extérieur) dans les bornes
-    EXACTES des tuiles (BOUNDS). Sans lui, la météo déborde sur les pays
-    voisins et la mer."""
+    """Masque des TERRES (255 = Terres, 0 = Mer/Océan) dans les bornes
+    EXACTES des tuiles (BOUNDS). Identique au site ARPEGE/GFS : la mer est masquée
+    en bleu mais aucune terre (France ou pays voisins) n'est masquée."""
     out_path = out_path or MASK_FILE
     try:
-        req = urllib.request.urlopen(DEPARTEMENTS_URL, timeout=60)
-        data = json.loads(req.read().decode("utf-8"))
+        with open(COUNTRIES_FILE, encoding="utf-8") as f:
+            data = json.load(f)
     except Exception as e:
-        print("WARNING: masque France non généré (%s)" % e)
+        print("WARNING: masque des terres non généré (%s)" % e)
         return None
 
     img = Image.new("L", (WIDTH, HEIGHT), 0)
     draw = ImageDraw.Draw(img)
-    for feature in data.get("features", []):
-        geom = feature.get("geometry", {})
-        gtype = geom.get("type")
-        coords = geom.get("coordinates", [])
-        if gtype == "Polygon":
-            for ring in coords:
-                pts = [_project((pt[0], pt[1])) for pt in ring]
+    for feat in data.get("features", []):
+        geom = feat.get("geometry")
+        if not geom:
+            continue
+        for ring in _iter_rings(geom):
+            pts = _ring_to_xy(ring)
+            if len(pts) >= 3:
                 draw.polygon(pts, fill=255)
-        elif gtype == "MultiPolygon":
-            for poly in coords:
-                for ring in poly:
-                    pts = [_project((pt[0], pt[1])) for pt in ring]
-                    draw.polygon(pts, fill=255)
+
+    lakes_file = os.path.join(BASE_DIR, "config", "lakes-50m.geojson")
+    if os.path.exists(lakes_file):
+        try:
+            with open(lakes_file, encoding="utf-8") as f:
+                lakes_data = json.load(f)
+            for feat in lakes_data.get("features", []):
+                geom = feat.get("geometry")
+                if not geom:
+                    continue
+                for ring in _iter_rings(geom):
+                    pts = _ring_to_xy(ring)
+                    if len(pts) >= 3:
+                        draw.polygon(pts, fill=0)
+        except Exception:
+            pass
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     img.save(out_path, format="PNG")
-    print("Masque France généré : %s" % out_path)
+    print("Masque des terres généré : %s" % out_path)
     return out_path
 
 
