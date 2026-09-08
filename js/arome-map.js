@@ -231,6 +231,7 @@
         var captureJpegButton = app.querySelector('[data-amfm-capture-jpeg]');
 
         var captureGifButton = app.querySelector('[data-amfm-capture-gif]');
+        var captureGifScreenButton = app.querySelector('[data-amfm-capture-gif-screen]');
 
         var toggleCitiesButton = app.querySelector('[data-amfm-toggle-cities]');
 
@@ -2598,7 +2599,7 @@
 
 
 
-        function openGifModal() {
+        function openGifModal(requestedFraming) {
 
             var steps = availableSteps();
 
@@ -2611,6 +2612,13 @@
             }
 
             if (gifModal) {
+
+                var framingToSelect = requestedFraming;
+                if (!framingToSelect) {
+                    framingToSelect = (transform && transform.scale > 1.08) ? 'screen' : 'full';
+                }
+                var framingRadio = gifModal.querySelector('input[name="gif-framing"][value="' + framingToSelect + '"]');
+                if (framingRadio) framingRadio.checked = true;
 
                 // Remplir les sélecteurs de plage personnalisée
 
@@ -2732,6 +2740,13 @@
 
 
 
+            // Déterminer le cadrage choisi (Carte Complète ou Écran)
+            var isScreen = false;
+            var checkedFraming = gifModal ? gifModal.querySelector('input[name="gif-framing"]:checked') : null;
+            if (checkedFraming) {
+                isScreen = (checkedFraming.value === 'screen');
+            }
+
             // Déterminer la plage d'échéances choisie
 
             var selectedRange = 'all';
@@ -2790,21 +2805,32 @@
 
             }
 
-            if (captureGifButton) {
-
-                captureGifButton.classList.add('is-loading');
-
-                captureGifButton.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>0%</span>';
-
-            }
+            [captureGifButton, captureGifScreenButton].forEach(function (btn) {
+                if (!btn) return;
+                btn.classList.add('is-loading');
+                btn.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>0%</span>';
+            });
 
 
 
-            // Dimensions GIF : ratio 4:3 exact (880 × 656) aligné sur la capture HD (2200 × 1640)
-
+            // Dimensions GIF : ratio adapté selon Carte Complète (880 × 656) ou Cadrage Écran
             var gw = 880;
-
             var gh = 656;
+
+            if (isScreen && viewport) {
+                var vw = viewport.clientWidth || 960;
+                var vh = viewport.clientHeight || 540;
+                var maxDim = 960;
+                if (vw >= vh) {
+                    gw = maxDim;
+                    gh = Math.round(maxDim * (vh / vw));
+                } else {
+                    gh = maxDim;
+                    gw = Math.round(maxDim * (vw / vh));
+                }
+                if (gw % 2 !== 0) gw += 1;
+                if (gh % 2 !== 0) gh += 1;
+            }
 
 
 
@@ -2868,7 +2894,7 @@
 
                 img.onload = function () {
 
-                    var fullCanvas = composeCaptureCanvas(step, img);
+                    var fullCanvas = composeCaptureCanvas(step, img, isScreen);
 
                     if (fullCanvas) {
 
@@ -2894,11 +2920,9 @@
 
                     if (gifPercentText) gifPercentText.textContent = pct + '%';
 
-                    if (captureGifButton) {
-
-                        captureGifButton.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>' + pct + '%</span>';
-
-                    }
+                    [captureGifButton, captureGifScreenButton].forEach(function (btn) {
+                        if (btn) btn.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>' + pct + '%</span>';
+                    });
 
                     next();
 
@@ -2930,11 +2954,9 @@
 
                 if (gifPercentText) gifPercentText.textContent = pct + '%';
 
-                if (captureGifButton) {
-
-                    captureGifButton.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>' + pct + '%</span>';
-
-                }
+                [captureGifButton, captureGifScreenButton].forEach(function (btn) {
+                    if (btn) btn.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i> <span>' + pct + '%</span>';
+                });
 
             });
 
@@ -2952,7 +2974,8 @@
 
                     var modelName = (manifest && manifest.model_name) ? manifest.model_name.replace(/[^a-zA-Z0-9]/g, '_') : 'AROME';
 
-                    var filename = 'MeteoClimatPro_' + modelName + '_' + (slug || 'animation') + '.gif';
+                    var prefix = (document.getElementById('amfm-logo-navbar') && document.getElementById('amfm-logo-navbar').src.indexOf('mm') !== -1) ? 'MonsieurMeteo_' : 'MeteoClimatPro_';
+                    var filename = prefix + modelName + '_' + (slug || 'animation') + (isScreen ? '_ecran_' : '_') + Date.now() + '.gif';
 
 
 
@@ -3003,11 +3026,12 @@
                 }
 
                 if (captureGifButton) {
-
                     captureGifButton.classList.remove('is-loading');
-
                     captureGifButton.innerHTML = '<i class="fa-solid fa-film"></i> <span>GIF</span>';
-
+                }
+                if (captureGifScreenButton) {
+                    captureGifScreenButton.classList.remove('is-loading');
+                    captureGifScreenButton.innerHTML = '<i class="fa-solid fa-video"></i> <span>GIF Écran</span>';
                 }
 
                 setToolHint('GIF généré et téléchargé avec succès !');
@@ -3019,11 +3043,12 @@
                 gif.on('abort', function () {
 
                     if (captureGifButton) {
-
                         captureGifButton.classList.remove('is-loading');
-
                         captureGifButton.innerHTML = '<i class="fa-solid fa-film"></i> <span>GIF</span>';
-
+                    }
+                    if (captureGifScreenButton) {
+                        captureGifScreenButton.classList.remove('is-loading');
+                        captureGifScreenButton.innerHTML = '<i class="fa-solid fa-video"></i> <span>GIF Écran</span>';
                     }
 
                     setToolHint('Génération du GIF interrompue.');
@@ -6541,9 +6566,10 @@
         }
 
         if (captureGifButton) {
-
-            captureGifButton.addEventListener('click', openGifModal);
-
+            captureGifButton.addEventListener('click', function () { openGifModal('full'); });
+        }
+        if (captureGifScreenButton) {
+            captureGifScreenButton.addEventListener('click', function () { openGifModal('screen'); });
         }
 
         if (toggleCitiesButton) {

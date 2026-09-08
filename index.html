@@ -1325,6 +1325,9 @@
                         <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-gif aria-label="Télécharger le GIF animé" title="Télécharger l'animation GIF">
                             <i class="fa-solid fa-film" aria-hidden="true"></i> <span>GIF</span>
                         </button>
+                        <button type="button" class="amfm-btn amfm-btn-download" data-amfm-capture-gif-screen aria-label="Télécharger le GIF animé de l'écran" title="Télécharger l'animation GIF de l'écran (zoom & vue actuelle)">
+                            <i class="fa-solid fa-video" aria-hidden="true"></i> <span>GIF Écran</span>
+                        </button>
                     </div>
 
                     <button type="button" class="amfm-btn amfm-btn-icon" onclick="localStorage.removeItem('amfm_auth_token'); if('caches' in window){caches.keys().then(function(k){k.forEach(function(n){caches.delete(n);});});} window.location.reload(true);" aria-label="Déconnexion et vider le cache" title="Vider le cache et Déconnexion">
@@ -1397,6 +1400,17 @@
                     <button type="button" class="amfm-modal-close" data-amfm-gif-close aria-label="Fermer">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
+                </div>
+                <div class="amfm-form-group">
+                    <label class="amfm-form-label">Cadrage de l'animation</label>
+                    <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:6px;">
+                        <label class="amfm-radio-card" style="justify-content:center; padding:7px 4px; font-size:12px; gap:6px;">
+                            <input type="radio" name="gif-framing" value="full" checked> <span>🗺️ <strong>Carte Complète</strong></span>
+                        </label>
+                        <label class="amfm-radio-card" style="justify-content:center; padding:7px 4px; font-size:12px; gap:6px;">
+                            <input type="radio" name="gif-framing" value="screen"> <span>🖥️ <strong>Capture Écran</strong></span>
+                        </label>
+                    </div>
                 </div>
                 <div class="amfm-form-group">
                     <label class="amfm-form-label">Plage d'échéances à inclure</label>
