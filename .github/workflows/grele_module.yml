@@ -84,6 +84,6 @@ jobs:
         # NB : un push fait par GITHUB_TOKEN ne déclenche PAS les workflows
         # `on: push` (limitation GitHub) → on lance explicitement le déploiement.
         run: |
-          gh workflow run deploy-pages.yml --repo monsieurmeteo/arome-weather-map --ref main
+          gh workflow run deploy-pages.yml --repo mto-user84925/arome-weather-map --ref main
         env:
           GH_TOKEN: ${{ github.token }}
